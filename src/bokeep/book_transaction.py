@@ -200,9 +200,9 @@ class TransactionMirror(object):
     """
 
     # important, any attributes that are being set must be defined here
-    self.trans_thread = None
-    self.book_name = None
-    self.trans_id = None
+    trans_thread = None
+    book_name = None
+    trans_id = None
 
     def __init__(self, book_name, trans_id, trans_thread):
         self.trans_thread = trans_thread
@@ -216,7 +216,7 @@ class TransactionMirror(object):
         # else assuming we're fetching an attribute that is an instance mutator
         # function that will modify the transaction
         else:
-            def ret_function(*args, *kargs):
+            def ret_function(*args, **kargs):
                 # note the intentional lack of return
                 self.trans_thread.mod_transaction_with_func(
                     self.book_name, self.trans_id, attr_name, args, kargs)
