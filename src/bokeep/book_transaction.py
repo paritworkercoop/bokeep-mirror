@@ -102,7 +102,7 @@ class TransactionComittingThread(Thread):
     @transmod
     def mod_transaction_with_func(
         self, delta, book_name, trans_id, function, args, kargs):
-        delta.function_calls.append(function, args, kargs)
+        delta.function_calls.append( (function, args, kargs) )
 
     @changelock
     def get_trans_for_delta(self, delta, dbroot):
