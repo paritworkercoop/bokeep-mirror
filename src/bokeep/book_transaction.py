@@ -190,3 +190,43 @@ class TransactionComittingThread(Thread):
             transaction.get().commit()
 
         dbcon.close()
+
+class TransactionMirror(object):
+    """Allows you to change a transaction being handled by a 
+    TransactionComittingThread as if you had the transaction itself,
+    You can set attributes, and you can call instance mutator functions
+    (without access to return values), but you can *NOT* get attributes
+    or get the values returned by calling instance methods
+    """
+
+    # important, any attributes that are being set must be defined here
+    self.trans_thread = None
+    self.book_name = None
+    self.trans_id = None
+
+    def __init__(self, book_name, trans_id, trans_thread):
+        self.trans_thread = trans_thread
+        self.book_name = book_name
+        self.trans_id = trans_id
+    
+    def __getattribute__(self, attr_name):
+        # if we're looking for an attribute from this instance, return it
+        if hasattr(self, attr_name):
+            return object.__getattribute__(self, attr_name)
+        # else assuming we're fetching an attribute that is an instance mutator
+        # function that will modify the transaction
+        else:
+            def ret_function(*args, *kargs):
+                # note the intentional lack of return
+                self.trans_thread.mod_transaction_with_func(
+                    self.book_name, self.trans_id, attr_name, args, kargs)
+            return ret_function
+
+    def __setattr__(self, attr_name, value):
+        # if we're setting one of the attribute from this class, set it
+        # as normal
+        if hasattr(self, attr_name):
+            object.__setattr__(self, attr_name, value)
+        # else set an attribute from the mirror class
+        else:
+            self.trans_thread.mod_transaction_attr
