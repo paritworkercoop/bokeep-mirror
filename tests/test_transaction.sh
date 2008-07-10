@@ -1,1 +1,1 @@
-PYTHONPATH=../src/ ./test_transaction.py
+PYTHONPATH=$PYTHONPATH:../src/ ./test_transaction.py

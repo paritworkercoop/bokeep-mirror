@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.4
+#!/usr/bin/env python
 
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
