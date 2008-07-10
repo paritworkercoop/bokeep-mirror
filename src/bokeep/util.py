@@ -53,7 +53,7 @@ class MessageRecievingThread(Thread):
 
     @waitlistmodify
     def request_thread_end(self):
-        self.trans_wait_list.append( ThreadEndMessage() )
+        self.trans_wait_list.append( ThreadEndMessage(self) )
 
     def end_thread_and_join(self):
         self.request_thread_end()
@@ -105,8 +105,9 @@ class MessageRecievingThread(Thread):
         """
         pass
 
-    def message_block_begin():
+    def message_block_begin(self):
         pass
 
-    def message_block_end():
+    def message_block_end(self):
         pass
+
