@@ -2,7 +2,7 @@
 
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
-    Transaction, TransactionComittingThread
+    Transaction, TransactionComittingThread, TransactionMirror
 from bokeep.util import ends_with_commit
 
 books = BoKeepBookSet("test_books.conf")
@@ -62,22 +62,37 @@ trans = test_book_1.get_transaction(trans_key)
 assert( trans.data == "fuck" )
 
 @ends_with_commit
-def use_commit_thread_again(book, trans_key):
+def use_commit_thread_again(books, book, trans_key):
 
     trans_thread = TransactionComittingThread(books)
     trans_thread.start()
     trans_thread.add_transaction(book.book_name, trans_key)
     trans_thread.mod_transaction_with_func(
-        book.book_name, trans_key, Type1Transaction.reset_data, (), {} )
+        book.book_name, trans_key, 'reset_data', (), {} )
     trans_thread.mod_transaction_with_func(
-        book.book_name, trans_key, Type1Transaction.append_data,
+        book.book_name, trans_key, 'append_data',
         (' shoot',), {} )
     trans_thread.end_trans_thread()
 
-use_commit_thread_again(test_book_1, trans_key)
+use_commit_thread_again(books, test_book_1, trans_key)
 
 trans = test_book_1.get_transaction(trans_key)
 assert( trans.data == "blah shoot" )
+
+@ends_with_commit
+def use_mirror_class(books, book, trans_key):
+    trans_thread = TransactionComittingThread(books)
+    trans_thread.start()
+    trans_thread.add_transaction(book.book_name, trans_key)
+    mirror = TransactionMirror( book.book_name, trans_key, trans_thread)
+    mirror.data = "juice"
+    mirror.append_data(" maker")
+    trans_thread.end_trans_thread()
+
+use_mirror_class(books, test_book_1, trans_key)
+
+trans = test_book_1.get_transaction(trans_key)
+assert( trans.data == "juice maker" )
 
 test_book_1.remove_transaction(trans_key)
 

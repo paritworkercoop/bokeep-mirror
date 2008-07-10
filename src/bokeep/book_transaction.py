@@ -177,7 +177,8 @@ class TransactionComittingThread(Thread):
                     while len(trans_delta.function_calls) > 0:
                         (function_to_call, args, kargs) = \
                                            trans_delta.function_calls.pop()
-                        function_to_call(trans, *args, **kargs)
+                        function_to_call = getattr(trans, function_to_call)
+                        function_to_call(*args, **kargs)
                 elif isinstance(trans_delta, TransactionDeltaEnd):
                     self.remove_delta(trans_delta)
                 elif isinstance(trans_delta, TransactionThreadEnd):
@@ -216,7 +217,7 @@ class TransactionMirror(object):
         # else assuming we're fetching an attribute that is an instance mutator
         # function that will modify the transaction
         else:
-            def ret_function(*args, **kargs):
+            def ret_function(*args, **kargs):                
                 # note the intentional lack of return
                 self.trans_thread.mod_transaction_with_func(
                     self.book_name, self.trans_id, attr_name, args, kargs)
@@ -229,4 +230,5 @@ class TransactionMirror(object):
             object.__setattr__(self, attr_name, value)
         # else set an attribute from the mirror class
         else:
-            self.trans_thread.mod_transaction_attr
+            self.trans_thread.mod_transaction_attr(
+                self.book_name, self.trans_id, attr_name, value)
