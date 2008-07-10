@@ -5,7 +5,7 @@ from threading import Thread, Condition
 
 class Transaction(Persistent):
     def __init__(self):
-        self.backend_dirty = False
+        pass
 
 class TransactionThreadAction(object):
     pass
