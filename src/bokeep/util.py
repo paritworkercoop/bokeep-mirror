@@ -134,10 +134,9 @@ def entitymod(dec_function):
     def ret_function(self, *args, **kargs):
         changes = self.waiting_changes[args[0]]
         return_value = dec_function(self, changes, *args, **kargs)
-        if not args[0] in self.wait_list_change_index:
+        if not args[0] in self.wait_list_change_set:
             self.message_wait_list.append(changes)
-            self.wait_list_change_index[args[0]] = \
-                len(self.message_wait_list) - 1
+            self.wait_list_change_set.add( args[0] )
         self.change_availible.notify()
     return ret_function
 
@@ -147,7 +146,7 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         self.changes_being_processed = {}
         self.waiting_changes = {}
         self.entity_lookup_dict = {}
-        self.wait_list_change_index = {}
+        self.wait_list_change_set = set()
 
 
     def wait_list_switched(active_message_list, empty_list):
@@ -157,6 +156,7 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         temp = self.changes_being_processed
         self.changes_being_processed  = self.waiting_changes
         self.waiting_changes = temp
+        self.wait_list_change_set.clear()
 
     @changelock
     def add_change_tracker(self, entity_identifier):
@@ -191,8 +191,4 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
             del dictionary[entity_key]
         if entity_key in self.entity_lookup_dict:
             del self.entity_lookup_dict[entity_key]
-        
-    @changelock
-    def message_block_end(self):
-        MessageRecievingThread.message_block_end(self)
-        self.wait_list_change_index.clear()
+    
