@@ -182,7 +182,8 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         return entity
 
     def handle_entity_change_message(self, change_message):
-        self.handle_entity_change(self.get_entity_for_delta(change_message) )
+        self.handle_entity_change(change_message,
+                                  self.get_entity_for_delta(change_message) )
     
     @changelock
     def remove_delta(self, message):
