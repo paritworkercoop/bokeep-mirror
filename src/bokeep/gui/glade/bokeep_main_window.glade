@@ -170,22 +170,6 @@
 	  </child>
 
 	  <child>
-	    <widget class="GtkComboBoxEntry" id="comboboxentry1">
-	      <property name="visible">True</property>
-	      <property name="add_tearoffs">False</property>
-	      <property name="has_frame">True</property>
-	      <property name="focus_on_click">True</property>
-	    </widget>
-	    <packing>
-	      <property name="left_attach">1</property>
-	      <property name="right_attach">2</property>
-	      <property name="top_attach">0</property>
-	      <property name="bottom_attach">1</property>
-	      <property name="y_options">fill</property>
-	    </packing>
-	  </child>
-
-	  <child>
 	    <widget class="GtkLabel" id="label2">
 	      <property name="visible">True</property>
 	      <property name="label" translatable="yes">Type:</property>
@@ -227,6 +211,23 @@
 	      <property name="right_attach">2</property>
 	      <property name="top_attach">1</property>
 	      <property name="bottom_attach">2</property>
+	      <property name="x_options">fill</property>
+	      <property name="y_options">fill</property>
+	    </packing>
+	  </child>
+
+	  <child>
+	    <widget class="GtkComboBox" id="books_combobox">
+	      <property name="visible">True</property>
+	      <property name="add_tearoffs">False</property>
+	      <property name="focus_on_click">True</property>
+	      <signal name="changed" handler="on_books_combobox_changed" last_modification_time="Sat, 12 Jul 2008 17:21:56 GMT"/>
+	    </widget>
+	    <packing>
+	      <property name="left_attach">1</property>
+	      <property name="right_attach">2</property>
+	      <property name="top_attach">0</property>
+	      <property name="bottom_attach">1</property>
 	      <property name="x_options">fill</property>
 	      <property name="y_options">fill</property>
 	    </packing>

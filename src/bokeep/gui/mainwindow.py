@@ -2,8 +2,9 @@
 from os.path import abspath, dirname, join, exists
 
 # Gtk
-from gtk import main_quit
+from gtk import main_quit, ListStore, CellRendererText
 from gtk.glade import XML
+import gobject
 
 # Bo-Keep
 from bokeep.book_transaction import \
@@ -27,6 +28,17 @@ class MainWindow(object):
         load_glade_file_get_widgets_and_connect_signals(
             glade_file, "mainwindow", self, self )
 
+        self.books_combobox_model = ListStore(str, object)
+        self.books_combobox.set_model(self.books_combobox_model)
+        cell = CellRendererText()
+        self.books_combobox.pack_start(cell, True)
+        self.books_combobox.add_attribute(cell, 'text', 0)
+        
+        for book_name, book in self.bookset.iterbooks():
+            self.books_combobox_model.append((book_name, book))
+        if len(self.books_combobox_model) > 0:
+            self.books_combobox.set_active(0)
+
     def on_remove(self, window, event):
         main_quit()
 
@@ -44,3 +56,6 @@ class MainWindow(object):
 
     def trans_type_changed(self, *args):
         pass
+
+    def on_books_combobox_changed(self, combobox):
+        print self.books_combobox_model[self.books_combobox.get_active()][0]

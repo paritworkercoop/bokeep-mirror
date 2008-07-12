@@ -38,7 +38,6 @@ class BoKeepBookSet(object):
     @ends_with_commit
     def remove_book(self, book_name):
         del self.dbroot[book_name]
-        
     
 class BoKeepBook(Persistent):
     def __init__(self, new_book_name):
