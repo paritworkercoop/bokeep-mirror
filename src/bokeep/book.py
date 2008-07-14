@@ -70,6 +70,12 @@ class BoKeepBook(Persistent):
     def get_transaction(self, trans_id):
         return self.trans_tree[trans_id]
 
+    def get_latest_transaction_id(self):
+        if len(self.trans_tree) == 0:
+            return None
+        else:
+            return self.trans_tree.maxKey()
+
     @ends_with_commit
     def remove_transaction(self, trans_id):
         del self.trans_tree[trans_id]

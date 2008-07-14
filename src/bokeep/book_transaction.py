@@ -87,6 +87,10 @@ class TransactionComittingThread(Thread):
         self.trans_wait_list.append( TransactionDeltaEnd(book_name, trans_id) )
 
     @waitlistmodify
+    def call_when_entity_uptodate(self, entity_id, callback):
+        pass
+
+    @waitlistmodify
     def request_end_trans_thread(self):
         self.trans_wait_list.append( TransactionThreadEnd() )
 
