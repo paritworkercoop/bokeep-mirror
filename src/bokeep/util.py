@@ -1,5 +1,5 @@
 # python standard library
-from threading import Thread, Condition
+from threading import Thread, Condition, Event
 
 # ZODB
 import transaction
@@ -127,6 +127,7 @@ class EntityChangeManager(EntityChangeMessage):
     callback_function = 'handle_entity_change_message'  
 
 class EntityChangeEnd(EntityChangeMessage):
+    notify_of_end_function = None
     callback_function = 'remove_delta'
 
 def entitymod(dec_function):
@@ -147,6 +148,9 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         self.waiting_changes = {}
         self.entity_lookup_dict = {}
         self.wait_list_change_set = set()
+        # track the latest EntityChangeEnd message for a particular entity,
+        # we don't care if several are in queue, just track the latest
+        self.end_change_lookup_dict = {}
 
 
     def wait_list_switched(active_message_list, empty_list):
@@ -159,17 +163,57 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         self.wait_list_change_set.clear()
 
     @changelock
-    def add_change_tracker(self, entity_identifier):
-        assert( entity_identifier not in self.changes_being_processed)
-        for dictionary in (self.changes_being_processed, self.waiting_changes):
-            dictionary[entity_identifier] = \
-                EntityChangeManager( self, entity_identifier)
+    def add_change_tracker(self, entity_identifier,
+                           entity_change_ready_callback):
+        """Calling convention, you should call add_change_tracker for a
+        particular entity only if you havn't done so yet, or if you've done
+        so but ended your series of changes with remove_change_tracker()
+
+        Callbacks must not continue executing and eventually call this back,
+        or the stack will never shink. Instead, the should trigger an event
+        somewhere, see add_change_tracker_block for a simple example
+        """
+        # if we're already tracking a particular entity, call
+        # entity_change_ready_callback when the latest call to
+        # remove_change_tracker has been called
+        if entity_identifier in self.changes_being_processed):
+            # Enforce calling convention, every call to add_change_tracker
+            # must be followed by a call to remove_change_tracker
+            # before you can call it again
+            #
+            # See that an end_change message has been inserted
+            assert( entity_identifier in self.end_change_lookup_dict)
+            end_msg = self.end_change_lookup_dict
+            # ensure that the end_change_message hasn't been told to notify
+            # that would also be a sign that the call convention is being
+            # violated
+            assert( end_msg.notify_of_end_function == None)
+            end_msg.notify_of_end_function = entity_change_ready_callback
+        # else the entity isn't already being tracked, start tracking
+        else:
+            # in this situation, the key should of been deleted
+            assert( entity_identifier not in self.end_change_lookup_dict)
+            for dictionary in \
+                    (self.changes_being_processed, self.waiting_changes):
+                dictionary[entity_identifier] = \
+                    EntityChangeManager( self, entity_identifier)
+            # use the callback to inform
+            entity_change_ready_callback(entity_identifier)
+
+    def add_change_tracker_block(self, entity_identifier):
+        block_in_place = Event()
+        def remove_blocking_condition(entity_identifier):
+            block_in_place.set()
+        self.add_change_tracker(entity_identifier, remove_blocking_condition)
+        block_in_place.wait()
 
     @waitlistmodify
     def remove_change_tracker(self, entity_identifier):
         assert( entity_identifier in self.changes_being_processed )
-        self.message_wait_list.append(
-            EntityChangeEnd(self, entity_identifier) )
+        new_end_change_msg = EntityChangeEnd(self, entity_identifier)
+        self.message_wait_list.append(new_end_change_msg)
+        self.end_change_lookup_dict[entity_identifier] = new_end_change_msg
+            
 
     @changelock
     def get_entity_for_delta(self, delta):
@@ -188,8 +232,19 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
     @changelock
     def remove_delta(self, message):
         entity_key = message.entity_identifier
-        for dictionary in (self.changes_being_processed, self.waiting_changes):
-            del dictionary[entity_key]
-        if entity_key in self.entity_lookup_dict:
-            del self.entity_lookup_dict[entity_key]
-    
+        # if we were asked to notify that things had ended,
+        # we don't need to pull anything out, just notify
+        if message.notify_of_end_function != None:
+            message.notify_of_end_function(entity_key)
+        else:
+            for dictionary in (self.changes_being_processed,
+            self.waiting_changes):
+                del dictionary[entity_key]
+            if entity_key in self.entity_lookup_dict:
+                del self.entity_lookup_dict[entity_key]
+
+        # if this message is the latest end message, we no lnoger need to
+        # track for this entity anymore, else, leave this so others can
+        # hook into this
+        if self.end_change_lookup_dict[message.entity_identifier] == message:
+            del self.end_change_lookup_dict[message.entity_identifier]
