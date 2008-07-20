@@ -236,6 +236,7 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         # we don't need to pull anything out, just notify
         if message.notify_of_end_function != None:
             message.notify_of_end_function(entity_key)
+        # else remove the deltas, they're no longer neede
         else:
             for dictionary in (self.changes_being_processed,
             self.waiting_changes):
