@@ -11,8 +11,11 @@ class Transaction(Persistent):
 class TransactionDeltaManager(EntityChangeManager):
     def __init__(self, running_thread, entity_identifier):
         EntityChangeManager.__init__(self, running_thread, entity_identifier)
-        self.attribute_delta = {}
-        self.function_calls = []
+        self.change_list = []
+        self.attribute_change_index = {}
+        # important value, if there have been no function calls this ensures
+        # attribute changes are considerd to occure "after" this
+        self.latest_function_call = -1 
 
 def new_transaction_committing_thread(book_set):
     commit_thread = TransactionComittingThread(book_set)
@@ -32,11 +35,26 @@ class TransactionComittingThread(ChangeMessageRecievingThread):
 
     @entitymod
     def mod_transaction_attr(self, delta, attr_name, attr_value):
-        delta.attribute_delta[attr_name] = attr_value
+        # if the attribute has already been changed, and that change was
+        # after the last function call, simply replace the attribute change
+        if attr_name in delta.attribute_change_index and \
+                delta.attribute_change_index[attr_name] > \
+                delta.latest_function_call:
+            change_position = delta.attribute_change_index[attr_name]
+        # else we create a new attribute change
+        else:
+            delta.attribute_change_index[attr_name] = change_position = \
+                len(delta.change_list)
+            delta.change_list.append(None)
+
+        # apply the attribute change, either on top of an old one that
+        # we're now ignoring, or as a new one
+        delta.change_list[change_position] = (attr_name, attr_value)
         
     @entitymod
     def mod_transaction_with_func(self, delta, function, args, kargs):
-        delta.function_calls.append( (function, args, kargs) )
+        delta.latest_function_call = len(delta.change_list)
+        delta.change_list.append( (function, args, kargs) )
 
     def get_entity_from_identifier(self, entity_identifier):
         (book_name, trans_id) = entity_identifier
@@ -49,18 +67,20 @@ class TransactionComittingThread(ChangeMessageRecievingThread):
         dbcon.close()
 
     def handle_entity_change(self, trans_delta, trans):
-        for attr, value in \
-                trans_delta.attribute_delta.iteritems():
-            setattr(trans, attr, value)
-        trans_delta.attribute_delta.clear()
-                    
-        trans_delta.function_calls.reverse()
-        while len(trans_delta.function_calls) > 0:
-            (function_to_call, args, kargs) = \
-                trans_delta.function_calls.pop()
-            function_to_call = getattr(trans, function_to_call)
-            function_to_call(*args, **kargs)
-
+        trans_delta.change_list.reverse()
+        while len(trans_delta.change_list) > 0:
+            change = trans_delta.change_list.pop()
+            if len(change) == 3:
+                (function_to_call, args, kargs) = change
+                function_to_call = getattr(trans, function_to_call)
+                function_to_call(*args, **kargs)            
+            else:
+                assert( len(change) == 2 )
+                (attr_name, attr_value) = change
+                setattr(trans, attr_name, attr_value)
+        trans_delta.attribute_change_index.clear()
+        # important value, see comments above
+        trans_delta.latest_function_call = -1
 
     def message_block_begin(self):
         transaction.get().commit()
