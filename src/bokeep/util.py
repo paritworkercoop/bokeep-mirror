@@ -97,7 +97,7 @@ class MessageRecievingThread(Thread):
             # actual order of entry
             active_message_list.reverse()
             while len(active_message_list) > 0:
-                messsage = active_message_list.pop()
+                message = active_message_list.pop()
                 message.handle_message()
 
             # active_message_list now empty
@@ -105,7 +105,7 @@ class MessageRecievingThread(Thread):
 
             self.message_block_end()
 
-    def wait_list_switched(active_message_list, empty_list):
+    def wait_lists_switched(self, active_message_list, empty_list):
         """Called right after the message lists are switched with the two
         lists, but before the lock is given up.
         """
@@ -120,7 +120,7 @@ class MessageRecievingThread(Thread):
 
 class EntityChangeMessage(ThreadCallbackMessage):
     def __init__(self, running_thread, entity_identifier):
-        ThreadCallbackMessage.__init__(running_thread)
+        ThreadCallbackMessage.__init__(self, running_thread)
         self.entity_identifier = entity_identifier
 
 class EntityChangeManager(EntityChangeMessage):
@@ -134,7 +134,8 @@ def entitymod(dec_function):
     @changelock
     def ret_function(self, *args, **kargs):
         changes = self.waiting_changes[args[0]]
-        return_value = dec_function(self, changes, *args, **kargs)
+        new_args = args[1:]
+        return_value = dec_function(self, changes, *new_args, **kargs)
         if not args[0] in self.wait_list_change_set:
             self.message_wait_list.append(changes)
             self.wait_list_change_set.add( args[0] )
@@ -143,7 +144,7 @@ def entitymod(dec_function):
 
 class ChangeMessageRecievingThread(MessageRecievingThread):
     def __init__(self):
-        MessageReceivingThread.__init__(self)
+        MessageRecievingThread.__init__(self)
         self.changes_being_processed = {}
         self.waiting_changes = {}
         self.entity_lookup_dict = {}
@@ -153,7 +154,7 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         self.end_change_lookup_dict = {}
 
 
-    def wait_list_switched(active_message_list, empty_list):
+    def wait_lists_switched(self, active_message_list, empty_list):
         """Called right after the message lists are switched with the two
         lists, but before the lock is given up.
         """
@@ -176,14 +177,14 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         # if we're already tracking a particular entity, call
         # entity_change_ready_callback when the latest call to
         # remove_change_tracker has been called
-        if entity_identifier in self.changes_being_processed):
+        if entity_identifier in self.changes_being_processed:
             # Enforce calling convention, every call to add_change_tracker
             # must be followed by a call to remove_change_tracker
             # before you can call it again
             #
             # See that an end_change message has been inserted
             assert( entity_identifier in self.end_change_lookup_dict)
-            end_msg = self.end_change_lookup_dict
+            end_msg = self.end_change_lookup_dict[entity_identifier]
             # ensure that the end_change_message hasn't been told to notify
             # that would also be a sign that the call convention is being
             # violated
@@ -196,9 +197,12 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
             for dictionary in \
                     (self.changes_being_processed, self.waiting_changes):
                 dictionary[entity_identifier] = \
-                    EntityChangeManager( self, entity_identifier)
+                    self.new_entity_change_manager(entity_identifier)
             # use the callback to inform
             entity_change_ready_callback(entity_identifier)
+
+    def new_entity_change_manager(self, entity_identifier):
+        return EntityChangeManager( self, entity_identifier)
 
     def add_change_tracker_block(self, entity_identifier):
         block_in_place = Event()
@@ -218,7 +222,7 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
     @changelock
     def get_entity_for_delta(self, delta):
         entity_key = delta.entity_identifier
-        if not entity_key in entity_lookup_dict:
+        if not entity_key in self.entity_lookup_dict:
             entity = self.get_entity_from_identifier(delta.entity_identifier)
             self.entity_lookup_dict[entity_key] = entity
         else:
