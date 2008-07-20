@@ -23,6 +23,16 @@ class ThreadAccessingMessage(Message):
         Message.__init__(self)
         self.running_thread = running_thread    
 
+class ThreadExecuteMessage(ThreadAccessingMessage):
+    def __init__(self, running_thread, exec_procedure):
+        ThreadAccessingMessage.__init__(self, running_thread)
+        self.exec_procedure = exec_procedure
+
+    def handle_message(self):
+        args, kargs = self.running_thread.get_arguments_for_exec_procedure()
+        self.exec_procedure( *args, **kargs )
+        
+
 class ThreadCallbackMessage(ThreadAccessingMessage):
     """Messages whoes only role in life is to make a call back to the
     thread instance, as it is more convienent to process the message
@@ -50,6 +60,12 @@ def waitlistmodify(dec_function):
         return return_value
     return ret_function
 
+def waitlistappend(dec_function):
+    @waitlistmodify
+    def ret_function(self, *args):
+        self.message_wait_list.append( dec_function(self, *args) )
+    return ret_function
+
 class MessageRecievingThread(Thread):
     def __init__(self):
         Thread.__init__(self)
@@ -57,9 +73,13 @@ class MessageRecievingThread(Thread):
         self.change_availible = Condition()
         self.__continue_running = True
 
-    @waitlistmodify
+    @waitlistappend
+    def request_thread_execute(self, exec_procedure):
+        return ThreadExecuteMessage(self, exec_procecure)
+
+    @waitlistappend
     def request_thread_end(self):
-        self.message_wait_list.append( ThreadEndMessage(self) )
+        return ThreadEndMessage(self)
 
     def end_thread_and_join(self):
         self.request_thread_end()

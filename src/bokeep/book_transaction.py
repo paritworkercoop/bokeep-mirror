@@ -24,6 +24,9 @@ class TransactionComittingThread(ChangeMessageRecievingThread):
         ChangeMessageRecievingThread.__init__(self)
         self.book_set = book_set
 
+    def get_arguments_for_exec_procedure(self):
+        return ((self.dbroot,), {})
+
     def new_entity_change_manager(self, entity_identifier):
         return TransactionDeltaManager(self, entity_identifier)
 
