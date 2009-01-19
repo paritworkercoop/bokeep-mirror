@@ -38,13 +38,38 @@ class BoKeepBookSet(object):
     @ends_with_commit
     def remove_book(self, book_name):
         del self.dbroot[book_name]
-    
+
 class BoKeepBook(Persistent):
     def __init__(self, new_book_name):
         self.book_name = new_book_name
         self.set_backend_module(DEFAULT_BACKEND_MODULE)
         self.trans_tree = IOBTree()
+        self.enabled_modules = {}
+        self.disabled_modules = {}
 
+    @ends_with_commit
+    def add_module(self, module_name):
+        assert( module_name not in self.enabled_modules and 
+                module_name not in self.disabled_modules )
+        # get the module class and instantiate as a new disabled module
+        self.disabled_modules[module_name] =  __import__(
+            module_name, globals(), locals(), [""]).get_module_class()()
+        self._p_changed = True
+
+    @ends_with_commit
+    def enable_module(self, module_name):
+        assert( module_name in self.disabled_modules )
+        self.enabled_modules[module_name] = self.disabled_modules[module_name]
+        del self.disabled_modules[module_name]
+        self._p_changed = True
+        
+    @ends_with_commit
+    def disable_module(self, module_name):
+        assert( module_name in self.enabled_modules )
+        self.disabled_modules[module_name] = self.enabled_modules[module_name]
+        del self.enabled_modules[module_name]
+        self._p_changed = True
+        
     @ends_with_commit
     def set_backend_module(self, backend_module_name):
         self.__backend_module = __import__(

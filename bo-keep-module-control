@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+
+# Python library
+from sys import argv
+
+# Bo-Keep
+from bokeep.config import get_database_cfg_file
+from bokeep.book import BoKeepBookSet
+
+def bokeep_main():
+    bookset = BoKeepBookSet( get_database_cfg_file() )
+    assert( len(argv) == 4 )
+    book_name = argv[1]
+    module_change = argv[2]
+    module_name = argv[3]
+    book = bookset.get_book(book_name)
+    if module_change == "enable":
+        book.enable_module(module_name)
+    elif module_change == "disable":
+        book.disable_module(module_name)
+    elif module_change == "add":
+        book.add_module(module_name)
+    bookset.close_primary_connection()
+
+if __name__ == "__main__":
+    bokeep_main()
+
