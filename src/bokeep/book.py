@@ -69,7 +69,10 @@ class BoKeepBook(Persistent):
         self.disabled_modules[module_name] = self.enabled_modules[module_name]
         del self.enabled_modules[module_name]
         self._p_changed = True
-        
+    
+    def get_module(self, module_name):
+        return self.enabled_modules[module_name]
+
     @ends_with_commit
     def set_backend_module(self, backend_module_name):
         self.__backend_module = __import__(
