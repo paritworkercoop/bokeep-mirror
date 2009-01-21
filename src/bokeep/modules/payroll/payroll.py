@@ -45,13 +45,14 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         cdnpayroll_Payday.add_paystub(self, paystub)
         self._p_changed = True
 
+    def specify_account_mapping(self, double_entry_accounting_spec):
+        self._v_double_entry_accounting_spec = double_entry_accounting_spec
+        self._p_changed = True
+
 class Paystub(Persistent, cdnpayroll_Paystub):
     def add_paystub_line(self, paystub_line):
         cdnpayroll_Paystub.add_paystub_line(self, paystub_line)
         self._p_changed = True
-
-class PaystubCPPDeductionLine(Persistent, cdnpayroll_PaystubCPPDeductionLine):
-    pass
 
 class PaystubLine(Persistent, cdnpayroll_PaystubLine):
     pass
