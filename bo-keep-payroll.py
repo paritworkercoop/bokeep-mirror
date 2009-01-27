@@ -45,14 +45,58 @@ def add_new_payroll(book, payroll_module):
     for emp in emp_list:
         employee = payroll_module.get_employee( emp['name'] )
         paystub = employee.create_and_add_new_paystub(payday)
-        for key, function in paystub_line_config:
-            if key in emp:
-                function( employee, emp, paystub, emp[key] )
+        for key, value in emp.iteritems():
+            function = paystub_line_config[key]
+            function( employee, emp, paystub, value )
     
     for i in xrange(2):
         print_paystubs(payday)
+        
+    def generate_each_paystub_accounting_line(paystub, account_line_config):
+        for single_account_line_config in account_line_config:
+            for paystub_line in single_account_line_config[2](paystub):
+                yield (single_account_line_config[0],
+                       single_account_line_config[1],
+                       paystub_line )
 
-    payday.specify_account_mapping(paystub_accounting_line_config)
+    payday_accounting_lines = [ [[], []],
+                                [{}, {}],
+                                [[], []] ]
+
+    for paystub in payday.paystubs:
+        for i in xrange(2):
+            payday_accounting_lines[0][i].extend(
+                generate_each_paystub_accounting_line(
+                    paystub,
+                    paystub_accounting_line_config[0][i] )
+                )
+        
+        for i in xrange(2):
+            for line_spec in paystub_accounting_line_config[1][i]:
+                line_spec_key = (line_spec[0], line_spec[1], line_spec[2])
+                if line_spec_key not in payday_accounting_lines[1][i]:
+                    payday_accounting_lines[1][i][line_spec_key] = []
+                payday_accounting_lines[1][i][line_spec_key].extend(
+                    paystub_line
+                    for paystub_line in line_spec[3](paystub)
+                    )
+
+        #new_per_employee_trans = [[], []]
+        #for i in xrange(2):
+        #    new_per_employee_trans[i].extend( 
+        #        generate_each_paystub_accounting_line(
+        #            paystub,
+        #            payday_accounting_lines[2][i] ) )
+
+        #for i in xrange(2):
+        #    if len(new_per_employee_trans[0]) > 0:
+        #               if len(new_per_employee_trans[0][i]) > 0:
+        #                   payday_accounting_lines[2][i].append(
+         #                      new_per_employee_trans )
+        
+
+    payday.specify_accounting_lines(payday_accounting_lines)
+    payday.print_accounting_lines()
 
     book.get_backend_module().mark_transaction_dirty(payday_trans_id)
 
@@ -63,7 +107,7 @@ def bokeep_main():
 
     if len(argv) >= 3:
         if argv[2] == "add" and argv[3] == "employee":
-            payroll_module.add_employee( argv[4], Employee(argv[4]))
+            Payroll_module.add_employee( argv[4], Employee(argv[4]))
         elif argv[2] == "print" and argv[3] == "employee":
             print str(payroll_module.get_employee( argv[4] ))
     else:

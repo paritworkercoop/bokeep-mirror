@@ -1,3 +1,10 @@
+# python
+from decimal import Decimal
+
+# zopedb
+from persistent import Persistent
+
+# cndpayroll
 from cdnpayroll.payday import Payday as cdnpayroll_Payday
 from cdnpayroll.paystub import Paystub as cdnpayroll_Paystub
 from cdnpayroll.employee import Employee as cdnpayroll_Employee
@@ -27,13 +34,19 @@ from cdnpayroll.income_tax import \
     PaystubCalculatedIncomeTaxDeductionLine as \
         cdnpayroll_PaystubCalculatedIncomeTaxDeductionLine
 
+# bo-keep
 from bokeep.book_transaction import Transaction as BookTransaction
 
-from persistent import Persistent
-
+def lines_of_class_function(class_find):
+    def new_func(paystub):
+        return paystub.get_paystub_lines_of_class(class_find)
+    return new_func
 
 # subclass and override functions from cdnpayroll classes to be persistable
 # via zopedb, and to use each other instead of original cdnpayroll classes
+
+def decimal_from_float(float_value):
+    return Decimal('%.2f' % float_value)
 
 class Payday(BookTransaction, cdnpayroll_Payday):
     def __init__(self, paydate):
@@ -45,9 +58,43 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         cdnpayroll_Payday.add_paystub(self, paystub)
         self._p_changed = True
 
-    def specify_account_mapping(self, double_entry_accounting_spec):
-        self._v_double_entry_accounting_spec = double_entry_accounting_spec
+    def specify_accounting_lines(self, payday_accounting_lines):
+        self.payday_accounting_lines = payday_accounting_lines
         self._p_changed = True
+
+    def print_accounting_lines(self):
+        print 'Per employee lines, payroll transaction'
+        for (debit_credit_str, debit_credit_pos, negate) in \
+                (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
+            print debit_credit_str
+            for (accounts, comment, paystub_line) in \
+                    self.payday_accounting_lines[0][debit_credit_pos]:
+                print negate * decimal_from_float(paystub_line.get_value()), \
+                    accounts, comment
+        print ''
+
+        print 'Cummulative lines, payroll transaction'
+        for (debit_credit_str, debit_credit_pos, negate) in \
+                (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
+            print debit_credit_str
+            for (id, accounts, comment), line_list in \
+                    self.payday_accounting_lines[1][debit_credit_pos].\
+                    iteritems():
+                print sum( ( decimal_from_float(line.get_value())
+                             for line in line_list), Decimal(0)),\
+                             accounts, comment
+        print ''
+
+        #print 'Per employee transaction lines'
+        #for (debit_credit_str, debit_credit_pos, negate) in \
+        #        (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
+        #    print debit_credit_str
+        #    for (accounts, comment, paystub_line) in \
+        #            self.payday_accounting_lines[1][debit_credit_pos]:
+        #        print negate * decimal_from_float(
+        #            paystub_line.get_value() ), \
+        #            accounts, comment
+        #print ' '
 
 class Paystub(Persistent, cdnpayroll_Paystub):
     def add_paystub_line(self, paystub_line):
