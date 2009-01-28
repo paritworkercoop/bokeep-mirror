@@ -9,7 +9,8 @@ import transaction
 # Bo-Keep
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bokeep.modules.payroll.payroll import Payday, Employee
+from bokeep.modules.payroll.payroll import Payday, Employee, \
+    PaystubCalculatedLine
 
 def print_paystubs(payday):
     from payroll_configuration import print_paystub_line_config
@@ -43,11 +44,23 @@ def add_new_payroll(book, payroll_module):
     payroll_module.add_payday(paydate, payday_serial, payday_trans_id, payday)
 
     for emp in emp_list:
-        employee = payroll_module.get_employee( emp['name'] )
+        employee_name = emp['name']
+        if not payroll_module.has_employee(employee_name):
+            employee = Employee(employee_name)
+            payroll_module.add_employee(employee_name, employee)
+        else:                                        
+            employee = payroll_module.get_employee(employee_name)
         paystub = employee.create_and_add_new_paystub(payday)
         for key, value in emp.iteritems():
             function = paystub_line_config[key]
             function( employee, emp, paystub, value )
+            
+    # freeze all calculated paystub lines with current values to avoid
+    # unesessary recalculation
+    for paystub in payday.paystubs:
+        for paystub_line in paystub.get_paystub_lines_of_class(
+            PaystubCalculatedLine):
+            paystub_line.freeze_value()
     
     for i in xrange(2):
         print_paystubs(payday)
@@ -105,13 +118,7 @@ def bokeep_main():
     book = bookset.get_book(argv[1])
     payroll_module = book.get_module('bokeep.modules.payroll')
 
-    if len(argv) >= 3:
-        if argv[2] == "add" and argv[3] == "employee":
-            Payroll_module.add_employee( argv[4], Employee(argv[4]))
-        elif argv[2] == "print" and argv[3] == "employee":
-            print str(payroll_module.get_employee( argv[4] ))
-    else:
-        add_new_payroll(book, payroll_module)
+    add_new_payroll(book, payroll_module)
 
     transaction.get().commit()
     bookset.close_primary_connection()

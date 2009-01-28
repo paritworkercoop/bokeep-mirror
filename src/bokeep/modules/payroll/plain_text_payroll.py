@@ -1,3 +1,6 @@
+# cndpayroll imports
+from cdnpayroll.paystub_line import sum_paystub_lines
+
 # Bo-Keep imports
 from bokeep.modules.payroll.payroll import PaystubWageLine
 
@@ -53,3 +56,13 @@ def amount_from_paystub_function( paystub_function ):
 @negate_decorator_decorator
 def amount_from_paystub_function_reversed(paystub_function):
     return amount_from_paystub_function(paystub_function)
+
+def calculated_value_of_class(class_name):
+    def return_func(paystub):
+        return sum ( line.get_calculated_value()
+                     for line in paystub.get_paystub_lines_of_class(
+                class_name) )
+    return return_func
+
+def do_nothing(*args):
+    pass

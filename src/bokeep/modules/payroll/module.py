@@ -15,6 +15,9 @@ class PayrollModule(Persistent):
     def add_employee(self, employee_ident, employee):
         self.employee_database[employee_ident] = employee
         self._p_changed = True
+
+    def has_employee(self, employee_ident):
+        return employee_ident in self.employee_database
         
     def get_employee(self, employee_ident):
         return self.employee_database[employee_ident]
