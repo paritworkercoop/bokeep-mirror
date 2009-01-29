@@ -10,7 +10,10 @@ import transaction
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
 from bokeep.modules.payroll.payroll import Payday, Employee, \
-    PaystubCalculatedLine
+    PaystubCalculatedLine, PaystubNetPaySummaryLinePersist
+from bokeep.util import ends_with_commit
+
+PAYROLL_MODULE = 'bokeep.modules.payroll'
 
 def print_paystubs(payday):
     from payroll_configuration import print_paystub_line_config
@@ -54,7 +57,12 @@ def add_new_payroll(book, payroll_module):
         for key, value in emp.iteritems():
             function = paystub_line_config[key]
             function( employee, emp, paystub, value )
-            
+    
+        assert( 0==len(list(
+                    paystub.get_paystub_lines_of_class(
+                        PaystubNetPaySummaryLinePersist))))
+        paystub.add_paystub_line( PaystubNetPaySummaryLinePersist(paystub) )
+
     # freeze all calculated paystub lines with current values to avoid
     # unesessary recalculation
     for paystub in payday.paystubs:
@@ -113,14 +121,23 @@ def add_new_payroll(book, payroll_module):
 
     book.get_backend_module().mark_transaction_dirty(payday_trans_id)
 
-def bokeep_main():
-    bookset = BoKeepBookSet( get_database_cfg_file() )
+@ends_with_commit
+def payroll_main(bookset):
     book = bookset.get_book(argv[1])
-    payroll_module = book.get_module('bokeep.modules.payroll')
+
+    if not book.has_module(PAYROLL_MODULE):
+        book.add_module(PAYROLL_MODULE)
+
+    if book.has_module_disabled(PAYROLL_MODULE):
+        book.enable_module(PAYROLL_MODULE)
+
+    payroll_module = book.get_module(PAYROLL_MODULE)
 
     add_new_payroll(book, payroll_module)
 
-    transaction.get().commit()
+def bokeep_main():
+    bookset = BoKeepBookSet( get_database_cfg_file() )
+    payroll_main(bookset)
     bookset.close_primary_connection()
 
 if __name__ == "__main__":

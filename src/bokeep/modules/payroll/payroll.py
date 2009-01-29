@@ -17,11 +17,20 @@ from cdnpayroll.paystub_line import \
     PaystubDeductionLine as cdnpayroll_PaystubDeductionLine, \
     PaystubSimpleDeductionLine as cdnpayroll_PaystubSimpleDeductionLine, \
     PaystubCalculatedDeductionLine as \
-        cdnpayroll_PaystubCalculatedDeductionLine, \
+    cdnpayroll_PaystubCalculatedDeductionLine, \
     PaystubEmployerContributionLine as \
-        cdnpayroll_PaystubEmployerContributionLine, \
+    cdnpayroll_PaystubEmployerContributionLine, \
     PaystubCalculatedEmployerContributionLine as \
-        cdnpayroll_PaystubCalculatedEmployerContributionLine
+    cdnpayroll_PaystubCalculatedEmployerContributionLine, \
+    PaystubSummaryLine as cdnpayroll_PaystubSummaryLine, \
+    PaystubNetPaySummaryLine as cdnpayroll_PaystubNetPaySummaryLine, \
+    PaystubTotalIncomeLine as cdnpayroll_PaystubTotalIncomeLine, \
+    PaystubMultipleOfIncomeLine as cdnpayroll_PaystubMultipleOfIncomeLine, \
+    PaystubDeductionMultipleOfIncomeLine as \
+    cdnpayroll_PaystubDeductionMultipleOfIncomeLine, \
+    PaystubEmployerContributionMultipleOfIncomeLine as \
+    cdnpayroll_PaystubEmployerContributionMultipleOfIncomeLine
+
 from cdnpayroll.cpp import \
     PaystubCPPDeductionLine as cdnpayroll_PaystubCPPDeductionLine, \
     PaystubCPPEmployerContributionLine as \
@@ -31,16 +40,15 @@ from cdnpayroll.ei import \
     PaystubEIEmployerContributionLine as \
         cdnpayroll_PaystubEIEmployerContributionLine
 from cdnpayroll.income_tax import \
+    PaystubIncomeTaxDeductionLine as \
+    cdnpayroll_PaystubIncomeTaxDeductionLine, \
+    PaystubExtraIncomeTaxDeductionLine as \
+    cdnpayroll_PaystubExtraIncomeTaxDeductionLine, \
     PaystubCalculatedIncomeTaxDeductionLine as \
-        cdnpayroll_PaystubCalculatedIncomeTaxDeductionLine
+    cdnpayroll_PaystubCalculatedIncomeTaxDeductionLine
 
 # bo-keep
 from bokeep.book_transaction import Transaction as BookTransaction
-
-def lines_of_class_function(class_find):
-    def new_func(paystub):
-        return paystub.get_paystub_lines_of_class(class_find)
-    return new_func
 
 # subclass and override functions from cdnpayroll classes to be persistable
 # via zopedb, and to use each other instead of original cdnpayroll classes
@@ -101,74 +109,193 @@ class Paystub(Persistent, cdnpayroll_Paystub):
         cdnpayroll_Paystub.add_paystub_line(self, paystub_line)
         self._p_changed = True
 
-class PaystubLine(Persistent, cdnpayroll_PaystubLine):
+class PaystubLine(cdnpayroll_PaystubLine):
     pass
 
-class PaystubIncomeLine(Persistent, cdnpayroll_PaystubIncomeLine):
+class PaystubLinePersist(Persistent, PaystubLine):
     pass
 
-class PaystubWageLine(Persistent, cdnpayroll_PaystubWageLine):
+class PaystubSummaryLine(cdnpayroll_PaystubSummaryLine, PaystubLine):
     pass
 
-class PaystubOvertimeWageLine(Persistent,
-                              cdnpayroll_PaystubOvertimeWageLine):
+class PaystubSummaryLinePersist(Persistent, PaystubSummaryLine):
     pass
 
-class PaystubCalculatedLine(Persistent, cdnpayroll_PaystubCalculatedLine):
+class PaystubNetPaySummaryLine(cdnpayroll_PaystubNetPaySummaryLine,
+                               PaystubSummaryLine):
     pass
 
-class PaystubDeductionLine(Persistent, cdnpayroll_PaystubDeductionLine):
+class PaystubNetPaySummaryLinePersist(Persistent,
+                                      PaystubNetPaySummaryLine):
     pass
 
-class PaystubSimpleDeductionLine(Persistent,
-                                 cdnpayroll_PaystubSimpleDeductionLine):
+class PaystubTotalIncomeLine(cdnpayroll_PaystubTotalIncomeLine,
+                             PaystubSummaryLine):
     pass
 
-class PaystubCalculatedDeductionLine(Persistent,
-                                     cdnpayroll_PaystubCalculatedDeductionLine):
+class PaystubTotalIncomeLinePersist(Persistent, PaystubTotalIncomeLine):
+    pass
+
+class PaystubIncomeLine(cdnpayroll_PaystubIncomeLine, PaystubLine):
+    pass
+
+class PaystubIncomeLinePersist(Persistent, PaystubIncomeLine):
+    pass
+
+class PaystubWageLine(cdnpayroll_PaystubWageLine, PaystubIncomeLine):
+    pass
+
+class PaystubWageLinePersist(Persistent, PaystubWageLine):
+    pass
+
+class PaystubOvertimeWageLine(cdnpayroll_PaystubOvertimeWageLine,
+                              PaystubWageLine ):
+    pass
+
+class PaystubOvertimeWageLinePersist(Persistent,
+                                     PaystubOvertimeWageLine):
+    pass
+
+class PaystubCalculatedLine(cdnpayroll_PaystubCalculatedLine,
+                            PaystubLine):
+    pass
+
+class PaystubCalculatedLinePersist(Persistent, PaystubCalculatedLine):
+    pass
+
+class PaystubDeductionLine(cdnpayroll_PaystubDeductionLine,
+                           PaystubLine):
+    pass
+
+class PaystubDeductionLinePersist(Persistent, PaystubDeductionLine):
+    pass
+
+class PaystubSimpleDeductionLine(cdnpayroll_PaystubSimpleDeductionLine,
+                                 PaystubDeductionLine):
+    pass
+
+class PaystubSimpleDeductionLinePersist(
+    Persistent,
+    PaystubSimpleDeductionLine):
+    pass
+
+class PaystubCalculatedDeductionLine(
+    cdnpayroll_PaystubCalculatedDeductionLine,
+    PaystubCalculatedLine,
+    PaystubDeductionLine):
+    pass
+
+class PaystubCalculatedDeductionLinePersist(
+    Persistent,
+    PaystubCalculatedDeductionLine):
     pass
 
 class PaystubEmployerContributionLine(
+    cdnpayroll_PaystubEmployerContributionLine,
+    PaystubLine):
+    pass
+
+class PaystubEmployerContributionLinePersist(
     Persistent,
-    cdnpayroll_PaystubEmployerContributionLine):
+    PaystubEmployerContributionLine):
     pass
 
 class PaystubCalculatedEmployerContributionLine(
-    Persistent, 
-    cdnpayroll_PaystubCalculatedEmployerContributionLine):
+    cdnpayroll_PaystubCalculatedEmployerContributionLine,
+    PaystubCalculatedLine, PaystubEmployerContributionLine):
     pass
 
-class PaystubCPPDeductionLine(Persistent, cdnpayroll_PaystubCPPDeductionLine):
+class PaystubCalculatedEmployerContributionLinePersist(
+    Persistent, 
+    PaystubCalculatedEmployerContributionLine):
+    pass
+
+class PaystubCPPDeductionLine(
+    cdnpayroll_PaystubCPPDeductionLine,
+    PaystubCalculatedDeductionLine):
+    pass
+
+class PaystubCPPDeductionLinePersist(Persistent, PaystubCPPDeductionLine):
     pass
 
 class PaystubCPPEmployerContributionLine(
+    cdnpayroll_PaystubCPPEmployerContributionLine,
+    PaystubCalculatedEmployerContributionLine):
+    pass
+
+class PaystubCPPEmployerContributionLinePersist(
     Persistent,
-    cdnpayroll_PaystubCPPEmployerContributionLine):
+    PaystubCPPEmployerContributionLine):
     pass
 
 class PaystubEIDeductionLine(
+    cdnpayroll_PaystubEIDeductionLine,
+    PaystubCalculatedDeductionLine):
+    pass
+
+class PaystubEIDeductionLinePersist(
     Persistent,
-    cdnpayroll_PaystubEIDeductionLine):
+    PaystubEIDeductionLine):
     pass
 
 class PaystubEIEmployerContributionLine(
+    cdnpayroll_PaystubEIEmployerContributionLine,
+    PaystubCalculatedEmployerContributionLine):
+    pass
+
+class PaystubEIEmployerContributionLinePersist(
     Persistent,
-    cdnpayroll_PaystubEIEmployerContributionLine):
+    PaystubEIEmployerContributionLine):
     pass
 
 class PaystubCalculatedIncomeTaxDeductionLine(
-    Persistent,
-    cdnpayroll_PaystubCalculatedIncomeTaxDeductionLine
+    cdnpayroll_PaystubCalculatedIncomeTaxDeductionLine,
+    PaystubDeductionLine
     ):
     pass
-    
+
+class PaystubCalculatedIncomeTaxDeductionLinePersist(
+    Persistent,
+    PaystubCalculatedIncomeTaxDeductionLine
+    ):
+    pass
+
+class PaystubMultipleOfIncomeLine(cdnpayroll_PaystubMultipleOfIncomeLine,
+                                  PaystubCalculatedLine):
+    pass
+
+class PaystubMultipleOfIncomeLinePersist(Persistent,
+                                         PaystubMultipleOfIncomeLine):
+    pass
+
+class PaystubDeductionMultipleOfIncomeLine(
+    cdnpayroll_PaystubDeductionMultipleOfIncomeLine,
+    PaystubMultipleOfIncomeLine,
+    PaystubDeductionLine):
+    pass
+
+class PaystubDeductionMultipleOfIncomeLinePersist(
+    Persistent, PaystubDeductionMultipleOfIncomeLine):
+    pass
+
+class PaystubEmployerContributionMultipleOfIncomeLine(
+    cdnpayroll_PaystubEmployerContributionMultipleOfIncomeLine,
+    PaystubMultipleOfIncomeLine,
+    PaystubEmployerContributionLine):
+    pass
+
+class PaystubEmployerContributionMultipleOfIncomeLinePersist(
+    Persistent,
+    PaystubEmployerContributionMultipleOfIncomeLine):
+    pass
+
 class Employee(Persistent, cdnpayroll_Employee):
     auto_add_lines = [
-        PaystubCPPDeductionLine,
-        PaystubCPPEmployerContributionLine,
-        PaystubEIDeductionLine,
-        PaystubEIEmployerContributionLine,
-        PaystubCalculatedIncomeTaxDeductionLine,
+        PaystubCPPDeductionLinePersist,
+        PaystubCPPEmployerContributionLinePersist,
+        PaystubEIDeductionLinePersist,
+        PaystubEIEmployerContributionLinePersist,
+        PaystubCalculatedIncomeTaxDeductionLinePersist,
         ]
 
     def add_paystub(self, paystub):

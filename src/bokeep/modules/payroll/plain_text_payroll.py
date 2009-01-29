@@ -66,3 +66,9 @@ def calculated_value_of_class(class_name):
 
 def do_nothing(*args):
     pass
+
+def lines_of_class_function(class_find):
+    def new_func(paystub):
+        return paystub.get_paystub_lines_of_class(class_find)
+    return new_func
+
