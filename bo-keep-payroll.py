@@ -28,6 +28,8 @@ def add_new_payroll(book, payroll_module):
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config
     
+    # if a payroll has already been run with the same date and serial number
+    # ask to remove it
     if payroll_module.has_payday(paydate, payday_serial):
         answer = raw_input("the payroll dated %s with serial %s has already "
                            "been run. Do you want to remove it and "
@@ -70,21 +72,40 @@ def add_new_payroll(book, payroll_module):
             PaystubCalculatedLine):
             paystub_line.freeze_value()
     
-    for i in xrange(2):
-        print_paystubs(payday)
+    print_paystubs(payday)
         
     def generate_each_paystub_accounting_line(paystub, account_line_config):
+        """Given a paystub and list of accounting specifications
+        (each of which is a three element tuple, consiting of an
+         account in accounting an program,
+         a line description for accounting program,
+         and a function that generates sub subset of paystub lines in
+         the paystub),
+         this function yields a tuple for containing each PaystubLine
+         with account and line description that the configuration specifies
+        """
         for single_account_line_config in account_line_config:
             for paystub_line in single_account_line_config[2](paystub):
                 yield (single_account_line_config[0],
                        single_account_line_config[1],
                        paystub_line )
 
-    payday_accounting_lines = [ [[], []],
-                                [{}, {}],
-                                [[], []] ]
+    payday_accounting_lines = [
+        # per employee lines, main payroll transaction
+        # debits and credits
+        [[], []],
+        
+        [{}, {}],
+        [[], []] ]
 
+    # for each paystub, build up financial accounting transactions for
+    # all its paystub lines according to the specification in
+    # paystub_accounting_line_config[0][i]
     for paystub in payday.paystubs:
+        # generate the per employee lines that will appear in the main payroll
+        # transaction
+        #
+        # do both the debits (0) and the credits (1)
         for i in xrange(2):
             payday_accounting_lines[0][i].extend(
                 generate_each_paystub_accounting_line(
@@ -92,6 +113,11 @@ def add_new_payroll(book, payroll_module):
                     paystub_accounting_line_config[0][i] )
                 )
         
+        
+        # generate the lines that are to be accumulated together across
+        # multiple employee paystubs
+        #
+        # debits (0) and credits (1)
         for i in xrange(2):
             for line_spec in paystub_accounting_line_config[1][i]:
                 line_spec_key = (line_spec[0], line_spec[1], line_spec[2])
