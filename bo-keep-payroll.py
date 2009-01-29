@@ -15,13 +15,16 @@ from bokeep.util import ends_with_commit
 
 PAYROLL_MODULE = 'bokeep.modules.payroll'
 
-def print_paystubs(payday):
+def print_paystub(paystub):
     from payroll_configuration import print_paystub_line_config
+    print paystub.employee.name
+    for (line_name, function) in print_paystub_line_config:
+        print line_name, '%.2f' % function(paystub)
+    print ''
+
+def print_paystubs(payday):
     for paystub in payday.paystubs:
-        print paystub.employee.name
-        for (line_name, function) in print_paystub_line_config:
-            print line_name, '%.2f' % function(paystub)
-        print ''
+        print_paystub(paystub)
 
 def add_new_payroll(book, payroll_module):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start
@@ -56,9 +59,9 @@ def add_new_payroll(book, payroll_module):
         else:                                        
             employee = payroll_module.get_employee(employee_name)
         paystub = employee.create_and_add_new_paystub(payday)
-        for key, value in emp.iteritems():
-            function = paystub_line_config[key]
-            function( employee, emp, paystub, value )
+        for key, function in paystub_line_config:
+            if key in emp:
+                function( employee, emp, paystub, emp[key] )
     
         assert( 0==len(list(
                     paystub.get_paystub_lines_of_class(
@@ -167,6 +170,8 @@ def payroll_main(bookset):
     payroll_module = book.get_module(PAYROLL_MODULE)
 
     add_new_payroll(book, payroll_module)
+
+
 
 def bokeep_main():
     bookset = BoKeepBookSet( get_database_cfg_file() )
