@@ -93,16 +93,21 @@ class Payday(BookTransaction, cdnpayroll_Payday):
                              accounts, comment
         print ''
 
-        #print 'Per employee transaction lines'
-        #for (debit_credit_str, debit_credit_pos, negate) in \
-        #        (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
-        #    print debit_credit_str
-        #    for (accounts, comment, paystub_line) in \
-        #            self.payday_accounting_lines[1][debit_credit_pos]:
-        #        print negate * decimal_from_float(
-        #            paystub_line.get_value() ), \
-        #            accounts, comment
-        #print ' '
+        print 'Per employee transaction lines'
+        chequenum = self.payday_accounting_lines[2]
+        for trans in self.payday_accounting_lines[3:]:
+            print trans[2] # employee name
+            print 'chequenum', chequenum
+            for (debit_credit_str, debit_credit_pos, negate) in \
+                    (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
+                print debit_credit_str
+                for (accounts, comment, paystub_line) in \
+                        trans[debit_credit_pos]:
+                    print negate * decimal_from_float(
+                    paystub_line.get_value() ), \
+                    accounts, comment
+            print ' '
+            chequenum = chequenum+1
 
 class Paystub(Persistent, cdnpayroll_Paystub):
     def add_paystub_line(self, paystub_line):

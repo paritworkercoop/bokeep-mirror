@@ -24,7 +24,7 @@ def print_paystubs(payday):
         print ''
 
 def add_new_payroll(book, payroll_module):
-    from payday_data import paydate, payday_serial, emp_list
+    from payday_data import paydate, payday_serial, emp_list, chequenum_start
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config
     
@@ -92,11 +92,16 @@ def add_new_payroll(book, payroll_module):
 
     payday_accounting_lines = [
         # per employee lines, main payroll transaction
-        # debits and credits
+        # debits (0) and credits (1)
         [[], []],
-        
+
+        # lines to be accumulated together across
+        # multiple employee paystubs
+        # debits (0) and credits (1)
         [{}, {}],
-        [[], []] ]
+
+        chequenum_start
+        ]
 
     # for each paystub, build up financial accounting transactions for
     # all its paystub lines according to the specification in
@@ -128,18 +133,20 @@ def add_new_payroll(book, payroll_module):
                     for paystub_line in line_spec[3](paystub)
                     )
 
-        #new_per_employee_trans = [[], []]
-        #for i in xrange(2):
-        #    new_per_employee_trans[i].extend( 
-        #        generate_each_paystub_accounting_line(
-        #            paystub,
-        #            payday_accounting_lines[2][i] ) )
+        # generate any per employee transactions
+        new_per_employee_trans = [[], []]
+        # do both the debits (0) and the credits (1)
+        for i in xrange(2):
+            new_per_employee_trans[i].extend( 
+                generate_each_paystub_accounting_line(
+                    paystub,
+                    paystub_accounting_line_config[2][i] ) )
+        new_per_employee_trans.append( paystub.employee.name )
 
-        #for i in xrange(2):
-        #    if len(new_per_employee_trans[0]) > 0:
-        #               if len(new_per_employee_trans[0][i]) > 0:
-        #                   payday_accounting_lines[2][i].append(
-         #                      new_per_employee_trans )
+        if len(new_per_employee_trans[0]) > 0:
+            if len(new_per_employee_trans[0][0]) > 0:
+                payday_accounting_lines.append(
+                    new_per_employee_trans )
         
 
     payday.specify_accounting_lines(payday_accounting_lines)
