@@ -4,9 +4,9 @@ from bokeep.modules.payroll.payroll import \
     PaystubEmployerContributionLine, PaystubCalculatedIncomeTaxDeductionLine, \
     PaystubCalculatedEmployerContributionLine, \
     PaystubEIEmployerContributionLine, \
-    PaystubIncomeLinePersist, \
+    PaystubIncomeLine, \
     PaystubNetPaySummaryLine, \
-    PaystubDeductionMultipleOfIncomeLinePersist
+    PaystubDeductionMultipleOfIncomeLine
 
 from bokeep.modules.payroll.plain_text_payroll import \
     create_paystub_line, \
@@ -22,7 +22,7 @@ PARIT_EQUITY_CONSTANT=0.03
 PARIT_EQUITY_LIMIT=900
 
 #def add_parit_equity_line(employee, employee_info_dict, paystub, value):
-#    equity_line = PaystubDeductionMultipleOfIncomeLinePersist(paystub)
+#    equity_line = PaystubDeductionMultipleOfIncomeLine(paystub)
 #    equity_line.constant = PARIT_EQUITY_CONSTANT
 #    old_equity = sum( ( paystub_line.get_value()
 #                        if hasattr(paystub_line, 'parit_equity_deduction')
@@ -38,7 +38,7 @@ PARIT_EQUITY_LIMIT=900
  #       paystub.add_paystub_line(equity_line)
 
 paystub_line_config = (
-    ('income', create_paystub_line(PaystubIncomeLinePersist)),
+    ('income', create_paystub_line(PaystubIncomeLine)),
 #    ('equity', add_parit_equity_line),
 )
 

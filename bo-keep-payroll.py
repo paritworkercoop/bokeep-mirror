@@ -10,7 +10,7 @@ import transaction
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
 from bokeep.modules.payroll.payroll import Payday, Employee, \
-    PaystubCalculatedLine, PaystubNetPaySummaryLinePersist
+    PaystubCalculatedLine, PaystubNetPaySummaryLine
 from bokeep.util import ends_with_commit
 
 PAYROLL_MODULE = 'bokeep.modules.payroll'
@@ -65,8 +65,8 @@ def add_new_payroll(book, payroll_module):
     
         assert( 0==len(list(
                     paystub.get_paystub_lines_of_class(
-                        PaystubNetPaySummaryLinePersist))))
-        paystub.add_paystub_line( PaystubNetPaySummaryLinePersist(paystub) )
+                        PaystubNetPaySummaryLine))))
+        paystub.add_paystub_line( PaystubNetPaySummaryLine(paystub) )
 
     # freeze all calculated paystub lines with current values to avoid
     # unesessary recalculation
