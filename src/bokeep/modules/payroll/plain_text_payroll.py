@@ -64,6 +64,13 @@ def calculated_value_of_class(class_name):
                 class_name) )
     return return_func
 
+def value_component_at_index(class_name, index):
+    def return_func(paystub):
+        return sum ( line.get_value_components()[index]
+                     for line in paystub.get_paystub_lines_of_class(
+                class_name) )
+    return return_func
+
 def do_nothing(*args):
     pass
 

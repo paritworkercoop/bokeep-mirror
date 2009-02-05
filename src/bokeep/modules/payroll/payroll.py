@@ -1,6 +1,8 @@
 # python
 from decimal import Decimal
 
+import sys
+
 # cndpayroll
 from cdnpayroll.payday import Payday as cdnpayroll_Payday
 from cdnpayroll.paystub import Paystub
@@ -44,42 +46,42 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         self.payday_accounting_lines = payday_accounting_lines
         self._p_changed = True
 
-    def print_accounting_lines(self):
-        print 'Per employee lines, payroll transaction'
+    def print_accounting_lines_to_file(self, writefunc):
+        writefunc('Per employee lines, payroll transaction' + '\n')
         for (debit_credit_str, debit_credit_pos, negate) in \
                 (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
-            print debit_credit_str
+            writefunc(debit_credit_str + '\n')
             for (accounts, comment, paystub_line) in \
                     self.payday_accounting_lines[0][debit_credit_pos]:
-                print negate * decimal_from_float(paystub_line.get_value()), \
-                    accounts, comment
-        print ''
-
-        print 'Cummulative lines, payroll transaction'
+                outstr = str(negate * decimal_from_float(paystub_line.get_value())) + str(accounts) + str(comment)
+        writefunc('\n')
+        writefunc('Cummulative lines, payroll transaction' + '\n')
         for (debit_credit_str, debit_credit_pos, negate) in \
                 (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
-            print debit_credit_str
+            writefunc(debit_credit_str + '\n')
             for (id, accounts, comment), line_list in \
                     self.payday_accounting_lines[1][debit_credit_pos].\
                     iteritems():
-                print sum( ( decimal_from_float(line.get_value())
+                writefunc(str((sum( ( decimal_from_float(line.get_value())
                              for line in line_list), Decimal(0)),\
-                             accounts, comment
-        print ''
+                             accounts, comment)) + '\n')
+        writefunc('\n')
 
-        print 'Per employee transaction lines'
+        writefunc('Per employee transaction lines' + '\n')
         chequenum = self.payday_accounting_lines[2]
         for trans in self.payday_accounting_lines[3:]:
-            print trans[2] # employee name
-            print 'chequenum', chequenum
+            writefunc(str(trans[2]) + '\n') # employee name
+            writefunc( 'chequenum ' + str(chequenum) + '\n')
             for (debit_credit_str, debit_credit_pos, negate) in \
                     (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
-                print debit_credit_str
+                writefunc(debit_credit_str + '\n')
                 for (accounts, comment, paystub_line) in \
                         trans[debit_credit_pos]:
-                    print negate * decimal_from_float(
-                    paystub_line.get_value() ), \
-                    accounts, comment
-            print ' '
+                    writefunc(str(negate * decimal_from_float(
+                    paystub_line.get_value() )) + ' ' +\
+                    str(accounts) + ' ' + comment + '\n')
+            writefunc(' \n')
             chequenum = chequenum+1
 
+    def print_accounting_lines(self):
+        self.print_accounting_lines_to_file(sys.stdout.write)

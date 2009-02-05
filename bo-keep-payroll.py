@@ -3,6 +3,8 @@
 # Python library
 from sys import argv
 
+import os
+
 # ZODB
 import transaction
 
@@ -17,10 +19,12 @@ PAYROLL_MODULE = 'bokeep.modules.payroll'
 
 def print_paystub(paystub):
     from payroll_configuration import print_paystub_line_config
-    print paystub.employee.name
+    paystub_file = open('PaystubPrint.txt', 'a')
+    paystub_file.write(paystub.employee.name + '\n')
     for (line_name, function) in print_paystub_line_config:
-        print line_name, '%.2f' % function(paystub)
-    print ''
+	outstr = line_name + ': ' + str('%.2f' % function(paystub))
+        paystub_file.write(outstr + '\n')
+    paystub_file.write(chr(0x0c) + '\n')
 
 def print_paystubs(payday):
     for paystub in payday.paystubs:
@@ -153,9 +157,14 @@ def add_new_payroll(book, payroll_module):
         
 
     payday.specify_accounting_lines(payday_accounting_lines)
-    payday.print_accounting_lines()
+
+    f = open('SummaryInfo.txt', 'a')
+    payday.print_accounting_lines_to_file(f.write)
 
     book.get_backend_module().mark_transaction_dirty(payday_trans_id)
+
+    os.execl('/usr/bin/oowriter', '0', 'PaystubPrint.txt')
+    
 
 @ends_with_commit
 def payroll_main(bookset):
