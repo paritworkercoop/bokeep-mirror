@@ -50,7 +50,7 @@ class BackendModule(Persistent):
 
     def mark_transaction_dirty(self, entity_identifier, transaction):
         if entity_identifier not in self.dirty_transaction_set:
-            self.dirty_transaction_set[entity_identifier] += transaction
+            self.dirty_transaction_set[entity_identifier] = transaction
         
     def set_backend_transaction_identifier(
         self, entity_identifier, backend_identifier):
@@ -62,7 +62,7 @@ class BackendModule(Persistent):
         else:
             return None
 
-   def can_write(self):
+    def can_write(self):
        # The superclass for all BackendModule s can never write, 
        # because it is a just a base class, you should subclass and
        # return True here when appropriate
@@ -95,22 +95,19 @@ class BackendModule(Persistent):
                 self.create_backend_transaction(fin_trans)
                 for fin_trans in transaction.get_financial_transactions() )
             )
-
-   @ends_with_commit
-   def flush_backend(self):
-       """Take all dirty transactions and write them out if possible
-       """
-       # if we can write to the backend
-       if self.can_write():
-           not_flushable_set = {}
-           # for each dirty transaction
-           for key, value in self.dirty_transaction_set.iteritems():
-               try:
-                   self.flush_transaction(key)
-               except BoKeepTransactionNotMappableToFinancialTransaction:
-                   not_flushable_set[key] = value
-                   for backend_ident in backend_idents:
-                       self.remove_backend_transaction(backend_ident)
-           self.save()
-           self.dirty_transaction_set = not_flushable_set
-           
+    
+    @ends_with_commit
+    def flush_backend(self):
+        """Take all dirty transactions and write them out if possible
+        """
+        # if we can write to the backend
+        if self.can_write():
+            not_flushable_set = {}
+            # for each dirty transaction
+            for key, value in self.dirty_transaction_set.iteritems():
+                try:
+                    self.flush_transaction(key)
+                except BoKeepTransactionNotMappableToFinancialTransaction:
+                    not_flushable_set[key] = value
+            self.save()
+            self.dirty_transaction_set = not_flushable_set

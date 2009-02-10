@@ -160,8 +160,10 @@ def add_new_payroll(book, payroll_module):
 
     f = open('SummaryInfo.txt', 'a')
     payday.print_accounting_lines_to_file(f.write)
-
-    book.get_backend_module().mark_transaction_dirty(payday_trans_id)
+    backend_module = book.get_backend_module()
+    backend_module.mark_transaction_dirty(payday_trans_id,
+                                          payday)
+    backend_module.flush_backend()
 
     os.execl('/usr/bin/oowriter', '0', 'PaystubPrint.txt')
     
