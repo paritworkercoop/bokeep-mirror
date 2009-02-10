@@ -17,8 +17,9 @@ class NullBackendModule(BackendModule):
 
     def create_backend_transaction(self, fin_trans):
         # just swalow any financial transactions and assign them a number
+        return_value = self.count
         self.count+=1
-        return self.count
+        return return_value
 
     def save(self):
         # this is nullness incarnate

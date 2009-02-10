@@ -48,33 +48,35 @@ class SerialFileModule(BackendModule):
             if reverse:
                 amount = -amount
             return "%s %s" % (amount,
-                                attribute_or_blank(line, 'comment') )
+                              attribute_or_blank(line, 'comment') )
 
         try:
-            self.write_to_file( """%(description)s
+            self.write_to_file( """transaction with identifier %(trans_id)s
+%(description)s
 chequenum %(chequenum)s
 debits
 %(debit_list)s
 credits
 %(credit_list)s
 
-""" % \
-                               { 'description': description,
-                                 'chequenum': chequenum,
-                                 'debit_list' : '\n'.join(
+""" % { 'trans_id': self.count,
+        'description': description,
+        'chequenum': chequenum,
+        'debit_list' : \
+            '\n'.join(
                         str_repr_of_line(line)
                         for line in debits
                         ),
-                                 'credit_list': '\n'.join(
-                        str_repr_of_line(line, True)
-                        for line in credits
-                        ),
-                                   } )
+        'credit_list': \
+            "\n".join( str_repr_of_line(line, True)
+                       for line in credits )
+        } )
         except IOError:
             raise BoKeepTransactionNotMappableToFinancialTransaction()
                 
+        return_value = self.count
         self.count = self.count + 1
-        return self.count
+        return return_value
 
     def save(self):
         # nothing to do here, we always save after each write...

@@ -83,8 +83,11 @@ class BackendModule(Persistent):
         raise Exception("backend modules must implement save()")
 
     def flush_transaction(self, entity_identifier):
-        if None != self.get_backend_transaction_identifier(entity_identifier):
-            self.remove_backend_transaction(entity_identifier)
+        backend_idents = \
+            self.get_backend_transaction_identifier(entity_identifier)
+        if None != backend_idents:
+            for backend_ident in backend_idents:
+                self.remove_backend_transaction(backend_ident)
 
         # get financial transactions from the specified bokeep transaction
         # put each of these in the backend, and store a mapping of the
@@ -98,7 +101,6 @@ class BackendModule(Persistent):
             )
         self._p_changed = True
     
-    @ends_with_commit
     def flush_backend(self):
         """Take all dirty transactions and write them out if possible
         """
