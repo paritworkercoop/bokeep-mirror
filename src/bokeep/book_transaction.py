@@ -4,9 +4,23 @@ from threading import Thread, Condition
 from util import \
     ChangeMessageRecievingThread, EntityChangeManager, entitymod
 
+class FinancialTransactionLine(object):
+    def __init__(self, amount):
+        self.amount = amount
+
+class FinancialTransaction(object):
+    def __init__(self, lines):
+        self.lines = lines
+
+class BoKeepTransactionNotMappableToFinancialTransaction(Exception):
+    pass
+
 class Transaction(Persistent):
     def __init__(self):
         pass
+
+    def get_financial_transactions(self):
+        raise BoKeepTransactionNotMappableToFinancialTransaction()
 
 class TransactionDeltaManager(EntityChangeManager):
     def __init__(self, running_thread, entity_identifier):

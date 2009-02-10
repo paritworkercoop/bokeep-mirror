@@ -12,6 +12,16 @@ def ends_with_commit(dec_function):
         return return_value
     return ret_func
 
+def none_args_become_dict(function):
+    def new_function(*args, **kargs):
+        new_args = []
+        for arg in args:
+            if arg == None:
+                arg = {}
+            new_args.append(arg)
+        return function( *new_args, **kargs )
+    return new_function
+
 
 # Message handling thread stuff
 
