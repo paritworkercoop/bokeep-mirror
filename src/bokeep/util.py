@@ -23,6 +23,12 @@ def none_args_become_dict(function):
     return new_function
 
 
+def attribute_or_blank(obj, attr):
+    if hasattr(obj, attr):
+        return getattr(obj, attr)
+    else:
+        return ""
+
 # Message handling thread stuff
 
 class Message(object):

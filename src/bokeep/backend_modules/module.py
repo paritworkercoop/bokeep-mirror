@@ -55,10 +55,11 @@ class BackendModule(Persistent):
     def set_backend_transaction_identifier(
         self, entity_identifier, backend_identifier):
         self.front_end_to_back_id[entity_identifier] = backend_identifier
+        self._p_changed = True
 
     def get_backend_transaction_identifier(self, entity_identifier):
         if entity_identifier in self.front_end_to_back_id:
-            self.front_end_to_back_id[entity_identifier] = backend_identifier
+            return self.front_end_to_back_id[entity_identifier]
         else:
             return None
 
@@ -95,6 +96,7 @@ class BackendModule(Persistent):
                 self.create_backend_transaction(fin_trans)
                 for fin_trans in transaction.get_financial_transactions() )
             )
+        self._p_changed = True
     
     @ends_with_commit
     def flush_backend(self):

@@ -24,7 +24,10 @@ from cdnpayroll.income_tax import \
     PaystubCalculatedIncomeTaxDeductionLine
 
 # bo-keep
-from bokeep.book_transaction import Transaction as BookTransaction
+from bokeep.book_transaction import \
+    Transaction as BookTransaction, \
+    BoKeepTransactionNotMappableToFinancialTransaction, \
+    FinancialTransactionLine, FinancialTransaction, make_fin_line
 
 # subclass and override functions from cdnpayroll classes to be persistable
 # via zopedb, and to use each other instead of original cdnpayroll classes
@@ -46,42 +49,74 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         self.payday_accounting_lines = payday_accounting_lines
         self._p_changed = True
 
-    def print_accounting_lines_to_file(self, writefunc):
-        writefunc('Per employee lines, payroll transaction' + '\n')
-        for (debit_credit_str, debit_credit_pos, negate) in \
-                (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
-            writefunc(debit_credit_str + '\n')
-            for (accounts, comment, paystub_line) in \
-                    self.payday_accounting_lines[0][debit_credit_pos]:
-                outstr = str(negate * decimal_from_float(paystub_line.get_value())) + str(accounts) + str(comment)
-        writefunc('\n')
-        writefunc('Cummulative lines, payroll transaction' + '\n')
-        for (debit_credit_str, debit_credit_pos, negate) in \
-                (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
-            writefunc(debit_credit_str + '\n')
-            for (id, accounts, comment), line_list in \
-                    self.payday_accounting_lines[1][debit_credit_pos].\
-                    iteritems():
-                writefunc(str((sum( ( decimal_from_float(line.get_value())
-                             for line in line_list), Decimal(0)),\
-                             accounts, comment)) + '\n')
-        writefunc('\n')
 
-        writefunc('Per employee transaction lines' + '\n')
+    def get_financial_transactions(self):
+        """Generate one big transaction for the payroll, and a transaction
+        for each employee.
+
+        This is based on the specification attribute, payday_accounting_lines
+        If that attribute isn't set, this function is unable to generate a
+        transaction
+        """
+        if not hasattr(self, 'payday_accounting_lines'):
+            raise BoKeepTransactionNotMappableToFinancialTransaction()
+        
+        # Per employee lines, payroll transaction 
+        fin_lines = []
+        for (debit_credit_pos, negate) in \
+                ((0, Decimal(1)), (1, Decimal(-1))): # debits then credits
+            fin_lines.extend( 
+                make_fin_line(
+                    negate * decimal_from_float(paystub_line.get_value()),
+                    accounts, comment)
+                for (accounts, comment, paystub_line) in \
+                self.payday_accounting_lines[0][debit_credit_pos]
+                )
+
+        # Cummulative lines, payroll transaction
+        for (debit_credit_pos, negate) in \
+                ( (0, Decimal(1)), (1, Decimal(-1)) ): # debits then credits
+            fin_lines.extend(
+                make_fin_line(
+                    negate * 
+                    sum( ( decimal_from_float(line.get_value())
+                           for line in line_list),
+                         Decimal(0) ),
+                    accounts,
+                    comment
+                )
+                
+                for (id, accounts, comment), line_list in \
+                    self.payday_accounting_lines[1][debit_credit_pos].\
+                    iteritems()
+                )
+        
+        fin_trans = FinancialTransaction(fin_lines)
+        fin_trans.trans_date = self.paydate
+        fin_trans.description = "payroll"
+        yield fin_trans
+
+        # Per employee transactions
         chequenum = self.payday_accounting_lines[2]
         for trans in self.payday_accounting_lines[3:]:
-            writefunc(str(trans[2]) + '\n') # employee name
-            writefunc( 'chequenum ' + str(chequenum) + '\n')
-            for (debit_credit_str, debit_credit_pos, negate) in \
-                    (('debits', 0, Decimal(1)), ('credits', 1, Decimal(1))):
-                writefunc(debit_credit_str + '\n')
-                for (accounts, comment, paystub_line) in \
-                        trans[debit_credit_pos]:
-                    writefunc(str(negate * decimal_from_float(
-                    paystub_line.get_value() )) + ' ' +\
-                    str(accounts) + ' ' + comment + '\n')
-            writefunc(' \n')
+            fin_lines = []
+            for (debit_credit_pos, negate) in \
+                    ((0, Decimal(1)), (1, Decimal(-1))): # debits then credits
+                fin_lines.extend( 
+                    make_fin_line(
+                        negate * decimal_from_float(
+                            paystub_line.get_value() ),
+                        accounts,
+                        comment )                        
+                    for (accounts, comment, paystub_line) in \
+                        trans[debit_credit_pos]
+                    )
+            fin_trans = FinancialTransaction(fin_lines)
+            fin_trans.trans_date = self.paydate
+            fin_trans.description = trans[2]
+            fin_trans.chequenum = chequenum
             chequenum = chequenum+1
+            yield fin_trans
 
     def print_accounting_lines(self):
         self.print_accounting_lines_to_file(sys.stdout.write)

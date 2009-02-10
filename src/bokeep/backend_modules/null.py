@@ -1,6 +1,10 @@
 from module import BackendModule
 
 class NullBackendModule(BackendModule):
+    def __init__(self):
+        BackendModule.__init__(self)
+        self.count = 0
+
     def can_write(self):
         # The NullBackend can always claim to be able to write, because
         # it never needs to

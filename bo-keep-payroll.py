@@ -155,11 +155,8 @@ def add_new_payroll(book, payroll_module):
                 payday_accounting_lines.append(
                     new_per_employee_trans )
         
-
+    
     payday.specify_accounting_lines(payday_accounting_lines)
-
-    f = open('SummaryInfo.txt', 'a')
-    payday.print_accounting_lines_to_file(f.write)
     backend_module = book.get_backend_module()
     backend_module.mark_transaction_dirty(payday_trans_id,
                                           payday)
