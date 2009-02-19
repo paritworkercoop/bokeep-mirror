@@ -165,9 +165,11 @@ def add_new_payroll(book, payroll_module):
     os.execl('/usr/bin/oowriter', '0', 'PaystubPrint.txt')
     
 
-@ends_with_commit
-def payroll_main(bookset):
-    book = bookset.get_book(argv[1])
+def payroll_runtime(bookname, bookset=None):
+    if (bookset == None):
+        bookset = BoKeepBookSet( get_database_cfg_file() )
+
+    book = bookset.get_book(bookname)
 
     if not book.has_module(PAYROLL_MODULE):
         book.add_module(PAYROLL_MODULE)
@@ -178,6 +180,11 @@ def payroll_main(bookset):
     payroll_module = book.get_module(PAYROLL_MODULE)
 
     add_new_payroll(book, payroll_module)
+    
+
+@ends_with_commit
+def payroll_main(bookset):
+    payroll_runtime(argv[1],bookset)
 
 
 
