@@ -2,7 +2,7 @@
 from cdnpayroll.paystub_line import sum_paystub_lines
 
 # Bo-Keep imports
-from bokeep.modules.payroll.payroll import PaystubWageLine
+from bokeep.modules.payroll.payroll import PaystubWageLine, PaystubVacpayLine
 
 def create_paystub_line(paystub_line_class):
     def return_function(employee, employee_info_dict, paystub, value):
@@ -14,6 +14,12 @@ def create_paystub_wage_line(employee, employee_info_dict, paystub, value):
     paystub.add_paystub_line(PaystubWageLine(paystub,
                                              employee_info_dict['hours'],
                                              employee_info_dict['rate'] ) )
+
+def create_paystub_vacpay_line(employee, employee_info_dict, paystub, value):
+    paystub.add_paystub_line(PaystubVacpayLine(paystub,
+                                               employee_info_dict['hours'],
+                                               employee_info_dict['rate'],
+                                               employee_info_dict['vacation_percent_rate'] ) )
 
 def negate_return_value(dec_func):
     """Input: A function that returns a GncNumeric value

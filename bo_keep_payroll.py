@@ -30,7 +30,7 @@ def print_paystubs(payday):
     for paystub in payday.paystubs:
         print_paystub(paystub)
 
-def add_new_payroll(book, payroll_module):
+def add_new_payroll(book, payroll_module, display_paystubs):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config
@@ -162,10 +162,11 @@ def add_new_payroll(book, payroll_module):
                                           payday)
     backend_module.flush_backend()
 
-    os.execl('/usr/bin/oowriter', '0', 'PaystubPrint.txt')
+    if (display_paystubs):
+        os.execl('/usr/bin/oowriter', '0', 'PaystubPrint.txt')
     
 
-def payroll_runtime(bookname, bookset=None):
+def payroll_runtime(bookname, display_paystubs=False, bookset=None):
     if (bookset == None):
         bookset = BoKeepBookSet( get_database_cfg_file() )
 
@@ -179,12 +180,12 @@ def payroll_runtime(bookname, bookset=None):
 
     payroll_module = book.get_module(PAYROLL_MODULE)
 
-    add_new_payroll(book, payroll_module)
+    add_new_payroll(book, payroll_module, display_paystubs)
     
 
 @ends_with_commit
 def payroll_main(bookset):
-    payroll_runtime(argv[1],bookset)
+    payroll_runtime(argv[1], True, bookset)
 
 
 
