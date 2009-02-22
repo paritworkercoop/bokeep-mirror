@@ -27,10 +27,13 @@ def print_paystub(paystub):
     paystub_file.write(chr(0x0c) + '\n')
 
 def print_paystubs(payday):
+    #nuke paystub data from any prior runs
+    newfile = open('PaystubPrint.txt', 'w')
+    newfile.close()
     for paystub in payday.paystubs:
         print_paystub(paystub)
 
-def add_new_payroll(book, payroll_module, display_paystubs):
+def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=True):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config
@@ -38,11 +41,13 @@ def add_new_payroll(book, payroll_module, display_paystubs):
     # if a payroll has already been run with the same date and serial number
     # ask to remove it
     if payroll_module.has_payday(paydate, payday_serial):
-        answer = raw_input("the payroll dated %s with serial %s has already "
-                           "been run. Do you want to remove it and "
-                           "reprocess? > " % (
-                paydate, payday_serial))
-        answer = answer.lower()
+        answer = 'yes'
+        if ask_user_reprocess:
+            answer = raw_input("the payroll dated %s with serial %s has already "
+                               "been run. Do you want to remove it and "
+                               "reprocess? > " % (
+                    paydate, payday_serial))
+            answer = answer.lower()
         if answer == "yes" or answer == "y":
             (payday_trans_id, payday) = payroll_module.get_payday(
                 paydate, payday_serial)
@@ -94,7 +99,7 @@ def add_new_payroll(book, payroll_module, display_paystubs):
         for single_account_line_config in account_line_config:
             for paystub_line in single_account_line_config[2](paystub):
                 yield (single_account_line_config[0],
-                       single_account_line_config[1],
+                      single_account_line_config[1],
                        paystub_line )
 
     payday_accounting_lines = [
@@ -166,7 +171,7 @@ def add_new_payroll(book, payroll_module, display_paystubs):
         os.execl('/usr/bin/oowriter', '0', 'PaystubPrint.txt')
     
 
-def payroll_runtime(bookname, display_paystubs=False, bookset=None):
+def payroll_runtime(bookname, ask_user_reprocess=True, display_paystubs=False, bookset=None):
     if (bookset == None):
         bookset = BoKeepBookSet( get_database_cfg_file() )
 
@@ -180,12 +185,16 @@ def payroll_runtime(bookname, display_paystubs=False, bookset=None):
 
     payroll_module = book.get_module(PAYROLL_MODULE)
 
-    add_new_payroll(book, payroll_module, display_paystubs)
+    add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess)
+
+    bookset.close()
+
+
     
 
 @ends_with_commit
 def payroll_main(bookset):
-    payroll_runtime(argv[1], True, bookset)
+    payroll_runtime(argv[1], True, True, bookset)
 
 
 

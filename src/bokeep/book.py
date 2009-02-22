@@ -19,6 +19,11 @@ class BoKeepBookSet(object):
 
     def close_primary_connection(self):
         self.dbcon.close()
+   
+    def close(self):
+        #flush out whatever's pending
+        transaction.get().commit()
+        self.zodb.close()
 
     def iterbooks(self):
         return self.dbroot.iteritems()
