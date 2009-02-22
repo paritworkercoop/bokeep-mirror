@@ -4,6 +4,7 @@
 from sys import argv
 
 import os
+from os import P_NOWAIT
 
 # ZODB
 import transaction
@@ -168,7 +169,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=T
     backend_module.flush_backend()
 
     if (display_paystubs):
-        os.execl('/usr/bin/oowriter', '0', 'PaystubPrint.txt')
+        print 'spawning oowriter'
+        os.spawnv(P_NOWAIT, '/usr/bin/oowriter', ['0', 'PaystubPrint.txt'])
     
 
 def payroll_init(bookname, bookset=None):
