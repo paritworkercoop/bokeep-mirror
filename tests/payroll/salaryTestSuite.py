@@ -6,7 +6,7 @@ import filecmp
 
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bo_keep_payroll import payroll_runtime
+from bo_keep_payroll import payroll_runtime, payroll_has_payday_serial
 from bo_keep_module_control import handle_backend_command
 
 SALARY_TEST_BOOKNAME = 'paytest'
@@ -37,11 +37,16 @@ class salaryTestCase(unittest.TestCase):
         bookset.close()
 
     def testSinglerun(self):
-        payroll_runtime(SALARY_TEST_BOOKNAME, False)
+        from payday_data import paydate, payday_serial
+
+        payroll_runtime(SALARY_TEST_BOOKNAME, False)        
         assert(filecmp.cmp("PaystubPrint.txt", "./salary_testing/PaystubPrint1.txt"))       
 
+        #we should also have an entry for this paydate now.
+        assert(payroll_has_payday_serial(SALARY_TEST_BOOKNAME, paydate, payday_serial))
+
     def testDoublerun(self):
-        payroll_runtime(SALARY_TEST_BOOKNAME, False)
+        payroll_runtime(SALARY_TEST_BOOKNAME, False)        
         payroll_runtime(SALARY_TEST_BOOKNAME, False)
 	assert(filecmp.cmp("PaystubPrint.txt", "./salary_testing/PaystubPrint1.txt"))
 
