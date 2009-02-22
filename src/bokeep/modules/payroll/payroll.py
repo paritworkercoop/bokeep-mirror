@@ -9,7 +9,6 @@ from cdnpayroll.paystub import Paystub
 from cdnpayroll.employee import Employee
 from cdnpayroll.paystub_line import \
     PaystubLine, PaystubIncomeLine, PaystubWageLine, PaystubOvertimeWageLine, \
-    PaystubVacpayLine, \
     PaystubCalculatedLine, PaystubDeductionLine, PaystubSimpleDeductionLine, \
     PaystubCalculatedDeductionLine, PaystubEmployerContributionLine, \
     PaystubCalculatedEmployerContributionLine, \
