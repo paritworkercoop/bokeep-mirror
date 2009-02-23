@@ -9,7 +9,7 @@ from os import P_NOWAIT
 # Hello, I'm ZODB
 import transaction
 
-# Bo-Keep
+# Bo-Keep, keeper of the Bo
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
 from bokeep.modules.payroll.payroll import Payday, Employee, \
