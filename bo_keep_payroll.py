@@ -6,7 +6,7 @@ from sys import argv
 import os
 from os import P_NOWAIT
 
-# ZODB
+# Hello, I'm ZODB
 import transaction
 
 # Bo-Keep
