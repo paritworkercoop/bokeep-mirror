@@ -115,3 +115,7 @@ class BackendModule(Persistent):
                     not_flushable_set[key] = value
             self.save()
             self.dirty_transaction_set = not_flushable_set
+
+    @ends_with_commit
+    def setattr(self, attr, value):
+        setattr(self, attr, value)
