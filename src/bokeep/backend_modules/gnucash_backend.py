@@ -1,9 +1,6 @@
 # python imports
 from decimal import Decimal 
 
-#gnucash imports
-from gnucash import Session, GncNumeric, Split, Transaction
-
 # bokeep imports
 from module import BackendModule
 from bokeep.book_transaction import \
@@ -13,6 +10,9 @@ from bokeep.util import attribute_or_blank
 ZERO = Decimal(0)
 
 def get_amount_from_trans_line(trans_line):
+    #gnucash imports
+    from gnucash import GncNumeric
+
     return GncNumeric( "%.2f" % trans_line.amount )
 
 def account_from_path(top_account, account_path):
@@ -45,6 +45,8 @@ class GnuCash(BackendModule):
             pass
         
     def create_backend_transaction(self, fin_trans):
+        from gnucash import Session, Transaction, Split, GncNumeric
+
         if self.openbook_if_not_open():
             description = attribute_or_blank(fin_trans, "description")
             chequenum = attribute_or_blank(fin_trans, "chequenum")
