@@ -34,7 +34,11 @@ class GnuCash(BackendModule):
         self._v_book_open = False
         self.count = 0
 
+    def can_write(self):
+        return self.openbook_if_not_open()
+
     def openbook_if_not_open(self):
+        from gnucash import Session
         if not hasattr(self, '_v_book_open') or not self._v_book_open:
             self._v_session = Session("file:" + self.gnucash_file, False)
             self._v_book_open = True
@@ -45,7 +49,7 @@ class GnuCash(BackendModule):
             pass
         
     def create_backend_transaction(self, fin_trans):
-        from gnucash import Session, Transaction, Split, GncNumeric
+        from gnucash import Transaction, Split, GncNumeric
 
         if self.openbook_if_not_open():
             description = attribute_or_blank(fin_trans, "description")
