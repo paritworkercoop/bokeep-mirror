@@ -1,5 +1,6 @@
 # python imports
 from decimal import Decimal 
+from datetime import date
 
 # bokeep imports
 from module import BackendModule
@@ -91,28 +92,38 @@ def make_new_split(book, amount, account, trans):
 class GnuCash(BackendModule):
     def __init__(self):
         BackendModule.__init__(self)
-        self.gnucash_file = ""
+        self.gnucash_file = None
         self._v_book_open = False
-        self.count = 0
 
     def can_write(self):
         return self.openbook_if_not_open()
 
     def openbook_if_not_open(self):
         from gnucash import Session
+        if self.gnucash_file == None:
+            return False
         if not hasattr(self, '_v_book_open') or not self._v_book_open:
             self._v_session = Session("file:" + self.gnucash_file, False)
             self._v_book_open = True
         return True
 
     def remove_backend_transaction(self, backend_ident):
-        if self.openbook_if_not_open():
-            pass
+        from gnucash import GUID
+        from gnucash.gnucash_core_c import string_to_guid
+        assert( self.can_write() )
+        if self.can_write():
+            guid = GUID()
+            result = string_to_guid(backend_ident, guid.get_instance())
+            assert(result)
+            trans = guid.TransLookup(self._v_session.book)
+            trans.Destroy()
         
     def create_backend_transaction(self, fin_trans):
         from gnucash import Transaction, GncCommodityTable
         from gnucash.gnucash_core_c import \
-            gnc_commodity_table_get_table, gnc_commodity_table_lookup
+            gnc_commodity_table_get_table, gnc_commodity_table_lookup, \
+            guid_to_string # NOTE, this is deprecated and non thread safe
+                           # it is probably a very bad idea to be using this
         
         if self.openbook_if_not_open():
             description = attribute_or_blank(fin_trans, "description")
@@ -143,17 +154,27 @@ class GnuCash(BackendModule):
                 attribute_or_blank(fin_trans, "description") )
             trans.SetNum(
                 str( attribute_or_blank(fin_trans, "chequenum") ) )
+            trans_date = attribute_or_blank(fin_trans, "trans_date")
+            if not isinstance(trans_date, str):
+                trans.SetDatePostedTS(trans_date)
+            trans.SetDateEnteredTS(date.today())
 
             for i, split_line in enumerate(lines):
                 split_line.SetMemo( attribute_or_blank(fin_trans.lines[i],
                                                        "comment" ) )
-            return_value = self.count
-            self.count+=1
-            return return_value
+            trans_guid = trans.GetGUID()
+            # guid_to_string is deprecated and string safe, and it owns the
+            # value it returns.
+            # copy with list and str.join to be sure we have a true copy
+            return ''.join(list( guid_to_string(trans_guid.get_instance()) ) )
 
     def save(self):
         if self.openbook_if_not_open():
             self._v_session.save()
+
+    def close(self):
+        if hasattr(self, '_v_book_open') and self._v_book_open:
+            self._v_session.end()
 
 def get_module_class():
     return GnuCash

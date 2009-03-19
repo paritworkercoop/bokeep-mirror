@@ -82,6 +82,9 @@ class BackendModule(Persistent):
     def save(self):
         raise Exception("backend modules must implement save()")
 
+    def close(self):
+        pass
+
     def flush_transaction(self, entity_identifier):
         backend_idents = \
             self.get_backend_transaction_identifier(entity_identifier)
@@ -119,3 +122,4 @@ class BackendModule(Persistent):
     @ends_with_commit
     def setattr(self, attr, value):
         setattr(self, attr, value)
+        self.flush_backend()

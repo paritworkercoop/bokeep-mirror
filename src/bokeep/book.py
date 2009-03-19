@@ -23,7 +23,9 @@ class BoKeepBookSet(object):
     def close(self):
         #flush out whatever's pending
         transaction.get().commit()
-        self.zodb.close()
+        for book_name, book in self.iterbooks():
+            book.get_backend_module().close()
+        self.zodb.close()      
 
     def iterbooks(self):
         return self.dbroot.iteritems()
@@ -47,8 +49,8 @@ class BoKeepBookSet(object):
 class BoKeepBook(Persistent):
     def __init__(self, new_book_name):
         self.book_name = new_book_name
-        self.set_backend_module(DEFAULT_BACKEND_MODULE)
         self.trans_tree = IOBTree()
+        self.set_backend_module(DEFAULT_BACKEND_MODULE)
         self.enabled_modules = {}
         self.disabled_modules = {}
 
@@ -95,6 +97,12 @@ class BoKeepBook(Persistent):
             backend_module_name, globals(), locals(), [""] ).\
             get_module_class()()
         assert( isinstance(self.__backend_module, BackendModule) )
+        # because we have changed the backend module, all transactions
+        # are now dirty and must be re-written to the new backend module
+        for trans_ident, trans in self.trans_tree.iteritems():
+            self.__backend_module.mark_transaction_dirty(
+                trans_ident, trans)
+        self.__backend_module.flush_backend()
 
     def get_backend_module(self):
         return self.__backend_module
