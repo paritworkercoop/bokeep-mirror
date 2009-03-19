@@ -161,7 +161,7 @@ class GnuCash(BackendModule):
 
             for i, split_line in enumerate(lines):
                 split_line.SetMemo( attribute_or_blank(fin_trans.lines[i],
-                                                       "comment" ) )
+                                                       "line_memo" ) )
             trans_guid = trans.GetGUID()
             # guid_to_string is deprecated and string safe, and it owns the
             # value it returns.
