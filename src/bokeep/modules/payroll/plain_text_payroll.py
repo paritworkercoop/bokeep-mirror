@@ -15,6 +15,20 @@ def create_paystub_wage_line(employee, employee_info_dict, paystub, value):
                                              employee_info_dict['hours'],
                                              employee_info_dict['rate'] ) )
 
+def calc_line_override(override_cls):
+    def return_function(employee, employee_info_dict, paystub, value):
+        first = True
+        for paystub_line in paystub.get_paystub_lines_of_class(override_cls):
+            # set value of the first paystub line of override_cls to the user
+            # specified value, set all other paystub lines of that type to 0
+            if first:
+                paystub_line.set_value(value)
+            else:
+                paystub_line.set_value(0.0)
+            first = False
+        
+    return return_function
+
 def negate_return_value(dec_func):
     """Input: A function that returns a GncNumeric value
     Output: A function that is like dec_func, but with the
