@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 # Python library
 from sys import argv
@@ -86,7 +86,20 @@ def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=T
             paystub_line.freeze_value()
     
     print_paystubs(payday)
-        
+       
+    #possibility of supporting stuff other than 'name' in futue
+    def parse_accounting_line_variables(paystub, scoping):
+       
+        listver = []
+ 
+        for i in range(0, len(scoping)):
+            if scoping[i].startswith('$name'):
+                listver.append(paystub.employee.name)
+            else:
+                listver.append(scoping[i])
+            
+        return tuple(listver)
+
     def generate_each_paystub_accounting_line(paystub, account_line_config):
         """Given a paystub and list of accounting specifications
         (each of which is a three element tuple, consiting of an
@@ -99,7 +112,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=T
         """
         for single_account_line_config in account_line_config:
             for paystub_line in single_account_line_config[2](paystub):
-                yield (single_account_line_config[0],
+                yield (parse_accounting_line_variables(paystub, single_account_line_config[0]),
                       single_account_line_config[1],
                        paystub_line )
 
@@ -206,7 +219,7 @@ def payroll_has_payday_serial(bookname, paydate, payday_serial):
 
 @ends_with_commit
 def payroll_main(bookset):
-    payroll_runtime(argv[1], True, True, bookset)
+    payroll_runtime(argv[1], True, False, bookset)
 
 
 
