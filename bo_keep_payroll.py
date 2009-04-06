@@ -202,6 +202,23 @@ def payroll_init(bookname, bookset=None):
 
     return bookset, book, payroll_module
 
+def payroll_add_employee(bookname, emp_name, bookset=None):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    if not payroll_module.has_employee(emp_name):
+        employee = Employee(emp_name)
+        payroll_module.add_employee(emp_name, employee)
+
+def payroll_get_employees(bookname, bookset=None):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    return payroll_module.get_employees()
+
+def payroll_get_employee(bookname, bookset, emp_name):    
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    if payroll_module.has_employee(emp_name):
+        return payroll_module.get_employee(emp_name)
+    else:
+        return None
+
 def payroll_runtime(bookname, ask_user_reprocess=True, display_paystubs=False, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
 
@@ -218,15 +235,48 @@ def payroll_has_payday_serial(bookname, paydate, payday_serial):
     
 
 @ends_with_commit
-def payroll_main(bookset):
+def payroll_run_main(bookset):
     payroll_runtime(argv[1], True, False, bookset)
 
 
+def payroll_set_employee_attr(bookname, bookset, empname, attr_name, attr_val):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    payroll_module.set_employee_attr(empname, attr_name, attr_val)
+
+def payroll_set_all_employee_attr(bookname, bookset, attr_name, attr_val):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    payroll_module.set_all_employee_attr(attr_name, attr_val)
+
+@ends_with_commit
+def payroll_employee_command(bookname, bookset, command_type, args):
+    if command_type == 'add':
+        payroll_add_employee(bookname, args[0], bookset)
+    elif command_type == 'get':
+        if args[0] == 'all':
+            emps = payroll_get_employees(bookname, bookset)
+            print 'current employees:\n'
+            for employee_name in emps:
+                print str(emps[employee_name]) + '\n'
+        else:
+            emp = payroll_get_employee(bookname, bookset, args[0])
+            print str(emp)
+    elif command_type == 'set':
+        if args[0] == 'all':
+            payroll_set_all_employee_attr(bookname, bookset, args[1], args[2])
+        else:
+            payroll_set_employee_attr(bookname, bookset, args[0], args[1], args[2])
+        
 
 def bokeep_main():
     bookset = BoKeepBookSet( get_database_cfg_file() )
-    payroll_main(bookset)
-    bookset.close_primary_connection()
+    if argv[2] == 'run':
+        payroll_run_main(bookset)
+    elif argv[2] == 'emp':
+        payroll_employee_command(argv[1], bookset, argv[3], argv[4:])
+    else:
+        print 'unrecognized command ' + argv[2]
+
+    bookset.close()
 
 if __name__ == "__main__":
     bokeep_main()

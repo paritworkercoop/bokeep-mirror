@@ -13,7 +13,8 @@ def bokeep_main():
     book_name = argv[1]
     assert( not bookset.has_book(book_name) )
     bookset.add_book(book_name)
-    bookset.close_primary_connection()
+#    bookset.close_primary_connection()
+    bookset.close()
 
 if __name__ == "__main__":
     bokeep_main()

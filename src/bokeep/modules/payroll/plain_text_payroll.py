@@ -11,9 +11,17 @@ def create_paystub_line(paystub_line_class):
 
 
 def create_paystub_wage_line(employee, employee_info_dict, paystub, value):
+    rate = employee.default_rate
+
+    if employee_info_dict.has_key('rate'):
+        #normal employee rate (or default rate) is being overridden
+        rate = employee_info_dict['rate']
+    elif hasattr(employee, 'rate'):
+        rate = employee.rate
+
     paystub.add_paystub_line(PaystubWageLine(paystub,
                                              employee_info_dict['hours'],
-                                             employee_info_dict['rate'] ) )
+                                             rate ) )
 
 def calc_line_override(override_cls):
     def return_function(employee, employee_info_dict, paystub, value):
