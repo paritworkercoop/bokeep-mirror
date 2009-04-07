@@ -2,6 +2,7 @@
 
 # Python library
 from sys import argv
+import sys
 
 import os
 from os import P_NOWAIT
@@ -16,6 +17,7 @@ from bokeep.modules.payroll.payroll import Payday, Employee, \
     PaystubCalculatedLine, PaystubNetPaySummaryLine
 from bokeep.util import ends_with_commit
 
+from datetime import date, datetime
 PAYROLL_MODULE = 'bokeep.modules.payroll'
 
 def print_paystub(paystub):
@@ -219,6 +221,25 @@ def payroll_get_employee(bookname, bookset, emp_name):
     else:
         return None
 
+def payroll_get_paydays(bookname, bookset=None):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    return payroll_module.get_paydays()
+
+def payroll_get_payday(bookname, date, serial, bookset=None):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    if payroll_module.has_payday(date, serial):
+        return payroll_module.get_payday(date, serial)
+    else:
+        return None
+
+def payroll_remove_payday(bookname, date, serial, bookset=None):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    if payroll_module.has_payday(date, serial):
+        payroll_module.remove_payday(date, serial)
+        return True
+    else:
+        return False
+    
 def payroll_runtime(bookname, ask_user_reprocess=True, display_paystubs=False, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
 
@@ -267,10 +288,48 @@ def payroll_employee_command(bookname, bookset, command_type, args):
             payroll_set_employee_attr(bookname, bookset, args[0], args[1], args[2])
         
 
+def payroll_payday_command(bookname, bookset, command_type, args):
+    if command_type == 'run':
+        payroll_run_main(bookset)
+    elif command_type == 'get':
+        if args[0] == 'all':
+            paydays = payroll_get_paydays(bookname, bookset)
+            print 'paydays in database:\n'
+            for payday in paydays:
+                print str(payday)
+        else:
+            try:
+#                print 'you are trying to get payday for ' + str(datetime.strptime(args[0], "%B %d, %Y"))
+                dt = datetime.strptime(args[0], "%B %d, %Y")
+                d = date(dt.year, dt.month, dt.day)
+                payday = payroll_get_payday(bookname, d, int(args[1]), bookset)    
+            except ValueError:
+                print "I didn't understand your date format.  Please use Month Day, Year (for example 'March 29, 2009'  The spaces are important, I'm a fragile creature who can't understand 'March 29,2009')"
+
+            if payday == None:
+                print "sorry, I couldn't find that payday"
+            else:
+                print str(payday[1])
+    elif command_type == 'drop':
+        try:
+            #we can add 'drop all' if we want, but that seems kind of dangerous and
+            #like something way too easy to do accidentally
+            dt = datetime.strptime(args[0], "%B %d, %Y")
+            d = date(dt.year, dt.month, dt.day)
+            removed = payroll_remove_payday(bookname, d, int(args[1]), bookset)
+        except ValueError:
+            print "I didn't understand your date format.  Please use Month Day, Year (for example 'March 29, 2009'  The spaces are important, I'm a fragile creature who can't understand 'March 29,2009')"
+
+        if removed == True:
+            print 'payday(' + str(dt) + ',' + args[1] + ') dropped.'
+        else:
+            print "sorry, I couldn't find that payday"
+      
+
 def bokeep_main():
     bookset = BoKeepBookSet( get_database_cfg_file() )
-    if argv[2] == 'run':
-        payroll_run_main(bookset)
+    if argv[2] == 'payday':
+        payroll_payday_command(argv[1], bookset, argv[3], argv[4:])
     elif argv[2] == 'emp':
         payroll_employee_command(argv[1], bookset, argv[3], argv[4:])
     else:

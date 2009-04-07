@@ -121,3 +121,11 @@ class Payday(BookTransaction, cdnpayroll_Payday):
 
     def print_accounting_lines(self):
         self.print_accounting_lines_to_file(sys.stdout.write)
+
+    def __str__(self):
+        retstr = 'PAYDAY\n'
+        retstr += 'date: ' + str(self.paydate) + '\n'
+        retstr += 'vvvvpaystubsvvvv\n'
+        for paystub in self.paystubs:
+            retstr += str(paystub)
+        return retstr

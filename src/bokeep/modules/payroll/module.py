@@ -49,6 +49,9 @@ class PayrollModule(Persistent):
     def remove_payday(self, payday_date, payday_serial):      
         del self.payday_database[ (payday_date, payday_serial) ]
         self._p_changed = True
+
+    def get_paydays(self):
+        return self.payday_database
     
     def has_payday(self, payday_date, payday_serial):
         self.ensure_payday_database()
