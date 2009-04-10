@@ -37,7 +37,7 @@ def print_paystubs(payday):
         print_paystub(paystub)
 
 def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=True):
-    from payday_data import paydate, payday_serial, emp_list, chequenum_start
+    from payday_data import paydate, payday_serial, emp_list, chequenum_start, period_start, period_end
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config
     
@@ -59,7 +59,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=T
         else:
             return None
     
-    payday = Payday(paydate)
+    payday = Payday(paydate, period_start, period_end)
     payday_trans_id = book.insert_transaction(payday)
     payroll_module.add_payday(paydate, payday_serial, payday_trans_id, payday)
 
@@ -268,10 +268,27 @@ def payroll_set_all_employee_attr(bookname, bookset, attr_name, attr_val):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     payroll_module.set_all_employee_attr(attr_name, attr_val)
 
+def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo, bookset=None):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    if payroll_module.has_employee(emp_name):
+        payroll_module.add_timesheet(emp_name, sheet_date, hours, memo)
+        return True
+    else:
+        return False
+
 @ends_with_commit
 def payroll_employee_command(bookname, bookset, command_type, args):
     if command_type == 'add':
-        payroll_add_employee(bookname, args[0], bookset)
+        if args[0] == 'timesheet':
+            try:
+                dt = datetime.strptime(args[2], "%B %d, %Y")
+                d = date(dt.year, dt.month, dt.day)
+                payroll_add_timesheet(bookname, args[1], d, float(args[3]), args[4], bookset)
+            except ValueError:
+                print "I didn't understand your date format.  Please use Month Day, Year (for example 'March 29, 2009'  The spaces are important, I'm a fragile creature who can't understand 'March 29,2009')"
+
+        else:
+            payroll_add_employee(bookname, args[0], bookset)
     elif command_type == 'get':
         if args[0] == 'all':
             emps = payroll_get_employees(bookname, bookset)

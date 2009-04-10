@@ -16,6 +16,11 @@ class PayrollModule(Persistent):
         self.employee_database[employee_ident] = employee
         self._p_changed = True
 
+    def add_timesheet(self, employee_ident, sheet_date, hours, memo):
+        employee = self.employee_database[employee_ident]
+        employee.add_timesheet(sheet_date, hours, memo)
+        self._p_changed = True
+
     def set_employee_attr(self, employee_ident, attr_name, attr_val):
 
         if attr_name == 'rate':

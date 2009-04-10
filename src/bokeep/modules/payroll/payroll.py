@@ -37,9 +37,9 @@ def decimal_from_float(float_value):
     return Decimal('%.2f' % float_value)
 
 class Payday(BookTransaction, cdnpayroll_Payday):
-    def __init__(self, paydate):
+    def __init__(self, paydate, period_start, period_end):
         BookTransaction.__init__(self)
-        cdnpayroll_Payday.__init__(self, paydate)
+        cdnpayroll_Payday.__init__(self, paydate, period_start, period_end)
         self._p_changed = True
 
     def add_paystub(self, paystub):
