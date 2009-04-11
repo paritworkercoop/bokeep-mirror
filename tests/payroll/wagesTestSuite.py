@@ -6,7 +6,7 @@ import filecmp
 
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bo_keep_payroll import payroll_runtime, payroll_has_payday_serial, payroll_employee_command
+from bokeep.bo_keep_payroll import payroll_runtime, payroll_has_payday_serial, payroll_employee_command
 from bo_keep_module_control import handle_backend_command
 
 WAGES_TEST_BOOKNAME = 'paytest'
