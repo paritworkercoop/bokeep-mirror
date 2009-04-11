@@ -1,0 +1,20 @@
+george costanza
+income: 642.20
+CPP deduction: 25.13
+EI deduction: 11.11
+Income tax deduction: 58.26
+advance: 0.00
+total deductions: 94.50
+net payment: 547.70
+employer contributions: 40.68
+
+susie
+income: 391.40
+CPP deduction: 12.71
+EI deduction: 6.77
+Income tax deduction: 6.38
+advance: 0.00
+total deductions: 25.86
+net payment: 365.54
+employer contributions: 22.19
+
