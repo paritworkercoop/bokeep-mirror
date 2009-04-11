@@ -209,6 +209,8 @@ def payroll_add_employee(bookname, emp_name, bookset=None):
     if not payroll_module.has_employee(emp_name):
         employee = Employee(emp_name)
         payroll_module.add_employee(emp_name, employee)
+        transaction.get().commit()
+    bookset.close()
 
 def payroll_get_employees(bookname, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
@@ -232,6 +234,7 @@ def payroll_get_payday(bookname, date, serial, bookset=None):
     else:
         return None
 
+@ends_with_commit
 def payroll_remove_payday(bookname, date, serial, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     if payroll_module.has_payday(date, serial):
@@ -276,8 +279,8 @@ def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo, bookset=N
     else:
         return False
 
-@ends_with_commit
 def payroll_employee_command(bookname, bookset, command_type, args):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
     if command_type == 'add':
         if args[0] == 'timesheet':
             try:
@@ -303,9 +306,13 @@ def payroll_employee_command(bookname, bookset, command_type, args):
             payroll_set_all_employee_attr(bookname, bookset, args[1], args[2])
         else:
             payroll_set_employee_attr(bookname, bookset, args[0], args[1], args[2])
+
+    if bookset.isOpen():
+        bookset.close()
         
 
 def payroll_payday_command(bookname, bookset, command_type, args):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
     if command_type == 'run':
         payroll_run_main(bookset)
     elif command_type == 'get':
@@ -342,6 +349,8 @@ def payroll_payday_command(bookname, bookset, command_type, args):
         else:
             print "sorry, I couldn't find that payday"
       
+    if bookset.isOpen():
+        bookset.close()
 
 def bokeep_main():
     bookset = BoKeepBookSet( get_database_cfg_file() )
@@ -352,7 +361,6 @@ def bokeep_main():
     else:
         print 'unrecognized command ' + argv[2]
 
-    bookset.close()
 
 if __name__ == "__main__":
     bokeep_main()
