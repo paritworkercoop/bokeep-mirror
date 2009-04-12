@@ -275,9 +275,14 @@ def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo, bookset=N
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     if payroll_module.has_employee(emp_name):
         payroll_module.add_timesheet(emp_name, sheet_date, hours, memo)
+        transaction.get().commit()
+        bookset.close()
         return True
     else:
+        bookset.close()
         return False
+
+
 
 def payroll_employee_command(bookname, bookset, command_type, args):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
