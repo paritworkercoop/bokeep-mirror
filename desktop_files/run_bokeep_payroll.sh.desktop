@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=true
+Exec=run_bokeep_payroll.sh
+Name=Run BoKeep Payroll
+Icon=gnome-panel-launcher
+Categories=Office;Finance;
+

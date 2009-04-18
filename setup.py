@@ -23,6 +23,12 @@ setup(name='Bo-Keep',
                    ),
 
                   ('share/bokeep_book_examples',
-                   ['examples/books/books.gnucash'])
+                   ['examples/books/books.gnucash']),
+
+                  ('share/applications',
+                   ['desktop_files/edit_bokeep_payroll.sh.desktop',
+                    'desktop_files/run_bokeep_payroll.sh.desktop',
+                    'desktop_files/initialize_accounting_system.sh.desktop'
+                    ])
                   ]
       )

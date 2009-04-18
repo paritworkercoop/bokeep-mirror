@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=false
+Exec=initialize_accounting_system.sh
+Name=Initialize BoKeep Payroll Accounting System
+Icon=gnome-panel-launcher
+Categories=Office;Finance;
+
