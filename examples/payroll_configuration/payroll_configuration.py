@@ -18,28 +18,8 @@ from bokeep.modules.payroll.plain_text_payroll import \
     calculated_value_of_class, \
     lines_of_class_function
 
-PARIT_EQUITY_CONSTANT=0.03
-PARIT_EQUITY_LIMIT=900
-
-#def add_parit_equity_line(employee, employee_info_dict, paystub, value):
-#    equity_line = PaystubDeductionMultipleOfIncomeLine(paystub)
-#    equity_line.constant = PARIT_EQUITY_CONSTANT
-#    old_equity = sum( ( paystub_line.get_value()
-#                        if hasattr(paystub_line, 'parit_equity_deduction')
-#                        for paystub_line in paystub
-#                        for paystub in employee.paystubs) )
-
- #   equity_line.parit_equity_deduction = True
-    # only add equity line if there is room to deduct for equity
- #   if old_equity < PARIT_EQUITY_LIMIT:
- #       new_equity = old_equity + equity_line.get_value()
- #       if new_equity > PARIT_EQUITY_LIMIT:
- #           equity_line.set_value(PARIT_EQUITY_LIMIT - old_equity)
- #       paystub.add_paystub_line(equity_line)
-
 paystub_line_config = (
     ('income', create_paystub_line(PaystubIncomeLine)),
-#    ('equity', add_parit_equity_line),
 )
 
 print_paystub_line_config = [
@@ -105,7 +85,7 @@ paystub_accounting_line_config = [
           ),
 
         # Credits
-        ( ( ("Assets", "Chequing account"), "payment",
+        ( ( ("Assets", "Current Assets", "Checking Account"), "payment",
             lines_of_class_function(PaystubNetPaySummaryLine) ),
           
           ),
