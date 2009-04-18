@@ -19,7 +19,8 @@ cd $USER_BOKEEP_DIR || exit 1
 # convert relative path to absolute
 USER_BOKEEP_DIR=`pwd`
 
-if bizname=`zenity --entry --text="What is the business name?"`; then \
+if bizname=`zenity --entry --text="What is the business/organization name?
+abeviate it to one word."`; then \
     mkdir "$bizname"
     if ! zenity --question --text \
 "Would you like a new gnucash file to be created?

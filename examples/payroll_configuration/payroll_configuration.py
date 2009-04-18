@@ -55,9 +55,7 @@ paystub_accounting_line_config = [
     [
         # Debits
         (
-            ( 1, ("Expenses", "Payroll Expenses"), "wages",
-              lines_of_class_function(PaystubIncomeLine) ),
-            ( 2, ("Expenses", "Payroll Expenses"), "employer cpp, ei",
+            ( 1, ("Expenses", "Payroll Expenses"), "employer cpp, ei",
               lines_of_class_function(PaystubEmployerContributionLine) ),
         ),
         # Credits
