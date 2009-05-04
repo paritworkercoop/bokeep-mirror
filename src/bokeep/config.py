@@ -8,7 +8,6 @@ def get_database_cfg_file():
     config = ConfigParser()
     config.read( [expanduser("~/%s" % CONFIG_FILE), CONFIG_FILE ] )
 
-    print config.get("database", "booksdatabase")
     return config.get("database", "booksdatabase")
 
         
