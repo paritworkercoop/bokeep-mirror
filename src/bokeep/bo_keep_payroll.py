@@ -214,7 +214,7 @@ def payroll_add_employee(bookname, emp_name, bookset=None):
 
 def payroll_get_employees(bookname, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
-    return payroll_module.get_employees()
+    return [payroll_module.get_employees(), bookset]
 
 def payroll_get_employee(bookname, bookset, emp_name):    
     bookset, book, payroll_module = payroll_init(bookname, bookset)
@@ -263,6 +263,7 @@ def payroll_run_main(bookset):
     payroll_runtime(argv[1], True, False, bookset)
 
 
+@ends_with_commit
 def payroll_set_employee_attr(bookname, bookset, empname, attr_name, attr_val):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     payroll_module.set_employee_attr(empname, attr_name, attr_val)
