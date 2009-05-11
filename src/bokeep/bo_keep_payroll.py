@@ -194,13 +194,7 @@ def payroll_init(bookname, bookset=None):
 
     book = bookset.get_book(bookname)
 
-    if not book.has_module(PAYROLL_MODULE):
-        book.add_module(PAYROLL_MODULE)
-
-    if book.has_module_disabled(PAYROLL_MODULE):
-        book.enable_module(PAYROLL_MODULE)
-
-    payroll_module = book.get_module(PAYROLL_MODULE)
+    payroll_module = payroll_get_payroll_module(bookname, bookset)
 
     return bookset, book, payroll_module
 
@@ -283,6 +277,17 @@ def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo, bookset=N
         bookset.close()
         return False
 
+def payroll_get_payroll_module(bookname, bookset):
+    book = bookset.get_book(bookname)
+
+    if not book.has_module(PAYROLL_MODULE):
+        book.add_module(PAYROLL_MODULE)
+
+    if book.has_module_disabled(PAYROLL_MODULE):
+        book.enable_module(PAYROLL_MODULE)
+
+    payroll_module = book.get_module(PAYROLL_MODULE)
+    return payroll_module
 
 
 def payroll_employee_command(bookname, bookset, command_type, args):
