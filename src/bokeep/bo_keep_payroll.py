@@ -20,8 +20,7 @@ from bokeep.util import ends_with_commit
 from datetime import date, datetime
 PAYROLL_MODULE = 'bokeep.modules.payroll'
 
-def print_paystub(paystub):
-    from payroll_configuration import print_paystub_line_config
+def print_paystub(paystub, print_paystub_line_config):
     paystub_file = open('PaystubPrint.txt', 'a')
     paystub_file.write(paystub.employee.name + '\n')
     for (line_name, function) in print_paystub_line_config:
@@ -29,17 +28,22 @@ def print_paystub(paystub):
         paystub_file.write(outstr + '\n')
     paystub_file.write(chr(0x0c) + '\n')
 
-def print_paystubs(payday):
+def print_paystubs(payday, print_paystub_line_config):
     #nuke paystub data from any prior runs
     newfile = open('PaystubPrint.txt', 'w')
     newfile.close()
     for paystub in payday.paystubs:
-        print_paystub(paystub)
+        print_paystub(paystub, print_paystub_line_config)
 
-def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=True):
+def add_new_payroll_from_import(book, payroll_module, display_paystubs, ask_user_reprocess=True):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start, period_start, period_end
     from payroll_configuration import \
-        paystub_line_config, paystub_accounting_line_config
+        paystub_line_config, paystub_accounting_line_config, print_paystub_line_config
+
+    add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, ask_user_reprocess)
+
+def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, ask_user_reprocess=True):
+
     
     # if a payroll has already been run with the same date and serial number
     # ask to remove it
@@ -87,7 +91,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess=T
             PaystubCalculatedLine):
             paystub_line.freeze_value()
     
-    print_paystubs(payday)
+    print_paystubs(payday, print_paystub_line_config)
        
     #possibility of supporting stuff other than 'name' in futue
     def parse_accounting_line_variables(paystub, scoping):
@@ -240,7 +244,7 @@ def payroll_remove_payday(bookname, date, serial, bookset=None):
 def payroll_runtime(bookname, ask_user_reprocess=True, display_paystubs=False, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
 
-    add_new_payroll(book, payroll_module, display_paystubs, ask_user_reprocess)
+    add_new_payroll_from_import(book, payroll_module, display_paystubs, ask_user_reprocess)
 
     bookset.close()
 
