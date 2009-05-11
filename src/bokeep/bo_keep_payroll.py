@@ -300,7 +300,7 @@ def payroll_employee_command(bookname, bookset, command_type, args):
             payroll_add_employee(bookname, args[0], bookset)
     elif command_type == 'get':
         if args[0] == 'all':
-            emps = payroll_get_employees(bookname, bookset)
+            emps, bookset = payroll_get_employees(bookname, bookset)
             print 'current employees:\n'
             for employee_name in emps:
                 print str(emps[employee_name]) + '\n'
