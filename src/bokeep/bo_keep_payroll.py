@@ -271,14 +271,19 @@ def payroll_set_all_employee_attr(bookname, bookset, attr_name, attr_val):
     payroll_module.set_all_employee_attr(attr_name, attr_val)
 
 def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo, bookset=None):
+    #only close the bookset if one wasn't passed in.  If one was passed in then
+    #the caller is taking responsibility
+    bookset_close_needed = bookset == None
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     if payroll_module.has_employee(emp_name):
         payroll_module.add_timesheet(emp_name, sheet_date, hours, memo)
         transaction.get().commit()
-        bookset.close()
+        if bookset_close_needed:
+            bookset.close()
         return True
     else:
-        bookset.close()
+        if bookset_close_needed:
+            bookset.close()
         return False
 
 def payroll_get_payroll_module(bookname, bookset):
