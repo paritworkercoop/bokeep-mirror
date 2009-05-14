@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='Bo-Keep',
-      version='0.2.1',
+      version='0.3',
       scripts=['bo-keep', 'bo-keep-book-add', 'bo-keep-book-remove',
                'bo_keep_module_control', 'bo_keep_payroll.py',
                'initialize_accounting_system.sh', 'edit_bokeep_payroll.sh',
