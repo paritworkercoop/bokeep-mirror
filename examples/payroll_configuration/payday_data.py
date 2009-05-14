@@ -8,9 +8,11 @@ period_end = paydate
 emp_list = [
     dict( name="Mark Jenkins",
           income=400.0,
+          extra_deduction=20.0,
           ),
 
     dict( name="Joe Hill",
-          income=300.0,
+          hours=90.0,
+          rate=14.0
           ),
 ]

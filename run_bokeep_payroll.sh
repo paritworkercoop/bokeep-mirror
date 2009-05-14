@@ -20,5 +20,5 @@ done
 choice=`zenity --text "choose a business/organization" \
     --list --column="business/organization" $bizs`
 
-PYTHONPATH=$choice exec gnucash-env $BOKEEP_BIN/bo_keep_payroll.py \
-    $choice payday run
+PYTHONPATH="$PYTHONPATH:$choice" exec gnucash-env \
+$BOKEEP_BIN/bo_keep_payroll.py $choice payday run
