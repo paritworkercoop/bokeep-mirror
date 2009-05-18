@@ -35,6 +35,17 @@ def print_paystubs(payday, print_paystub_line_config):
     for paystub in payday.paystubs:
         print_paystub(paystub, print_paystub_line_config)
 
+
+def payday_accounting_lines_balance(transactions):
+    for trans in transactions.get_financial_transactions():
+        #after all lines are processed, balance amount must be back to zero 
+        #again otherwise we're imbalanced
+        balance_amount = 0
+        for line in trans.lines:
+            balance_amount += line.amount
+
+        return balance_amount == 0
+
 def add_new_payroll_from_import(book, payroll_module, display_paystubs, ask_user_reprocess=True):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start, period_start, period_end
     from payroll_configuration import \
@@ -179,17 +190,20 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             if len(new_per_employee_trans[0][0]) > 0:
                 payday_accounting_lines.append(
                     new_per_employee_trans )
-        
-    
-    payday.specify_accounting_lines(payday_accounting_lines)
-    backend_module = book.get_backend_module()
-    backend_module.mark_transaction_dirty(payday_trans_id,
-                                          payday)
-    backend_module.flush_backend()
 
-    if (display_paystubs):
-        print 'spawning oowriter'
-        os.spawnv(P_NOWAIT, '/usr/bin/oowriter', ['0', 'PaystubPrint.txt'])
+    payday.specify_accounting_lines(payday_accounting_lines)
+        
+    if payday_accounting_lines_balance(payday):
+        backend_module = book.get_backend_module()
+        backend_module.mark_transaction_dirty(payday_trans_id,
+                                              payday)
+        backend_module.flush_backend()
+
+        if (display_paystubs):
+            print 'spawning oowriter'
+            os.spawnv(P_NOWAIT, '/usr/bin/oowriter', ['0', 'PaystubPrint.txt'])
+    else:
+        print 'the payday accounting lines do not balance.  Please review your accounting line configuration.  Contact your consultant if needed.'
     
 
 def payroll_init(bookname, bookset=None):
