@@ -43,8 +43,11 @@ def payday_accounting_lines_balance(transactions):
         balance_amount = 0
         for line in trans.lines:
             balance_amount += line.amount
+ 
+        if not (balance_amount == 0):
+            return False
 
-        return balance_amount == 0
+    return True
 
 def add_new_payroll_from_import(book, payroll_module, display_paystubs, ask_user_reprocess=True):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start, period_start, period_end
