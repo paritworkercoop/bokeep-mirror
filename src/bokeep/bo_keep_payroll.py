@@ -18,6 +18,9 @@ from bokeep.modules.payroll.payroll import Payday, Employee, \
 from bokeep.util import ends_with_commit
 
 from datetime import date, datetime
+
+from decimal import Decimal
+
 PAYROLL_MODULE = 'bokeep.modules.payroll'
 
 def print_paystub(paystub, print_paystub_line_config):
@@ -40,11 +43,12 @@ def payday_accounting_lines_balance(transactions):
     for trans in transactions.get_financial_transactions():
         #after all lines are processed, balance amount must be back to zero 
         #again otherwise we're imbalanced
-        balance_amount = 0
+        balance_amount = Decimal(0)
         for line in trans.lines:
             balance_amount += line.amount
  
-        if not (balance_amount == 0):
+        if not (abs(balance_amount) < Decimal('0.05')):
+            print 'imbalance amount of ' + str(balance_amount)
             return False
 
     return True
