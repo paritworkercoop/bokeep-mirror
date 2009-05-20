@@ -22,7 +22,7 @@ from cdnpayroll.ei import \
 from cdnpayroll.income_tax import \
     PaystubIncomeTaxDeductionLine, PaystubExtraIncomeTaxDeductionLine, \
     PaystubCalculatedIncomeTaxDeductionLine
-from cdnpayroll.vacation_pay import PaystubVacpayLine
+from cdnpayroll.vacation_pay import PaystubVacpayLine, PaystubVacpayPayoutLine
 
 # bo-keep
 from bokeep.book_transaction import \
