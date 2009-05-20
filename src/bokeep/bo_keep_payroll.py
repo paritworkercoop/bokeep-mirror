@@ -375,6 +375,7 @@ def payroll_payday_command(bookname, bookset, command_type, args):
             else:
                 print str(payday[1])
     elif command_type == 'drop':
+        removed = False
         try:
             #we can add 'drop all' if we want, but that seems kind of dangerous and
             #like something way too easy to do accidentally
