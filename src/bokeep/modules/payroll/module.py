@@ -56,8 +56,28 @@ class PayrollModule(Persistent):
             (payday_trans_id, payday)
         self._p_changed = True
 
-    def remove_payday(self, payday_date, payday_serial):      
-        del self.payday_database[ (payday_date, payday_serial) ]
+    def remove_payday(self, payday_date, payday_serial):
+        key = (payday_date, payday_serial) 
+        id, payday_to_remove = \
+        self.payday_database[key]
+        del self.payday_database[key]
+        # remove paystubs from this payday if associated with an employee
+        # this was originally missed, which was a pretty severre bug
+        # as paystubs would be left in the employee while removed
+        # from the payday
+        #
+        # that this was missed illustrates that it having both employee and
+        # payday reference paystubs was a bad idea.
+        #
+        # referencing the same thing in many places means one hand can
+        # forget what the other was doing...
+        for name, employee in self.get_employees().iteritems():
+            new_paystubs = [
+                paystub
+                for paystub in employee.paystubs
+                if paystub not in payday_to_remove.paystubs
+                ]
+            employee.paystubs = new_paystubs
         self._p_changed = True
 
     def get_paydays(self):
