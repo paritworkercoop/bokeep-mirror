@@ -20,10 +20,11 @@ def create_paystub_wage_line(employee, employee_info_dict, paystub, value):
         rate = employee.rate
 
 #    print 'period start is ' + str(paystub.payday.period_start) + ', period end is ' + str(paystub.payday.period_end)
-    matching_timesheets = employee.get_timesheets(paystub.payday.period_start, paystub.payday.period_end)
+#skip matching timesheets for the moment, need to put more thought into it
+#    matching_timesheets = employee.get_timesheets(paystub.payday.period_start, paystub.payday.period_end)
     overall_hours = 0
-    for timesheet in matching_timesheets:
-        overall_hours += timesheet.hours
+#    for timesheet in matching_timesheets:
+#        overall_hours += timesheet.hours
 
     #add any 'additional hours not on a timesheet'
     if employee_info_dict.has_key('hours'):
