@@ -19,38 +19,12 @@ from bokeep.modules.payroll.plain_text_payroll import \
     amount_from_paystub_line_of_class, \
     amount_from_paystub_line_of_class_reversed, \
     calculated_value_of_class, \
-    lines_of_class_function
-
-def create_and_tag_paystub_line(paystub_line_class, tag):
-    def return_function(employee, employee_info_dict, paystub, value):
-        new_paystub_line = paystub_line_class(paystub, value)
-        setattr(new_paystub_line, tag, None)
-        paystub.add_paystub_line(new_paystub_line)
-    return return_function
-
-def paystub_get_lines_of_class_with_tag(
-    paystub, paystub_line_class, tag):
-    return ( line
-             for line in paystub.get_paystub_lines_of_class(
-                 paystub_line_class)
-             if hasattr(line, tag) )
-
-def get_lines_of_class_with_tag(paystub_line_class, tag):
-    def return_function(paystub):
-        return paystub_get_lines_of_class_with_tag(
-            paystub, paystub_line_class, tag)
-    return return_function
-
-def sum_line_of_class_with_tag(paystub_line_class, tag):
-    def return_function(paystub):
-        return sum( 
-            ( line.get_value()
-              for line in paystub_get_lines_of_class_with_tag(
-                  paystub, paystub_line_class, tag)
-            ), # end generator
-            0.0) # end sum
-    return return_function
-
+    lines_of_class_function, \
+    value_of_class, \
+    create_and_tag_paystub_line, \
+    paystub_get_lines_of_class_with_tag, \
+    get_lines_of_class_with_tag, \
+    sum_line_of_class_with_tag
 
 paystub_line_config = (
     ('income', create_paystub_line(PaystubIncomeLine)),
