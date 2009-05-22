@@ -22,9 +22,15 @@ for name, employee in payroll_mod.get_employees().iteritems():
     employee.paystubs = new_paystubs
     print name, len(employee.paystubs), old_len
 
-print len(all_paystubs), "=", sum(
+assert (len(all_paystubs) == sum(
     len(employee.paystubs)
-    for name, employee in payroll_mod.get_employees().iteritems() )
+    for name, employee in payroll_mod.get_employees().iteritems() ))
+
+assert (set(all_paystubs) == \
+        set( paystub 
+             for name, employee in payroll_mod.get_employees().iteritems()
+             for paystub in employee.paystubs ) )
+                             
                           
 transaction.get().commit()
 bookset.close()
