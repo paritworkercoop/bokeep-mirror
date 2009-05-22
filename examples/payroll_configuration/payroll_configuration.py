@@ -8,7 +8,8 @@ from bokeep.modules.payroll.payroll import \
     PaystubNetPaySummaryLine, \
     PaystubDeductionMultipleOfIncomeLine, \
     PaystubVacpayLine, \
-    PaystubDeductionLine
+    PaystubDeductionLine, \
+    PaystubVacpayPayoutLine
 
 from bokeep.modules.payroll.plain_text_payroll import \
     create_paystub_line, \
@@ -24,13 +25,15 @@ from bokeep.modules.payroll.plain_text_payroll import \
     create_and_tag_paystub_line, \
     paystub_get_lines_of_class_with_tag, \
     get_lines_of_class_with_tag, \
-    sum_line_of_class_with_tag
+    sum_line_of_class_with_tag, \
+    lines_of_classes_and_not_classes_function
 
 paystub_line_config = (
     ('income', create_paystub_line(PaystubIncomeLine)),
     ('hours', create_paystub_wage_line ),
     ('extra_deduction', create_and_tag_paystub_line(PaystubDeductionLine,
-                                              "extra_deduction"))
+                                              "extra_deduction")),
+    ('vacation_payout', create_paystub_line(PaystubVacpayPayoutLine)),
 )
 
 print_paystub_line_config = [
@@ -49,7 +52,11 @@ print_paystub_line_config = [
     ( "net payment",
       amount_from_paystub_function(Paystub.net_pay) ),
     ( "employer contributions",
-      calculated_value_of_class(PaystubCalculatedEmployerContributionLine)),
+      value_of_class(PaystubCalculatedEmployerContributionLine)),
+    ( "possible vacation payout",
+      calculated_value_of_class(PaystubVacpayPayoutLine)),
+    ( "actual vacation payout",
+      value_of_class(PaystubVacpayPayoutLine)),
 ]
 
 
@@ -59,10 +66,19 @@ paystub_accounting_line_config = [
         # Debits
         (
             ( ("Expenses", "Payroll Expenses"), "wages",
-              lines_of_class_function(PaystubIncomeLine) ),
+              lines_of_classes_and_not_classes_function(
+                    (PaystubIncomeLine,), (PaystubVacpayPayoutLine,) ) ),
+            ( ("Liabilities", "Vacation Pay"),
+              "vacation pay",
+              lines_of_class_function(PaystubVacpayPayoutLine) ),
             ),
         # Credits
-        (),
+        (
+            ( ("Liabilities", "Payroll extra deductions clearing"),
+              "extra_deduction",
+              get_lines_of_class_with_tag(PaystubDeductionLine, 
+                                          "extra_deduction") ),
+            ),
         ],
     # Cummulative lines, payroll transaction
     [
@@ -90,10 +106,6 @@ paystub_accounting_line_config = [
               lines_of_class_function(PaystubVacpayLine) ),
             ( 6, ("Liabilities", "Payroll temp clearing"), "payment",
               lines_of_class_function(PaystubNetPaySummaryLine) ),
-            ( 7, ("Liabilities", "Payroll extra deductions clearing"),
-              "extra_deduction",
-              get_lines_of_class_with_tag(PaystubDeductionLine, 
-                                          "extra_deduction") ),
         ),
 
         ],

@@ -119,13 +119,9 @@ def lines_of_class_function(class_find):
 
 
 def lines_of_classes_and_not_classes_function(good_classes, bad_classes):
-    good_classes = set(good_classes)
-    bad_classes = set(bad_classes)
     def new_func(paystub):
-        return ( paystub_line
-                 for paystub_line in paystub.paystub_lines
-                 if paystub_line in good_classes and \
-                     pasystub_line not in bad_classes )
+        return paystub.get_paystub_lines_of_classes_not_classes(
+            good_classes, bad_classes)
     return new_func
 
 def create_and_tag_paystub_line(paystub_line_class, tag):
