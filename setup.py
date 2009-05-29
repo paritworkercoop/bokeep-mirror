@@ -7,7 +7,8 @@ setup(name='Bo-Keep',
       scripts=['bo-keep', 'bo-keep-book-add', 'bo-keep-book-remove',
                'bo_keep_module_control', 'bo_keep_payroll.py',
                'initialize_accounting_system.sh', 'edit_bokeep_payroll.sh',
-               'run_bokeep_payroll.sh'
+               'run_bokeep_payroll.sh',
+               'bo_keep_fix_bug_in_v0.3_payroll_database.py'
                ],
       packages=['bokeep', 'bokeep.backend_modules', 'bokeep.gui',
                 'bokeep.modules', 'bokeep.modules.payroll'],
