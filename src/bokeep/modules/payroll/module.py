@@ -31,6 +31,17 @@ class PayrollModule(Persistent):
         if attr_name == 'rate':
             attr_val = float(attr_val)
 
+        #if the name is being changed then we need to reindex the employee
+        if attr_name == 'name':
+            self.employee_database[attr_val] = self.employee_database[employee_ident]
+            setattr(self.employee_database[attr_val], attr_name, attr_val)
+            self.employee_database[attr_val]._p_changed = True
+
+            #remove the old key.
+            del self.employee_database[employee_ident]
+            self._p_changed = True
+
+
         if self.has_employee(employee_ident):
             emp = self.get_employee(employee_ident)
             setattr(emp, attr_name, attr_val)
