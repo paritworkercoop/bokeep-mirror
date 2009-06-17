@@ -224,12 +224,18 @@ def payroll_init(bookname, bookset=None):
     return bookset, book, payroll_module
 
 def payroll_add_employee(bookname, emp_name, bookset=None):
+    bookset_close_needed = False
+    if bookset == None:
+        bookset_close_needed = True
+
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     if not payroll_module.has_employee(emp_name):
         employee = Employee(emp_name)
         payroll_module.add_employee(emp_name, employee)
         transaction.get().commit()
-    bookset.close()
+
+    if bookset_close_needed:    
+        bookset.close()
 
 def payroll_get_employees(bookname, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
