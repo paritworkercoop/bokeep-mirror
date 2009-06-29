@@ -154,3 +154,8 @@ def sum_line_of_class_with_tag(paystub_line_class, tag):
             ), # end generator
             0.0) # end sum
     return return_function
+
+def get_ytd_sum_of_class(paystub_line_class):
+    def return_function(paystub):
+        return paystub.employee.get_YTD_sum_of_paystub_line_class(paystub_line_class, paystub, True)
+    return return_function
