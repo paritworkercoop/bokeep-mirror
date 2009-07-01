@@ -26,6 +26,10 @@ class PayrollModule(Persistent):
         employee.drop_timesheets(start_drop, end_drop)
         self._p_changed = True
 
+    def get_timesheets(self, employee_ident, start_get, end_get):
+        employee = self.employee_database[employee_ident]
+        return employee.get_timesheets(start_get, end_get)
+
     def set_employee_attr(self, employee_ident, attr_name, attr_val):
 
         if attr_name == 'rate':
