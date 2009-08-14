@@ -244,9 +244,9 @@ def payroll_get_employees(bookname, bookset=None):
 def payroll_get_employee(bookname, bookset, emp_name):    
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     if payroll_module.has_employee(emp_name):
-        return payroll_module.get_employee(emp_name)
+        return [payroll_module.get_employee(emp_name), bookset]
     else:
-        return None
+        return [None, bookset]
 
 def payroll_get_paydays(bookname, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
