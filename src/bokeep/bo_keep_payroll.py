@@ -23,21 +23,22 @@ from decimal import Decimal
 
 PAYROLL_MODULE = 'bokeep.modules.payroll'
 
-def print_paystub(paystub, print_paystub_line_config):
-    paystub_file = open('PaystubPrint.txt', 'a')
+def print_paystub(paystub, print_paystub_line_config, paystub_file):
     paystub_file.write(paystub.employee.name + '\n')
     for (line_name, function) in print_paystub_line_config:
 	outstr = line_name + ': ' + str('%.2f' % function(paystub))
         paystub_file.write(outstr + '\n')
     paystub_file.write(chr(0x0c) + '\n')
 
-def print_paystubs(payday, print_paystub_line_config):
+def print_paystubs(payday, print_paystub_line_config, filepath):
     #nuke paystub data from any prior runs
-    newfile = open('PaystubPrint.txt', 'w')
-    newfile.close()
+    prepender = ''
+    if not (filepath == ''):
+        prepender = filepath + '/'
+    newfile = open(prepender + 'PaystubPrint.txt', 'w')
     for paystub in payday.paystubs:
-        print_paystub(paystub, print_paystub_line_config)
-
+        print_paystub(paystub, print_paystub_line_config, newfile)
+    newfile.close()
 
 def payday_accounting_lines_balance(transactions):
     for trans in transactions.get_financial_transactions():
@@ -58,9 +59,9 @@ def add_new_payroll_from_import(book, payroll_module, display_paystubs, ask_user
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config, print_paystub_line_config
 
-    add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, ask_user_reprocess)
+    add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, '', ask_user_reprocess)
 
-def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, ask_user_reprocess=True):
+def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, file_path, ask_user_reprocess=True):
 
     
     # if a payroll has already been run with the same date and serial number
@@ -93,14 +94,14 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
         else:                                        
             employee = payroll_module.get_employee(employee_name)
         paystub = employee.create_and_add_new_paystub(payday)
+        paystub.add_paystub_line( PaystubNetPaySummaryLine(paystub))
         for key, function in paystub_line_config:
             if key in emp:
                 function( employee, emp, paystub, emp[key] )
     
-        assert( 0==len(list(
+        assert( 1==len(list(
                     paystub.get_paystub_lines_of_class(
                         PaystubNetPaySummaryLine))))
-        paystub.add_paystub_line( PaystubNetPaySummaryLine(paystub) )
 
     # freeze all calculated paystub lines with current values to avoid
     # unesessary recalculation
@@ -109,7 +110,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             PaystubCalculatedLine):
             paystub_line.freeze_value()
     
-    print_paystubs(payday, print_paystub_line_config)
+    print_paystubs(payday, print_paystub_line_config, file_path)
        
     #possibility of supporting stuff other than 'name' in futue
     def parse_accounting_line_variables(paystub, scoping):
