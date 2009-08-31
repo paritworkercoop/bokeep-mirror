@@ -23,6 +23,21 @@ from decimal import Decimal
 
 PAYROLL_MODULE = 'bokeep.modules.payroll'
 
+RUN_PAYROLL_SUCCEEDED = 0
+PAYROLL_ALREADY_EXISTS = 1 
+PAYROLL_ACCOUNTING_LINES_IMBALANCE = 2
+PAYROLL_MISSING_NET_PAY = 3
+PAYROLL_TOO_MANY_DEDUCTIONS = 4
+
+def payroll_succeeded(code):
+    return code == RUN_PAYROLL_SUCCEEDED
+
+def payroll_already_exists(code):
+    return code == PAYROLL_ALREADY_EXISTS
+
+def payroll_accounting_lines_imbalance(code):
+    return code == PAYROLL_ACCOUNTING_LINES_IMBALANCE
+
 def print_paystub(paystub, print_paystub_line_config, paystub_file):
     paystub_file.write(paystub.employee.name + '\n')
     for (line_name, function) in print_paystub_line_config:
@@ -54,33 +69,27 @@ def payday_accounting_lines_balance(transactions):
 
     return True
 
-def add_new_payroll_from_import(book, payroll_module, display_paystubs, ask_user_reprocess=True):
+def add_new_payroll_from_import(book, payroll_module, display_paystubs, overwrite_existing=False):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start, period_start, period_end
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config, print_paystub_line_config
 
-    add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, '', ask_user_reprocess)
+    add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, '', overwrite_existing)
 
-def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, file_path, ask_user_reprocess=True):
+def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, file_path, overwrite_existing=False):
+
 
     
     # if a payroll has already been run with the same date and serial number
     # ask to remove it
     if payroll_module.has_payday(paydate, payday_serial):
-        answer = 'yes'
-        if ask_user_reprocess:
-            answer = raw_input("the payroll dated %s with serial %s has already "
-                               "been run. Do you want to remove it and "
-                               "reprocess? > " % (
-                    paydate, payday_serial))
-            answer = answer.lower()
-        if answer == "yes" or answer == "y":
+        if not (overwrite_existing):
+            return PAYROLL_ALREADY_EXISTS, None
+        else:
             (payday_trans_id, payday) = payroll_module.get_payday(
                 paydate, payday_serial)
             payroll_module.remove_payday(paydate, payday_serial)
             book.remove_transaction(payday_trans_id)
-        else:
-            return None
     
     payday = Payday(paydate, period_start, period_end)
     payday_trans_id = book.insert_transaction(payday)
@@ -99,9 +108,25 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             if key in emp:
                 function( employee, emp, paystub, emp[key] )
     
-        assert( 1==len(list(
-                    paystub.get_paystub_lines_of_class(
-                        PaystubNetPaySummaryLine))))
+        #gotta have a net pay line
+        if not (1 == len(list(paystub.get_paystub_lines_of_class(PaystubNetPaySummaryLine)))):
+            payroll_module.remove_payday(paydate, payday_serial)
+            return PAYROLL_MISSING_NET_PAY, employee_name
+
+        #net pay must be zero or greater than zero, cannot have negative net pay
+        net_pay = paystub.net_pay()
+        if net_pay < 0:
+            sum_ded = Decimal('0')
+            total_deductions = paystub.get_deduction_lines()
+
+            for deduct in total_deductions:
+                sum_ded += deduct.get_value()
+
+            gross_pay = paystub.gross_income()
+
+            payroll_module.remove_payday(paydate, payday_serial)
+            return PAYROLL_TOO_MANY_DEDUCTIONS, [employee_name, gross_pay, sum_ded]
+   
 
     # freeze all calculated paystub lines with current values to avoid
     # unesessary recalculation
@@ -211,8 +236,10 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             print 'spawning oowriter'
             os.spawnv(P_NOWAIT, '/usr/bin/oowriter', ['0', 'PaystubPrint.txt'])
     else:
-        print 'the payday accounting lines do not balance.  Please review your accounting line configuration.  Contact your consultant if needed.'
-    
+        payroll_module.remove_payday(paydate, payday_serial)
+        return PAYROLL_ACCOUNTING_LINES_IMBALANCE, None
+
+    return RUN_PAYROLL_SUCCEEDED, None    
 
 def payroll_init(bookname, bookset=None):
     if (bookset == None):

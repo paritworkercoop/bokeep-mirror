@@ -4,6 +4,8 @@ from cdnpayroll.paystub_line import sum_paystub_lines
 # Bo-Keep imports
 from bokeep.modules.payroll.payroll import PaystubWageLine
 
+from decimal import Decimal
+
 def create_paystub_line(paystub_line_class):
     def return_function(employee, employee_info_dict, paystub, value):
         paystub.add_paystub_line( paystub_line_class(paystub, value) )
@@ -127,7 +129,7 @@ def lines_of_classes_and_not_classes_function(good_classes, bad_classes):
 
 def create_and_tag_paystub_line(paystub_line_class, tag):
     def return_function(employee, employee_info_dict, paystub, value):
-        new_paystub_line = paystub_line_class(paystub, value)
+        new_paystub_line = paystub_line_class(paystub, Decimal(str(value)))
         setattr(new_paystub_line, tag, None)
         paystub.add_paystub_line(new_paystub_line)
     return return_function
@@ -152,7 +154,7 @@ def sum_line_of_class_with_tag(paystub_line_class, tag):
               for line in paystub_get_lines_of_class_with_tag(
                   paystub, paystub_line_class, tag)
             ), # end generator
-            0.0) # end sum
+            Decimal('0.0')) # end sum
     return return_function
 
 def get_ytd_sum_of_class(paystub_line_class):
