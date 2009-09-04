@@ -131,3 +131,4 @@ class BoKeepBook(Persistent):
     @ends_with_commit
     def remove_transaction(self, trans_id):
         del self.trans_tree[trans_id]
+        self.backend_module.remove_backend_transaction(trans_id)
