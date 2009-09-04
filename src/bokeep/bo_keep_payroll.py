@@ -111,6 +111,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
         #gotta have a net pay line
         if not (1 == len(list(paystub.get_paystub_lines_of_class(PaystubNetPaySummaryLine)))):
             payroll_module.remove_payday(paydate, payday_serial)
+            book.remove_transaction(payday_trans_id)
             return PAYROLL_MISSING_NET_PAY, employee_name
 
         #net pay must be zero or greater than zero, cannot have negative net pay
@@ -125,6 +126,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             gross_pay = paystub.gross_income()
 
             payroll_module.remove_payday(paydate, payday_serial)
+            book.remove_transaction(payday_trans_id)
             return PAYROLL_TOO_MANY_DEDUCTIONS, [employee_name, gross_pay, sum_ded]
    
 
@@ -237,6 +239,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             os.spawnv(P_NOWAIT, '/usr/bin/oowriter', ['0', 'PaystubPrint.txt'])
     else:
         payroll_module.remove_payday(paydate, payday_serial)
+        book.remove_transaction(payday_trans_id)
         return PAYROLL_ACCOUNTING_LINES_IMBALANCE, None
 
     return RUN_PAYROLL_SUCCEEDED, None    
@@ -291,7 +294,9 @@ def payroll_get_payday(bookname, date, serial, bookset=None):
 def payroll_remove_payday(bookname, date, serial, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     if payroll_module.has_payday(date, serial):
+        (payday_trans_id, payday) = payroll_module.get_payday(date, serial)
         payroll_module.remove_payday(date, serial)
+        book.remove_transaction(payday_trans_id)
         return True
     else:
         return False
@@ -415,7 +420,7 @@ def payroll_payday_command(bookname, bookset, command_type, args):
             #like something way too easy to do accidentally
             dt = datetime.strptime(args[0], "%B %d, %Y")
             d = date(dt.year, dt.month, dt.day)
-            removed = payroll_remove_payday(bookname, d, int(args[1]), bookset)
+            #removed = payroll_remove_payday(bookname, d, int(args[1]), bookset)
         except ValueError:
             print "I didn't understand your date format.  Please use Month Day, Year (for example 'March 29, 2009'  The spaces are important, I'm a fragile creature who can't understand 'March 29,2009')"
 
