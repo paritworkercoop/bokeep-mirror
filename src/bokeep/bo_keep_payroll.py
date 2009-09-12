@@ -108,6 +108,9 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             if key in emp:
                 function( employee, emp, paystub, emp[key] )
     
+        if emp.has_key('cheque_override'):
+            payday.add_cheque_override(emp['name'], emp['cheque_override'])
+
         #gotta have a net pay line
         if not (1 == len(list(paystub.get_paystub_lines_of_class(PaystubNetPaySummaryLine)))):
             payroll_module.remove_payday(paydate, payday_serial)

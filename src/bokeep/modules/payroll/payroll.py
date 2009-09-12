@@ -40,6 +40,7 @@ class Payday(BookTransaction, cdnpayroll_Payday):
     def __init__(self, paydate, period_start, period_end):
         BookTransaction.__init__(self)
         cdnpayroll_Payday.__init__(self, paydate, period_start, period_end)
+        self.cheque_overrides = {}
         self._p_changed = True
 
     def add_paystub(self, paystub):
@@ -50,6 +51,11 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         self.payday_accounting_lines = payday_accounting_lines
         self._p_changed = True
 
+
+    #this allows some employees to not get a typically numbered cheque.  Use 
+    #cases include stuff like direct deposit.
+    def add_cheque_override(self, name, override):
+        self.cheque_overrides[name] = override
 
     def get_financial_transactions(self):
         """Generate one big transaction for the payroll, and a transaction
@@ -114,9 +120,15 @@ class Payday(BookTransaction, cdnpayroll_Payday):
                     )
             fin_trans = FinancialTransaction(fin_lines)
             fin_trans.trans_date = self.paydate
-            fin_trans.description = trans[2]
-            fin_trans.chequenum = chequenum
-            chequenum = chequenum+1
+            fin_trans.description = trans[2]            
+            if hasattr(self, 'cheque_overrides') and self.cheque_overrides.has_key(fin_trans.description):
+                #use the override they've specified.  Also, don't incremeent 
+                #cheque number because they didn't "use one up"
+                fin_trans.chequenum = self.cheque_overrides[fin_trans.description]
+            else:
+                fin_trans.chequenum = chequenum
+                chequenum = chequenum+1
+
             yield fin_trans
 
     def print_accounting_lines(self):
