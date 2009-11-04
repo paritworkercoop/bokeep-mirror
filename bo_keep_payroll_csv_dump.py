@@ -56,7 +56,7 @@ paystub_lines_from_payday = [
             payroll_mod.get_payday(paydate, serial)[0], # arg bokeep_trans_id
             serial),# dictafy_paystub_line
         new_fields ) # extend_set_with_keys
-    for paydate, serial in payroll_mod.get_paydays()
+    for paydate, serial in sorted(payroll_mod.get_paydays())
     for paystub in payroll_mod.get_payday(paydate, serial)[1].paystubs
     ] # list comprehension
 
@@ -69,7 +69,8 @@ paystub_lines_from_employees = [
         dictafy_paystub_line(
             paystub ),
         new_fields ) # extend_set_with_keys
-    for employee in payroll_mod.get_employees().itervalues()
+    for employee_name, employee in sorted(
+        payroll_mod.get_employees().iteritems())
     for paystub in employee.paystubs
     ] # list comprehension
 
