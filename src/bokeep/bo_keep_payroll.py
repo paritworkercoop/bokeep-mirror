@@ -28,6 +28,7 @@ PAYROLL_ALREADY_EXISTS = 1
 PAYROLL_ACCOUNTING_LINES_IMBALANCE = 2
 PAYROLL_MISSING_NET_PAY = 3
 PAYROLL_TOO_MANY_DEDUCTIONS = 4
+PAYROLL_DATABASE_MISSING_EMPLOYEE = 5
 
 def payroll_succeeded(code):
     return code == RUN_PAYROLL_SUCCEEDED
@@ -69,14 +70,14 @@ def payday_accounting_lines_balance(transactions):
 
     return True
 
-def add_new_payroll_from_import(book, payroll_module, display_paystubs, overwrite_existing=False):
+def add_new_payroll_from_import(book, payroll_module, display_paystubs, overwrite_existing=False, add_missing_employees=False):
     from payday_data import paydate, payday_serial, emp_list, chequenum_start, period_start, period_end
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config, print_paystub_line_config
 
     add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, '', overwrite_existing)
 
-def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, file_path, overwrite_existing=False):
+def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, file_path, overwrite_existing=False, add_missing_employees=False):
 
 
     
@@ -98,6 +99,9 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
     for emp in emp_list:
         employee_name = emp['name']
         if not payroll_module.has_employee(employee_name):
+            if not add_missing_employees:
+                return PAYROLL_DATABASE_MISSING_EMPLOYEE, employee_name
+
             employee = Employee(employee_name)
             payroll_module.add_employee(employee_name, employee)
         else:                                        
