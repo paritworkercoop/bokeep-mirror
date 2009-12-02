@@ -17,6 +17,8 @@ from bokeep.modules.payroll.payroll import Payday, Employee, \
     PaystubCalculatedLine, PaystubNetPaySummaryLine
 from bokeep.util import ends_with_commit
 
+from cdnpayroll.vacation_pay import VacationPayoutTooMuchException
+
 from datetime import date, datetime
 
 from decimal import Decimal
@@ -29,6 +31,7 @@ PAYROLL_ACCOUNTING_LINES_IMBALANCE = 2
 PAYROLL_MISSING_NET_PAY = 3
 PAYROLL_TOO_MANY_DEDUCTIONS = 4
 PAYROLL_DATABASE_MISSING_EMPLOYEE = 5
+PAYROLL_VACPAY_DRAW_TOO_MUCH = 6
 
 def payroll_succeeded(code):
     return code == RUN_PAYROLL_SUCCEEDED
@@ -108,9 +111,13 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             employee = payroll_module.get_employee(employee_name)
         paystub = employee.create_and_add_new_paystub(payday)
         paystub.add_paystub_line( PaystubNetPaySummaryLine(paystub))
-        for key, function in paystub_line_config:
-            if key in emp:
-                function( employee, emp, paystub, emp[key] )
+
+        try:
+            for key, function in paystub_line_config:
+                if key in emp:
+                    function( employee, emp, paystub, emp[key] )
+        except VacationPayoutTooMuchException:
+            return PAYROLL_VACPAY_DRAW_TOO_MUCH, employee_name 
     
         if emp.has_key('cheque_override'):
             payday.add_cheque_override(emp['name'], emp['cheque_override'])
