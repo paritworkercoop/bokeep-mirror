@@ -8,64 +8,37 @@ from bokeep.book_transaction import \
     BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.util import attribute_or_blank
 
-ZERO = Decimal(0)
 
-def gnc_numeric_from_string(numeric_string):
+# there should be some fairly serrious unit testing for this
+def gnc_numeric_from_decimal(decimal_value):
     from gnucash import GncNumeric
-    from gnucash.gnucash_core_c import string_to_gnc_numeric
-    numeric_string = numeric_string.strip() # murder whitespace
+    sign, digits, exponent = decimal_value.as_tuple()
+    assert(0 <= sign <= 1)
+    assert(exponent<=0)
 
-    if len(numeric_string) > 0:
-        # if there is a decimal point get rid of it
-        if '.' in numeric_string:
-            # get the parts left and right of the decimal point
-            left_of_decimal, right_of_decimal = numeric_string.split('.')
+    # convert decimal digits to a fractional numerator
+    # equivlent to
+    # numerator = int(''.join(digits))
+    # but without the wated conversion to string and back,
+    # this is probably the same algorithm int() uses
+    numerator = 0
+    TEN = int(Decimal(0).radix()) # this is always 10
+    numerator_place_value = 1
+    # add each digit to the final value multiplied by the place value
+    # from least significant to most sigificant
+    for i in xrange(len(digits)-1,-1,-1):
+        numerator += digits[i] * numerator_place_value
+        numerator_place_value *= TEN
 
-            negate = ''
+    if decimal_value.is_signed():
+        numerator = -numerator
 
-            if len(left_of_decimal) > 0:
-                if left_of_decimal[0] == '-':
-                    negate = '-'
-                    left_of_decimal = left_of_decimal[1:]
-
-                left_of_decimal = int(left_of_decimal)
-                if left_of_decimal == 0:
-                    left_of_decimal = ''
-                else:
-                    left_of_decimal = str(left_of_decimal)
-
-
-
-            # the string now consists of the left part, right part,
-            # /1 and and apropriate number of 0's
-            numeric_string = '%s%s%s/1%s' % (
-                negate,
-                left_of_decimal,
-                right_of_decimal,
-                # put len(right_of_decimal) 0's in the denominator,
-                # eg 10.1 -> 101/10,
-                # len(right_of_decimal) == 1, (one zero)
-                # eg 10.10 -> 1010/100,
-                # len(right_of_decimal) == 2, (two zeros)
-                # eg 10.100 -> 10100/1000
-                # len(right_of_decimal) == 3, (three zeros)
-                '0'*len(right_of_decimal) ) 
-    else:
-        numeric_string = '0/1'
-
-    if '/' not in numeric_string:
-        numeric_string += '/1'
-
-    gncnumeric = GncNumeric()
-    convert_success = string_to_gnc_numeric(
-        numeric_string,
-        gncnumeric.get_instance()
-        )
-    assert( convert_success )
-    return gncnumeric
+    return GncNumeric( numerator,
+                       TEN ** (-exponent) ) # denominator
+                       
 
 def get_amount_from_trans_line(trans_line):
-    return gnc_numeric_from_string(str(trans_line.amount))
+    return gnc_numeric_from_decimal(trans_line.amount)
 
 def account_from_path(top_account, account_path, original_path=None):
     if original_path==None: original_path = account_path
