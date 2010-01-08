@@ -22,7 +22,8 @@ from cdnpayroll.ei import \
 from cdnpayroll.income_tax import \
     PaystubIncomeTaxDeductionLine, PaystubExtraIncomeTaxDeductionLine, \
     PaystubCalculatedIncomeTaxDeductionLine
-from cdnpayroll.vacation_pay import PaystubVacpayLine, PaystubVacpayPayoutLine, PaystubVacationPayAvailable
+from cdnpayroll.vacation_pay import PaystubVacpayLine, \
+    PaystubVacpayPayoutLine, PaystubVacationPayAvailable
 
 # bo-keep
 from bokeep.book_transaction import \
@@ -33,8 +34,9 @@ from bokeep.book_transaction import \
 # subclass and override functions from cdnpayroll classes to be persistable
 # via zopedb, and to use each other instead of original cdnpayroll classes
 
-def decimal_from_float(float_value):
-    return Decimal('%.2f' % float_value)
+ONE = Decimal('1.00')
+NEG_ONE = Decimal('-1.00')
+ZERO = Decimal('0.00')
 
 class Payday(BookTransaction, cdnpayroll_Payday):
     def __init__(self, paydate, period_start, period_end):
@@ -71,10 +73,10 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         # Per employee lines, payroll transaction 
         fin_lines = []
         for (debit_credit_pos, negate) in \
-                ((0, Decimal(1)), (1, Decimal(-1))): # debits then credits
+                ((0, ONE), (1, NEG_ONE )): # debits then credits
             fin_lines.extend( 
                 make_fin_line(
-                    negate * decimal_from_float(paystub_line.get_value()),
+                    negate * paystub_line.get_value(),
                     accounts, comment)
                 for (accounts, comment, paystub_line) in \
                 self.payday_accounting_lines[0][debit_credit_pos]
@@ -82,13 +84,13 @@ class Payday(BookTransaction, cdnpayroll_Payday):
 
         # Cummulative lines, payroll transaction
         for (debit_credit_pos, negate) in \
-                ( (0, Decimal(1)), (1, Decimal(-1)) ): # debits then credits
+                ( (0, ONE), (1, NEG_ONE) ): # debits then credits
             fin_lines.extend(
                 make_fin_line(
                     negate * 
-                    sum( ( decimal_from_float(line.get_value())
+                    sum( ( line.get_value()
                            for line in line_list),
-                         Decimal(0) ),
+                         ZERO ),
                     accounts,
                     comment
                 )
@@ -108,11 +110,10 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         for trans in self.payday_accounting_lines[3:]:
             fin_lines = []
             for (debit_credit_pos, negate) in \
-                    ((0, Decimal(1)), (1, Decimal(-1))): # debits then credits
+                    ( (0, ONE), (1, NEG_ONE) ): # debits then credits
                 fin_lines.extend( 
                     make_fin_line(
-                        negate * decimal_from_float(
-                            paystub_line.get_value() ),
+                        negate * paystub_line.get_value(),
                         accounts,
                         comment )                        
                     for (accounts, comment, paystub_line) in \
@@ -121,10 +122,12 @@ class Payday(BookTransaction, cdnpayroll_Payday):
             fin_trans = FinancialTransaction(fin_lines)
             fin_trans.trans_date = self.paydate
             fin_trans.description = trans[2]            
-            if hasattr(self, 'cheque_overrides') and self.cheque_overrides.has_key(fin_trans.description):
+            if hasattr(self, 'cheque_overrides') and \
+                    self.cheque_overrides.has_key(fin_trans.description):
                 #use the override they've specified.  Also, don't incremeent 
                 #cheque number because they didn't "use one up"
-                fin_trans.chequenum = self.cheque_overrides[fin_trans.description]
+                fin_trans.chequenum = \
+                    self.cheque_overrides[fin_trans.description]
             else:
                 fin_trans.chequenum = chequenum
                 chequenum = chequenum+1

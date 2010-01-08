@@ -45,9 +45,9 @@ def payroll_accounting_lines_imbalance(code):
 def print_paystub(paystub, print_paystub_line_config, paystub_file):
     paystub_file.write(paystub.employee.name + '\n')
     for (line_name, function) in print_paystub_line_config:
-	outstr = line_name + ': ' + str('%.2f' % function(paystub))
+	outstr = line_name + ': ' + str( function(paystub) )
         paystub_file.write(outstr + '\n')
-    paystub_file.write(chr(0x0c) + '\n')
+    paystub_file.write('\f\n')
 
 def print_paystubs(payday, print_paystub_line_config, filepath):
     #nuke paystub data from any prior runs
@@ -60,6 +60,8 @@ def print_paystubs(payday, print_paystub_line_config, filepath):
     newfile.close()
 
 def payday_accounting_lines_balance(transactions):
+    # this should be removed, there shouldn't be an imbalance at all
+
     for trans in transactions.get_financial_transactions():
         #after all lines are processed, balance amount must be back to zero 
         #again otherwise we're imbalanced
@@ -73,16 +75,27 @@ def payday_accounting_lines_balance(transactions):
 
     return True
 
-def add_new_payroll_from_import(book, payroll_module, display_paystubs, overwrite_existing=False, add_missing_employees=False):
-    from payday_data import paydate, payday_serial, emp_list, chequenum_start, period_start, period_end
+def add_new_payroll_from_import(
+    book, payroll_module, display_paystubs,
+    overwrite_existing=False, add_missing_employees=False):
+    from payday_data import paydate, payday_serial, emp_list, \
+        chequenum_start, period_start, period_end
     from payroll_configuration import \
-        paystub_line_config, paystub_accounting_line_config, print_paystub_line_config
+        paystub_line_config, paystub_accounting_line_config, \
+        print_paystub_line_config
 
-    add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, '', overwrite_existing)
+    add_new_payroll(book, payroll_module, display_paystubs, paydate,
+                    payday_serial, emp_list, chequenum_start,
+                    period_start, period_end, paystub_line_config,
+                    paystub_accounting_line_config,
+                    print_paystub_line_config, '', overwrite_existing)
 
-def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_serial, emp_list, chequenum_start, period_start, period_end, paystub_line_config, paystub_accounting_line_config, print_paystub_line_config, file_path, overwrite_existing=False, add_missing_employees=False):
-
-
+def add_new_payroll(book, payroll_module, display_paystubs, paydate,
+                    payday_serial, emp_list, chequenum_start, period_start,
+                    period_end, paystub_line_config,
+                    paystub_accounting_line_config,
+                    print_paystub_line_config, file_path,
+                    overwrite_existing=False, add_missing_employees=False):
     
     # if a payroll has already been run with the same date and serial number
     # ask to remove it
@@ -123,7 +136,9 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
             payday.add_cheque_override(emp['name'], emp['cheque_override'])
 
         #gotta have a net pay line
-        if not (1 == len(list(paystub.get_paystub_lines_of_class(PaystubNetPaySummaryLine)))):
+        if not (1 ==
+                len(list(paystub.get_paystub_lines_of_class(
+                        PaystubNetPaySummaryLine)))):
             payroll_module.remove_payday(paydate, payday_serial)
             book.remove_transaction(payday_trans_id)
             return PAYROLL_MISSING_NET_PAY, employee_name
@@ -141,7 +156,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
 
             payroll_module.remove_payday(paydate, payday_serial)
             book.remove_transaction(payday_trans_id)
-            return PAYROLL_TOO_MANY_DEDUCTIONS, [employee_name, gross_pay, sum_ded]
+            return (PAYROLL_TOO_MANY_DEDUCTIONS,
+                    [employee_name, gross_pay, sum_ded] )
    
 
     # freeze all calculated paystub lines with current values to avoid
@@ -178,9 +194,10 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate, payday_seri
         """
         for single_account_line_config in account_line_config:
             for paystub_line in single_account_line_config[2](paystub):
-                yield (parse_accounting_line_variables(paystub, single_account_line_config[0]),
-                      single_account_line_config[1],
-                       paystub_line )
+                yield ( parse_accounting_line_variables(
+                        paystub, single_account_line_config[0]),
+                        single_account_line_config[1],
+                        paystub_line )
 
     payday_accounting_lines = [
         # per employee lines, main payroll transaction
@@ -315,10 +332,13 @@ def payroll_remove_payday(bookname, date, serial, bookset=None):
     else:
         return False
     
-def payroll_runtime(bookname, ask_user_reprocess=True, display_paystubs=False, bookset=None):
+def payroll_runtime(bookname,
+                    ask_user_reprocess=True, display_paystubs=False,
+                    bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
 
-    add_new_payroll_from_import(book, payroll_module, display_paystubs, ask_user_reprocess)
+    add_new_payroll_from_import(book, payroll_module,
+                                display_paystubs, ask_user_reprocess)
 
     bookset.close()
 
@@ -344,7 +364,8 @@ def payroll_set_all_employee_attr(bookname, bookset, attr_name, attr_val):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     payroll_module.set_all_employee_attr(attr_name, attr_val)
 
-def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo, bookset=None):
+def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo,
+                          bookset=None):
     #only close the bookset if one wasn't passed in.  If one was passed in then
     #the caller is taking responsibility
     bookset_close_needed = bookset == None
@@ -380,10 +401,13 @@ def payroll_employee_command(bookname, bookset, command_type, args):
             try:
                 dt = datetime.strptime(args[2], "%B %d, %Y")
                 d = date(dt.year, dt.month, dt.day)
-                payroll_add_timesheet(bookname, args[1], d, float(args[3]), args[4], bookset)
+                payroll_add_timesheet(bookname, args[1], d, float(args[3]),
+                                      args[4], bookset)
             except ValueError:
-                print "I didn't understand your date format.  Please use Month Day, Year (for example 'March 29, 2009'  The spaces are important, I'm a fragile creature who can't understand 'March 29,2009')"
-
+                print "I didn't understand your date format.  Please use " \
+                    "Month Day, Year (for example 'March 29, 2009'  The " \
+                    "spaces are important, I'm a fragile creature who can't" \
+                    "understand 'March 29,2009')"
         else:
             payroll_add_employee(bookname, args[0], bookset)
     elif command_type == 'get':
@@ -399,7 +423,8 @@ def payroll_employee_command(bookname, bookset, command_type, args):
         if args[0] == 'all':
             payroll_set_all_employee_attr(bookname, bookset, args[1], args[2])
         else:
-            payroll_set_employee_attr(bookname, bookset, args[0], args[1], args[2])
+            payroll_set_employee_attr(bookname, bookset,
+                                      args[0], args[1], args[2])
 
     bookset.close()
         
@@ -421,7 +446,10 @@ def payroll_payday_command(bookname, bookset, command_type, args):
                 d = date(dt.year, dt.month, dt.day)
                 payday = payroll_get_payday(bookname, d, int(args[1]), bookset)    
             except ValueError:
-                print "I didn't understand your date format.  Please use Month Day, Year (for example 'March 29, 2009'  The spaces are important, I'm a fragile creature who can't understand 'March 29,2009')"
+                print "I didn't understand your date format.  Please use " \
+                    "Month Day, Year (for example 'March 29, 2009'  The " \
+                    "spaces are important, I'm a fragile creature who " \
+                    "can't understand 'March 29,2009')"
 
             if payday == None:
                 print "sorry, I couldn't find that payday"
@@ -436,7 +464,10 @@ def payroll_payday_command(bookname, bookset, command_type, args):
             d = date(dt.year, dt.month, dt.day)
             #removed = payroll_remove_payday(bookname, d, int(args[1]), bookset)
         except ValueError:
-            print "I didn't understand your date format.  Please use Month Day, Year (for example 'March 29, 2009'  The spaces are important, I'm a fragile creature who can't understand 'March 29,2009')"
+            print "I didn't understand your date format.  Please use Month " \
+                "Day, Year (for example 'March 29, 2009'  The spaces are " \
+                "important, I'm a fragile creature who can't understand " \
+                "'March 29,2009')"
 
         if removed == True:
             print 'payday(' + str(dt) + ',' + args[1] + ') dropped.'

@@ -6,8 +6,21 @@ from bokeep.modules.payroll.payroll import PaystubWageLine
 
 from decimal import Decimal
 
+def decimal_from_float(float_value, places=2):
+    formatstring = '%.' + places + 'f'
+    return Decimal(formatstring % float_value)
+
+def decimal_from_whatever(value, places=2):
+    if type(value) == float:
+        return decimal_from_float(value, places)
+    elif type(value) == Decimal:
+        return value.quantize( Decimal(10) ** (-places) )
+    else: # covers int, string, and anything else Decimal() can handle..
+        return Decimal(value).quantize( Decimal(10) ** (-places) )
+    
 def create_paystub_line(paystub_line_class):
     def return_function(employee, employee_info_dict, paystub, value):
+        value = decimal_from_whatever(value)
         paystub.add_paystub_line( paystub_line_class(paystub, value) )
     return return_function
 
@@ -21,16 +34,22 @@ def create_paystub_wage_line(employee, employee_info_dict, paystub, value):
     elif hasattr(employee, 'rate'):
         rate = employee.rate
 
-#    print 'period start is ' + str(paystub.payday.period_start) + ', period end is ' + str(paystub.payday.period_end)
+    #    print 'period start is ' + str(paystub.payday.period_start) + ', period end is ' + str(paystub.payday.period_end)
 #skip matching timesheets for the moment, need to put more thought into it
 #    matching_timesheets = employee.get_timesheets(paystub.payday.period_start, paystub.payday.period_end)
     overall_hours = 0
-#    for timesheet in matching_timesheets:
-#        overall_hours += timesheet.hours
+    #    for timesheet in matching_timesheets:
+    #        overall_hours += timesheet.hours
 
     #add any 'additional hours not on a timesheet'
     if employee_info_dict.has_key('hours'):
         overall_hours += employee_info_dict['hours']
+
+    # convert and restrict the hours and rate to four decimals places to
+    # retain some precision the result of multiplying them will become
+    # two places elsewhere
+    overall_hours = decimal_from_whatever(overall_hours, 4)
+    rate = decimal_from_whatever(rate, 4)
 
     paystub.add_paystub_line(PaystubWageLine(paystub,
                                              overall_hours,
@@ -43,9 +62,9 @@ def calc_line_override(override_cls):
             # set value of the first paystub line of override_cls to the user
             # specified value, set all other paystub lines of that type to 0
             if first:
-                paystub_line.set_value(value)
+                paystub_line.set_value(decimal_from_whatever(value))
             else:
-                paystub_line.set_value(0.0)
+                paystub_line.set_value(Decimal('0.00'))
             first = False
         
     return return_function
@@ -129,7 +148,8 @@ def lines_of_classes_and_not_classes_function(good_classes, bad_classes):
 
 def create_and_tag_paystub_line(paystub_line_class, tag):
     def return_function(employee, employee_info_dict, paystub, value):
-        new_paystub_line = paystub_line_class(paystub, Decimal(str(value)))
+        value = decimal_from_whatever(value)
+        new_paystub_line = paystub_line_class(paystub, value)
         setattr(new_paystub_line, tag, None)
         paystub.add_paystub_line(new_paystub_line)
     return return_function
@@ -149,15 +169,14 @@ def get_lines_of_class_with_tag(paystub_line_class, tag):
 
 def sum_line_of_class_with_tag(paystub_line_class, tag):
     def return_function(paystub):
-        return sum( 
-            ( line.get_value()
-              for line in paystub_get_lines_of_class_with_tag(
-                  paystub, paystub_line_class, tag)
-            ), # end generator
-            Decimal('0.0')) # end sum
+        return sum( line.get_value()
+                    for line in paystub_get_lines_of_class_with_tag(
+                            paystub, paystub_line_class, tag)
+                    )
     return return_function
 
 def get_ytd_sum_of_class(paystub_line_class):
     def return_function(paystub):
-        return paystub.employee.get_YTD_sum_of_paystub_line_class(paystub_line_class, paystub, True)
+        return paystub.employee.get_YTD_sum_of_paystub_line_class(
+                        paystub_line_class, paystub, True)
     return return_function
