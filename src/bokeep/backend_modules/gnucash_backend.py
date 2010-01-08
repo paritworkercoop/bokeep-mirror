@@ -13,8 +13,6 @@ from bokeep.util import attribute_or_blank
 def gnc_numeric_from_decimal(decimal_value):
     from gnucash import GncNumeric
     sign, digits, exponent = decimal_value.as_tuple()
-    assert(0 <= sign <= 1)
-    assert(exponent<=0)
 
     # convert decimal digits to a fractional numerator
     # equivlent to
@@ -33,8 +31,16 @@ def gnc_numeric_from_decimal(decimal_value):
     if decimal_value.is_signed():
         numerator = -numerator
 
-    return GncNumeric( numerator,
-                       TEN ** (-exponent) ) # denominator
+    # if the exponent is negative, we use it to set the denominator
+    if exponent < 0 :
+        denominator = TEN ** (-exponent)
+    # if the exponent isn't negative, we bump up the numerator
+    # and set the denominator to 1
+    else:
+        numerator *= TEN ** exponent
+        denominator = 1
+
+    return GncNumeric(numerator, denoninator)
                        
 
 def get_amount_from_trans_line(trans_line):
