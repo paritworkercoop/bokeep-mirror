@@ -67,11 +67,15 @@ def gnc_numeric_from_string(numeric_string):
 def get_amount_from_trans_line(trans_line):
     return gnc_numeric_from_string(str(trans_line.amount))
 
-def account_from_path(top_account, account_path):
+def account_from_path(top_account, account_path, original_path=None):
+    if original_path==None: original_path = account_path
     account, account_path = account_path[0], account_path[1:]
     account = top_account.lookup_by_name(account)
+    if account.get_instance() == None:
+        raise BoKeepTransactionNotMappableToFinancialTransaction(
+            "path" + ''.join(original_path) + " could not be found")
     if len(account_path) > 0 :
-        return account_from_path(account, account_path)
+        return account_from_path(account, account_path, original_path)
     else:
         return account
 
@@ -79,9 +83,30 @@ def get_account_from_trans_line(top_level_account, trans_line):
     assert( hasattr(trans_line, "account_spec") )
     return account_from_path(top_level_account, trans_line.account_spec)
 
-def make_new_split(book, amount, account, trans):
+def make_new_split(book, amount, account, trans, currency):
     from gnucash import Split
-    return_value = Split( book )
+    from gnucash.gnucash_core_c import gnc_commodity_get_fraction, \
+        xaccAccountGetCommodity, gnc_commodity_get_mnemonic, \
+        gnc_commodity_get_namespace
+        
+    if gnc_commodity_get_fraction(currency) != amount.denom():
+        raise BoKeepTransactionNotMappableToFinancialTransaction(
+            "Amount denominator doesn't match currency fraction")
+    if gnc_commodity_get_fraction(currency) != account.GetCommoditySCU():
+        raise BoKeepTransactionNotMappableToFinancialTransaction(
+            "Account smallest currency unit (SCU) doesn't match currency "
+            "fraction")
+    account_inst = account.get_instance()
+    if \
+            gnc_commodity_get_mnemonic(currency) == \
+            gnc_commodity_get_mnemonic(xaccAccountGetCommodity(account_inst)) \
+            and \
+            gnc_commodity_get_namespace(currency) == \
+            gnc_commodity_get_namespace(xaccAccountGetCommodity(account_inst)):
+        raise BoKeepTransactionNotMappableToFinancialTransaction(
+            "transaction currency and account don't match")
+    
+    return_value = Split(book)
     return_value.SetValue(amount)
     return_value.SetAmount(amount)
     return_value.SetAccount(account)
@@ -132,24 +157,40 @@ class GnuCash(BackendModule):
             # added
             trans = Transaction(self._v_session.book)
 
-            # create a list of GnuCash splits, set the amount, account,
-            # and parent them with the Transaction
-            lines = [ make_new_split(
-                    self._v_session.book,
-                    get_amount_from_trans_line(trans_line),
-                    get_account_from_trans_line(
-                        self._v_session.book.get_root_account(),
-                        trans_line),
-                    trans )
-                      for trans_line in fin_trans.lines ]
             
             commodtable = GncCommodityTable(
                 instance=gnc_commodity_table_get_table(
                     self._v_session.book.get_instance()) )
             CAD = gnc_commodity_table_lookup(
                 commodtable.get_instance(), "ISO4217","CAD")
-            
+
+            # create a list of GnuCash splits, set the amount, account,
+            # and parent them with the Transaction
+            lines = []
+            for trans_line in fin_trans.lines:
+                try:
+                    lines.append( make_new_split(
+                            self._v_session.book,
+                            get_amount_from_trans_line(trans_line),
+                            get_account_from_trans_line(
+                                self._v_session.book.get_root_account(),
+                                trans_line ),
+                            trans,
+                            CAD ) )
+                # catch problems fetching the account, currency mismatch
+                # with the account, or currency precisions mismatching
+                except BoKeepTransactionNotMappableToFinancialTransaction, e:
+                    trans.Destory() # undo what we have done
+                    raise e # and re-raise the exception
+                    
             trans.SetCurrency(CAD)
+
+            # if there's an imbalance
+            if trans.GetImbalance().num() != 0:
+                trans.Destory() # undo what we have done
+                raise BoKeepTransactionNotMappleToFinancialTransaction(
+                    "transaction doesn't balance")
+
             trans.SetDescription(
                 attribute_or_blank(fin_trans, "description") )
             trans.SetNum(
