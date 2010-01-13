@@ -67,14 +67,33 @@ def make_new_split(book, amount, account, trans, currency):
     from gnucash.gnucash_core_c import gnc_commodity_get_fraction, \
         xaccAccountGetCommodity, gnc_commodity_get_mnemonic, \
         gnc_commodity_get_namespace
-        
-    if gnc_commodity_get_fraction(currency) != amount.denom():
+
+    # the fraction tests used to be !=, but it was realized that
+    # there isn't a reason to be concerned if the amount denominator is
+    # smaller or equal to the currency fraction,
+    # e.g. if the amount is x/10 or x/100, and the currency fraction is
+    # x/100, there isn't a problem, because you don't lose information
+    # if you make amount into y/100 (y=10x [first example] or y=x
+    # [second example]
+    #
+    # But, there is an assumption of that sort of convertability
+    # always being possible for the conditions given for tolerance here
+    #
+    # if you end up with fractions like x/7 you can't exactly make them
+    # into y/5 or z/9, and unfortunalty these checks won't catch that
+    if gnc_commodity_get_fraction(currency) < amount.denom():
         raise BoKeepTransactionNotMappableToFinancialTransaction(
-            "Amount denominator doesn't match currency fraction")
-    if gnc_commodity_get_fraction(currency) != account.GetCommoditySCU():
+            "Amount denominator %s isn't compatible with currency "
+            "fraction 1/%s" % (
+                amount.denom(),
+                gnc_commodity_get_fraction(currency) ) )
+    if gnc_commodity_get_fraction(currency) < account.GetCommoditySCU():
         raise BoKeepTransactionNotMappableToFinancialTransaction(
-            "Account smallest currency unit (SCU) doesn't match currency "
-            "fraction")
+            "Account smallest currency unit (SCU) fraction 1/%s doesn't "
+            "match currency fraction 1/%s" % (
+                account.GetCommoditySCU(),
+                gnc_commodity_get_fraction(currency) ) )
+    
     account_inst = account.get_instance()
     if \
             gnc_commodity_get_mnemonic(currency) == \
