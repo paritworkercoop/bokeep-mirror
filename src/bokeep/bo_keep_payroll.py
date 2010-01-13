@@ -23,11 +23,11 @@ from bokeep.modules.payroll.plain_text_payroll import \
     payroll_succeeded, payroll_already_exists, \
     payroll_accounting_lines_imbalance, print_paystub, print_paystubs, \
     payday_accounting_lines_balance, add_new_payroll_from_import, \
-    add_new_payroll, generate_each_paystub_accounting_line, \
+    add_new_payroll, \
     payroll_init, payroll_add_employee, payroll_get_employees, \
     payroll_get_employee, payroll_get_paydays, payroll_get_payday, \
     payroll_remove_payday, payroll_runtime, payroll_has_payday_serial, \
-    payroll_run_main, payroll_ste_employee_attr, \
+    payroll_run_main, payroll_set_employee_attr, \
     payroll_set_all_employee_attr, payroll_add_timesheet, \
     payroll_get_payroll_module, payroll_employee_command, \
     payroll_payday_command
