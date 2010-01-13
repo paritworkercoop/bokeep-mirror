@@ -40,8 +40,6 @@ def gnc_numeric_from_decimal(decimal_value):
         numerator *= TEN ** exponent
         denominator = 1
 
-    print 'converted %s to %s/%s' %(decimal_value, numerator, denominator)
-
     return GncNumeric(numerator, denominator)
                        
 
