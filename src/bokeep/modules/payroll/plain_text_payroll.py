@@ -180,3 +180,10 @@ def get_ytd_sum_of_class(paystub_line_class):
         return paystub.employee.get_YTD_sum_of_paystub_line_class(
                         paystub_line_class, paystub, True)
     return return_function
+
+def get_all_time_sum_of_class(paystub_line_class):
+    def return_function(paystub):
+        return paystub.employee.get_sum_of_all_paystub_line_class(
+            paystub_line_class, paystub, True)
+    return return_function
+
