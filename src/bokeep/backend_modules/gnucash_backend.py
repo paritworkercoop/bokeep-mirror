@@ -52,7 +52,7 @@ def account_from_path(top_account, account_path, original_path=None):
     account = top_account.lookup_by_name(account)
     if account.get_instance() == None:
         raise BoKeepTransactionNotMappableToFinancialTransaction(
-            "path" + ''.join(original_path) + " could not be found")
+            "path " + ''.join(original_path) + " could not be found")
     if len(account_path) > 0 :
         return account_from_path(account, account_path, original_path)
     else:
