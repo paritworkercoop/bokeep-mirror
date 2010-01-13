@@ -51,6 +51,7 @@ class BackendModule(Persistent):
     def mark_transaction_dirty(self, entity_identifier, transaction):
         if entity_identifier not in self.dirty_transaction_set:
             self.dirty_transaction_set[entity_identifier] = transaction
+        self._p_changed = True
         
     def set_backend_transaction_identifier(
         self, entity_identifier, backend_identifier):
@@ -68,6 +69,18 @@ class BackendModule(Persistent):
        # because it is a just a base class, you should subclass and
        # return True here when appropriate
        return False
+
+    def remove_front_end_transaction(self, frontend_ident):
+        backend_idents = \
+            self.get_backend_transaction_identifier(frontend_ident)
+        if frontend_ident in self.front_end_to_back_id:
+            del self.front_end_to_back_id[frontend_ident]
+        if frontend_ident in self.dirty_transaction_set:
+            del self.dirty_transaction_set[frontend_ident]
+        self._p_changed = True
+        if backend_idents != None:
+            for backend_ident in backend_idents:
+                self.remove_backend_transaction(backend_ident)
 
     def remove_backend_transaction(self, backend_ident):
         raise Exception("backend modules must implement "
@@ -114,7 +127,12 @@ class BackendModule(Persistent):
             for key, value in self.dirty_transaction_set.iteritems():
                 try:
                     self.flush_transaction(key)
-                except BoKeepTransactionNotMappableToFinancialTransaction:
+                except \
+                   BoKeepTransactionNotMappableToFinancialTransaction, e:
+                    if hasattr(self, "error_log_file"):
+                        error_log = file(self.error_log_file, "a")
+                        error_log.write(e.message + "\n")
+                        error_log.close()
                     not_flushable_set[key] = value
             self.save()
             self.dirty_transaction_set = not_flushable_set

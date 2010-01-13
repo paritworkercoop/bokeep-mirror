@@ -40,7 +40,9 @@ def gnc_numeric_from_decimal(decimal_value):
         numerator *= TEN ** exponent
         denominator = 1
 
-    return GncNumeric(numerator, denoninator)
+    print 'converted %s to %s/%s' %(decimal_value, numerator, denominator)
+
+    return GncNumeric(numerator, denominator)
                        
 
 def get_amount_from_trans_line(trans_line):
@@ -83,8 +85,9 @@ def make_new_split(book, amount, account, trans, currency):
     # into y/5 or z/9, and unfortunalty these checks won't catch that
     if gnc_commodity_get_fraction(currency) < amount.denom():
         raise BoKeepTransactionNotMappableToFinancialTransaction(
-            "Amount denominator %s isn't compatible with currency "
+            "Amount (%s) denominator %s isn't compatible with currency "
             "fraction 1/%s" % (
+                amount.num(),
                 amount.denom(),
                 gnc_commodity_get_fraction(currency) ) )
     if gnc_commodity_get_fraction(currency) < account.GetCommoditySCU():
@@ -178,14 +181,14 @@ class GnuCash(BackendModule):
                 # catch problems fetching the account, currency mismatch
                 # with the account, or currency precisions mismatching
                 except BoKeepTransactionNotMappableToFinancialTransaction, e:
-                    trans.Destory() # undo what we have done
+                    trans.Destroy() # undo what we have done
                     raise e # and re-raise the exception
                     
             trans.SetCurrency(CAD)
 
             # if there's an imbalance
             if trans.GetImbalance().num() != 0:
-                trans.Destory() # undo what we have done
+                trans.Destroy() # undo what we have done
                 raise BoKeepTransactionNotMappleToFinancialTransaction(
                     "transaction doesn't balance")
 

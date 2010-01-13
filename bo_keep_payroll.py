@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from sys import argv
 
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet

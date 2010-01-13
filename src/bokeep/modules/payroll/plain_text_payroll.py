@@ -37,8 +37,9 @@ PAYROLL_DATABASE_MISSING_EMPLOYEE = 5
 PAYROLL_VACPAY_DRAW_TOO_MUCH = 6
 
 def decimal_from_float(float_value, places=2):
-    formatstring = '%.' + places + 'f'
-    return Decimal(formatstring % float_value)
+    formatstring = '%.' + str(places) + 'f'
+    return_value = Decimal(formatstring % float_value)
+    return return_value
 
 def decimal_from_whatever(value, places=2):
     if type(value) == float:
@@ -50,7 +51,8 @@ def decimal_from_whatever(value, places=2):
     
 def create_paystub_line(paystub_line_class):
     def return_function(employee, employee_info_dict, paystub, value):
-        value = decimal_from_whatever(value)
+        if value !=None:
+            value = decimal_from_whatever(value)
         paystub.add_paystub_line( paystub_line_class(paystub, value) )
     return return_function
 
@@ -269,11 +271,11 @@ def add_new_payroll_from_import(
         paystub_line_config, paystub_accounting_line_config, \
         print_paystub_line_config
 
-    add_new_payroll(book, payroll_module, display_paystubs, paydate,
+    assert( (0,None) == add_new_payroll(book, payroll_module, display_paystubs, paydate,
                     payday_serial, emp_list, chequenum_start,
                     period_start, period_end, paystub_line_config,
                     paystub_accounting_line_config,
-                    print_paystub_line_config, '', overwrite_existing)
+                    print_paystub_line_config, '', overwrite_existing) )
 
 def add_new_payroll(book, payroll_module, display_paystubs, paydate,
                     payday_serial, emp_list, chequenum_start, period_start,
@@ -288,19 +290,24 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         if not (overwrite_existing):
             return PAYROLL_ALREADY_EXISTS, None
         else:
+            # jeez, shouldn't there be a prompt here before we just go
+            # on and remove? Didn't there use to be?
             (payday_trans_id, payday) = payroll_module.get_payday(
                 paydate, payday_serial)
             payroll_module.remove_payday(paydate, payday_serial)
             book.remove_transaction(payday_trans_id)
-    
+
     payday = Payday(paydate, period_start, period_end)
     payday_trans_id = book.insert_transaction(payday)
-    payroll_module.add_payday(paydate, payday_serial, payday_trans_id, payday)
+    payroll_module.add_payday(paydate, payday_serial,
+                              payday_trans_id, payday)
 
     for emp in emp_list:
         employee_name = emp['name']
         if not payroll_module.has_employee(employee_name):
             if not add_missing_employees:
+                payroll_module.remove_payday(paydate, payday_serial)
+                book.remove_transaction(payday_trans_id)
                 return PAYROLL_DATABASE_MISSING_EMPLOYEE, employee_name
 
             employee = Employee(employee_name)
@@ -315,6 +322,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
                 if key in emp:
                     function( employee, emp, paystub, emp[key] )
         except VacationPayoutTooMuchException:
+            payroll_module.remove_payday(paydate, payday_serial)
+            book.remove_transaction(payday_trans_id)
             return PAYROLL_VACPAY_DRAW_TOO_MUCH, employee_name 
     
         if emp.has_key('cheque_override'):
@@ -446,6 +455,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         
     if payday_accounting_lines_balance(payday):
         backend_module = book.get_backend_module()
+        backend_module.error_log_file = "bo_keep_backend_error_log"
         backend_module.mark_transaction_dirty(payday_trans_id,
                                               payday)
         backend_module.flush_backend()
@@ -457,6 +467,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         payroll_module.remove_payday(paydate, payday_serial)
         book.remove_transaction(payday_trans_id)
         return PAYROLL_ACCOUNTING_LINES_IMBALANCE, None
+
+    print list(book.trans_tree.iteritems())
 
     return RUN_PAYROLL_SUCCEEDED, None    
 
