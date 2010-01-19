@@ -174,12 +174,9 @@ class TransactionMirror(object):
         self.trans_id = trans_id
     
     def __getattribute__(self, attr_name):
-        # if we're looking for an attribute from this instance, return it
-        if hasattr(self, attr_name):
+        try:
             return object.__getattribute__(self, attr_name)
-        # else assuming we're fetching an attribute that is an instance mutator
-        # function that will modify the transaction
-        else:
+        except AttributeError:
             def ret_function(*args, **kargs):                
                 # note the intentional lack of return
                 self.trans_thread.mod_transaction_with_func(

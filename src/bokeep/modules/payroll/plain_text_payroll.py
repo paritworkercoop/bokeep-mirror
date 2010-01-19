@@ -271,11 +271,11 @@ def add_new_payroll_from_import(
         paystub_line_config, paystub_accounting_line_config, \
         print_paystub_line_config
 
-    assert( (0,None) == add_new_payroll(book, payroll_module, display_paystubs, paydate,
+    add_new_payroll(book, payroll_module, display_paystubs, paydate,
                     payday_serial, emp_list, chequenum_start,
                     period_start, period_end, paystub_line_config,
                     paystub_accounting_line_config,
-                    print_paystub_line_config, '', overwrite_existing) )
+                    print_paystub_line_config, '', overwrite_existing)
 
 def add_new_payroll(book, payroll_module, display_paystubs, paydate,
                     payday_serial, emp_list, chequenum_start, period_start,
@@ -577,6 +577,19 @@ def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo,
         if bookset_close_needed:
             bookset.close()
         return False
+
+
+def handle_backend_command(book, args):
+    cmd = args[0]
+    if cmd == "set":
+        book.set_backend_module(args[1])
+    if cmd == "setattr":
+        #be warned that I don't think this backend command can usefully set
+        #to non-string attributes, since command line args are seen as strings
+        #I tried a variety of values like 99 and 4.2 that could have been 
+        #parsed to non-string but they still ended up string.
+        mod = book.get_backend_module()
+        mod.setattr(args[1], args[2])
 
 def payroll_get_payroll_module(bookname, bookset):
     book = bookset.get_book(bookname)

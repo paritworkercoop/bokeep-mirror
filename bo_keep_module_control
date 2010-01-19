@@ -6,19 +6,7 @@ from sys import argv
 # Bo-Keep
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-
-def handle_backend_command(book, args):
-    cmd = args[0]
-    if cmd == "set":
-        book.set_backend_module(args[1])
-    if cmd == "setattr":
-        #be warned that I don't think this backend command can usefully set
-        #to non-string attributes, since command line args are seen as strings
-        #I tried a variety of values like 99 and 4.2 that could have been 
-        #parsed to non-string but they still ended up string.
-        mod = book.get_backend_module()
-        mod.setattr(args[1], args[2])
-
+from bokeep.modules.payroll.plain_text_payroll import handle_backend_command
 
 def bokeep_main():
     bookset = BoKeepBookSet( get_database_cfg_file() )

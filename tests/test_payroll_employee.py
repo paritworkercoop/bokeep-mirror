@@ -5,7 +5,8 @@ import filecmp
 
 #from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bokeep.bo_keep_payroll import payroll_add_employee, payroll_get_employees
+from bokeep.modules.payroll.plain_text_payroll \
+    import payroll_add_employee, payroll_get_employees
 
 EMP_TEST_BOOKNAME = 'paytest'
 
@@ -31,6 +32,7 @@ class empTestCase(unittest.TestCase):
 
     def testEmpAddAndGet(self):
         bookset = BoKeepBookSet( TEST_ZOPEDB_CONFIG)
+        self.assert_( bookset.has_book(EMP_TEST_BOOKNAME) )
         payroll_add_employee(EMP_TEST_BOOKNAME, "george costanza", bookset)
         payroll_add_employee(EMP_TEST_BOOKNAME, "susie", bookset)
         
@@ -44,16 +46,6 @@ class empTestCase(unittest.TestCase):
         self.assertFalse( emplist[SECOND_EMP] == None)
 
         bookset.close()
-#        for emp in emplist:
-#            if not(str(emp) == str(empsWeWant print 'emp : ' + str(emp)
-        
-
-        
-
-        
-#class empTestSuite(unittest.TestSuite):
-#    def __init__(self):
-#        unittest.TestSuite.__init__(self,map(empTestCase, ()))
 
 if __name__ == "__main__":
     unittest.main()

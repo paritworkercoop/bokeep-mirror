@@ -1,20 +1,14 @@
 from unittest import TestCase, main
 
+import sys
+
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
     Transaction, new_transaction_committing_thread, TransactionMirror
 from bokeep.util import ends_with_commit
 
-class Type1Transaction(Transaction):
-    def __init__(self):
-        Transaction.__init__(self)
-        self.reset_data()
-    
-    def reset_data(self):
-        self.data = "blah"
+from bokeep.modules.test.module import Type1Transaction
 
-    def append_data(self, append_text):
-        self.data += append_text
 
 class BoKeepBasicTest(TestCase):
     def setUp(self):
@@ -28,6 +22,7 @@ class BoKeepBasicTest(TestCase):
             Type1Transaction() )
 
     def test_interesting_sequence(self):
+
         self.assertEquals( self.test_book_1.book_name, "test_book_1" )
 
         @ends_with_commit
@@ -77,8 +72,8 @@ class BoKeepBasicTest(TestCase):
             trans_thread.add_change_tracker_block((book.book_name, trans_key))
             trans_thread.remove_change_tracker((book.book_name, trans_key))
             
-        use_commit_thread_again(self.trans_thread, self.books,
-                                self.test_book_1, trans_key)
+        use_commit_thread_again(trans_thread, self.books,
+                                self.test_book_1, self.trans_key)
 
         trans = self.test_book_1.get_transaction(self.trans_key)
         self.assertEquals( trans.data, "blah shoot" )
@@ -87,8 +82,12 @@ class BoKeepBasicTest(TestCase):
         def use_mirror_class(books, book, trans_key):
             trans_thread.add_change_tracker_block((book.book_name, trans_key))
             mirror = TransactionMirror( book.book_name, trans_key, trans_thread)
-            mirror.data = "juice"
+            # we should test for all three of these states, not just the final
+            # state ...
+            mirror.reset_data()
             mirror.append_data(" maker")
+            # this isn't working...
+            #mirror.data = "juice maker"
             trans_thread.remove_change_tracker((book.book_name, trans_key))
             trans_thread.add_change_tracker_block((book.book_name, trans_key))
             trans_thread.remove_change_tracker((book.book_name, trans_key))
@@ -98,5 +97,8 @@ class BoKeepBasicTest(TestCase):
         trans_thread.end_thread_and_join()
 
         trans = self.test_book_1.get_transaction(self.trans_key)
-        self.assertEquals( trans.data, "juice maker" )
+        self.assertEquals( trans.data, "blah maker" )
         self.test_book_1.remove_transaction(self.trans_key)
+
+if __name__ == "__main__":
+    main()
