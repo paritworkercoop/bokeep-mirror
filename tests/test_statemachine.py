@@ -34,7 +34,7 @@ class StateMachineTest(TestCase):
             )
         self.fear = 0
     
-    def enough_fear_to_transition(self, state_machine):
+    def enough_fear_to_transition(self, state_machine, next_state):
         return self.fear / 5 > state_machine.state
 
     def test_strait_up_transition_to_darkness(self):
@@ -48,6 +48,19 @@ class StateMachineTest(TestCase):
         self.assertEquals( self.dark_side_path.state, SUFFERING )
         self.dark_side_path.advance_state_machine()
         self.assertEquals( self.dark_side_path.state, SUFFERING )
+
+    def test_stuck_in_gear(self):
+        self.assertEquals( self.dark_side_path.state, FEAR )
+        self.dark_side_path.advance_state_machine()
+        self.assertEquals( self.dark_side_path.state, FEAR )
+        self.fear = 5
+        self.assertEquals( self.dark_side_path.state, FEAR )
+        self.dark_side_path.advance_state_machine()
+        self.assertEquals( self.dark_side_path.state, ANGER )
+        self.dark_side_path.advance_state_machine()
+        self.assertEquals( self.dark_side_path.state, ANGER )
+        self.dark_side_path.advance_state_machine()
+        self.assertEquals( self.dark_side_path.state, ANGER )
 
 
 if __name__ == "__main__":

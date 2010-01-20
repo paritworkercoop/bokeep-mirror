@@ -291,8 +291,55 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
             del self.end_change_lookup_dict[message.entity_identifier]
 
 class FunctionAndDataDrivenStateMachine(object):
+    """A state machine where posible transitions are tested by boolean
+    functions and followed up by transition functions, and a piece of
+    data is kept at all times and altered during each transition.
+
+    States are identified by sequential integers starting at zero
+
+    When you call init, you provide the argument transition_rules_for_states.
+    This is the table of transition rules.
+
+    The outer level is a tuple, each element of the tuple is rules
+    for leaving each particular state. For example,
+    transition_rules_for_states[0] is rules for leaving state 0.
+
+    Each set of rules is also a tuple (middle level). Each rule is
+    considered, in order until a matching rule is found, subsequent
+    rules are not considered. So, for example,
+    transition_rules_for_states[2][0] is the first rule considered
+    for leaving state 2, transition_rules_for_states[2][1] is the
+    second rule considered for leaving state 2 and so on.
+
+    The rules themselves are tuples as well. (inner level).
+    They consist of a function for checking if a transition should be made,
+    a function to be executed if the transition is made, and the next state
+    (condition_func, transition_func, next_state) = rule
+    The function condition_func is passed the state machine and the
+    possible next state. If condition_func returns True, the rule is
+    considered a match, a transition is made to the next state,
+    and subsequent rules are not considered. On transition,
+    the transition function is called with the state machine, and the
+    new state. Whatever it returns will be put in the data field.
+
+    So, that's three different levels of nested tuple,
+    the outer level (state table), the middle level (rule list per state),
+    and inner level (rule).
+
+    The current state and data are always available via the data
+    and state properties, or the get_data and get_state functions.
+    You can not change them directly, only a state transition can do that.
+
+    Calling advance_state_machine() triggers the tests for the current state.
+
+    You may find the example in tests/test_statemachine.py amusing.
+    """
+
     def __init__(self, transition_rules_for_states, initial_state=0,
                  data=None ):
+        """Initialize with transition rules for each state, and optionally
+        include the initial state (default 0) or data (default None).
+        """
         self.__transition_rules_for_states = transition_rules_for_states
         self.__data = data
         self.__state = initial_state
@@ -300,17 +347,18 @@ class FunctionAndDataDrivenStateMachine(object):
     def get_data(self):
         return self.__data
 
+    data = property(get_data)
+    
     def get_state(self):
         return self.__state
 
-    data = property(get_data)
     state = property(get_state)
 
     def advance_state_machine(self):
         new_state = self.__state
         for i, (condition_func, transition_func, pos_new_state) in enumerate(
             self.__transition_rules_for_states[self.__state]):
-            if condition_func(self):
+            if condition_func(self, pos_new_state):
                 new_state = pos_new_state
                 self.__data = transition_func(self, new_state)
                 break
