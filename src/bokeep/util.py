@@ -289,3 +289,30 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         # hook into this
         if self.end_change_lookup_dict[message.entity_identifier] == message:
             del self.end_change_lookup_dict[message.entity_identifier]
+
+class FunctionAndDataDrivenStateMachine(object):
+    def __init__(self, transition_rules_for_states, initial_state=0,
+                 data=None ):
+        self.__transition_rules_for_states = transition_rules_for_states
+        self.__data = data
+        self.__state = initial_state
+
+    def get_data(self):
+        return self.__data
+
+    def get_state(self):
+        return self.__state
+
+    data = property(get_data)
+    state = property(get_state)
+
+    def advance_state_machine(self):
+        new_state = self.__state
+        for i, (condition_func, transition_func, pos_new_state) in enumerate(
+            self.__transition_rules_for_states[self.__state]):
+            if condition_func(self):
+                new_state = pos_new_state
+                self.__data = transition_func(self, new_state)
+                break
+        self.__state = new_state
+        
