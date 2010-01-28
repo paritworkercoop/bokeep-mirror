@@ -363,4 +363,30 @@ class FunctionAndDataDrivenStateMachine(object):
                 self.__data = transition_func(self, new_state)
                 break
         self.__state = new_state
-        
+
+    def run_until_steady_state(self):
+        old_state = None
+        while old_state != self.state:
+            old_state = self.state
+            self.advance_state_machine()
+
+def state_machine_always_true(state_machine, next_state):
+    return True
+
+def state_machine_do_nothing(state_machine, next_state):
+    return state_machine.data
+
+class StateMachineMinChangeDataStore(object):
+    def __init__(self, **kargs):
+        # intentionaly not readable by outside world
+        self.__values = kargs
+
+    def duplicate_and_change(self, **kargs):
+        new_args = self.__values
+        for key, value in kargs.iteritems():
+            new_args[key] = value
+        return BackendStateMachineDataStore(**new_args)
+
+
+    def get_value(self, key):
+        return self.__values[key]
