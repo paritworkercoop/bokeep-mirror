@@ -1,7 +1,5 @@
 # bokeep imports
 from module import BackendModule
-from bokeep.book_transaction import \
-    BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.util import attribute_or_blank
 from decimal import Decimal 
 
@@ -72,7 +70,7 @@ credits
                        for line in credits )
         } )
         except IOError:
-            raise BoKeepTransactionNotMappableToFinancialTransaction()
+            raise BoKeepBackendException
                 
         return_value = self.count
         self.count = self.count + 1

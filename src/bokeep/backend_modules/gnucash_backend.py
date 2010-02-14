@@ -3,9 +3,7 @@ from decimal import Decimal
 from datetime import date
 
 # bokeep imports
-from module import BackendModule
-from bokeep.book_transaction import \
-    BoKeepTransactionNotMappableToFinancialTransaction
+from module import BackendModule, BoKeepBackendException
 from bokeep.util import attribute_or_blank
 
 
@@ -51,7 +49,7 @@ def account_from_path(top_account, account_path, original_path=None):
     account, account_path = account_path[0], account_path[1:]
     account = top_account.lookup_by_name(account)
     if account.get_instance() == None:
-        raise BoKeepTransactionNotMappableToFinancialTransaction(
+        raise BoKeepBackendException(
             "path " + ''.join(original_path) + " could not be found")
     if len(account_path) > 0 :
         return account_from_path(account, account_path, original_path)
@@ -82,14 +80,14 @@ def make_new_split(book, amount, account, trans, currency):
     # if you end up with fractions like x/7 you can't exactly make them
     # into y/5 or z/9, and unfortunalty these checks won't catch that
     if gnc_commodity_get_fraction(currency) < amount.denom():
-        raise BoKeepTransactionNotMappableToFinancialTransaction(
+        raise BoKeepBackendException(
             "Amount (%s) denominator %s isn't compatible with currency "
             "fraction 1/%s" % (
                 amount.num(),
                 amount.denom(),
                 gnc_commodity_get_fraction(currency) ) )
     if gnc_commodity_get_fraction(currency) < account.GetCommoditySCU():
-        raise BoKeepTransactionNotMappableToFinancialTransaction(
+        raise BoKeepBackendException(
             "Account smallest currency unit (SCU) fraction 1/%s doesn't "
             "match currency fraction 1/%s" % (
                 account.GetCommoditySCU(),
@@ -102,7 +100,7 @@ def make_new_split(book, amount, account, trans, currency):
             and \
             gnc_commodity_get_namespace(currency) == \
             gnc_commodity_get_namespace(xaccAccountGetCommodity(account_inst)):
-        raise BoKeepTransactionNotMappableToFinancialTransaction(
+        raise BoKeepBackendException(
             "transaction currency and account don't match")
     
     return_value = Split(book)
@@ -178,7 +176,7 @@ class GnuCash(BackendModule):
                             CAD ) )
                 # catch problems fetching the account, currency mismatch
                 # with the account, or currency precisions mismatching
-                except BoKeepTransactionNotMappableToFinancialTransaction, e:
+                except BoKeepBackendException, e:
                     trans.Destroy() # undo what we have done
                     raise e # and re-raise the exception
                     
@@ -187,7 +185,7 @@ class GnuCash(BackendModule):
             # if there's an imbalance
             if trans.GetImbalance().num() != 0:
                 trans.Destroy() # undo what we have done
-                raise BoKeepTransactionNotMappleToFinancialTransaction(
+                raise BoKeepBackendException(
                     "transaction doesn't balance")
 
             trans.SetDescription(
