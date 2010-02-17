@@ -385,7 +385,7 @@ class StateMachineMinChangeDataStore(object):
         new_args = self.__values
         for key, value in kargs.iteritems():
             new_args[key] = value
-        return BackendStateMachineDataStore(**new_args)
+        return StateMachineMinChangeDataStore(**new_args)
 
 
     def get_value(self, key):

@@ -37,6 +37,11 @@ class StateMachineTest(TestCase):
     def enough_fear_to_transition(self, state_machine, next_state):
         return self.fear / 5 > state_machine.state
 
+    def test_direct_to_darkness(self):
+        self.fear = 20
+        self.dark_side_path.run_until_steady_state()
+        self.assertEquals( self.dark_side_path.state, SUFFERING )        
+
     def test_strait_up_transition_to_darkness(self):
         self.fear = 20
         self.assertEquals( self.dark_side_path.state, FEAR )
