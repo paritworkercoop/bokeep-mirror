@@ -81,15 +81,17 @@ class BackendModuleBasicSetup(TestCase):
         self.backend_module = BackendModuleUnitTest()
         self.transaction = TestTransaction()
 
+    def look_for_save(self):
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 1)
+        self.assertEquals(actions.pop()[0], SAVE)
+
 class BasicBackendModuleTest(BackendModuleBasicSetup):
     def test_null_reset(self):
         # hmm, still saves even if no changes, might want to change that
         # someday
         self.backend_module.flush_backend()
-        actions = self.backend_module.pop_actions_queue()
-        self.assertEquals(len(actions), 1)
-        self.assertEquals(actions.pop()[0], SAVE)
-
+        self.look_for_save()
 
 class StartWithInsertSetup(BackendModuleBasicSetup):
     def setUp(self):
@@ -100,11 +102,57 @@ class StartWithInsertSetup(BackendModuleBasicSetup):
 
 
 class StartWithInsertTest(StartWithInsertSetup):
-    def test_setup_stage(self):
+    def test_transaction_create_and_remove(self):
         self.backend_module.flush_backend()
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 2)
-        #self.assertEquals(actions.pop()[0], SAVE)
+
+        action1 = actions.pop()
+        self.assertEquals(len(action1), 3)
+        cmd, return_val, transaction = action1
+        self.assertEquals(cmd, CREATE)
+        self.assertEquals(return_val, 1)
+        self.assertEquals(transaction,
+                          self.transaction.get_financial_transactions()[0])
+        
+        action2 = actions.pop()
+        self.assertEquals(len(action2), 2)
+        cmd, return_val = action2
+        self.assertEquals(cmd, SAVE)
+        self.assertEquals(return_val, None)
+
+        self.backend_module.flush_backend()
+        self.look_for_save()
+
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id, self.transaction)
+        self.backend_module.flush_backend()
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 4) # verify, remove, create, save
+
+        action1 = actions.pop()
+        self.assertEquals(len(action1), 4)
+        cmd, return_val, backend_ident, fin_trans = action1
+        self.assertEquals(cmd, VERIFY)       
+        self.assertEquals(return_val, True)
+        self.assertEquals(backend_ident, 1)
+        self.assertEquals(fin_trans,
+                          self.transaction.get_financial_transactions()[0] )
+
+        action2 = actions.pop()
+        self.assertEquals(len(action2), 3)
+        cmd, return_val, backend_ident = action2
+        self.assertEquals(cmd, REMOVE)
+        self.assertEquals(return_val, None)
+        self.assertEquals(backend_ident, 1)
+
+        action3 = actions.pop()
+        self.assertEquals(len(action3), 3)
+        cmd, return_val, transaction = action3
+        self.assertEquals(cmd, CREATE)
+        self.assertEquals(return_val, 2)
+        self.assertEquals(transaction,
+                          self.transaction.get_financial_transactions()[0])
 
 if __name__ == "__main__":
     main()
