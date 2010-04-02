@@ -157,16 +157,21 @@ class StartWithInsertSetup(BackendModuleBasicSetup):
             self.front_end_id, self.transaction)
         self.FIRST_BACKEND_ID = 1
 
-    # this test is intended to run when inherited by both the StartWithInsert
-    # and StartWithInsertAndFlushTest classes, in both cases the same result
-    # is expected
-    def test_forced_remove_of_non_held_transaction(self):
+    def force_remove_known_transaction(self):
+        self.backend_module.mark_transaction_for_forced_remove(
+            self.front_end_id)
+
+    # not an actual test case, has to be called by a function
+    # that starts with test in the name
+    def run_test_of_forced_remove_of_non_held_transaction(self):
         self.assertRaises(
             BoKeepBackendException,
-            self.backend_module.mark_transaction_for_forced_remove,
-            self.front_end_id )
+            self.force_remove_known_transaction)
 
 class StartWithInsertTest(StartWithInsertSetup):
+    def test_forced_remove_of_non_held_transaction(self):
+        self.run_test_of_forced_remove_of_non_held_transaction()
+
     def test_hold_of_uncommited_new_transaction(self):
         self.backend_module.mark_transaction_for_hold(self.front_end_id)
         self.backend_module.flush_backend()
@@ -206,6 +211,9 @@ class StartWithInsertAndFlushSetup(StartWithInsertSetup):
         self.SECOND_BACKEND_ID = self.FIRST_BACKEND_ID+1
 
 class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
+    def test_forced_remove_of_non_held_transaction(self):
+        self.run_test_of_forced_remove_of_non_held_transaction()
+        
     def test_transaction_verify(self):
         # this should do a VERIFY and a SAVE
         self.backend_module.mark_transaction_for_verification(
@@ -261,10 +269,23 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
 class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
     def setUp(self):
         StartWithInsertAndFlushSetup.setUp(self)
+        self.backend_module.mark_transaction_for_hold(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.backend_module.pop_actions_queue()
 
-    # no longer applies
-    def test_forced_remove_of_non_held_transaction(self):
-        pass
+
+class InsertFlushAndHoldTest(StartWithInsertFlushAndHoldSetup):
+    def test_success_force_remove(self):
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 0)
+        
+        self.force_remove_known_transaction()
+        self.backend_module.flush_backend()
+        actions = self.backend_module.pop_actions_queue()
+        # expecting REMOVE and SAVE
+        self.assertEquals(len(actions), 2)
+        self.look_for_remove(actions, self.FIRST_BACKEND_ID)
+        self.look_for_save(actions)
 
 if __name__ == "__main__":
     main()

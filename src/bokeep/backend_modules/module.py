@@ -717,6 +717,13 @@ class BackendModule(Persistent):
                             self.BACKEND_SAFE_REMOVE_REQUESTED),
                    self.__remove_transaction_state_machine,
                    self.NO_BACKEND_EXIST ),
+                  # if a forced remove was requested, it must of been sucessful
+                  # if we got this far, just get rid of the state machine now
+                  # seeing how we've succeeded
+                  (self.__particular_input_state_machine(
+                            self.BACKEND_BLOWOUT_REQUESTED),
+                   self.__remove_transaction_state_machine,
+                   self.NO_BACKEND_EXIST ),
                   # if a hold has been requested, its easy, we just
                   # go into the hold state
                   (self.__particular_input_state_machine(
