@@ -331,6 +331,11 @@ class BackendModule(Persistent):
             self._p_changed = True
 
     def mark_transaction_for_forced_remove(self, trans_id):
+        """Will ensure a transaction in a held state is removed despite
+        being out of sync. If you want to try recreating the transaction
+        again after, you have to flush_backend() after this, and then call
+        mark_transaction_as_dirty and flush_backend()
+        """
         self.__transaction_invarient(trans_id)
         if self.__trans_id_in_held_set(trans_id):
             self.__transaction_invarient(trans_id)
