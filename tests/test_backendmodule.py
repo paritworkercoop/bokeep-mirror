@@ -118,12 +118,44 @@ class BackendModuleBasicSetup(TestCase):
         self.assertEquals(return_val, backend_id)
         self.assertEquals(transaction, fin_trans)
 
+    def assertBackendException(self, callable, *args, **kargs):
+        self.assertRaises(
+            BoKeepBackendException, callable, *args, **kargs)
+
+    def assertTransactionIsCleanFail(self, trans_id):
+        self.assertBackendException(
+            self.backend_module.transaction_is_clean,
+            trans_id )
+
+    def assertTransactionIsClean(self, trans_id):
+        self.assert_(
+            self.backend_module.transaction_is_clean(trans_id))
+        # this should not throw an exception, idealy we'd check that
+        # it always returns None instead of a string, but we're not
+        # too worried about forcing that, a backend implementation
+        # doesn't need to do that...
+        self.assertRaises(
+            BoKeepBackendException,
+            self.backend_module.reason_transaction_is_dirty,
+            trans_id )
+
+    def assertTransactionIsDirty(self, trans_id):
+        self.assertFalse(
+            self.backend_module.transaction_is_clean(trans_id))
+
+        self.assert_( isinstance(
+                self.backend_module.reason_transaction_is_dirty(trans_id),
+                str ) )
+
 class BasicBackendModuleTest(BackendModuleBasicSetup):
     def test_null_reset(self):
         # hmm, still saves even if no changes, might want to change that
         # someday
         self.backend_module.flush_backend()
         self.pop_all_look_for_save()
+
+    def test_clean_check_on_none(self):
+        self.assertTransactionIsCleanFail(None)
 
     def test_verify_fail_on_none(self):
         self.assertRaises(
@@ -169,12 +201,17 @@ class StartWithInsertSetup(BackendModuleBasicSetup):
             self.force_remove_known_transaction)
 
 class StartWithInsertTest(StartWithInsertSetup):
+    def test_initial_dirtyness(self):
+        self.assertTransactionIsDirty(self.front_end_id)
+
     def test_forced_remove_of_non_held_transaction(self):
         self.run_test_of_forced_remove_of_non_held_transaction()
 
     def test_hold_of_uncommited_new_transaction(self):
         self.backend_module.mark_transaction_for_hold(self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
         # this should just save, in the future, we might even avoid the
         # wasted save here
         self.pop_all_look_for_save()
@@ -194,11 +231,14 @@ class StartWithInsertTest(StartWithInsertSetup):
 
     def test_remove_right_after_insert(self):
         self.backend_module.mark_transaction_for_removal(self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
+        self.assertTransactionIsCleanFail(self.front_end_id)
         self.pop_all_look_for_save()
 
     def test_create(self):
         self.backend_module.flush_backend()
+        self.assertTransactionIsClean(self.front_end_id)
         actions = self.backend_module.pop_actions_queue()
         self.look_for_create(actions, self.FIRST_BACKEND_ID, self.fin_trans )
         self.look_for_save(actions)
@@ -211,6 +251,9 @@ class StartWithInsertAndFlushSetup(StartWithInsertSetup):
         self.SECOND_BACKEND_ID = self.FIRST_BACKEND_ID+1
 
 class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
+    def test_dirty_after_flush(self):
+        self.assertTransactionIsClean(self.front_end_id)
+
     def test_forced_remove_of_non_held_transaction(self):
         self.run_test_of_forced_remove_of_non_held_transaction()
         
@@ -218,7 +261,9 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
         # this should do a VERIFY and a SAVE
         self.backend_module.mark_transaction_for_verification(
             self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
+        self.assertTransactionIsClean(self.front_end_id)
         
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 2)
@@ -246,7 +291,9 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
     def test_transaction_dirty_refresh(self):
         self.backend_module.mark_transaction_dirty(
             self.front_end_id, self.transaction)
+        self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
+        self.assertTransactionIsClean(self.front_end_id)
 
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 4) # verify, remove, create, save
@@ -258,7 +305,10 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
 
     def test_transaction_remove(self):
         self.backend_module.mark_transaction_for_removal(self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
+        self.assertTransactionIsCleanFail(self.front_end_id)
+
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 3) # verify, remove, save
         self.look_for_verify(actions, self.fin_trans)
@@ -275,12 +325,18 @@ class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
 
 
 class InsertFlushAndHoldTest(StartWithInsertFlushAndHoldSetup):
+    def test_after_flush(self):
+        self.assertTransactionIsDirty(self.front_end_id)
+
     def test_success_force_remove(self):
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 0)
         
         self.force_remove_known_transaction()
+        self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
+        self.assertTransactionIsCleanFail(self.front_end_id)
+
         actions = self.backend_module.pop_actions_queue()
         # expecting REMOVE and SAVE
         self.assertEquals(len(actions), 2)

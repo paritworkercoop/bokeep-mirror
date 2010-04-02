@@ -139,14 +139,34 @@ class BackendModule(Persistent):
     """
 
     # state machine inputs
+    # keep these syncronized with MACHINE_INPUT_STRINGS
     (BACKEND_RECREATE, BACKEND_VERIFICATION_REQUESTED,
      BACKEND_LEAVE_ALONE_REQUESTED, BACKEND_BLOWOUT_REQUESTED,
      BACKEND_SAFE_REMOVE_REQUESTED, LAST_ACT_NONE, LAST_ACT_SAVE,
      LAST_ACT_RESET) = range(8)
+    MACHINE_INPUT_STRINGS = [
+        "The backend transaction has been marked dirty for re-creation", #0
+        "The backend transaction has been marked for a verify", #1
+        "A request as been made to hold the backend transaction", #2
+        "A held backend transaction is being removed, despite possibly "
+        "not matching the frontend", #3
+        "A request has been made to remove the transaction", #4
+        "machine input nothing",
+        "machine input, save just happended",
+        "machine input, reset"
+        ]
 
     # error types for a backend state machine
+    # keep these syncronized with ERROR_TYPE_STRINGS
     (ERROR_CAN_NOT_REMOVE, ERROR_VERIFY_FAILED,
      ERROR_OTHER, ERROR_NONE) = range(4)
+    ERROR_TYPE_STRINGS = [
+        "couldn't remove a transaction from backend", #0
+        "a transaction did not match the version in the backend during "
+        "verify", #1
+        "other type of error", #2
+        "no error", #3
+        ]
 
     # These are the states a transaction can be in the backend
     #
@@ -358,12 +378,16 @@ class BackendModule(Persistent):
         """Returns True if a transaction is not dirty, marked for removal,
         or in any other state than the normal one
         """
+        if trans_id not in self.__front_end_to_back:
+            raise BoKeepBackendException(
+                "A transaction must exist to be considered clean")
+        
         self.__transaction_invarient(trans_id)
         result = (trans_id not in self.dirty_transaction_set) and \
             (not self.__trans_id_in_held_set(trans_id))
         if result:
             # there shouldn't be any error flags if above conditions hold..
-            assert( self.dirty_transaction_set[trans_id].data.get_value(
+            assert( self.__front_end_to_back[trans_id].data.get_value(
                     'error_code') == self.ERROR_NONE )
         return result
 
@@ -372,14 +396,36 @@ class BackendModule(Persistent):
         dirty, marked for removal, or in any other non-clean / non-normal state.
 
         You should only call this if you've first called transaction_is_clean(),
-        otherwise it isn't meaningful and may return non-String values like
-        None
+        otherwise it isn't meaningful and will give you an exception
 
         You will get an error if you call this when trans_id doesn't
         exist
         """
-        return self.__front_end_to_back[trans_id].data.get_value(
-            'error_string')
+        error_code = self.__front_end_to_back[trans_id].data.get_value(
+            'error_code')
+        clean_status = self.transaction_is_clean(trans_id)
+        # its possible to not be clean without an error,
+        # to not be clean with an error, and it is
+        # possible to be clean without an error
+        # but it isn't possible to be clean and have an error
+        assert( not (clean_status and error_code != self.ERROR_NONE ) )
+        if error_code == self.ERROR_NONE:
+            if clean_status:
+                raise BoKeepBackendException("the transaction isn't dirty")
+            if trans_id in self.dirty_transaction_set:
+                trans_dirty_reason = self.dirty_transaction_set[trans_id]
+            else:
+                assert(self.__trans_id_in_held_set(trans_id) )
+                trans_dirty_reason = self.BACKEND_LEAVE_ALONE_REQUESTED
+            return 'reason dirty: %s, %s' % (
+                trans_dirty_reason,
+                self.MACHINE_INPUT_STRINGS[trans_dirty_reason] )
+        else:
+            return 'error code: %s--%s, %s' % (
+                error_code,
+                self.ERROR_TYPE_STRINGS[error_code],
+                self.__front_end_to_back[trans_id].data.get_value(
+                    'error_string') )
     
     def flush_backend(self):
         """Take all transactions that are dirty or marked for removal
