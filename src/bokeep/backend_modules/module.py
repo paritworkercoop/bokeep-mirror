@@ -199,10 +199,7 @@ class BackendModule(Persistent):
      BACKEND_HELD_WAIT_SAVE, # 11
      BACKEND_HELD, # 12
 
-     # FIXME, comments for these!
-     BACKEND_SAFE_REMOVE_AFTER_VERIFY, # 13
-     BACKEND_SAFE_REMOVE_AFTER_BACKEND_GONE, # 14
-     ) = range(15)
+     ) = range(13)
          
     def __init__(self):
         Persistent.__init__(self)
@@ -236,7 +233,7 @@ class BackendModule(Persistent):
 
         This doesn't trigger the backend update itself to occure, that only
         happens when flush_backend is called
-
+ 
         trans_id -- Bo-keep identifier for the transaction
         transaction -- The actual bo-keep transaction
         """
@@ -254,9 +251,12 @@ class BackendModule(Persistent):
         # this shouldn't be too hard to fix... or maybe we shouldn't care..
         # TODO: think about it
         if trans_id in self.__front_end_to_back:
-            assert(self.__front_end_to_back[trans_id]. \
-                       data.get_value('bo_keep_trans') ==
-                   transaction)
+            if self.__front_end_to_back[trans_id]. \
+                    data.get_value('bo_keep_trans') != transaction:
+                   raise BoKeepBackendException(
+                       "If you mark an existing transaction dirty you "
+                       "must provide the original transaction id and "
+                       "transactrion")
         else:
             self.__front_end_to_back[trans_id] = \
                 self.__create_new_state_machine(trans_id, transaction)
@@ -272,12 +272,15 @@ class BackendModule(Persistent):
         trans_id -- Bo-Keep transaction id
         """
         self.__transaction_invarient(trans_id)
+        if trans_id not in self.__front_end_to_back:
+            raise BoKeepBackendException("%s not a valid transaction id"
+                                         % trans_id)
         self.__remove_trans_id_from_held_set_if_there(trans_id)
         self.dirty_transaction_set[trans_id] = \
             self.BACKEND_SAFE_REMOVE_REQUESTED
         self.__transaction_invarient(trans_id)
         self._p_changed = True
-
+    
     @ends_with_commit
     def mark_transaction_for_verification(self, trans_id):
         """Indicate a bo-keep transaction should be compared against the backend
@@ -302,14 +305,27 @@ class BackendModule(Persistent):
                 "You can't request verification on a transaction with changes "
                 "or being deleted, call mark_transaction_for_verification() "
                 "again after flush_backend deals with those changes" )
+
+        if trans_id not in self.__front_end_to_back:
+            raise BoKeepBackendException(
+                "you can't request verification on a transaction "
+                "that has never been doesn't exist.")
+                                                 
         self.dirty_transaction_set[trans_id] = \
             self.BACKEND_VERIFICATION_REQUESTED
         self._p_changed = True
 
     def mark_transaction_for_hold(self, trans_id):
         self.__transaction_invarient(trans_id)
+
+        if trans_id not in self.__front_end_to_back:
+            raise BoKeepBackendException(
+                "you can't request a hold a transaction that hasn't even "
+                "appeared yet, mark it as dirty, do flush, *THEN* place "
+                "the hold request and flush again")
+        
         # don't bother if the transaction is already held..
-        if not trans_id in self.__trans_id_in_held_set:
+        if not self.__trans_id_in_held_set(trans_id):
             self.dirty_transaction_set[trans_id] = \
                 self.BACKEND_LEAVE_ALONE_REQUESTED
             self._p_changed = True
@@ -374,6 +390,7 @@ class BackendModule(Persistent):
             self.__advance_all_dirty_transaction_state_machine()
             self._p_changed = True
             transaction.get().commit()
+
             # save, and let all dirty transactions change thier state
             # with the knowledge that a save just took place
             try:
@@ -385,12 +402,13 @@ class BackendModule(Persistent):
                 for dirty_trans_id in self.dirty_transaction_set.iterkeys():
                     self.dirty_transaction_set[dirty_trans_id] = \
                         self.LAST_ACT_SAVE
-                    
                 self.__advance_all_dirty_transaction_state_machine()
+
             self.__update_dirty_and_held_transaction_sets()
             for trans_id, original_input_value in dirty_set_copy.iteritems():
                 if trans_id in self.dirty_transaction_set:
                     self.dirty_transaction_set[trans_id] = original_input_value
+
             self._p_changed = True
             transaction.get().commit()
 
@@ -467,13 +485,15 @@ class BackendModule(Persistent):
                      trans_id in self.dirty_transaction_set ) )
 
     def __advance_all_dirty_transaction_state_machine(self):
+        # advance all diryt state machines
         for key in self.dirty_transaction_set.iterkeys():
-            self.__front_end_to_back[key].run_until_steady_state()
+            # but only ones that still exist..
+            if key in self.__front_end_to_back:
+                self.__front_end_to_back[key].run_until_steady_state()
         for dirty_trans_id in self.dirty_transaction_set.iterkeys():
             self.dirty_transaction_set[dirty_trans_id] = self.LAST_ACT_NONE
-
         self._p_changed = True
-
+        
     def __update_dirty_and_held_transaction_sets(self):
         # remove from the dirty set transactions that have been tottally
         # wiped out
@@ -564,6 +584,7 @@ class BackendModule(Persistent):
 
         del self.__front_end_to_back[
             state_machine.data.get_value('front_end_id') ]
+
         return state_machine.data # no changes
 
     def __particular_input_state_machine(self, input):
@@ -673,6 +694,11 @@ class BackendModule(Persistent):
         # during this process through a call to 
         #
 
+        # Fixme, we should document the difference between transiant and
+        # persistent (written to database) states, and assert that invariant
+        # implication: I think only persistent state would need to check for
+        # backend reset
+
         return FunctionAndDataDrivenStateMachine(
             (
                 # Rules for state NO_BACKEND_EXIST [0]
@@ -680,10 +706,24 @@ class BackendModule(Persistent):
                   # If a transaction is marked for removal but is in this state
                   # all we have to do is remove the state machine
                   # next state won't matter
-                ( (self.__particular_input_state_machine(
+                ( (self.__error_in_state_machine_data_is(
+                            self.ERROR_CAN_NOT_REMOVE),
+                   state_machine_do_nothing,
+                   self.BACKEND_ERROR_WAIT_SAVE ),
+                  # if removal has been requested, its easy, we just
+                  # get rid of the state machine seeing how there are
+                  # no backend transactions
+                  (self.__particular_input_state_machine(
                             self.BACKEND_SAFE_REMOVE_REQUESTED),
                    self.__remove_transaction_state_machine,
                    self.NO_BACKEND_EXIST ),
+                  # if a hold has been requested, its easy, we just
+                  # go into the hold state
+                  (self.__particular_input_state_machine(
+                            self.BACKEND_LEAVE_ALONE_REQUESTED),
+                   state_machine_do_nothing,
+                   self.BACKEND_HELD),
+                  
                   # Otherwise, always move to NO_BACKEND_TRIED and try to
                   # create the backend transaction
                   (state_machine_always_true,
@@ -754,15 +794,11 @@ class BackendModule(Persistent):
                             self.BACKEND_VERIFICATION_REQUESTED),
                    self.__backend_data_verify_state_machine,
                    self.BACKEND_VERIFY_REQUESTED),
-                  # if normal removal was requested, verify first
-                  (self.__particular_input_state_machine(
-                            self.BACKEND_SAFE_REMOVE_REQUESTED),
-                   self.__backend_data_verify_state_machine,
-                   self.BACKEND_SAFE_REMOVE_AFTER_VERIFY),
                   # if forced consideration of being out of sync, do it
                   (self.__particular_input_state_machine(
                             self.BACKEND_LEAVE_ALONE_REQUESTED),
                    state_machine_do_nothing, self.BACKEND_HELD),
+                  # otherwise, we're doing a verify followed by a remove
                   # always check if backend data has changed
                   (state_machine_always_true,
                    self.__backend_data_verify_state_machine,
@@ -785,7 +821,10 @@ class BackendModule(Persistent):
                   ), # end rules for state BACKEND_ERROR_TRY_AGAIN
                 
                 # Rules for state BACKEND_ERROR_FORGOTON_TRY_AGAIN [7]
-                ( (state_machine_always_true,
+                ( (self.__particular_input_state_machine(
+                            self.BACKEND_SAFE_REMOVE_REQUESTED),
+                   state_machine_do_nothing, self.BACKEND_VERIFY_REQUESTED ),
+                  (state_machine_always_true,
                    self.__backend_data_verify_state_machine,
                    self.BACKEND_OLD_TO_BE_REMOVED),
                   ), # end rules for state BACKEND_ERROR_FORGOTON_TRY_AGAIN
@@ -834,6 +873,14 @@ class BackendModule(Persistent):
                    state_machine_do_nothing, self.BACKEND_ERROR_WAIT_SAVE),
                   (self.__particular_input_state_machine(self.LAST_ACT_RESET),
                    state_machine_do_nothing, self.BACKEND_OUT_OF_SYNC),
+                  # if verification was requested, we now know it was a
+                  # success, so just wait here until the save, after which
+                  # we can expect that we'll be allowed to advance, and
+                  # then removed from the dirty set
+                  (self.__particular_input_state_machine(
+                            self.BACKEND_VERIFICATION_REQUESTED),
+                   state_machine_do_nothing,
+                   self.BACKEND_VERIFY_REQUESTED),
                   # its all good
                   (state_machine_always_true,
                    state_machine_do_nothing, self.BACKEND_SYNCED),
@@ -857,23 +904,6 @@ class BackendModule(Persistent):
                   self.BACKEND_OLD_TO_BE_REMOVED),
                   ), # end rules for BACKEND_HELD
 
-                # Rules for BACKEND_SAFE_REMOVE_AFTER_VERIFY [13]
-                ( (self.__error_in_state_machine_data_is(self.ERROR_NONE),
-                   self.__remove_backend_transactions_state_machine,
-                   self.BACKEND_SAFE_REMOVE_AFTER_BACKEND_GONE),
-                  (state_machine_always_true,
-                   state_machine_do_nothing, self.BACKEND_VERIFY_REQUESTED),
-                  ), # end rules for BACKEND_SAFE_REMOVE_AFTER_VERIFY
-                
-                # Rules for BACKEND_SAFE_REMOVE_AFTER_BACKEND_GONE [14]
-                # wait, should this just be mertged with state [0],
-                # with the below error checking included?
-                ( (self.__error_in_state_machine_data_is(self.ERROR_NONE),
-                   self.__remove_transaction_state_machine,
-                   self.BACKEND_SAFE_REMOVE_AFTER_BACKEND_GONE),
-                  (state_machine_always_true,
-                   state_machine_do_nothing, self.BACKEND_VERIFY_REQUESTED),
-                  ), # end rules for BACKEND_SAFE_REMOVE_AFTER_BACKEND_GONE
                 ), # end state list
             self.NO_BACKEND_EXIST, # initial_state
             # the initial state machine data
@@ -929,4 +959,4 @@ class BackendModule(Persistent):
 
 class BoKeepBackendException(Exception):
     def __init__(self, msg=""):
-        Exception.__init__(msg)
+        Exception.__init__(self, msg)
