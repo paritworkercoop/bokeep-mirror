@@ -30,7 +30,7 @@ class StateMachineTest(TestCase):
             
         self.assertEquals(len(dark_side_transitions),  NUM_STATES )
         self.dark_side_path = FunctionAndDataDrivenStateMachine(
-            dark_side_transitions
+            transition_table=dark_side_transitions
             )
         self.fear = 0
     

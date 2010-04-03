@@ -335,12 +335,19 @@ class FunctionAndDataDrivenStateMachine(object):
     You may find the example in tests/test_statemachine.py amusing.
     """
 
-    def __init__(self, transition_rules_for_states, initial_state=0,
-                 data=None ):
+    def __init__(
+        self,
+        transition_function=None,
+        initial_state=0,
+        data=None, transition_table=None):
         """Initialize with transition rules for each state, and optionally
         include the initial state (default 0) or data (default None).
         """
-        self.__transition_rules_for_states = transition_rules_for_states
+        if transition_function == None:
+            self.__transition_function = self.next_state_and_data_from_table
+        else:
+            self.__transition_function = transition_function
+        self.__transition_table = transition_table
         self.__data = data
         self.__state = initial_state
 
@@ -354,15 +361,25 @@ class FunctionAndDataDrivenStateMachine(object):
 
     state = property(get_state)
 
-    def advance_state_machine(self):
+    def next_state_and_data_from_table(self):
         new_state = self.__state
+        new_data = self.__data
+        table = self.table
         for i, (condition_func, transition_func, pos_new_state) in enumerate(
-            self.__transition_rules_for_states[self.__state]):
+            table[self.__state]):
             if condition_func(self, pos_new_state):
                 new_state = pos_new_state
-                self.__data = transition_func(self, new_state)
+                new_data = transition_func(self, new_state)
                 break
-        self.__state = new_state
+        return (new_state, new_data)
+    
+    def get_table(self):
+        return self.__transition_table
+
+    table = property(get_table)
+
+    def advance_state_machine(self):
+        self.__state, self.__data = self.__transition_function()
 
     def run_until_steady_state(self):
         old_state = None
