@@ -364,7 +364,7 @@ class FunctionAndDataDrivenStateMachine(object):
     def next_state_and_data_from_table(self):
         new_state = self.__state
         new_data = self.__data
-        table = self.table
+        table = self.get_table()
         for i, (condition_func, transition_func, pos_new_state) in enumerate(
             table[self.__state]):
             if condition_func(self, pos_new_state):
