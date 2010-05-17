@@ -257,11 +257,8 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
      # preparing to remove old backend transactions, verification
      # just took place on the way here
      BACKEND_OLD_TO_BE_REMOVED, # 8
-     # an attempt was just made to remove backend transactions, will
-     # move on to re-creating them if that worked
-     BACKEND_OLD_JUST_TRIED_REMOVE, # 9
      # verification was just requested
-     BACKEND_VERIFY_REQUESTED, # 10
+     BACKEND_VERIFY_REQUESTED, # 9
      # its been verified, the backend is out of sync, a state we
      # should stay in until explicit user intervention
      #
@@ -276,23 +273,27 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
      # but verification was possible, and all the end user wanted to
      # begin with was a verification...
      # FIXME, differnet comment for each
-     BACKEND_HELD_WAIT_SAVE, # 11
-     BACKEND_HELD, # 12
+     BACKEND_HELD_WAIT_SAVE, # 10
+     BACKEND_HELD, # 11
 
-     ) = range(13)
+     ) = range(11+1)
 
     __backend_rule_table = (
         # Rules for state NO_BACKEND_EXIST [0]
         #
-        # If a transaction is marked for removal but is in this state
-        # all we have to do is remove the state machine
-        # next state won't matter
         ( (error_in_state_machine_data_is(
                     ERROR_CAN_NOT_REMOVE),
            state_machine_do_nothing,
            BACKEND_ERROR_WAIT_SAVE ),
+
+          (particular_input_state_machine(LAST_ACT_RESET),
+           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
+
+          # If a transaction is marked for removal but is in this state
+          # all we have to do is remove the state machine
+          # next state won't matter
           # if removal has been requested, its easy, we just
-                  # get rid of the state machine seeing how there are
+          # get rid of the state machine seeing how there are
           # no backend transactions
           (particular_input_state_machine(
                     BACKEND_SAFE_REMOVE_REQUESTED),
@@ -437,23 +438,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
           (state_machine_always_true,
            __remove_backend_transactions_state_machine,
-           BACKEND_OLD_JUST_TRIED_REMOVE),
+           NO_BACKEND_EXIST),
           ), # end rules for state BACKEND_OLD_TO_BE_REMOVED
         
-        # Rules for BACKEND_OLD_JUST_TRIED_REMOVE [9]
-        ( (error_in_state_machine_data_is(
-                    ERROR_CAN_NOT_REMOVE),
-           state_machine_do_nothing, BACKEND_ERROR_WAIT_SAVE),
-          # see comment on similar rule in BACKEND_OLD_TO_BE_REMOVED..
-          (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
-          # otherwise, we can just remove all the backend transactions
-          (state_machine_always_true,
-           __remove_backend_transactions_state_machine,
-           NO_BACKEND_EXIST),
-          ), # end rules for state BACKEND_OLD_JUST_TRIED_REMOVE
-        
-        # Rules for BACKEND_VERIFY_REQUESTED [10]
+        # Rules for BACKEND_VERIFY_REQUESTED [9]
         ( (error_in_state_machine_data_is(
                     ERROR_VERIFY_FAILED),
            state_machine_do_nothing, BACKEND_HELD_WAIT_SAVE),
@@ -474,14 +462,14 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_SYNCED),
           ), # end rules for state BACKEND_VERIFY_REQUESTED
         
-        # Rules for BACKEND_HELD_WAIT_SAVE [11]
+        # Rules for BACKEND_HELD_WAIT_SAVE [10]
         ( (particular_input_state_machine(LAST_ACT_SAVE),
            state_machine_do_nothing, BACKEND_HELD),
           (particular_input_state_machine(LAST_ACT_RESET),
            state_machine_do_nothing, BACKEND_HELD),
           ), # end rules for BACKEND_HELD_WAIT_SAVE
         
-        # Rules for BACKEND_HELD [12]
+        # Rules for BACKEND_HELD [11]
         ( (particular_input_state_machine(
                     BACKEND_VERIFICATION_REQUESTED),
            __backend_data_verify_state_machine,
