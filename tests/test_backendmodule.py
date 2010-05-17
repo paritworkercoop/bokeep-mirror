@@ -5,7 +5,8 @@ from unittest import TestCase, main
 from decimal import Decimal
 from itertools import chain
 
-from bokeep.backend_modules.module import BackendModule, BoKeepBackendException
+from bokeep.backend_modules.module import BackendModule, \
+    BackendDataStateMachine, BoKeepBackendException
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
@@ -22,30 +23,53 @@ class TestTransaction(Transaction):
 
 REMOVE, CREATE, VERIFY, SAVE, CLOSE = range(5)
 
+(REMOVAL_FAIL,) = range(1)
+FAILURE_TYPES = (REMOVAL_FAIL,)
+
 def create_logging_function(func, cmd):
-    def logging_function(self, *args):
-        return_value = func(self, *args)
+    def logging_function(self, *args, **kargs):
         self.actions_queue.append(tuple( chain(
-                    (cmd,), (return_value,), args) ) )
+                    (cmd,), (None,), args) ) )
+        return_value = func(self, *args, **kargs)
+        self.actions_queue[len(self.actions_queue)-1] = tuple( chain(
+                    (cmd,), (return_value,), args) )
         return return_value
     return logging_function
 
 null_function = lambda *args: None
 
+def create_failure_function(func, tag):
+    def failure_function(self, *args, **kargs):
+        if len(self.programmed_failures[tag]) > 0:
+            exception_to_raise, msg, trigger_test = \
+                self.programmed_failures[tag].pop()
+            if trigger_test(self, *args, **kargs):
+                raise exception_to_raise(msg)
+
+        # we want this to execute in two cases,
+        # 1) if the first if statement doesn't match, or
+        # 2) the second if statement doesn't match
+        return func(self, *args, **kargs)
+    return failure_function
+
 class BackendModuleUnitTest(BackendModule):
     def __init__(self):
         BackendModule.__init__(self)
         self.clear_actions_queue()
+        self.clear_programmed_fails()
         self.counter = 0
         
     def can_write(self):
         return True
     
-    remove_backend_transaction = create_logging_function(null_function, REMOVE)
-
+    remove_backend_transaction = create_logging_function(
+        create_failure_function(null_function, REMOVAL_FAIL),
+        REMOVE)
+    
     def create_backend_transaction(self, fin_trans):
         self.counter+=1
         return self.counter
+
     create_backend_transaction = create_logging_function(
         create_backend_transaction, CREATE)
 
@@ -63,6 +87,15 @@ class BackendModuleUnitTest(BackendModule):
 
     def clear_actions_queue(self):
         self.actions_queue = []
+    
+    def clear_programmed_fails(self):
+        self.programmed_failures  = {}
+        for tag in FAILURE_TYPES:
+            self.programmed_failures[tag] = []
+
+    def program_failure(self, tag, exception_to_raise, msg, trigger_test):
+        self.programmed_failures[tag].insert(
+            0, (exception_to_raise, msg, trigger_test) )
 
 class BackendModuleBasicSetup(TestCase):
     """This tests that BackendModule makes calls to the subclass functions
@@ -266,6 +299,18 @@ class StartWithInsertAndFlushSetup(StartWithInsertSetup):
         self.look_for_verify(actions, self.fin_trans)
         self.look_for_save(actions)
 
+
+    def run_test_of_transaction_remove(self):
+        self.backend_module.mark_transaction_for_removal(self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 3) # verify, remove, save
+        self.look_for_verify(actions, self.fin_trans)
+        self.look_for_remove(actions, self.FIRST_BACKEND_ID)
+        self.look_for_save(actions)
+
 class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
     def test_dirty_after_flush(self):
         self.assertTransactionIsClean(self.front_end_id)
@@ -309,17 +354,28 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
         self.look_for_save(actions)
 
     def test_transaction_remove(self):
-        self.backend_module.mark_transaction_for_removal(self.front_end_id)
-        self.assertTransactionIsDirty(self.front_end_id)
-        self.backend_module.flush_backend()
+        self.run_test_of_transaction_remove()
         self.assertTransactionIsCleanFail(self.front_end_id)
-
-        actions = self.backend_module.pop_actions_queue()
-        self.assertEquals(len(actions), 3) # verify, remove, save
-        self.look_for_verify(actions, self.fin_trans)
-        self.look_for_remove(actions, self.FIRST_BACKEND_ID)
-        self.look_for_save(actions)
        
+    def test_failed_remove(self):
+        reason_for_backend_fail = "this is just a test, not a real failure " \
+            "on remove"
+        def test_for_correct_backend_id(backend_mod_self, backend_id):
+            return backend_id == self.FIRST_BACKEND_ID
+        self.backend_module.program_failure(
+            REMOVAL_FAIL, BoKeepBackendException,
+            reason_for_backend_fail, test_for_correct_backend_id)
+
+        self.run_test_of_transaction_remove()
+        self.assertTransactionIsDirty(self.front_end_id)
+        full_error_string = \
+            self.backend_module.reason_transaction_is_dirty(self.front_end_id)
+        self.assert_(full_error_string.endswith(reason_for_backend_fail) )
+        self.assert_(full_error_string.startswith(
+            "error code: %s"  % BackendDataStateMachine.ERROR_CAN_NOT_REMOVE) )
+
+        # check that it works next time around
+        self.test_transaction_remove()
 
 class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
     def setUp(self):
