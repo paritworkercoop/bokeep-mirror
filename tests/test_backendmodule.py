@@ -350,6 +350,18 @@ class InsertFlushAndHoldTest(StartWithInsertFlushAndHoldSetup):
         self.look_for_empty_actions_queue()
         self.run_test_of_transaction_verify()
 
+    def test_fail_if_dirty_mark_in_hold(self):
+        self.assertRaises(
+            BoKeepBackendException,
+            self.backend_module.mark_transaction_dirty,
+            self.front_end_id, self.transaction )
+
+    def test_fail_if_removal_in_hold(self):
+        self.assertRaises(
+            BoKeepBackendException,
+            self.backend_module.mark_transaction_for_removal,
+            self.front_end_id )
+
 if __name__ == "__main__":
     main()
         

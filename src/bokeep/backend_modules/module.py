@@ -625,6 +625,7 @@ class BackendModule(Persistent):
         transaction -- The actual bo-keep transaction
         """
         self.__transaction_invarient(trans_id)
+        self.__raise_if_held_state(trans_id)
 
         # if the transaction is currently held, remove it because we're going
         # to give it another chance to be resynced...
@@ -663,7 +664,7 @@ class BackendModule(Persistent):
         if trans_id not in self.__front_end_to_back:
             raise BoKeepBackendException("%s not a valid transaction id"
                                          % trans_id)
-        self.__remove_trans_id_from_held_set_if_there(trans_id)
+        self.__raise_if_held_state(trans_id)
         self.dirty_transaction_set[trans_id] = \
             BackendDataStateMachine.BACKEND_SAFE_REMOVE_REQUESTED
         self.__transaction_invarient(trans_id)
@@ -996,6 +997,14 @@ class BackendModule(Persistent):
             self
             ) # BackendDataStateMachine
 
+    def __raise_if_held_state(self, trans_id):
+        if self.__trans_id_in_held_set(trans_id):        
+            raise BoKeepBackendException(
+                "You can only remove a transaction with a hold on it if "
+                "you verify (mark_transaction_for_verification) that it "
+                "matches the backend, or explicitly get rid of it ",
+                "(mark_transaction_for_forced_remove)" )
+    
     def can_write(self):
        # The superclass for all BackendModule s can never write, 
        # because it is a just a base class, you should subclass and
