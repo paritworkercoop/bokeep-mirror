@@ -799,28 +799,41 @@ class BackendModule(Persistent):
         # if we can write to the backend
         if self.can_write():
             dirty_set_copy = self.dirty_transaction_set.copy()
-            self.__advance_all_dirty_transaction_state_machine()
-            self._p_changed = True
-            transaction.get().commit()
-
-            # save, and let all dirty transactions change thier state
-            # with the knowledge that a save just took place
             try:
-                self.save()
-            except BoKeepBackendException, e:
-                # call close, which also triggers backend_reset_occured()
-                self.close('called close() because save failed ' + e.message) 
-            else:
-                for dirty_trans_id in self.dirty_transaction_set.iterkeys():
-                    self.dirty_transaction_set[dirty_trans_id] = \
-                        BackendDataStateMachine.LAST_ACT_SAVE
                 self.__advance_all_dirty_transaction_state_machine()
+                self._p_changed = True
+                transaction.get().commit()
+
+                # save, and let all dirty transactions change thier state
+                # with the knowledge that a save just took place
+                try:
+                    self.save()
+                except BoKeepBackendException, e:
+                    # call close, which also triggers backend_reset_occured()
+                    self.close('called close() because save failed ' + \
+                                   e.message) 
+                else:
+                    for dirty_trans_id in self.dirty_transaction_set.iterkeys():
+                        self.dirty_transaction_set[dirty_trans_id] = \
+                            BackendDataStateMachine.LAST_ACT_SAVE
+                    self.__advance_all_dirty_transaction_state_machine()
+
+            except BoKeepBackendResetException, reset_except:
+                if reset_except.message != '':
+                    self.__set_all_transactions_to_reset_and_advance(
+                        reset_except.message)
+                else:
+                    self.__set_all_transactions_to_reset_and_advance()
+            else:
+                self._p_changed = True
+                transaction.get().commit()
 
             self.__update_dirty_and_held_transaction_sets()
-            for trans_id, original_input_value in dirty_set_copy.iteritems():
+            for trans_id, original_input_value in \
+                    dirty_set_copy.iteritems():
                 if trans_id in self.dirty_transaction_set:
-                    self.dirty_transaction_set[trans_id] = original_input_value
-
+                    self.dirty_transaction_set[trans_id] = \
+                        original_input_value
             self._p_changed = True
             transaction.get().commit()
 
@@ -830,10 +843,9 @@ class BackendModule(Persistent):
 
         This should be called when done with a backend module.
 
-        A call to self.backend_reset_occured should be made because
-        the loss of information from a close
+        Any other calls made since the last call to flush_backend may be lost()
         """
-        self.backend_reset_occured(close_reason)
+        self.__set_all_transactions_to_reset_and_advance(close_reason)
 
     @ends_with_commit
     def update_trans_flush_check_and_close(self, trans_id, transaction):
@@ -908,11 +920,15 @@ class BackendModule(Persistent):
             # but only ones that still exist..
             if key in self.__front_end_to_back:
                 self.__front_end_to_back[key].run_until_steady_state()
+
+    def __set_all_transactions_to_reset_and_advance(
+        self, reset_reason="reset"):
+        self.__reason_for_reset = reset_reason
         for dirty_trans_id in self.dirty_transaction_set.iterkeys():
             self.dirty_transaction_set[dirty_trans_id] = \
-                BackendDataStateMachine.LAST_ACT_NONE
-        self._p_changed = True
-        
+                BackendDataStateMachine.LAST_ACT_RESET
+        self.__advance_all_dirty_transaction_state_machine()
+       
     def __update_dirty_and_held_transaction_sets(self):
         # remove from the dirty set transactions that have been tottally
         # wiped out
@@ -1011,30 +1027,20 @@ class BackendModule(Persistent):
         """
         raise Exception("backend modules must implement "
                         "create_backend_transaction")
-
-    def backend_reset_occured(self, reason='reset occured'):
-        """Invoked by a subclass of BackendModule to indicate that
-           changes via create_backend_transaction() and remove_backend_changes()
-           made since the last successful save were lost.
-        """
-        for dirty_trans_id, last_input in \
-                self.dirty_transaction_set.iteritems():
-            assert( last_input == BackendDataStateMachine.LAST_ACT_NONE )
-            dirty_transaction_set[dirty_trans_id] = \
-                BackendDataStateMachine.LAST_ACT_RESET
-        self.__reason_for_reset = reason
-        self.__advance_all_dirty_transaction_state_machine()
-        for dirty_trans_id, last_input in \
-                self.dirty_transaction_set.iteritems():
-            assert( last_input == BackendDataStateMachine.LAST_ACT_RESET )
-            dirty_transaction_set[dirty_trans_id] = \
-                BackendDataStateMachine.LAST_ACT_NONE
-        self.__reason_for_reset = reason
-
     def save(self):
         raise Exception("backend modules must implement save()")
 
 
 class BoKeepBackendException(Exception):
+    pass
+
+class BoKeepBackendResetException(Exception):
+    """Subclasses of BackendModule can raise this to indicate that
+    changes via create_backend_transaction() and remove_backend_changes()
+    made since the last successful save have been lost.
+
+    A BackendModule should raise this immediatly when it becomes true, and not
+    write new changes (that aren't lost) to the backend prior to raising this.
+    """
     pass
 

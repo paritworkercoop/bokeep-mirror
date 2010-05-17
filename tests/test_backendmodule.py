@@ -6,7 +6,7 @@ from decimal import Decimal
 from itertools import chain
 
 from bokeep.backend_modules.module import BackendModule, \
-    BackendDataStateMachine, BoKeepBackendException
+    BackendDataStateMachine, BoKeepBackendException, BoKeepBackendResetException
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
@@ -23,8 +23,8 @@ class TestTransaction(Transaction):
 
 REMOVE, CREATE, VERIFY, SAVE, CLOSE = range(5)
 
-(REMOVAL_FAIL,) = range(1)
-FAILURE_TYPES = (REMOVAL_FAIL,)
+(REMOVAL_FAIL, REMOVAL_RESET) = range(2)
+FAILURE_TYPES = (REMOVAL_FAIL, REMOVAL_RESET)
 
 def create_logging_function(func, cmd):
     def logging_function(self, *args, **kargs):
@@ -45,7 +45,6 @@ def create_failure_function(func, tag):
                 self.programmed_failures[tag].pop()
             if trigger_test(self, *args, **kargs):
                 raise exception_to_raise(msg)
-
         # we want this to execute in two cases,
         # 1) if the first if statement doesn't match, or
         # 2) the second if statement doesn't match
@@ -63,7 +62,9 @@ class BackendModuleUnitTest(BackendModule):
         return True
     
     remove_backend_transaction = create_logging_function(
-        create_failure_function(null_function, REMOVAL_FAIL),
+        create_failure_function(
+            create_failure_function(null_function, REMOVAL_FAIL),
+            REMOVAL_RESET),
         REMOVE)
     
     def create_backend_transaction(self, fin_trans):
@@ -376,6 +377,26 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
 
         # check that it works next time around
         self.test_transaction_remove()
+
+    def test_reset_lost_remove(self):
+        reason_for_backend_reset = "this is just a test, not a real reset " \
+            "on remove"
+        def test_for_correct_backend_id(backend_mod_self, backend_id):
+            return backend_id == self.FIRST_BACKEND_ID
+        self.backend_module.program_failure(
+            REMOVAL_RESET, BoKeepBackendResetException,
+            reason_for_backend_reset, test_for_correct_backend_id)
+
+        self.backend_module.mark_transaction_for_removal(self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 2) # verify, remove
+        self.look_for_verify(actions, self.fin_trans)
+        self.look_for_remove(actions, self.FIRST_BACKEND_ID)
+
+        self.assertTransactionIsDirty(self.front_end_id)
 
 class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
     def setUp(self):
