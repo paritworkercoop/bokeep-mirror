@@ -698,7 +698,8 @@ class BackendModule(Persistent):
             raise BoKeepBackendException(
                 "you can't request verification on a transaction "
                 "that has never been doesn't exist.")
-                                                 
+        
+        self.__remove_trans_id_from_held_set_if_there(trans_id)
         self.dirty_transaction_set[trans_id] = \
             BackendDataStateMachine.BACKEND_VERIFICATION_REQUESTED
         self._p_changed = True
