@@ -73,9 +73,6 @@ class BackendModuleBasicSetup(TestCase):
     mark_transaction_for_hold, mark_transaction_for_forced_remove,
     transaction_is_clean, reason_transaction_is_dirty, flush_backend, and
     backend_reset_occured
-
-    I'm not sure this is quite blackbox testing, but certainly not whitebox
-    either, perhaps greybox?
     """
     def setUp(self):
         self.backend_module = BackendModuleUnitTest()
@@ -117,6 +114,10 @@ class BackendModuleBasicSetup(TestCase):
         self.assertEquals(cmd, CREATE)
         self.assertEquals(return_val, backend_id)
         self.assertEquals(transaction, fin_trans)
+
+    def look_for_empty_actions_queue(self):
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 0)        
 
     def assertBackendException(self, callable, *args, **kargs):
         self.assertRaises(
@@ -193,6 +194,10 @@ class StartWithInsertSetup(BackendModuleBasicSetup):
         self.backend_module.mark_transaction_for_forced_remove(
             self.front_end_id)
 
+    def verify_known_transaction(self):
+        self.backend_module.mark_transaction_for_verification(
+            self.front_end_id)        
+
     # not an actual test case, has to be called by a function
     # that starts with test in the name
     def run_test_of_forced_remove_of_non_held_transaction(self):
@@ -219,8 +224,7 @@ class StartWithInsertTest(StartWithInsertSetup):
     def test_verify_fail_right_after_insert(self):
         self.assertRaises(
             BoKeepBackendException,
-           self.backend_module.mark_transaction_for_verification,
-            self.front_end_id )
+            self.verify_known_transaction )
 
     def test_re_insert_trouble_when_change(self):
         self.assertRaises(
@@ -250,17 +254,9 @@ class StartWithInsertAndFlushSetup(StartWithInsertSetup):
         self.backend_module.pop_actions_queue()
         self.SECOND_BACKEND_ID = self.FIRST_BACKEND_ID+1
 
-class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
-    def test_dirty_after_flush(self):
-        self.assertTransactionIsClean(self.front_end_id)
-
-    def test_forced_remove_of_non_held_transaction(self):
-        self.run_test_of_forced_remove_of_non_held_transaction()
-        
-    def test_transaction_verify(self):
+    def run_test_of_transaction_verify(self):
         # this should do a VERIFY and a SAVE
-        self.backend_module.mark_transaction_for_verification(
-            self.front_end_id)
+        self.verify_known_transaction()
         self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
         self.assertTransactionIsClean(self.front_end_id)
@@ -269,11 +265,20 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
         self.assertEquals(len(actions), 2)
         self.look_for_verify(actions, self.fin_trans)
         self.look_for_save(actions)
+
+class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
+    def test_dirty_after_flush(self):
+        self.assertTransactionIsClean(self.front_end_id)
+
+    def test_forced_remove_of_non_held_transaction(self):
+        self.run_test_of_forced_remove_of_non_held_transaction()
+        
+    def test_transaction_verify(self):
+        self.run_test_of_transaction_verify()
     
     def test_multi_verify(self):
         for i in xrange(20):
-            self.backend_module.mark_transaction_for_verification(
-                self.front_end_id)
+            self.verify_known_transaction()
         self.test_transaction_verify()
 
     def test_transaction_hold(self):
@@ -329,9 +334,7 @@ class InsertFlushAndHoldTest(StartWithInsertFlushAndHoldSetup):
         self.assertTransactionIsDirty(self.front_end_id)
 
     def test_success_force_remove(self):
-        actions = self.backend_module.pop_actions_queue()
-        self.assertEquals(len(actions), 0)
-        
+        self.look_for_empty_actions_queue()        
         self.force_remove_known_transaction()
         self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
@@ -342,6 +345,10 @@ class InsertFlushAndHoldTest(StartWithInsertFlushAndHoldSetup):
         self.assertEquals(len(actions), 2)
         self.look_for_remove(actions, self.FIRST_BACKEND_ID)
         self.look_for_save(actions)
+
+    def test_success_verify_in_hold(self):
+        self.look_for_empty_actions_queue()
+        self.run_test_of_transaction_verify()
 
 if __name__ == "__main__":
     main()
