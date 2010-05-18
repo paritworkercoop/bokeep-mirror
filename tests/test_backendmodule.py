@@ -23,8 +23,8 @@ class TestTransaction(Transaction):
 
 REMOVE, CREATE, VERIFY, SAVE, CLOSE = range(5)
 
-(REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET) = range(4)
-FAILURE_TYPES = (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET)
+FAILURE_TYPES = (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET) \
+    = range(4)
 
 def create_logging_function(func, cmd):
     def logging_function(self, *args, **kargs):
