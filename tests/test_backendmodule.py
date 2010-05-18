@@ -540,8 +540,20 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
                 "error code: %s" % BackendDataStateMachine.ERROR_VERIFY_FAILED
                 ))
         self.pop_all_look_for_save()
+
+        # can't mark dirty, can't remove normally
         self.run_test_fail_if_dirty_mark_in_hold()
         self.run_test_fail_if_removal_in_hold()
+
+        # let it fail the next verification, again
+        self.backend_module.program_return(VERIFY, False)
+        self.verify_known_transaction()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.run_test_fail_if_dirty_mark_in_hold()
+        self.look_for_actions_from_verify(False)
+
         self.run_test_of_transaction_verify()
 
 class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
