@@ -391,17 +391,22 @@ class StartWithInsertAndFlushSetup(StartWithInsertSetup):
         self.look_for_verify(actions, self.fin_trans, verify_result)
         self.look_for_save(actions)        
 
-    def run_test_of_transaction_remove(self):
+    def remove_known_transaction_and_flush(self):
         self.backend_module.mark_transaction_for_removal(self.front_end_id)
         self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
 
+    def run_test_of_transaction_remove(self):
+        self.remove_known_transaction_and_flush()
+
+        self.look_for_normal_remove_sequence()
+
+    def look_for_normal_remove_sequence(self):
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 3) # verify, remove, save
         self.look_for_verify(actions, self.fin_trans)
         self.look_for_remove(actions, self.FIRST_BACKEND_ID)
         self.look_for_save(actions)
-
 
     def run_test_fail_if_dirty_mark_in_hold(self):
         self.assertRaises(
@@ -520,7 +525,7 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
 
         self.assertTransactionIsDirty(self.front_end_id)
 
-    def test_after_verify_inconsist_triggered_by_removal(self):
+    def test_after_verify_inconsist_triggered_by_verify(self):
         self.backend_module.program_return(VERIFY, False)
         self.verify_known_transaction()
         self.assertTransactionIsDirty(self.front_end_id)
@@ -553,8 +558,57 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
         self.assertTransactionIsDirty(self.front_end_id)
         self.run_test_fail_if_dirty_mark_in_hold()
         self.look_for_actions_from_verify(False)
-
         self.run_test_of_transaction_verify()
+
+    def test_after_verify_fail_triggered_by_verify(self):
+        reason_for_backend_fail = "this is just a test, not a real failure " \
+            "on verify"
+        def test_for_correct_backend_id(
+            backend_mod_self, backend_id, fin_trans):
+            return backend_id == self.FIRST_BACKEND_ID and \
+                fin_trans == self.fin_trans
+        self.backend_module.program_failure(
+            VERIFY_FAIL, BoKeepBackendException,
+            reason_for_backend_fail, test_for_correct_backend_id)
+        self.verify_known_transaction()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.look_for_actions_from_verify(None)
+        self.run_test_of_transaction_verify()
+
+    def test_after_verify_inconsist_triggered_by_removal(self):
+        self.backend_module.program_return(VERIFY, False)
+        self.remove_known_transaction_and_flush()
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 2) # verify, save
+        self.look_for_verify(actions, self.fin_trans, False)
+        self.look_for_save(actions)
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.pop_all_look_for_save()
+        # can't mark dirty, can't remove normally
+        self.run_test_fail_if_dirty_mark_in_hold()
+        self.run_test_fail_if_removal_in_hold()
+
+    def test_after_verify_fail_triggered_by_removal(self):
+        reason_for_backend_fail = "this is just a test, not a real failure " \
+            "on verify"
+        def test_for_correct_backend_id(
+            backend_mod_self, backend_id, fin_trans):
+            return backend_id == self.FIRST_BACKEND_ID and \
+                fin_trans == self.fin_trans
+        self.backend_module.program_failure(
+            VERIFY_FAIL, BoKeepBackendException,
+            reason_for_backend_fail, test_for_correct_backend_id)
+        self.remove_known_transaction_and_flush()
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 2) # verify, save
+        self.look_for_verify(actions, self.fin_trans, None)
+        self.look_for_save(actions)
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.look_for_normal_remove_sequence()
 
 class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
     def setUp(self):
