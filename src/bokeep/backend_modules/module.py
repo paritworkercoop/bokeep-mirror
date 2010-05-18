@@ -391,8 +391,8 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         # Rules for state BACKEND_ERROR_TRY_AGAIN [5]
         #
         # If we got here because of a save or reset, just wait in this
-        # state and record the reason
-        # non-transient state
+        # state and if its a reset record the reason
+        # this is a non-transient state
         ( (particular_input_state_machine(LAST_ACT_SAVE),
            state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
 
