@@ -287,7 +287,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            BACKEND_ERROR_WAIT_SAVE ),
 
           (particular_input_state_machine(LAST_ACT_RESET),
-           __record_reason_for_reset_state_machine, NO_BACKEND_EXIST),
+           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
 
           # If a transaction is marked for removal but is in this state
           # all we have to do is remove the state machine
