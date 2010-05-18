@@ -348,7 +348,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         # no big deal if save never happned and we lost it...,
         # just try again
         ( (particular_input_state_machine(LAST_ACT_RESET),
-           __clear_error_flag_and_msg_state_machine,
+           state_machine_do_nothing,
            BACKEND_ERROR_TRY_AGAIN),
           # otherwise we wait until there is a save
           (particular_input_state_machine(LAST_ACT_SAVE),
