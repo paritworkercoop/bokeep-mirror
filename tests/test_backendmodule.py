@@ -520,7 +520,7 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
 
         self.assertTransactionIsDirty(self.front_end_id)
 
-    def test_things_after_verification_inconsistency(self):
+    def test_after_verify_inconsist_triggered_by_removal(self):
         self.backend_module.program_return(VERIFY, False)
         self.verify_known_transaction()
         self.assertTransactionIsDirty(self.front_end_id)
