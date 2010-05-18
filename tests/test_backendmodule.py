@@ -21,7 +21,7 @@ class TestTransaction(Transaction):
     def get_financial_transactions(self):
        return [self.fin_trans]
 
-REMOVE, CREATE, VERIFY, SAVE, CLOSE = range(5)
+CMDS = (REMOVE, CREATE, VERIFY, SAVE, CLOSE) = range(5)
 
 FAILURE_TYPES = \
     (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET,
@@ -52,11 +52,21 @@ def create_failure_function(func, tag):
         return func(self, *args, **kargs)
     return failure_function
 
+def create_return_override_function(func, cmd):
+    def return_override_function(self, *args, **kargs):
+        original_return = func(self, *args, **kargs)
+        if len(self.programmed_return[cmd])> 0:
+            return self.programmed_return[cmd].pop()
+        else:
+            return original_return
+    return return_override_function
+
 class BackendModuleUnitTest(BackendModule):
     def __init__(self):
         BackendModule.__init__(self)
         self.clear_actions_queue()
         self.clear_programmed_fails()
+        self.clear_programmed_return()
         self.counter = 0
         
     def can_write(self):
@@ -81,9 +91,12 @@ class BackendModuleUnitTest(BackendModule):
     verify_backend_transaction = create_logging_function(
         create_failure_function(
             create_failure_function(
-                BackendModule.verify_backend_transaction, VERIFY_FAIL),
+                create_return_override_function(
+                    BackendModule.verify_backend_transaction, VERIFY),
+                VERIFY_FAIL),
             VERIFY_RESET),
         VERIFY)
+
 
     save = create_logging_function(
         create_failure_function(
@@ -109,6 +122,14 @@ class BackendModuleUnitTest(BackendModule):
     def program_failure(self, tag, exception_to_raise, msg, trigger_test):
         self.programmed_failures[tag].insert(
             0, (exception_to_raise, msg, trigger_test) )
+
+    def clear_programmed_return(self):
+        self.programmed_return = {}
+        for cmd in CMDS:
+            self.programmed_return[cmd] = []
+
+    def program_return(self, cmd, return_value):
+        self.programmed_return[cmd].insert(0, return_value)
 
 class BackendModuleBasicSetup(TestCase):
     """This tests that BackendModule makes calls to the subclass functions
@@ -381,6 +402,19 @@ class StartWithInsertAndFlushSetup(StartWithInsertSetup):
         self.look_for_remove(actions, self.FIRST_BACKEND_ID)
         self.look_for_save(actions)
 
+
+    def run_test_fail_if_dirty_mark_in_hold(self):
+        self.assertRaises(
+            BoKeepBackendException,
+            self.backend_module.mark_transaction_dirty,
+            self.front_end_id, self.transaction )
+
+    def run_test_fail_if_removal_in_hold(self):
+        self.assertRaises(
+            BoKeepBackendException,
+            self.backend_module.mark_transaction_for_removal,
+            self.front_end_id )
+
 class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
     def test_dirty_after_flush(self):
         self.assertTransactionIsClean(self.front_end_id)
@@ -486,6 +520,30 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
 
         self.assertTransactionIsDirty(self.front_end_id)
 
+    def test_things_after_verification_inconsistency(self):
+        self.backend_module.program_return(VERIFY, False)
+        self.verify_known_transaction()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.look_for_actions_from_verify(False)
+        reason_dirty = \
+            self.backend_module.reason_transaction_is_dirty(self.front_end_id)
+        self.assert_(reason_dirty.startswith(
+                "error code: %s" % BackendDataStateMachine.ERROR_VERIFY_FAILED
+                ))
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        reason_dirty = \
+            self.backend_module.reason_transaction_is_dirty(self.front_end_id)
+        self.assert_(reason_dirty.startswith(
+                "error code: %s" % BackendDataStateMachine.ERROR_VERIFY_FAILED
+                ))
+        self.pop_all_look_for_save()
+        self.run_test_fail_if_dirty_mark_in_hold()
+        self.run_test_fail_if_removal_in_hold()
+        self.run_test_of_transaction_verify()
+
 class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
     def setUp(self):
         StartWithInsertAndFlushSetup.setUp(self)
@@ -516,16 +574,10 @@ class InsertFlushAndHoldTest(StartWithInsertFlushAndHoldSetup):
         self.run_test_of_transaction_verify()
 
     def test_fail_if_dirty_mark_in_hold(self):
-        self.assertRaises(
-            BoKeepBackendException,
-            self.backend_module.mark_transaction_dirty,
-            self.front_end_id, self.transaction )
+        self.run_test_fail_if_dirty_mark_in_hold()
 
     def test_fail_if_removal_in_hold(self):
-        self.assertRaises(
-            BoKeepBackendException,
-            self.backend_module.mark_transaction_for_removal,
-            self.front_end_id )
+        self.run_test_fail_if_removal_in_hold()
 
 if __name__ == "__main__":
     main()

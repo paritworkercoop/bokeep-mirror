@@ -465,14 +465,16 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         # non-transient state
         ( (particular_input_state_machine(
                     BACKEND_VERIFICATION_REQUESTED),
-           __backend_data_verify_state_machine,
-           BACKEND_VERIFY_REQUESTED),
+           __clear_error_flag_and_msg_state_machine,
+           BACKEND_OUT_OF_SYNC),
           (particular_input_state_machine(
                     BACKEND_BLOWOUT_REQUESTED),
            __clear_error_flag_and_msg_state_machine,
            BACKEND_OLD_TO_BE_REMOVED),
           ), # end rules for BACKEND_HELD
-        
+          
+           
+
         ) # end state list
         
 
