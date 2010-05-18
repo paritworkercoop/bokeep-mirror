@@ -249,13 +249,11 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
      # despite past errors, a new attempt is ready to be be made made to
      # synchronize
      BACKEND_ERROR_TRY_AGAIN, # 5
-     # we just forgot past errors, ready for regeneration steps
-     BACKEND_ERROR_FORGOTON_TRY_AGAIN, # 6
      # preparing to remove old backend transactions, verification
      # just took place on the way here
-     BACKEND_OLD_TO_BE_REMOVED, # 7
+     BACKEND_OLD_TO_BE_REMOVED, # 6
      # verification was just requested
-     BACKEND_VERIFY_REQUESTED, # 8
+     BACKEND_VERIFY_REQUESTED, # 7
      # its been verified, the backend is out of sync, a state we
      # should stay in until explicit user intervention
      #
@@ -270,10 +268,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
      # but verification was possible, and all the end user wanted to
      # begin with was a verification...
      # FIXME, differnet comment for each
-     BACKEND_HELD_WAIT_SAVE, # 9
-     BACKEND_HELD, # 10
+     BACKEND_HELD_WAIT_SAVE, # 8
+     BACKEND_HELD, # 9
 
-     ) = range(10+1)
+     ) = range(9+1)
 
     # for each state, it is noted if the state is transient (always leads to
     # another state), or non-transient (can lead back to itself and stop the
@@ -404,20 +402,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
           # sitting around in the backend
           (state_machine_always_true,
            __clear_error_flag_and_msg_state_machine,
-           BACKEND_ERROR_FORGOTON_TRY_AGAIN),
+           BACKEND_OUT_OF_SYNC),
           ), # end rules for state BACKEND_ERROR_TRY_AGAIN
         
-        # Rules for state BACKEND_ERROR_FORGOTON_TRY_AGAIN [6]
-        # transient state
-        ( (particular_input_state_machine(
-                    BACKEND_SAFE_REMOVE_REQUESTED),
-           state_machine_do_nothing, BACKEND_VERIFY_REQUESTED ),
-          (state_machine_always_true,
-           __backend_data_verify_state_machine,
-           BACKEND_OLD_TO_BE_REMOVED),
-          ), # end rules for state BACKEND_ERROR_FORGOTON_TRY_AGAIN
-        
-        # Rules for state BACKEND_OLD_TO_BE_REMOVED [7]
+        # Rules for state BACKEND_OLD_TO_BE_REMOVED [6]
         # if the verify failed, we're not going to do removal!
         # transient state
         ( (error_in_state_machine_data_is(
@@ -441,7 +429,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            NO_BACKEND_EXIST),
           ), # end rules for state BACKEND_OLD_TO_BE_REMOVED
         
-        # Rules for BACKEND_VERIFY_REQUESTED [8]
+        # Rules for BACKEND_VERIFY_REQUESTED [7]
         # non-transient state
         ( (error_in_state_machine_data_is(
                     ERROR_VERIFY_FAILED),
@@ -463,7 +451,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_SYNCED),
           ), # end rules for state BACKEND_VERIFY_REQUESTED
         
-        # Rules for BACKEND_HELD_WAIT_SAVE [9]
+        # Rules for BACKEND_HELD_WAIT_SAVE [8]
         # non-transient state
         ( (particular_input_state_machine(LAST_ACT_SAVE),
            state_machine_do_nothing, BACKEND_HELD),
@@ -471,7 +459,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_HELD),
           ), # end rules for BACKEND_HELD_WAIT_SAVE
         
-        # Rules for BACKEND_HELD [10]
+        # Rules for BACKEND_HELD [9]
         # non-transient state
         ( (particular_input_state_machine(
                     BACKEND_VERIFICATION_REQUESTED),
