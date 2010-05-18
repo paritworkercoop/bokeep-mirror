@@ -23,8 +23,9 @@ class TestTransaction(Transaction):
 
 REMOVE, CREATE, VERIFY, SAVE, CLOSE = range(5)
 
-FAILURE_TYPES = (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET) \
-    = range(4)
+FAILURE_TYPES = \
+    (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET,
+     SAVE_FAIL, SAVE_RESET) = range(6)
 
 def create_logging_function(func, cmd):
     def logging_function(self, *args, **kargs):
@@ -80,7 +81,11 @@ class BackendModuleUnitTest(BackendModule):
     verify_backend_transaction = create_logging_function(
         BackendModule.verify_backend_transaction, VERIFY)
 
-    save = create_logging_function(null_function, SAVE)   
+    save = create_logging_function(
+        create_failure_function(
+            create_failure_function(null_function, SAVE_FAIL),
+            SAVE_RESET),
+        SAVE)
     close = create_logging_function(BackendModule.close, CLOSE)
 
     def pop_actions_queue(self):
@@ -313,6 +318,30 @@ class StartWithInsertTest(StartWithInsertSetup):
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 1) # create
         self.look_for_create(actions, None, self.fin_trans )
+        # creation process should work now that programmed reset is gone
+        self.test_create()
+
+    def test_create_fail_followed_by_save_throwing_reset(self):
+        def check_for_right_financial_trans(backend_mod_self, fin_trans):
+            return self.fin_trans == fin_trans
+        
+        self.backend_module.program_failure(
+            CREATION_FAIL, BoKeepBackendException,
+            "creation fail", check_for_right_financial_trans)
+
+        reason_for_reset = "reset called on save()"
+        self.backend_module.program_failure(
+            SAVE_RESET, BoKeepBackendResetException,
+            reason_for_reset, lambda backend_mod_self: True )
+
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.run_inspection_of_create_save(backend_id=None)
+        full_error_string = \
+            self.backend_module.reason_transaction_is_dirty(self.front_end_id)
+        self.assert_(full_error_string.endswith(reason_for_reset) )
+        self.assert_(full_error_string.startswith(
+            "error code: %s"  % BackendDataStateMachine.ERROR_OTHER) )
         # creation process should work now that programmed reset is gone
         self.test_create()
 
