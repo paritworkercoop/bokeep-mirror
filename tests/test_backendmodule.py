@@ -25,7 +25,7 @@ REMOVE, CREATE, VERIFY, SAVE, CLOSE = range(5)
 
 FAILURE_TYPES = \
     (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET,
-     SAVE_FAIL, SAVE_RESET) = range(6)
+     SAVE_FAIL, SAVE_RESET, VERIFY_FAIL, VERIFY_RESET) = range(8)
 
 def create_logging_function(func, cmd):
     def logging_function(self, *args, **kargs):
@@ -79,7 +79,11 @@ class BackendModuleUnitTest(BackendModule):
         CREATE)
 
     verify_backend_transaction = create_logging_function(
-        BackendModule.verify_backend_transaction, VERIFY)
+        create_failure_function(
+            create_failure_function(
+                BackendModule.verify_backend_transaction, VERIFY_FAIL),
+            VERIFY_RESET),
+        VERIFY)
 
     save = create_logging_function(
         create_failure_function(
@@ -132,12 +136,12 @@ class BackendModuleBasicSetup(TestCase):
         self.assertEquals(cmd, SAVE)
         self.assertEquals(return_val, None)
 
-    def look_for_verify(self, actions, orig_fin_trans):
+    def look_for_verify(self, actions, orig_fin_trans, verify_result=True):
         action1 = actions.pop()
         self.assertEquals(len(action1), 4)
         cmd, return_val, backend_ident, fin_trans = action1
         self.assertEquals(cmd, VERIFY)       
-        self.assertEquals(return_val, True)
+        self.assertEquals(return_val, verify_result)
         self.assertEquals(backend_ident, 1)
         self.assertEquals(fin_trans, orig_fin_trans)
 
@@ -311,7 +315,7 @@ class StartWithInsertTest(StartWithInsertSetup):
             return self.fin_trans == fin_trans
         
         self.backend_module.program_failure(
-            CREATION_FAIL, BoKeepBackendResetException,
+            CREATION_RESET, BoKeepBackendResetException,
             "creation lost to reset", check_for_right_financial_trans)
         self.backend_module.flush_backend()
         self.assertTransactionIsDirty(self.front_end_id)        
@@ -352,18 +356,19 @@ class StartWithInsertAndFlushSetup(StartWithInsertSetup):
         self.backend_module.pop_actions_queue()
         self.SECOND_BACKEND_ID = self.FIRST_BACKEND_ID+1
 
-    def run_test_of_transaction_verify(self):
+    def run_test_of_transaction_verify(self, verify_result=True):
         # this should do a VERIFY and a SAVE
         self.verify_known_transaction()
         self.assertTransactionIsDirty(self.front_end_id)
         self.backend_module.flush_backend()
         self.assertTransactionIsClean(self.front_end_id)
-        
-        actions = self.backend_module.pop_actions_queue()
-        self.assertEquals(len(actions), 2)
-        self.look_for_verify(actions, self.fin_trans)
-        self.look_for_save(actions)
+        self.look_for_actions_from_verify(verify_result)
 
+    def look_for_actions_from_verify(self, verify_result=True):
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 2) # verify, save
+        self.look_for_verify(actions, self.fin_trans, verify_result)
+        self.look_for_save(actions)        
 
     def run_test_of_transaction_remove(self):
         self.backend_module.mark_transaction_for_removal(self.front_end_id)
@@ -390,6 +395,25 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
         for i in xrange(20):
             self.verify_known_transaction()
         self.test_transaction_verify()
+
+    def test_verify_fail(self):
+        reason_for_backend_verify_fail = "this is just a test, not a real " \
+            "failure on verify"
+        def test_for_correct_backend_id(backend_mod_self, backend_id,
+                                        fin_trans):
+            return backend_id == self.FIRST_BACKEND_ID and \
+                fin_trans == self.fin_trans
+        self.backend_module.program_failure(
+            VERIFY_FAIL, BoKeepBackendException,
+            reason_for_backend_verify_fail, test_for_correct_backend_id)
+
+        # this should do a VERIFY and a SAVE
+        self.verify_known_transaction()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.look_for_actions_from_verify(None)
+        self.run_test_of_transaction_verify()
 
     def test_transaction_hold(self):
         # this should just SAVE
