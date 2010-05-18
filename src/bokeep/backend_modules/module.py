@@ -360,10 +360,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         # non-transient state
         ( (particular_input_state_machine(LAST_ACT_SAVE),
            state_machine_do_nothing, BACKEND_SYNCED),
-          # check if dirty in dirty_transaction_set, if so,
-          # set the dirty flag in the state machine
+          # check if dirty in dirty_transaction_set, if so, leave this state
           (__in_dirty_set_state_machine,
-           state_machine_do_nothing, BACKEND_OUT_OF_SYNC),
+           state_machine_do_nothing, BACKEND_OUT_OF_SYNC),         
+          # implicit, if there is a reset, we just stay here
           ), # end rules for state BACKEND_SYNCED
         
         # Rules for state BACKEND_OUT_OF_SYNC [4]
