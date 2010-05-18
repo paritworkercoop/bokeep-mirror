@@ -241,24 +241,21 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
      # made it, and we don't want to muck with it again until there is a
      # save
      BACKEND_ERROR_WAIT_SAVE, # 2
-     # an attempt was made to create a backend transaction, but it never
-     # made it
-     BACKEND_ERROR, # 3
      # The backend is in sync with the front end, stay in this state
      # until a transaction is marked as dirty
-     BACKEND_SYNCED, # 4
+     BACKEND_SYNCED, # 3
      # The backend is out of sync, and will soon be updated
-     BACKEND_OUT_OF_SYNC, # 5
+     BACKEND_OUT_OF_SYNC, # 4
      # despite past errors, a new attempt is ready to be be made made to
      # synchronize
-     BACKEND_ERROR_TRY_AGAIN, # 6
+     BACKEND_ERROR_TRY_AGAIN, # 5
      # we just forgot past errors, ready for regeneration steps
-     BACKEND_ERROR_FORGOTON_TRY_AGAIN, # 7
+     BACKEND_ERROR_FORGOTON_TRY_AGAIN, # 6
      # preparing to remove old backend transactions, verification
      # just took place on the way here
-     BACKEND_OLD_TO_BE_REMOVED, # 8
+     BACKEND_OLD_TO_BE_REMOVED, # 7
      # verification was just requested
-     BACKEND_VERIFY_REQUESTED, # 9
+     BACKEND_VERIFY_REQUESTED, # 8
      # its been verified, the backend is out of sync, a state we
      # should stay in until explicit user intervention
      #
@@ -273,10 +270,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
      # but verification was possible, and all the end user wanted to
      # begin with was a verification...
      # FIXME, differnet comment for each
-     BACKEND_HELD_WAIT_SAVE, # 10
-     BACKEND_HELD, # 11
+     BACKEND_HELD_WAIT_SAVE, # 9
+     BACKEND_HELD, # 10
 
-     ) = range(11+1)
+     ) = range(10+1)
 
     # for each state, it is noted if the state is transient (always leads to
     # another state), or non-transient (can lead back to itself and stop the
@@ -355,23 +352,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            BACKEND_ERROR_TRY_AGAIN),
           # otherwise we wait until there is a save
           (particular_input_state_machine(LAST_ACT_SAVE),
-           state_machine_do_nothing, BACKEND_ERROR),
+           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
           ), # end rules for state BACKEND_ERROR_WAIT_SAVE
         
-        # rules for BACKEND_ERROR [3]
-        # As long as the last thing that happened was a save,
-        # we stay here
-        # thus non-transient state
-        ( (particular_input_state_machine(LAST_ACT_SAVE),
-           state_machine_do_nothing, BACKEND_ERROR),
-          
-          # Now we can move on and try again to commit..
-          (state_machine_always_true,
-           __clear_error_flag_and_msg_state_machine,
-           BACKEND_ERROR_TRY_AGAIN),
-          ), # end rules for state BACKEND_ERROR
-        
-        # Rules for state BACKEND_SYNCED [4]
+        # Rules for state BACKEND_SYNCED [3]
         # hold up if save just happened
         # non-transient state
         ( (particular_input_state_machine(LAST_ACT_SAVE),
@@ -382,7 +366,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_OUT_OF_SYNC),
           ), # end rules for state BACKEND_SYNCED
         
-        # Rules for state BACKEND_OUT_OF_SYNC [5]
+        # Rules for state BACKEND_OUT_OF_SYNC [4]
         # if a reset brought us here, hold on
         # non-transient state
         ( (particular_input_state_machine(LAST_ACT_RESET),
@@ -404,12 +388,15 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            BACKEND_OLD_TO_BE_REMOVED),
           ), # end rules for state BACKEND_OUT_OF_SYNC
         
-        # Rules for state BACKEND_ERROR_TRY_AGAIN [6]
+        # Rules for state BACKEND_ERROR_TRY_AGAIN [5]
         #
-        # If we got here because of a reset, just wait in this
+        # If we got here because of a save or reset, just wait in this
         # state and record the reason
         # non-transient state
-        ( (particular_input_state_machine(LAST_ACT_RESET),
+        ( (particular_input_state_machine(LAST_ACT_SAVE),
+           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
+
+          (particular_input_state_machine(LAST_ACT_RESET),
            __record_reason_for_reset_state_machine,
            BACKEND_ERROR_TRY_AGAIN),
           # otherwise we are ready to try again, the first step
@@ -420,7 +407,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            BACKEND_ERROR_FORGOTON_TRY_AGAIN),
           ), # end rules for state BACKEND_ERROR_TRY_AGAIN
         
-        # Rules for state BACKEND_ERROR_FORGOTON_TRY_AGAIN [7]
+        # Rules for state BACKEND_ERROR_FORGOTON_TRY_AGAIN [6]
         # transient state
         ( (particular_input_state_machine(
                     BACKEND_SAFE_REMOVE_REQUESTED),
@@ -430,7 +417,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            BACKEND_OLD_TO_BE_REMOVED),
           ), # end rules for state BACKEND_ERROR_FORGOTON_TRY_AGAIN
         
-        # Rules for state BACKEND_OLD_TO_BE_REMOVED [8]
+        # Rules for state BACKEND_OLD_TO_BE_REMOVED [7]
         # if the verify failed, we're not going to do removal!
         # transient state
         ( (error_in_state_machine_data_is(
@@ -454,7 +441,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            NO_BACKEND_EXIST),
           ), # end rules for state BACKEND_OLD_TO_BE_REMOVED
         
-        # Rules for BACKEND_VERIFY_REQUESTED [9]
+        # Rules for BACKEND_VERIFY_REQUESTED [8]
         # non-transient state
         ( (error_in_state_machine_data_is(
                     ERROR_VERIFY_FAILED),
@@ -476,7 +463,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_SYNCED),
           ), # end rules for state BACKEND_VERIFY_REQUESTED
         
-        # Rules for BACKEND_HELD_WAIT_SAVE [10]
+        # Rules for BACKEND_HELD_WAIT_SAVE [9]
         # non-transient state
         ( (particular_input_state_machine(LAST_ACT_SAVE),
            state_machine_do_nothing, BACKEND_HELD),
@@ -484,7 +471,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_HELD),
           ), # end rules for BACKEND_HELD_WAIT_SAVE
         
-        # Rules for BACKEND_HELD [11]
+        # Rules for BACKEND_HELD [10]
         # non-transient state
         ( (particular_input_state_machine(
                     BACKEND_VERIFICATION_REQUESTED),
