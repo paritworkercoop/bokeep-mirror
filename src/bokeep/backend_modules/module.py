@@ -287,7 +287,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            BACKEND_ERROR_WAIT_SAVE ),
 
           (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
+           __record_reason_for_reset_state_machine, NO_BACKEND_EXIST),
 
           # If a transaction is marked for removal but is in this state
           # all we have to do is remove the state machine
@@ -368,8 +368,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         # if a reset brought us here, hold on
         # non-transient state
         ( (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing,
+           __record_reason_for_reset_state_machine,
            BACKEND_OUT_OF_SYNC),
+          (particular_input_state_machine(LAST_ACT_SAVE),
+           state_machine_do_nothing, BACKEND_OUT_OF_SYNC),
           # if a verification was requested, do it
           (particular_input_state_machine(
                     BACKEND_VERIFICATION_REQUESTED),
