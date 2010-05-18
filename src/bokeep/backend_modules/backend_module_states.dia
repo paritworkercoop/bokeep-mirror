@@ -1577,16 +1577,16 @@
     </dia:object>
     <dia:object type="UML - Transition" version="2" id="O32">
       <dia:attribute name="obj_pos">
-        <dia:point val="21.2001,21.05"/>
+        <dia:point val="21.2001,20.15"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="21.1501,12.25;29.5901,21.55"/>
+        <dia:rectangle val="21.1501,12.25;29.5901,20.6575"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="21.2001,21.05"/>
-        <dia:point val="23.0913,21.05"/>
-        <dia:point val="23.0913,18.3068"/>
-        <dia:point val="29.0901,18.3068"/>
+        <dia:point val="21.2001,20.15"/>
+        <dia:point val="21.85,20.15"/>
+        <dia:point val="21.85,16.55"/>
+        <dia:point val="29.0901,16.55"/>
         <dia:point val="29.0901,12.3"/>
       </dia:attribute>
       <dia:attribute name="orth_orient">
@@ -1617,7 +1617,7 @@
         <dia:boolean val="false"/>
       </dia:attribute>
       <dia:connections>
-        <dia:connection handle="0" to="O7" connection="4"/>
+        <dia:connection handle="0" to="O7" connection="2"/>
         <dia:connection handle="1" to="O6" connection="7"/>
       </dia:connections>
     </dia:object>
@@ -2269,16 +2269,16 @@
     </dia:object>
     <dia:object type="UML - Transition" version="2" id="O48">
       <dia:attribute name="obj_pos">
-        <dia:point val="21.2001,20.15"/>
+        <dia:point val="21.2001,21.05"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="21.1501,12.1068;46.2203,20.65"/>
+        <dia:rectangle val="21.1501,12.1068;46.2203,21.55"/>
       </dia:attribute>
       <dia:attribute name="orth_points">
-        <dia:point val="21.2001,20.15"/>
-        <dia:point val="22.5065,20.15"/>
-        <dia:point val="22.5065,15.2068"/>
-        <dia:point val="43.5949,15.2068"/>
+        <dia:point val="21.2001,21.05"/>
+        <dia:point val="22.5065,21.05"/>
+        <dia:point val="22.5065,17.35"/>
+        <dia:point val="43.5949,17.35"/>
         <dia:point val="43.5949,14.1279"/>
         <dia:point val="46.1703,14.1279"/>
       </dia:attribute>
@@ -2311,7 +2311,7 @@
         <dia:boolean val="false"/>
       </dia:attribute>
       <dia:connections>
-        <dia:connection handle="0" to="O7" connection="2"/>
+        <dia:connection handle="0" to="O7" connection="4"/>
         <dia:connection handle="1" to="O9" connection="5"/>
       </dia:connections>
     </dia:object>
