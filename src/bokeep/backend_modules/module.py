@@ -47,17 +47,22 @@ class BackendChangeThread(ChangeMessageRecievingThread):
         # send count_down back to the backend module dirty db, or nothing
 
         
-def error_in_state_machine_data_is(error_code):
-    def error_check_function(state_machine, next_state):
-        return state_machine.data.get_value("error_code") == error_code
-    return error_check_function
+def error_in_state_machine_data_is(error_code=None):
+    if error_code == None:
+        def check_for_any_error(state_machine, next_state):
+            return state_machine.data.get_value("error_code") != \
+                BackendDataStateMachine.ERROR_NONE
+        return check_for_any_error
+    else:
+        def error_check_function(state_machine, next_state):
+            return state_machine.data.get_value("error_code") == error_code
+        return error_check_function
 
 def particular_input_state_machine(input):
     def command_check(state_machine, next_state):
         return state_machine.backend_module.dirty_transaction_set[
             state_machine.data.get_value('front_end_id')] == input
     return command_check
-
 
 class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
     def __init__(self, init_data, backend_module):
@@ -67,9 +72,34 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
             data=init_data)
         self.backend_module = backend_module
 
-    @classmethod
-    def get_table(cls):
-        return cls.__backend_rule_table
+    def get_table(self):
+        if hasattr(self, 'override_rule_table'):
+            return self.override_rule_table
+        else:
+            return BackendDataStateMachine.__backend_rule_table
+
+    def error_override(self, error_code, error_string):
+        def error_code_setter(state_machine, next_state):
+            return state_machine.data.duplicate_and_change(
+                error_code=error_code,
+                error_string=error_string,
+                )
+        # temporarilly override the state machine rule table,
+        # for each state, set one rule, a rule that overrides the error code
+        # and returns to the same state
+        self.override_rule_table = tuple(
+            ((state_machine_always_true, error_code_setter, rule_id), )
+            for rule_id, rule in \
+                enumerate(BackendDataStateMachine.__backend_rule_table)
+            ) # tuple
+        # check that self.get_table() is actually using our temp table
+        assert( self.override_rule_table == self.get_table() )
+        self.advance_state_machine()
+        del self.override_rule_table
+        # check that self.get_table() now is returning the original table
+        assert( BackendDataStateMachine.__backend_rule_table ==
+                self.get_table() )
+        
 
     def __remove_transaction_state_machine(state_machine, next_state):
         """Removes the reference
@@ -116,6 +146,9 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                         create_backend_transaction(fin_trans)
                     backend_ids_to_fin_trans[new_backend_id] = fin_trans
                     
+            except BoKeepBackendResetException, reset_e:
+                error_code = BackendDataStateMachine.ERROR_RESET
+                error_string = reset_e.message
             except BoKeepBackendException, e:
                 error_code = BackendDataStateMachine.ERROR_OTHER
                 error_string = e.message
@@ -149,6 +182,9 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                     backend_id, fin_trans):
                     error_code = BackendDataStateMachine.ERROR_VERIFY_FAILED
                     break # for loop
+            except BoKeepBackendResetException, reset_e:
+                error_code = BackendDataStateMachine.ERROR_RESET
+                error_string = reset_e.message
             except BoKeepBackendException, e:
                 error_code = BackendDataStateMachine.ERROR_OTHER
                 error_string = e.message
@@ -157,11 +193,6 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         return state_machine.data.duplicate_and_change(
             error_code=error_code,
             error_string=error_string)
-
-    def __record_reason_for_reset_state_machine(state_machine, next_state):
-        return state_machine.data.duplicate_and_change(
-            error_code=BackendDataStateMachine.ERROR_OTHER,
-            error_string=state_machine.backend_module.get_reason_for_reset() )
 
     def __remove_backend_transactions_state_machine(state_machine, next_state):
         """Removes any backend transactions listed in the state machine data
@@ -184,6 +215,9 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                 state_machine.backend_module.remove_backend_transaction(
                     backend_id)
                 removed_backend_ids.add(backend_id)
+        except BoKeepBackendResetException, reset_e:
+            error_code = BackendDataStateMachine.ERROR_RESET
+            error_string = reset_e.message
         except BoKeepBackendException, e:
             error_code = BackendDataStateMachine.ERROR_CAN_NOT_REMOVE
             error_string = e.message
@@ -202,8 +236,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
     # keep these syncronized with MACHINE_INPUT_STRINGS
     (BACKEND_RECREATE, BACKEND_VERIFICATION_REQUESTED,
      BACKEND_LEAVE_ALONE_REQUESTED, BACKEND_BLOWOUT_REQUESTED,
-     BACKEND_SAFE_REMOVE_REQUESTED, LAST_ACT_NONE, LAST_ACT_SAVE,
-     LAST_ACT_RESET) = range(8)
+     BACKEND_SAFE_REMOVE_REQUESTED, LAST_ACT_NONE, LAST_ACT_SAVE) = range(7)
     MACHINE_INPUT_STRINGS = [
         "The backend transaction has been marked dirty for re-creation", #0
         "The backend transaction has been marked for a verify", #1
@@ -211,21 +244,21 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         "A held backend transaction is being removed, despite possibly "
         "not matching the frontend", #3
         "A request has been made to remove the transaction", #4
-        "machine input nothing",
-        "machine input, save just happended",
-        "machine input, reset"
+        "machine input nothing", #5
+        "machine input, save just happended", #6
         ]
 
     # error types for a backend state machine
     # keep these syncronized with ERROR_TYPE_STRINGS
     (ERROR_CAN_NOT_REMOVE, ERROR_VERIFY_FAILED,
-     ERROR_OTHER, ERROR_NONE) = range(4)
+     ERROR_RESET, ERROR_OTHER, ERROR_NONE) = range(5)
     ERROR_TYPE_STRINGS = [
         "couldn't remove a transaction from backend", #0
-        "a transaction did not match the version in the backend during "
+        "a transaction did not match the version in the backend during " 
         "verify", #1
-        "other type of error", #2
-        "no error", #3
+        "reset", #2
+        "other type of error", #3
+        "no error", #4
         ]
 
     # These are the states a transaction can be in the backend
@@ -237,23 +270,16 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
     (NO_BACKEND_EXIST,  # 0
      # an attempt was made to create backend transaction
      BACKEND_CREATION_TRIED, # 1
-     # an attempt was made to create a backend transaction, but it never
-     # made it, and we don't want to muck with it again until there is a
-     # save
-     BACKEND_ERROR_WAIT_SAVE, # 2
      # The backend is in sync with the front end, stay in this state
      # until a transaction is marked as dirty
-     BACKEND_SYNCED, # 3
+     BACKEND_SYNCED, # 2
      # The backend is out of sync, and will soon be updated
-     BACKEND_OUT_OF_SYNC, # 4
-     # despite past errors, a new attempt is ready to be be made made to
-     # synchronize
-     BACKEND_ERROR_TRY_AGAIN, # 5
+     BACKEND_OUT_OF_SYNC, # 3
      # preparing to remove old backend transactions, verification
      # just took place on the way here
-     BACKEND_OLD_TO_BE_REMOVED, # 6
+     BACKEND_OLD_TO_BE_REMOVED, # 4
      # verification was just requested
-     BACKEND_VERIFY_REQUESTED, # 7
+     BACKEND_VERIFY_REQUESTED, # 5
      # its been verified, the backend is out of sync, a state we
      # should stay in until explicit user intervention
      #
@@ -268,27 +294,18 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
      # but verification was possible, and all the end user wanted to
      # begin with was a verification...
      # FIXME, differnet comment for each
-     BACKEND_HELD_WAIT_SAVE, # 8
-     BACKEND_HELD, # 9
+     BACKEND_HELD_WAIT_SAVE, # 6
+     BACKEND_HELD, # 7
+     ) = range(7+1)
 
-     ) = range(9+1)
-
-    # for each state, it is noted if the state is transient (always leads to
-    # another state), or non-transient (can lead back to itself and stop the
-    # state to state iteration)
-
+    # it's notable that only one state (BACKEND_OLD_TO_BE_REMOVED) is transient,
+    # all of the others can stop the state to state iteration
     __backend_rule_table = (
         # Rules for state NO_BACKEND_EXIST [0]
-        #
-        # This is a non-transient state
-        ( (error_in_state_machine_data_is(
-                    ERROR_CAN_NOT_REMOVE),
+        ( (error_in_state_machine_data_is(),
            state_machine_do_nothing,
-           BACKEND_ERROR_WAIT_SAVE ),
-
-          (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
-
+           BACKEND_OUT_OF_SYNC ),
+          
           # If a transaction is marked for removal but is in this state
           # all we have to do is remove the state machine
           # next state won't matter
@@ -322,38 +339,18 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         
         # Rules for state BACKEND_CREATION_TRIED [1]
         #
-        # This is a non-transient state 
-        #
         # If there was an error when attempting to create the
         # backend transaction, go to the error state
-        ( (error_in_state_machine_data_is(ERROR_OTHER),
+        ( (error_in_state_machine_data_is(),
            state_machine_do_nothing,
-           BACKEND_ERROR_WAIT_SAVE),
-          # no need to test for other error codes
-          
-          # If the transaction was created in the backend, but
-          # lost because a save couldn't take place, we'll just
-          # have to try again
-          (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing,
-           BACKEND_ERROR_TRY_AGAIN),
+           BACKEND_OUT_OF_SYNC ),
+
           # Otherwise we're just waiting for the save to work out
           (particular_input_state_machine(LAST_ACT_SAVE),
            state_machine_do_nothing, BACKEND_SYNCED),
           ), # end rules for state BACKEND_CREATION_TRIED
-        
-        # Rules for state BACKEND_ERROR_WAIT_SAVE [2]
-        # no big deal if save never happned and we lost it...,
-        # just try again
-        ( (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing,
-           BACKEND_ERROR_TRY_AGAIN),
-          # otherwise we wait until there is a save
-          (particular_input_state_machine(LAST_ACT_SAVE),
-           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
-          ), # end rules for state BACKEND_ERROR_WAIT_SAVE
-        
-        # Rules for state BACKEND_SYNCED [3]
+                
+        # Rules for state BACKEND_SYNCED [2]
         # hold up if save just happened
         # non-transient state
         ( (particular_input_state_machine(LAST_ACT_SAVE),
@@ -364,15 +361,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
           # implicit, if there is a reset, we just stay here
           ), # end rules for state BACKEND_SYNCED
         
-        # Rules for state BACKEND_OUT_OF_SYNC [4]
+        # Rules for state BACKEND_OUT_OF_SYNC [3]
         # if a reset brought us here, hold on
-        # non-transient state
-        ( (particular_input_state_machine(LAST_ACT_RESET),
-           __record_reason_for_reset_state_machine,
-           BACKEND_OUT_OF_SYNC),
-          (particular_input_state_machine(LAST_ACT_SAVE),
+        ( (error_in_state_machine_data_is(),
            state_machine_do_nothing, BACKEND_OUT_OF_SYNC),
-          # if a verification was requested, do it
           (particular_input_state_machine(
                     BACKEND_VERIFICATION_REQUESTED),
            __backend_data_verify_state_machine,
@@ -388,33 +380,9 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            BACKEND_OLD_TO_BE_REMOVED),
           ), # end rules for state BACKEND_OUT_OF_SYNC
         
-        # Rules for state BACKEND_ERROR_TRY_AGAIN [5]
-        #
-        # If we got here because of a save or reset, just wait in this
-        # state and if its a reset record the reason
-        # this is a non-transient state
-        ( (particular_input_state_machine(LAST_ACT_SAVE),
-           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
-
-          (particular_input_state_machine(LAST_ACT_RESET),
-           __record_reason_for_reset_state_machine,
-           BACKEND_ERROR_TRY_AGAIN),
-          # otherwise we are ready to try again, the first step
-          # being data verification prior to removing anything
-          # sitting around in the backend
-          (state_machine_always_true,
-           __clear_error_flag_and_msg_state_machine,
-           BACKEND_OUT_OF_SYNC),
-          ), # end rules for state BACKEND_ERROR_TRY_AGAIN
-        
-        # Rules for state BACKEND_OLD_TO_BE_REMOVED [6]
+        # Rules for state BACKEND_OLD_TO_BE_REMOVED [4]
         # if the verify failed, we're not going to do removal!
-        # transient state
-        ( (error_in_state_machine_data_is(
-                    ERROR_VERIFY_FAILED),
-           state_machine_do_nothing, BACKEND_HELD_WAIT_SAVE),
-          (error_in_state_machine_data_is(ERROR_OTHER),
-           state_machine_do_nothing, BACKEND_ERROR_WAIT_SAVE),
+        # This is the only transient state
           # is this really fair if we got here from
           # BACKEND_SYNCED->BACKEND_OUT_OF_SYNC, if there was
           # never an error and just a reset, what's the big deal?
@@ -424,22 +392,24 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
           #
           # or maybe this is a good idea, the reason for the reset
           # can end up getting recorded, which may be of interest..
-          (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing, BACKEND_ERROR_TRY_AGAIN),
+        ( (error_in_state_machine_data_is(
+                    ERROR_VERIFY_FAILED),
+           state_machine_do_nothing, BACKEND_HELD_WAIT_SAVE),
+          (error_in_state_machine_data_is(),
+           state_machine_do_nothing,
+           BACKEND_OUT_OF_SYNC),
           (state_machine_always_true,
            __remove_backend_transactions_state_machine,
            NO_BACKEND_EXIST),
           ), # end rules for state BACKEND_OLD_TO_BE_REMOVED
         
-        # Rules for BACKEND_VERIFY_REQUESTED [7]
-        # non-transient state
+        # Rules for BACKEND_VERIFY_REQUESTED [5]
         ( (error_in_state_machine_data_is(
                     ERROR_VERIFY_FAILED),
            state_machine_do_nothing, BACKEND_HELD_WAIT_SAVE),
-          (error_in_state_machine_data_is(ERROR_OTHER),
-           state_machine_do_nothing, BACKEND_ERROR_WAIT_SAVE),
-          (particular_input_state_machine(LAST_ACT_RESET),
-           state_machine_do_nothing, BACKEND_OUT_OF_SYNC),
+          (error_in_state_machine_data_is(),
+           state_machine_do_nothing,
+           BACKEND_OUT_OF_SYNC),
           # if verification was requested, we now know it was a
           # success, so just wait here until the save, after which
           # we can expect that we'll be allowed to advance, and
@@ -453,15 +423,12 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
            state_machine_do_nothing, BACKEND_SYNCED),
           ), # end rules for state BACKEND_VERIFY_REQUESTED
         
-        # Rules for BACKEND_HELD_WAIT_SAVE [8]
-        # non-transient state
+        # Rules for BACKEND_HELD_WAIT_SAVE [6]
         ( (particular_input_state_machine(LAST_ACT_SAVE),
-           state_machine_do_nothing, BACKEND_HELD),
-          (particular_input_state_machine(LAST_ACT_RESET),
            state_machine_do_nothing, BACKEND_HELD),
           ), # end rules for BACKEND_HELD_WAIT_SAVE
         
-        # Rules for BACKEND_HELD [9]
+        # Rules for BACKEND_HELD [7]
         # non-transient state
         ( (particular_input_state_machine(
                     BACKEND_VERIFICATION_REQUESTED),
@@ -471,10 +438,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                     BACKEND_BLOWOUT_REQUESTED),
            __clear_error_flag_and_msg_state_machine,
            BACKEND_OLD_TO_BE_REMOVED),
-          ), # end rules for BACKEND_HELD
-          
-           
-
+          ), # end rules for BACKEND_HELD        
         ) # end state list
         
 
@@ -795,7 +759,7 @@ class BackendModule(Persistent):
         if self.can_write():
             dirty_set_copy = self.dirty_transaction_set.copy()
             try:
-                self.__advance_all_dirty_transaction_state_machine()
+                self.__advance_all_dirty_transaction_state_machine(True)
                 self._p_changed = True
                 transaction.get().commit()
 
@@ -804,13 +768,15 @@ class BackendModule(Persistent):
                 try:
                     self.save()
                 except BoKeepBackendException, e:
-                    # call close, which also triggers backend_reset_occured()
+                    # call close, which also triggers
+                    # __set_all_transactions_to_reset_and_advance()
                     self.close('called close() because save failed ' + \
                                    e.message) 
                 else:
                     for dirty_trans_id in self.dirty_transaction_set.iterkeys():
                         self.dirty_transaction_set[dirty_trans_id] = \
                             BackendDataStateMachine.LAST_ACT_SAVE
+                    self._p_changed = True
                     self.__advance_all_dirty_transaction_state_machine()
 
             except BoKeepBackendResetException, reset_except:
@@ -894,9 +860,6 @@ class BackendModule(Persistent):
     def front_end_to_back_del(self, key):
         del self.__front_end_to_back[key]
 
-    def get_reason_for_reset(self):
-        return self.__reason_for_reset
-
     def __remove_trans_id_from_held_set_if_there(self, trans_id):
         if self.__trans_id_in_held_set(trans_id):
             self.held_transaction_set.remove(trans_id)
@@ -909,20 +872,35 @@ class BackendModule(Persistent):
         assert( not (trans_id in self.held_transaction_set and
                      trans_id in self.dirty_transaction_set ) )
 
-    def __advance_all_dirty_transaction_state_machine(self):
+    def __advance_all_dirty_transaction_state_machine(self, clear_error=False):
         # advance all diryt state machines
         for key in self.dirty_transaction_set.iterkeys():
             # but only ones that still exist..
             if key in self.__front_end_to_back:
+                if self.__front_end_to_back[key].state == \
+                        BackendDataStateMachine.BACKEND_OUT_OF_SYNC \
+                        and clear_error:
+                    self.__front_end_to_back[key].error_override(
+                        BackendDataStateMachine.ERROR_NONE, None)
+
                 self.__front_end_to_back[key].run_until_steady_state()
+                if key in self.__front_end_to_back and \
+                        self.__front_end_to_back[key].data.get_value(
+                    'error_code') == BackendDataStateMachine.ERROR_RESET:
+                    raise BoKeepBackendResetException(
+                        self.__front_end_to_back[key].data.get_value(
+                            'error_string') )
 
     def __set_all_transactions_to_reset_and_advance(
         self, reset_reason="reset"):
-        self.__reason_for_reset = reset_reason
-        for dirty_trans_id in self.dirty_transaction_set.iterkeys():
-            self.dirty_transaction_set[dirty_trans_id] = \
-                BackendDataStateMachine.LAST_ACT_RESET
-        self.__advance_all_dirty_transaction_state_machine()
+        # find all dirty transactions
+        for key in self.dirty_transaction_set.iterkeys():
+            # but only ones that still exist..
+            if key in self.__front_end_to_back:
+                self.__front_end_to_back[key].error_override(
+                    BackendDataStateMachine.ERROR_RESET,
+                    reset_reason)
+                self.__front_end_to_back[key].run_until_steady_state()
        
     def __update_dirty_and_held_transaction_sets(self):
         # remove from the dirty set transactions that have been tottally
@@ -973,7 +951,7 @@ class BackendModule(Persistent):
         # run_until_steady_state() for each state, then it calls save()
         # and sets the __last_act flag to LAST_ACT_SAVE if the save worked,
         # finally it calls run_until_steady_state() again for each state.
-        # It is possible that the backend may set __last_act to LAST_ACT_RESET
+        # It is possible that the backend may set __last_act to ERROR_RESET
         # during this process through a call to
         # fixeme, above sentance out of date..
         #
