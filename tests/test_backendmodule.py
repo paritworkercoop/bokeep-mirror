@@ -13,7 +13,8 @@ from bokeep.book_transaction import \
 
 
 class TestTransaction(Transaction):
-    fin_trans = FinancialTransaction( (
+    def __init__(self):
+        self.fin_trans = FinancialTransaction( (
             FinancialTransactionLine(Decimal(1)),
             FinancialTransactionLine(Decimal(-1)),
             ) )
@@ -369,6 +370,50 @@ class StartWithInsertTest(StartWithInsertSetup):
             "error code: %s"  % BackendDataStateMachine.ERROR_RESET) )
         # creation process should work now that programmed reset is gone
         self.test_create()
+
+class StartWithTwoInsertAndSetup(StartWithInsertSetup):
+    def setUp(self):
+        StartWithInsertSetup.setUp(self)
+        self.transaction2 = TestTransaction()
+        self.fin_trans2 = self.transaction2.get_financial_transactions()[0]
+        self.front_end_id_2 = 1
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id_2, self.transaction2)
+        self.SECOND_BACKEND_ID = 2
+
+    def test_double_create_where_second_one_kills_first_with_reset(self):
+        self.backend_module.flush_backend()
+        self.assertTransactionIsClean(self.front_end_id)
+        self.assertTransactionIsClean(self.front_end_id_2)
+        self.backend_module.pop_actions_queue()
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id, self.transaction)
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id_2, self.transaction2)
+        self.backend_module.flush_backend()        
+
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 7)
+        cmd, return_val, backend_ident, fin_trans = actions.pop()
+        if fin_trans == self.fin_trans:
+            second_fin_trans_recreate = self.fin_trans2
+        else:
+            second_fin_trans_recreate = self.fin_trans
+
+        def check_for_right_financial_trans(backend_mod_self, fin_trans):
+            return second_fin_trans_recreate == fin_trans
+        
+        self.backend_module.program_failure(
+            CREATION_RESET, BoKeepBackendResetException,
+            "creation lost to reset", check_for_right_financial_trans)
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id, self.transaction)
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id_2, self.transaction2)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id_2)
+        self.assertEquals(len(actions), 6)
 
 class StartWithInsertAndFlushSetup(StartWithInsertSetup):
     def setUp(self):
