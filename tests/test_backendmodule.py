@@ -621,12 +621,7 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
             VERIFY_RESET, BoKeepBackendResetException,
             reason_for_backend_fail, test_for_correct_backend_id)
 
-        self.backend_module.mark_transaction_for_removal(self.front_end_id)
-        self.assertTransactionIsDirty(self.front_end_id)
-        #self.remove_known_transaction_and_flush()
-        self.look_for_empty_actions_queue()
-
-        self.backend_module.flush_backend()       
+        self.remove_known_transaction_and_flush()
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 1) # verify
         self.look_for_verify(actions, self.fin_trans, None)
