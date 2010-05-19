@@ -414,12 +414,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
           # success, so just wait here until the save, after which
           # we can expect that we'll be allowed to advance, and
           # then removed from the dirty set
-          (particular_input_state_machine(
-                    BACKEND_VERIFICATION_REQUESTED),
-           state_machine_do_nothing,
-           BACKEND_VERIFY_REQUESTED),
-          # its all good
-          (state_machine_always_true,
+          (particular_input_state_machine(LAST_ACT_SAVE),
            state_machine_do_nothing, BACKEND_SYNCED),
           ), # end rules for state BACKEND_VERIFY_REQUESTED
         
