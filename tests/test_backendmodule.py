@@ -47,6 +47,9 @@ def create_failure_function(func, tag):
                 self.programmed_failures[tag].pop()
             if trigger_test(self, *args, **kargs):
                 raise exception_to_raise(msg)
+            else: # else put it back
+                self.programmed_failures[tag].append(
+                    (exception_to_raise, msg, trigger_test))
         # we want this to execute in two cases,
         # 1) if the first if statement doesn't match, or
         # 2) the second if statement doesn't match
@@ -376,6 +379,7 @@ class StartWithTwoInsertAndSetup(StartWithInsertSetup):
         StartWithInsertSetup.setUp(self)
         self.transaction2 = TestTransaction()
         self.fin_trans2 = self.transaction2.get_financial_transactions()[0]
+        assert(self.fin_trans2 != self.fin_trans)
         self.front_end_id_2 = 1
         self.backend_module.mark_transaction_dirty(
             self.front_end_id_2, self.transaction2)
@@ -399,9 +403,11 @@ class StartWithTwoInsertAndSetup(StartWithInsertSetup):
             second_fin_trans_recreate = self.fin_trans2
         else:
             second_fin_trans_recreate = self.fin_trans
+        assert( (second_fin_trans_recreate == self.fin_trans2) or \
+                    (second_fin_trans_recreate == self.fin_trans) )
 
-        def check_for_right_financial_trans(backend_mod_self, fin_trans):
-            return second_fin_trans_recreate == fin_trans
+        def check_for_right_financial_trans(backend_mod_self, fin_trans_in):
+            return second_fin_trans_recreate == fin_trans_in
         
         self.backend_module.program_failure(
             CREATION_RESET, BoKeepBackendResetException,
@@ -410,10 +416,18 @@ class StartWithTwoInsertAndSetup(StartWithInsertSetup):
             self.front_end_id, self.transaction)
         self.backend_module.mark_transaction_dirty(
             self.front_end_id_2, self.transaction2)
-        self.backend_module.flush_backend()
         self.assertTransactionIsDirty(self.front_end_id)
         self.assertTransactionIsDirty(self.front_end_id_2)
+        self.backend_module.flush_backend()
+        actions = self.backend_module.pop_actions_queue()        
         self.assertEquals(len(actions), 6)
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.assertTransactionIsDirty(self.front_end_id_2)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsClean(self.front_end_id)
+        self.assertTransactionIsClean(self.front_end_id_2)
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 7)
 
 class StartWithInsertAndFlushSetup(StartWithInsertSetup):
     def setUp(self):
