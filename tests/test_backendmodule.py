@@ -714,7 +714,29 @@ class StartWithInsertAndFlushTests(StartWithInsertAndFlushSetup):
         self.backend_module.flush_backend()
         self.look_for_normal_remove_sequence()
 
-        
+    def test_creation_fail_but_still_save(self):
+        reason_for_backend_fail = "this is just a test, not a real failure " \
+            "on create"
+        def test_for_correct_backend_id(
+            backend_mod_self, fin_trans):
+            return fin_trans == self.fin_trans
+        self.backend_module.program_failure(
+            CREATION_FAIL, BoKeepBackendException,
+            reason_for_backend_fail, test_for_correct_backend_id)
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id, self.transaction)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsClean(self.front_end_id)
+        actions = self.backend_module.pop_actions_queue()
+        self.assertEquals(len(actions), 6)
+        self.look_for_verify(actions, self.fin_trans)
+        self.look_for_remove(actions, self.FIRST_BACKEND_ID)
+        self.look_for_create(actions, None, self.fin_trans)
+        self.look_for_save(actions)
+        self.look_for_create(actions, self.SECOND_BACKEND_ID, self.fin_trans)
+        self.look_for_save(actions)
 
 class StartWithInsertFlushAndHoldSetup(StartWithInsertAndFlushSetup):
     def setUp(self):
