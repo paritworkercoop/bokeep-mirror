@@ -133,7 +133,6 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         bo_keep_trans = state_machine.data.get_value('bo_keep_trans')
         error_code = state_machine.data.get_value('error_code')
         error_string = state_machine.data.get_value('error_string')
-        old_backend_ids_to_fin_trans = backend_ids_to_fin_trans.copy()
         try:
             fin_trans_list = list(bo_keep_trans.get_financial_transactions())
         except BoKeepTransactionNotMappableToFinancialTransaction, e:
@@ -155,7 +154,6 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
 
         return state_machine.data.duplicate_and_change(
             backend_ids_to_fin_trans=backend_ids_to_fin_trans,
-            old_backend_ids_to_fin_trans=old_backend_ids_to_fin_trans,
             error_code=error_code,
             error_string=error_string,
             )
@@ -221,8 +219,11 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         except BoKeepBackendException, e:
             error_code = BackendDataStateMachine.ERROR_CAN_NOT_REMOVE
             error_string = e.message
-        for backend_id in removed_backend_ids:
-            del backend_ids_to_fin_trans[backend_id]
+            for backend_id in removed_backend_ids:
+                del backend_ids_to_fin_trans[backend_id]
+        else:
+            for backend_id in removed_backend_ids:
+                del backend_ids_to_fin_trans[backend_id]
 
         return state_machine.data.duplicate_and_change(
             backend_ids_to_fin_trans=backend_ids_to_fin_trans,
@@ -230,6 +231,15 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
             error_code=error_code,
             error_string=error_string )
 
+    def __restore_old_backend_ids(state_machine, next_state):
+        return state_machine.data.duplicate_and_change(
+            backend_ids_to_fin_trans=state_machine.data.get_value(
+                'old_backend_ids_to_fin_trans') )
+    
+    def __lose_old_backend_ids(state_machine, next_state):
+        return state_machine.data.duplicate_and_change(
+            old_backend_ids_to_fin_trans=state_machine.data.get_value(
+                'backend_ids_to_fin_trans') )
 
 
     # state machine inputs
@@ -302,7 +312,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
     # all of the others can stop the state to state iteration
     __backend_rule_table = (
         # Rules for state NO_BACKEND_EXIST [0]
-        ( (error_in_state_machine_data_is(),
+        ( (error_in_state_machine_data_is(ERROR_RESET),
+           __restore_old_backend_ids, BACKEND_OUT_OF_SYNC),
+          
+          (error_in_state_machine_data_is(),
            state_machine_do_nothing,
            BACKEND_OUT_OF_SYNC ),
           
@@ -341,13 +354,16 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         #
         # If there was an error when attempting to create the
         # backend transaction, go to the error state
-        ( (error_in_state_machine_data_is(),
+        ( (error_in_state_machine_data_is(ERROR_RESET),
+           __restore_old_backend_ids, BACKEND_OUT_OF_SYNC),
+
+          (error_in_state_machine_data_is(),
            state_machine_do_nothing,
            BACKEND_OUT_OF_SYNC ),
 
           # Otherwise we're just waiting for the save to work out
           (particular_input_state_machine(LAST_ACT_SAVE),
-           state_machine_do_nothing, BACKEND_SYNCED),
+           __lose_old_backend_ids, BACKEND_SYNCED),
           ), # end rules for state BACKEND_CREATION_TRIED
                 
         # Rules for state BACKEND_SYNCED [2]
@@ -362,7 +378,8 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
           ), # end rules for state BACKEND_SYNCED
         
         # Rules for state BACKEND_OUT_OF_SYNC [3]
-        # if a reset brought us here, hold on
+        # 
+        # do we need a special check for reset here like everywhere else?
         ( (error_in_state_machine_data_is(),
            state_machine_do_nothing, BACKEND_OUT_OF_SYNC),
           (particular_input_state_machine(
@@ -395,6 +412,8 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         ( (error_in_state_machine_data_is(
                     ERROR_VERIFY_FAILED),
            state_machine_do_nothing, BACKEND_HELD_WAIT_SAVE),
+          (error_in_state_machine_data_is(ERROR_RESET),
+           __restore_old_backend_ids, BACKEND_OUT_OF_SYNC),
           (error_in_state_machine_data_is(),
            state_machine_do_nothing,
            BACKEND_OUT_OF_SYNC),
@@ -407,6 +426,8 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         ( (error_in_state_machine_data_is(
                     ERROR_VERIFY_FAILED),
            state_machine_do_nothing, BACKEND_HELD_WAIT_SAVE),
+          (error_in_state_machine_data_is(ERROR_RESET),
+           __restore_old_backend_ids, BACKEND_OUT_OF_SYNC),
           (error_in_state_machine_data_is(),
            state_machine_do_nothing,
            BACKEND_OUT_OF_SYNC),

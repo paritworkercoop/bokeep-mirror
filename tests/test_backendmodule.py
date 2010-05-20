@@ -161,22 +161,23 @@ class BackendModuleBasicSetup(TestCase):
         self.assertEquals(cmd, SAVE)
         self.assertEquals(return_val, None)
 
-    def look_for_verify(self, actions, orig_fin_trans, verify_result=True):
+    def look_for_verify(self, actions, orig_fin_trans, verify_result=True,
+                        backend_ident_from=1):
         action1 = actions.pop()
         self.assertEquals(len(action1), 4)
         cmd, return_val, backend_ident, fin_trans = action1
         self.assertEquals(cmd, VERIFY)       
         self.assertEquals(return_val, verify_result)
-        self.assertEquals(backend_ident, 1)
+        self.assertEquals(backend_ident, backend_ident_from)
         self.assertEquals(fin_trans, orig_fin_trans)
 
     def look_for_remove(self, actions, backend_ident):
         action = actions.pop()
         self.assertEquals(len(action), 3)
-        cmd, return_val, backend_ident = action
+        cmd, return_val, backend_ident_from = action
         self.assertEquals(cmd, REMOVE)
         self.assertEquals(return_val, None)
-        self.assertEquals(backend_ident, backend_ident)
+        self.assertEquals(backend_ident, backend_ident_from)
 
     def look_for_create(self, actions, backend_id, fin_trans):
         action = actions.pop()
@@ -401,8 +402,10 @@ class StartWithTwoInsertAndSetup(StartWithInsertSetup):
         cmd, return_val, backend_ident, fin_trans = actions.pop()
         if fin_trans == self.fin_trans:
             second_fin_trans_recreate = self.fin_trans2
+            first_fin_trans_recreate = self.fin_trans
         else:
             second_fin_trans_recreate = self.fin_trans
+            first_fin_trans_recreate = self.fin_trans2
         assert( (second_fin_trans_recreate == self.fin_trans2) or \
                     (second_fin_trans_recreate == self.fin_trans) )
 
@@ -421,6 +424,15 @@ class StartWithTwoInsertAndSetup(StartWithInsertSetup):
         self.backend_module.flush_backend()
         actions = self.backend_module.pop_actions_queue()        
         self.assertEquals(len(actions), 6)
+        self.look_for_verify(actions, first_fin_trans_recreate, True,
+                             3)
+        self.look_for_remove(actions, 3)
+        self.look_for_create(actions, 5, first_fin_trans_recreate)
+        self.look_for_verify(actions, second_fin_trans_recreate, True,
+                             4)
+        self.look_for_remove(actions, 4)
+        self.look_for_create(actions, None, second_fin_trans_recreate)
+        
         self.assertTransactionIsDirty(self.front_end_id)
         self.assertTransactionIsDirty(self.front_end_id_2)
         self.backend_module.flush_backend()
@@ -428,6 +440,14 @@ class StartWithTwoInsertAndSetup(StartWithInsertSetup):
         self.assertTransactionIsClean(self.front_end_id_2)
         actions = self.backend_module.pop_actions_queue()
         self.assertEquals(len(actions), 7)
+        self.look_for_verify(actions, first_fin_trans_recreate, True,
+                             3)
+        self.look_for_remove(actions, 3)
+        self.look_for_create(actions, 6, first_fin_trans_recreate)
+        self.look_for_verify(actions, second_fin_trans_recreate, True, 4)
+        self.look_for_remove(actions, 4)
+        self.look_for_create(actions, 7, second_fin_trans_recreate)
+        self.look_for_save(actions)
 
 class StartWithInsertAndFlushSetup(StartWithInsertSetup):
     def setUp(self):
