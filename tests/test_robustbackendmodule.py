@@ -5,8 +5,12 @@ from unittest import TestCase, main
 from decimal import Decimal
 from itertools import chain
 
-from bokeep.backend_modules.module import BackendModule, \
-    BackendDataStateMachine, BoKeepBackendException, BoKeepBackendResetException
+from bokeep.backend_modules.module import \
+    BoKeepBackendException, BoKeepBackendResetException
+
+from bokeep.backend_modules.robust_backend_module import \
+    RobustBackendModule, BackendDataStateMachine
+
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
@@ -65,9 +69,9 @@ def create_return_override_function(func, cmd):
             return original_return
     return return_override_function
 
-class BackendModuleUnitTest(BackendModule):
+class BackendModuleUnitTest(RobustBackendModule):
     def __init__(self):
-        BackendModule.__init__(self)
+        RobustBackendModule.__init__(self)
         self.clear_actions_queue()
         self.clear_programmed_fails()
         self.clear_programmed_return()
@@ -96,7 +100,7 @@ class BackendModuleUnitTest(BackendModule):
         create_failure_function(
             create_failure_function(
                 create_return_override_function(
-                    BackendModule.verify_backend_transaction, VERIFY),
+                    RobustBackendModule.verify_backend_transaction, VERIFY),
                 VERIFY_FAIL),
             VERIFY_RESET),
         VERIFY)
@@ -107,7 +111,7 @@ class BackendModuleUnitTest(BackendModule):
             create_failure_function(null_function, SAVE_FAIL),
             SAVE_RESET),
         SAVE)
-    close = create_logging_function(BackendModule.close, CLOSE)
+    close = create_logging_function(RobustBackendModule.close, CLOSE)
 
     def pop_actions_queue(self):
         return_value = self.actions_queue
@@ -136,7 +140,7 @@ class BackendModuleUnitTest(BackendModule):
         self.programmed_return[cmd].insert(0, return_value)
 
 class BackendModuleBasicSetup(TestCase):
-    """This tests that BackendModule makes calls to the subclass functions
+    """This tests that RobustBackendModule makes calls to the subclass functions
     create_backend_transaction, remove_backend_transaction,
     verify_backend_transaction, save, and close in the expected order, and
     responded in the expected way with calls to mark_transaction_dirty,
