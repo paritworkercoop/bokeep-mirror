@@ -779,6 +779,7 @@ class RobustBackendModule(BackendModule):
             self._p_changed = True
             transaction.get().commit()
 
+    @ends_with_commit
     def close(self, close_reason='reset because close() was called'):
         """Instructs the module to release any resources being used to
         access the backend.
