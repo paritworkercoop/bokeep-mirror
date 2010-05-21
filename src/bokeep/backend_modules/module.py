@@ -773,11 +773,11 @@ class BackendModule(Persistent):
         """
         # if we can write to the backend
         if self.can_write():
+            self._p_changed = True
+            transaction.get().commit()
             dirty_set_copy = self.dirty_transaction_set.copy()
             try:
                 self.__advance_all_dirty_transaction_state_machine(True)
-                self._p_changed = True
-                transaction.get().commit()
 
                 # save, and let all dirty transactions change thier state
                 # with the knowledge that a save just took place
@@ -793,6 +793,7 @@ class BackendModule(Persistent):
                         self.dirty_transaction_set[dirty_trans_id] = \
                             BackendDataStateMachine.LAST_ACT_SAVE
                     self._p_changed = True
+                    transaction.get().commit()
                     self.__advance_all_dirty_transaction_state_machine()
 
             except BoKeepBackendResetException, reset_except:
@@ -801,9 +802,9 @@ class BackendModule(Persistent):
                         reset_except.message)
                 else:
                     self.__set_all_transactions_to_reset_and_advance()
-            else:
-                self._p_changed = True
-                transaction.get().commit()
+
+            self._p_changed = True
+            transaction.get().commit()
 
             self.__update_dirty_and_held_transaction_sets()
             for trans_id, original_input_value in \
