@@ -577,6 +577,7 @@ class BackendModule(Persistent):
 
     # START MANDATORY BO-KEEP BACKEND MODULE API
         
+    @ends_with_commit
     def mark_transaction_dirty(self, trans_id, transaction):
         """Indicate a bo-keep transaction is not up to date in the backend.
 
@@ -613,6 +614,7 @@ class BackendModule(Persistent):
                 self.__create_new_state_machine(trans_id, transaction)
         self._p_changed = True
 
+    @ends_with_commit
     def mark_transaction_for_removal(self, trans_id):
         """Indicate a bo-keep transaction should be removed from the backend
 
@@ -631,6 +633,7 @@ class BackendModule(Persistent):
         self.__transaction_invarient(trans_id)
         self._p_changed = True
     
+    @ends_with_commit
     def mark_transaction_for_verification(self, trans_id):
         """Indicate a bo-keep transaction should be compared against the backend
 
@@ -665,6 +668,7 @@ class BackendModule(Persistent):
             BackendDataStateMachine.BACKEND_VERIFICATION_REQUESTED
         self._p_changed = True
 
+    @ends_with_commit
     def mark_transaction_for_hold(self, trans_id):
         self.__transaction_invarient(trans_id)
 
@@ -680,6 +684,7 @@ class BackendModule(Persistent):
                 BackendDataStateMachine.BACKEND_LEAVE_ALONE_REQUESTED
             self._p_changed = True
 
+    @ends_with_commit
     def mark_transaction_for_forced_remove(self, trans_id):
         """Will ensure a transaction in a held state is removed despite
         being out of sync. If you want to try recreating the transaction
@@ -768,9 +773,6 @@ class BackendModule(Persistent):
         sharing a zopedb thread with this you'll want to be sure your data
         is in a state you're comfortable having commited
         """
-        self._p_changed = True
-        transaction.get().commit()
-
         # if we can write to the backend
         if self.can_write():
             dirty_set_copy = self.dirty_transaction_set.copy()
