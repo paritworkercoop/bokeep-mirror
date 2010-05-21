@@ -557,9 +557,6 @@ class RobustBackendModule(BackendModule):
         self.__transaction_invarient(trans_id)
         self.__raise_if_held_state(trans_id)
 
-        # if the transaction is currently held, remove it because we're going
-        # to give it another chance to be resynced...
-        self.__remove_trans_id_from_held_set_if_there(trans_id)
         self.dirty_transaction_set[trans_id] = \
             BackendDataStateMachine.BACKEND_RECREATE
         self.__transaction_invarient(trans_id)
