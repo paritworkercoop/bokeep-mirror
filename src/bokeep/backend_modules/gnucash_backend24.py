@@ -5,7 +5,7 @@ from datetime import date
 # bokeep imports
 from module import BoKeepBackendException, \
     BoKeepBackendResetException
-from session_bassed_robust_backend_module import \
+from session_based_robust_backend_module import \
     SessionBasedRobustBackendModule
 from bokeep.util import attribute_or_blank
 
