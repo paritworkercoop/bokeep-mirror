@@ -207,10 +207,11 @@ class GnuCash24(SessionBasedRobustBackendModule):
         # dead... or had end() not be callable
         except GnuCashBackendException, e:
             self.current_session_error = e.message
-            if hasattr(self, _v_session_active):
-                self._v_session_active.destory()
+            if hasattr(self, '_v_session_active'):
+                self._v_session_active.destroy()
                 del self._v_session_active
-            raise BoKeepBackendResetException("gnucash save failed " + e.message)
+            raise BoKeepBackendResetException(
+                "gnucash save failed " + e.message)
 
     def close(self, close_reason='reset because close() was called'):
         if self.can_write():

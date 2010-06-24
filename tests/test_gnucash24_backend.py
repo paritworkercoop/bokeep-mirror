@@ -49,6 +49,11 @@ class GnuCash24BasicSetup(TestCase):
         s.save()
         s.end()
 
+        self.backend_module = GnuCash24()
+        self.backend_module.setattr(
+            'gnucash_file', self.get_gnucash_file_name_with_protocol() )
+        self.assert_(self.backend_module.can_write())
+
     def tearDown(self):
         for file_name in glob(self.gnucash_file_name + '*'):
             remove(file_name)
