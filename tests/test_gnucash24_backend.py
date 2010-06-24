@@ -48,6 +48,7 @@ class GnuCash24BasicSetup(TestCase):
         petty_cash = create_new_account(PETTY_CASH_ACCOUNT, assets)
         s.save()
         s.end()
+        s.destroy()
 
         self.backend_module = GnuCash24()
         self.backend_module.setattr(
@@ -83,6 +84,7 @@ class GnuCash24BasicSetup(TestCase):
         test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
         
         s.end()
+        s.destroy()
 
 class GetProtocolXML(object):
     def get_protocol(self):
