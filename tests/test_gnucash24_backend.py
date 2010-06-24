@@ -68,6 +68,7 @@ class GnuCash24BasicSetup(TestCase):
         return self.get_protocol() + "://"
 
     def check_account_tree_is_present(self):
+        self.backend_module.close()
         s = Session(self.get_gnucash_file_name_with_protocol())
         root = s.book.get_root_account()
 
