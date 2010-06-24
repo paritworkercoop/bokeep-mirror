@@ -30,7 +30,7 @@ class GnuCash24BasicSetup(TestCase):
         # hope the gnucash backend module itself would need to do any
         # early saves; think this only applies to new book, wonder if
         # backend module itself should ever create a new book?
-        #s.save()
+        s.save()
         book = s.get_book()
         root_account = book.get_root_account()
         CAD = book.get_table().lookup('CURRENCY', 'CAD')
