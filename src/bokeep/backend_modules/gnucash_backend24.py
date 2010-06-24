@@ -1,6 +1,8 @@
 # python imports
 from decimal import Decimal 
 from datetime import date
+from glob import glob
+from os import remove
 
 # bokeep imports
 from module import BoKeepBackendException, \
@@ -13,10 +15,15 @@ from bokeep.util import attribute_or_blank
 from gnucash import Session, Split, GncNumeric, GUID, Transaction, \
     GnuCashBackendException
 from gnucash.gnucash_core_c import \
+        ERR_FILEIO_BACKUP_ERROR, \
         string_to_guid, \
         guid_to_string # NOTE, this is deprecated and non thread safe
                        # it is probably a very bad idea to be using this
         
+SQLITE3 = 'sqlite3'
+XML = 'xml'
+PROTOCOL_SUFFIX = '://'
+
 # there should be some fairly serrious unit testing for this
 def gnc_numeric_from_decimal(decimal_value):
     sign, digits, exponent = decimal_value.as_tuple()
@@ -204,14 +211,21 @@ class GnuCash24(SessionBasedRobustBackendModule):
         try:
             self._v_session_active.save()
         # this should be a little more refined, the session isn't neccesarilly
-        # dead... or had end() not be callable
+        # dead... or had end() not be callable, we already ignore the
+        # couldn't make a backup exception
         except GnuCashBackendException, e:
+            # ignore a backup file error, they happen normally when save()
+            # is called frequently because the file names on the backup files
+            # end up having the same timestamp
+            if len(e.errors) == 1 and e.errors[0] == ERR_FILEIO_BACKUP_ERROR:
+                return None
             self.current_session_error = e.message
             if hasattr(self, '_v_session_active'):
                 self._v_session_active.destroy()
                 del self._v_session_active
             raise BoKeepBackendResetException(
                 "gnucash save failed " + e.message)
+        return None
 
     def close(self, close_reason='reset because close() was called'):
         if self.can_write():

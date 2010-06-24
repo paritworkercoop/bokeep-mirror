@@ -6,8 +6,8 @@ from tempfile import NamedTemporaryFile
 
 from bokeep.backend_modules.gnucash_backend24 import GnuCash24
 
-from gnucash import Session, Account
-from gnucash.gnucash_core_c import ACCT_TYPE_ASSET
+from gnucash import Session, Account, GnuCashBackendException
+from gnucash.gnucash_core_c import ACCT_TYPE_ASSET, ERR_FILEIO_BACKUP_ERROR 
 
 SQLITE3 = 'sqlite3'
 XML = 'xml'
@@ -46,7 +46,15 @@ class GnuCash24BasicSetup(TestCase):
         assets = create_new_account(ASSETS_ACCOUNT)
         bank = create_new_account(BANK_ACCOUNT, assets)
         petty_cash = create_new_account(PETTY_CASH_ACCOUNT, assets)
-        s.save()
+        try:
+            s.save()
+        except GnuCashBackendException, e:
+            # unless this is a file backup error, which happens when the
+            # time between saves is small and is harmless, re-reise the
+            # GnuCashBackendException
+            if not ( len(e.errors) == 1 and \
+                         e.errors[0] == ERR_FILEIO_BACKUP_ERROR ):
+                raise e
         s.end()
         s.destroy()
 
