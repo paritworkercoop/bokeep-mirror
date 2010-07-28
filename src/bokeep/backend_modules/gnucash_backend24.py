@@ -125,7 +125,7 @@ class GnuCash24(SessionBasedRobustBackendModule):
         self.current_session_error = None
 
     def can_write(self):
-        return SessionBasedRobustBackendModule.can_write(self) or \
+        return SessionBasedRobustBackendModule.can_write(self) and \
             self.current_session_error == None
 
     def remove_backend_transaction(self, backend_ident):
@@ -229,6 +229,7 @@ class GnuCash24(SessionBasedRobustBackendModule):
 
     def close(self, close_reason='reset because close() was called'):
         if self.can_write():
+            #if self.has_active_session_attr():
             self._v_session_active.end()
             self._v_session_active.destroy()
         if self.current_session_error != None:

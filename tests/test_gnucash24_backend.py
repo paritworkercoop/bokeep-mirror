@@ -102,6 +102,15 @@ class GnuCash24BasicTest(GnuCash24BasicSetup):
     test_account_tree_is_present = \
         GnuCash24BasicSetup.check_account_tree_is_present
 
+    def test_simple_close(self):
+        self.backend_module.close()
+        self.check_account_tree_is_present()
+
+    def test_simple_flush_and_close(self):
+        self.backend_module.flush_backend()
+        self.assert_(self.backend_module.has_active_session_attr() )
+        self.test_simple_close()
+
 class GnuCash24BasicTestXML(GetProtocolXML, GnuCash24BasicTest): pass
 
 if __name__ == "__main__":
