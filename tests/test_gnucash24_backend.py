@@ -59,6 +59,7 @@ class GnuCash24BasicSetup(TestCase):
         s.destroy()
 
         self.backend_module = GnuCash24()
+        self.assertFalse(self.backend_module.can_write())
         self.backend_module.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
         self.assert_(self.backend_module.can_write())
@@ -102,14 +103,17 @@ class GnuCash24BasicTest(GnuCash24BasicSetup):
     test_account_tree_is_present = \
         GnuCash24BasicSetup.check_account_tree_is_present
 
-    def test_simple_close(self):
+    def do_close_and_tree_check(self):
         self.backend_module.close()
+        self.assertFalse(self.backend_module.can_write() )
         self.check_account_tree_is_present()
+
+    test_simple_close = do_close_and_tree_check
 
     def test_simple_flush_and_close(self):
         self.backend_module.flush_backend()
         self.assert_(self.backend_module.can_write() )
-        self.test_simple_close()
+        self.do_close_and_tree_check()
 
 class GnuCash24BasicTestXML(GetProtocolXML, GnuCash24BasicTest): pass
 
