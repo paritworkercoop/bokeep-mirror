@@ -62,8 +62,6 @@ class GnuCash24BasicSetup(TestCase):
         self.backend_module.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
         self.assert_(self.backend_module.can_write())
-        self.backend_module.close()
-        self.assertFalse(self.backend_module.can_write())
 
     def tearDown(self):
         for file_name in glob(self.gnucash_file_name + '*'):
@@ -78,7 +76,7 @@ class GnuCash24BasicSetup(TestCase):
     def get_protocol_full(self):
         return self.get_protocol() + "://"
 
-    def test_account_tree_is_present(self):
+    def check_account_tree_is_present(self):
         self.backend_module.close()
         s = Session(self.get_gnucash_file_name_with_protocol())
         root = s.book.get_root_account()
@@ -96,20 +94,24 @@ class GnuCash24BasicSetup(TestCase):
         s.end()
         s.destroy()
 
+class GetProtocolXML(object):
+    def get_protocol(self):
+        return XML
+
+class GnuCash24BasicTest(GnuCash24BasicSetup):
+    test_account_tree_is_present = \
+        GnuCash24BasicSetup.check_account_tree_is_present
+
     def test_simple_close(self):
         self.backend_module.close()
-        self.test_account_tree_is_present()
+        self.check_account_tree_is_present()
 
     def test_simple_flush_and_close(self):
         self.backend_module.flush_backend()
         self.assert_(self.backend_module.can_write() )
         self.test_simple_close()
 
-class GetProtocolXML(object):
-    def get_protocol(self):
-        return XML
-
-class GnuCash24BasicSetupXML(GetProtocolXML, GnuCash24BasicSetup): pass
+class GnuCash24BasicTestXML(GetProtocolXML, GnuCash24BasicTest): pass
 
 if __name__ == "__main__":
     main()
