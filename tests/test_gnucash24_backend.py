@@ -65,6 +65,8 @@ class GnuCash24BasicSetup(TestCase):
         self.assert_(self.backend_module.can_write())
 
     def tearDown(self):
+        self.backend_module.close()
+        self.assertFalse(self.backend_module.can_write())
         for file_name in glob(self.gnucash_file_name + '*'):
             remove(file_name)
 
@@ -110,7 +112,7 @@ class GnuCash24BasicTest(GnuCash24BasicSetup):
 
     test_simple_close = do_close_and_tree_check
 
-    def test_simple_flush_and_close(self):
+    def test_blank_flush_and_close(self):
         self.backend_module.flush_backend()
         self.assert_(self.backend_module.can_write() )
         self.do_close_and_tree_check()
