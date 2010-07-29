@@ -73,6 +73,7 @@ def account_from_path(top_account, account_path, original_path=None):
         return account
 
 def get_account_from_trans_line(top_level_account, trans_line):
+    # shouldn't we raise a catchable exception intead of asserting here
     assert( hasattr(trans_line, "account_spec") )
     return account_from_path(top_level_account, trans_line.account_spec)
 
@@ -97,7 +98,7 @@ def make_new_split(book, amount, account, trans, currency):
                 amount.num(),
                 amount.denom(),
                 currency.get_fraction() ) )
-    if currency.get_fraction(currency) < account.GetCommoditySCU():
+    if currency.get_fraction() < account.GetCommoditySCU():
         raise BoKeepBackendException(
             "Account smallest currency unit (SCU) fraction 1/%s doesn't "
             "match currency fraction 1/%s" % (
@@ -105,8 +106,8 @@ def make_new_split(book, amount, account, trans, currency):
                 currency.get_fraction() ) )
     
     account_commodity = account.GetCommodity()
-    if currency.get_mnemonic() == account_commodity.get_mnemonic() and \
-            currency.get_namespace() == account_commodity.get_namespace():
+    if currency.get_mnemonic() != account_commodity.get_mnemonic() or \
+            currency.get_namespace() != account_commodity.get_namespace():
         raise BoKeepBackendException(
             "transaction currency and account don't match")
     
@@ -142,61 +143,65 @@ class GnuCash24(SessionBasedRobustBackendModule):
     #    return True
 
     def create_backend_transaction(self, fin_trans):
-        if self.openbook_if_not_open():
-            description = attribute_or_blank(fin_trans, "description")
-            chequenum = attribute_or_blank(fin_trans, "chequenum")
-            # important, don't do anything to transaction until splits are
-            # added
-            trans = Transaction(self._v_session_active.book)
+        description = attribute_or_blank(fin_trans, "description")
+        chequenum = attribute_or_blank(fin_trans, "chequenum")
+        # important, don't do anything to transaction until splits are
+        # added
+        trans = Transaction(self._v_session_active.book)
 
-            
-            commodtable = self._v_session_active.book.get_table()
-            CAD = commod_table.lookup("ISO4217","CAD")
 
-            # create a list of GnuCash splits, set the amount, account,
-            # and parent them with the Transaction
-            lines = []
-            for trans_line in fin_trans.lines:
-                try:
-                    lines.append( make_new_split(
-                            self._v_session_active.book,
-                            get_amount_from_trans_line(trans_line),
-                            get_account_from_trans_line(
-                                self._v_session_active.book.get_root_account(),
-                                trans_line ),
-                            trans,
-                            CAD ) )
-                # catch problems fetching the account, currency mismatch
-                # with the account, or currency precisions mismatching
-                except BoKeepBackendException, e:
-                    trans.Destroy() # undo what we have done
-                    raise e # and re-raise the exception
-                    
-            trans.SetCurrency(CAD)
+        commod_table = self._v_session_active.book.get_table()
+        CAD = commod_table.lookup("ISO4217","CAD")
 
-            # if there's an imbalance
-            if trans.GetImbalance().num() != 0:
+        # create a list of GnuCash splits, set the amount, account,
+        # and parent them with the Transaction
+        lines = []
+        for trans_line in fin_trans.lines:
+            try:
+                lines.append( make_new_split(
+                        self._v_session_active.book,
+                        get_amount_from_trans_line(trans_line),
+                        get_account_from_trans_line(
+                            self._v_session_active.book.get_root_account(),
+                            trans_line ),
+                        trans,
+                        CAD ) )
+            # catch problems fetching the account, currency mismatch
+            # with the account, or currency precisions mismatching
+            except BoKeepBackendException, e:
                 trans.Destroy() # undo what we have done
-                raise BoKeepBackendException(
-                    "transaction doesn't balance")
+                raise e # and re-raise the exception
 
-            trans.SetDescription(
-                attribute_or_blank(fin_trans, "description") )
-            trans.SetNum(
-                str( attribute_or_blank(fin_trans, "chequenum") ) )
-            trans_date = attribute_or_blank(fin_trans, "trans_date")
-            if not isinstance(trans_date, str):
-                trans.SetDatePostedTS(trans_date)
-            trans.SetDateEnteredTS(date.today())
+        trans.SetCurrency(CAD)
 
-            for i, split_line in enumerate(lines):
-                split_line.SetMemo( attribute_or_blank(fin_trans.lines[i],
-                                                       "line_memo" ) )
-            trans_guid = trans.GetGUID()
-            # guid_to_string is deprecated and string safe, and it owns the
-            # value it returns.
-            # copy with list and str.join to be sure we have a true copy
-            return ''.join(list( guid_to_string(trans_guid.get_instance()) ) )
+        # if there's an imbalance
+        imbalance = trans.GetImbalanceValue()
+        # there isn't convinent support for xaccTransGetImbalanceValue() in the
+        # bindings this conversion and the behavior with
+        # xaccTransGetImbalance() is currently wrong in the bindings
+        imbalance = GncNumeric(instance=imbalance)
+        if imbalance.num() != 0:
+            trans.Destroy() # undo what we have done
+            raise BoKeepBackendException(
+                "transaction doesn't balance")
+
+        trans.SetDescription(
+            attribute_or_blank(fin_trans, "description") )
+        trans.SetNum(
+            str( attribute_or_blank(fin_trans, "chequenum") ) )
+        trans_date = attribute_or_blank(fin_trans, "trans_date")
+        if not isinstance(trans_date, str):
+            trans.SetDatePostedTS(trans_date)
+        trans.SetDateEnteredTS(date.today())
+
+        for i, split_line in enumerate(lines):
+            split_line.SetMemo( attribute_or_blank(fin_trans.lines[i],
+                                                   "line_memo" ) )
+        trans_guid = trans.GetGUID()
+        # guid_to_string is deprecated and string safe, and it owns the
+        # value it returns.
+        # copy with list and str.join to be sure we have a true copy
+        return ''.join(list( guid_to_string(trans_guid.get_instance()) ) )
 
     def open_session(self):
         try:

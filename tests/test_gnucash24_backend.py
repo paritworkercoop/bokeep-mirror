@@ -3,10 +3,14 @@ from os.path import abspath
 from os import remove
 from glob import glob
 from tempfile import NamedTemporaryFile
+from decimal import Decimal
 
 from bokeep.backend_modules.gnucash_backend24 import GnuCash24
+from bokeep.book_transaction import \
+    Transaction, FinancialTransaction, FinancialTransactionLine
 
-from gnucash import Session, Account, GnuCashBackendException
+from gnucash import Session, Account, GnuCashBackendException, Split, \
+    GncNumeric
 from gnucash.gnucash_core_c import ACCT_TYPE_ASSET, ERR_FILEIO_BACKUP_ERROR 
 
 SQLITE3 = 'sqlite3'
@@ -15,6 +19,21 @@ XML = 'xml'
 ASSETS_ACCOUNT = 'Assets'
 BANK_ACCOUNT = 'Bank'
 PETTY_CASH_ACCOUNT = 'Petty Cash'
+
+ASSETS_FULL_SPEC = (ASSETS_ACCOUNT)
+BANK_FULL_SPEC = (ASSETS_ACCOUNT, BANK_ACCOUNT)
+PETTY_CASH_FULL_SPEC = (ASSETS_ACCOUNT, PETTY_CASH_ACCOUNT)
+
+class TestTransaction(Transaction):
+    def __init__(self, value1, account1, value2, account2):
+        line1 = FinancialTransactionLine(value1)
+        line1.account_spec = account1
+        line2 = FinancialTransactionLine(value2)
+        line2.account_spec = account2
+        self.fin_trans = FinancialTransaction( (line1, line2) )
+    
+    def get_financial_transactions(self):
+       return [self.fin_trans]
 
 class GnuCash24BasicSetup(TestCase):
     def setUp(self):
@@ -79,9 +98,12 @@ class GnuCash24BasicSetup(TestCase):
     def get_protocol_full(self):
         return self.get_protocol() + "://"
 
-    def check_account_tree_is_present(self):
-        self.backend_module.close()
-        s = Session(self.get_gnucash_file_name_with_protocol())
+    def check_account_tree_is_present(self, session_provided=None):
+        if session_provided == None:
+            self.backend_module.close()
+            s = Session(self.get_gnucash_file_name_with_protocol())
+        else:
+            s = session_provided
         root = s.book.get_root_account()
 
         def test_for_sub_account(parent, sub_name):
@@ -94,8 +116,9 @@ class GnuCash24BasicSetup(TestCase):
         test_for_sub_account(assets, BANK_ACCOUNT)
         test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
         
-        s.end()
-        s.destroy()
+        if session_provided == None:
+            s.end()
+            s.destroy()
 
 class GetProtocolXML(object):
     def get_protocol(self):
@@ -118,6 +141,67 @@ class GnuCash24BasicTest(GnuCash24BasicSetup):
         self.do_close_and_tree_check()
 
 class GnuCash24BasicTestXML(GetProtocolXML, GnuCash24BasicTest): pass
+
+class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
+    def setUp(self):
+        GnuCash24BasicSetup.setUp(self)
+        self.test_trans = TestTransaction(Decimal(1), BANK_FULL_SPEC,
+                                          Decimal(-1), PETTY_CASH_FULL_SPEC )
+        self.front_end_id = 1
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id, self.test_trans)
+    
+    def check_of_test_trans_present(self):
+        self.backend_module.close()
+        from os import system
+
+        s = Session(self.get_gnucash_file_name_with_protocol())
+        self.check_account_tree_is_present(s)
+        root = s.book.get_root_account()
+        assets = root.lookup_by_name(ASSETS_ACCOUNT)
+        bank = assets.lookup_by_name(BANK_ACCOUNT)
+        petty_cash = assets.lookup_by_name(PETTY_CASH_ACCOUNT)
+
+        return_value = False
+        bank_splits = [Split(instance=split_inst)
+                       for split_inst in bank.GetSplitList() ]
+        petty_cash_splits = [Split(instance=split_inst)
+                             for split_inst in petty_cash.GetSplitList() ]
+        ONE = GncNumeric(1)
+        NEG_ONE = GncNumeric(-1)
+        # perhaps we this restriction be done away with to make the
+        # test more flexible and the actual transaction of interest
+        # fished out amougst others (if they exist)
+        if len(bank_splits) == 1 and len(petty_cash_splits) == 1:
+            # compare the bank account splists
+            if bank_splits[0].GetAmount().equal( ONE ):
+                if petty_cash_splits[0].GetAmount().equal(NEG_ONE):
+                    return_value = True
+        
+        s.end()
+        s.destroy()
+
+        return return_value
+
+    def test_simple_flush(self):
+        self.backend_module.flush_backend()
+        if not self.backend_module.transaction_is_clean(
+                self.front_end_id):
+            self.assertEquals(
+                self.backend_module.reason_transaction_is_dirty(
+                    self.front_end_id),
+                None)
+        self.assert_(self.backend_module.transaction_is_clean(
+                self.front_end_id ))
+        self.assert_(self.check_of_test_trans_present())
+        self.check_account_tree_is_present()
+        
+
+    def test_close_flush_close(self):
+        self.assertFalse(self.check_of_test_trans_present())
+        self.backend_module.flush_backend()
+        self.assert_(self.check_of_test_trans_present())
+        self.check_account_tree_is_present()
 
 if __name__ == "__main__":
     main()
