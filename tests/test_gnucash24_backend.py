@@ -202,6 +202,33 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
         self.assert_(self.check_of_test_trans_present())
         self.check_account_tree_is_present()
 
+    def test_close_account_commod_change_then_flush(self):
+        self.backend_module.close()
+
+        s = Session(self.get_gnucash_file_name_with_protocol())
+        book = s.book
+        self.check_account_tree_is_present(s)
+        root = book.get_root_account()
+        assets = root.lookup_by_name(ASSETS_ACCOUNT)
+        bank = assets.lookup_by_name(BANK_ACCOUNT)
+        commod_table = book.get_table()
+        USD = commod_table.lookup("ISO4217","USD")
+        bank.SetCommodity(USD)
+        s.save()
+        s.end()
+        s.destroy()
+
+        # perhaps doing a flush first,
+        # this damage second, and verify here should also be able to
+        # trigger the transaction being marked dirty
+        self.backend_module.flush_backend()
+        self.assertFalse(self.backend_module.transaction_is_clean(
+                self.front_end_id) )
+        reason_dirty = \
+            self.backend_module.reason_transaction_is_dirty(self.front_end_id)
+        self.assert_(reason_dirty.endswith(
+                "transaction currency and account don't match") )       
+
 if __name__ == "__main__":
     main()
         
