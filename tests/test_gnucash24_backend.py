@@ -153,7 +153,6 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
     
     def check_of_test_trans_present(self):
         self.backend_module.close()
-        from os import system
 
         s = Session(self.get_gnucash_file_name_with_protocol())
         self.check_account_tree_is_present(s)
