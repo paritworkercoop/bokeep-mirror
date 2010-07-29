@@ -43,18 +43,16 @@ class GnuCash24BasicSetup(TestCase):
             dir='.')
         self.gnucash_file_name = tmp.name
         tmp.close()
-        s = Session(self.get_gnucash_file_name_with_protocol(), True)
+        s, book, root = self.acquire_gnucash_session_book_and_root(True)
         # this is neccesary for the sqlite3 backend to work, a new
         # book has to be saved right away.
         # hope the gnucash backend module itself would need to do any
         # early saves; think this only applies to new book, wonder if
         # backend module itself should ever create a new book?
         s.save()
-        book = s.get_book()
-        root_account = book.get_root_account()
         CAD = book.get_table().lookup('CURRENCY', 'CAD')
 
-        def create_new_account(name, parent=root_account):
+        def create_new_account(name, parent):
             return_value = Account(book)
             parent.append_child(return_value)
             return_value.SetName(name)
@@ -62,7 +60,7 @@ class GnuCash24BasicSetup(TestCase):
             return_value.SetCommodity(CAD)
             return return_value
         
-        assets = create_new_account(ASSETS_ACCOUNT)
+        assets = create_new_account(ASSETS_ACCOUNT, root)
         bank = create_new_account(BANK_ACCOUNT, assets)
         petty_cash = create_new_account(PETTY_CASH_ACCOUNT, assets)
         try:
@@ -74,8 +72,7 @@ class GnuCash24BasicSetup(TestCase):
             if not ( len(e.errors) == 1 and \
                          e.errors[0] == ERR_FILEIO_BACKUP_ERROR ):
                 raise e
-        s.end()
-        s.destroy()
+        self.gnucash_session_termination(s)
 
         self.backend_module = GnuCash24()
         self.assertFalse(self.backend_module.can_write())
@@ -101,10 +98,11 @@ class GnuCash24BasicSetup(TestCase):
     def check_account_tree_is_present(self, session_provided=None):
         if session_provided == None:
             self.backend_module.close()
-            s = Session(self.get_gnucash_file_name_with_protocol())
+            s, book, root = self.acquire_gnucash_session_book_and_root()
         else:
             s = session_provided
-        root = s.book.get_root_account()
+            book = s.book
+            root = book.get_root_account()
 
         def test_for_sub_account(parent, sub_name):
             sub = parent.lookup_by_name(sub_name)
@@ -112,13 +110,38 @@ class GnuCash24BasicSetup(TestCase):
             self.assertEquals(sub.GetName(), sub_name)
             return sub
 
-        assets = test_for_sub_account(root, ASSETS_ACCOUNT)
-        test_for_sub_account(assets, BANK_ACCOUNT)
-        test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
+        self.acquire_test_accounts_from_root(root)
         
         if session_provided == None:
-            s.end()
-            s.destroy()
+            self.gnucash_session_termination(s)
+
+    def acquire_gnucash_session_book_and_root(self, is_new=False):
+        s = Session(self.get_gnucash_file_name_with_protocol(), is_new)
+        book = s.book
+        root = s.book.get_root_account()
+        return (s, book, root)
+
+    def acquire_test_accounts_from_root(self, root):
+        def test_for_sub_account(parent, sub_name):
+            sub = parent.lookup_by_name(sub_name)
+            self.assertNotEquals(sub.get_instance(), None)
+            self.assertEquals(sub.GetName(), sub_name)
+            return sub
+        assets = test_for_sub_account(root, ASSETS_ACCOUNT)
+        bank = test_for_sub_account(assets, BANK_ACCOUNT)
+        petty_cash = test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
+        return (assets, bank, petty_cash)
+
+    def acquire_gnucash_session_book_root_and_accounts(self):
+        (s, book, root) = self.acquire_gnucash_session_book_and_root()
+        return (s, book, root, self.acquire_test_accounts_from_root(root) )
+
+    def gnucash_session_termination(self, s, with_save=False):
+        if with_save:
+            s.save()
+        s.end()
+        s.destroy()
+
 
 class GetProtocolXML(object):
     def get_protocol(self):
@@ -153,13 +176,10 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
     
     def check_of_test_trans_present(self):
         self.backend_module.close()
-
-        s = Session(self.get_gnucash_file_name_with_protocol())
-        self.check_account_tree_is_present(s)
-        root = s.book.get_root_account()
-        assets = root.lookup_by_name(ASSETS_ACCOUNT)
-        bank = assets.lookup_by_name(BANK_ACCOUNT)
-        petty_cash = assets.lookup_by_name(PETTY_CASH_ACCOUNT)
+        
+        (s, book, root, accounts) = \
+            self.acquire_gnucash_session_book_root_and_accounts()
+        assets, bank, petty_cash = accounts[:3]
 
         return_value = False
         bank_splits = [Split(instance=split_inst)
@@ -177,8 +197,7 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
                 if petty_cash_splits[0].GetAmount().equal(NEG_ONE):
                     return_value = True
         
-        s.end()
-        s.destroy()
+        self.gnucash_session_termination(s)
 
         return return_value
 
@@ -205,18 +224,13 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
     def test_close_account_commod_change_then_flush(self):
         self.backend_module.close()
 
-        s = Session(self.get_gnucash_file_name_with_protocol())
-        book = s.book
-        self.check_account_tree_is_present(s)
-        root = book.get_root_account()
-        assets = root.lookup_by_name(ASSETS_ACCOUNT)
-        bank = assets.lookup_by_name(BANK_ACCOUNT)
+        (s, book, root, accounts) = \
+            self.acquire_gnucash_session_book_root_and_accounts()
+        assets, bank, petty_cash = accounts[:3] 
         commod_table = book.get_table()
         USD = commod_table.lookup("ISO4217","USD")
         bank.SetCommodity(USD)
-        s.save()
-        s.end()
-        s.destroy()
+        self.gnucash_session_termination(s, True)
 
         # perhaps doing a flush first,
         # this damage second, and verify here should also be able to
