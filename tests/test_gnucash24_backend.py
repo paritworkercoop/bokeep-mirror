@@ -5,7 +5,8 @@ from glob import glob
 from tempfile import NamedTemporaryFile
 from decimal import Decimal
 
-from bokeep.backend_modules.gnucash_backend24 import GnuCash24
+from bokeep.backend_modules.gnucash_backend24 import \
+    GnuCash24, call_catch_qofbackend_exception_reraise_important
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
 
@@ -138,7 +139,7 @@ class GnuCash24BasicSetup(TestCase):
 
     def gnucash_session_termination(self, s, with_save=False):
         if with_save:
-            s.save()
+            call_catch_qofbackend_exception_reraise_important(s.save)
         s.end()
         s.destroy()
 

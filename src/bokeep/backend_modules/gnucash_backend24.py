@@ -118,6 +118,16 @@ def make_new_split(book, amount, account, trans, currency):
     return_value.SetParent(trans)
     return return_value
 
+def call_catch_qofbackend_exception_reraise_important(call_me):
+    try:
+        call_me()
+    except GnuCashBackendException, e:
+        # ignore a backup file error, they happen normally when save()
+        # is called frequently because the file names on the backup files
+        # end up having the same timestamp
+        if len(e.errors) == 1 and e.errors[0] == ERR_FILEIO_BACKUP_ERROR:
+            return None
+        raise e
 
 class GnuCash24(SessionBasedRobustBackendModule):
     def __init__(self):
@@ -214,16 +224,12 @@ class GnuCash24(SessionBasedRobustBackendModule):
 
     def save(self):
         try:
-            self._v_session_active.save()
+            call_catch_qofbackend_exception_reraise_important(
+                self._v_session_active.save)
         # this should be a little more refined, the session isn't neccesarilly
         # dead... or had end() not be callable, we already ignore the
         # couldn't make a backup exception
         except GnuCashBackendException, e:
-            # ignore a backup file error, they happen normally when save()
-            # is called frequently because the file names on the backup files
-            # end up having the same timestamp
-            if len(e.errors) == 1 and e.errors[0] == ERR_FILEIO_BACKUP_ERROR:
-                return None
             self.current_session_error = e.message
             if hasattr(self, '_v_session_active'):
                 self._v_session_active.destroy()
