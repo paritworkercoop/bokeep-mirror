@@ -225,6 +225,9 @@ class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):
     def test_close_account_commod_change_then_flush(self):
         self.backend_module.close()
 
+        self.assertFalse(self.backend_module.transaction_is_clean(
+                self.front_end_id) )
+
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3] 
@@ -243,6 +246,10 @@ class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):
             self.backend_module.reason_transaction_is_dirty(self.front_end_id)
         self.assert_(reason_dirty.endswith(
                 "transaction currency and account don't match") )       
+
+class GnuCash24StartsWithMarkTestsXML(
+    GetProtocolXML, GnuCash24StartsWithMarkTests):
+    pass
 
 if __name__ == "__main__":
     main()

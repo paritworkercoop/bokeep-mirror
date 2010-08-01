@@ -3,6 +3,7 @@ from decimal import Decimal
 from datetime import date
 from glob import glob
 from os import remove
+from time import sleep
 
 # bokeep imports
 from module import BoKeepBackendException, \
@@ -119,15 +120,22 @@ def make_new_split(book, amount, account, trans, currency):
     return return_value
 
 def call_catch_qofbackend_exception_reraise_important(call_me):
-    try:
-        call_me()
-    except GnuCashBackendException, e:
-        # ignore a backup file error, they happen normally when save()
-        # is called frequently because the file names on the backup files
-        # end up having the same timestamp
-        if len(e.errors) == 1 and e.errors[0] == ERR_FILEIO_BACKUP_ERROR:
-            return None
-        raise e
+    while True:
+        try:
+            call_me()
+        except GnuCashBackendException, e:
+            # ignore a backup file error, they happen normally when save()
+            # is called frequently because the file names on the backup files
+            # end up having the same timestamp
+            # but we have learned that the cal to save doesn't actually
+            # finish when this error happens, so we have a while True
+            # loop here and a 1 second delay to do it over and over again
+            if len(e.errors) == 1 and e.errors[0] == ERR_FILEIO_BACKUP_ERROR:
+                sleep(2)
+            else:
+                raise e
+        else:
+            break # break while
 
 class GnuCash24(SessionBasedRobustBackendModule):
     def __init__(self):
