@@ -165,7 +165,7 @@ class GnuCash24BasicTest(GnuCash24BasicSetup):
 
 class GnuCash24BasicTestXML(GetProtocolXML, GnuCash24BasicTest): pass
 
-class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
+class GnuCash24StartsWithMarkSetup(GnuCash24BasicSetup):
     def setUp(self):
         GnuCash24BasicSetup.setUp(self)
         self.test_trans = TestTransaction(Decimal(1), BANK_FULL_SPEC,
@@ -173,7 +173,7 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
         self.front_end_id = 1
         self.backend_module.mark_transaction_dirty(
             self.front_end_id, self.test_trans)
-    
+
     def check_of_test_trans_present(self):
         self.backend_module.close()
         
@@ -201,6 +201,7 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
 
         return return_value
 
+class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):   
     def test_simple_flush(self):
         self.backend_module.flush_backend()
         if not self.backend_module.transaction_is_clean(
@@ -213,7 +214,6 @@ class GnuCash24StartsWithMarkTests(GnuCash24BasicSetup):
                 self.front_end_id ))
         self.assert_(self.check_of_test_trans_present())
         self.check_account_tree_is_present()
-        
 
     def test_close_flush_close(self):
         self.assertFalse(self.check_of_test_trans_present())
