@@ -166,8 +166,8 @@ class GnuCash24(SessionBasedRobustBackendModule):
         # important, don't do anything to transaction until splits are
         # added
         trans = Transaction(self._v_session_active.book)
-
-
+        trans.BeginEdit()
+        
         commod_table = self._v_session_active.book.get_table()
         CAD = commod_table.lookup("ISO4217","CAD")
 
@@ -192,14 +192,9 @@ class GnuCash24(SessionBasedRobustBackendModule):
 
         trans.SetCurrency(CAD)
 
-        # if there's an imbalance
-        imbalance = trans.GetImbalanceValue()
-        # there isn't convinent support for xaccTransGetImbalanceValue() in the
-        # bindings this conversion and the behavior with
-        # xaccTransGetImbalance() is currently wrong in the bindings
-        imbalance = GncNumeric(instance=imbalance)
-        if imbalance.num() != 0:
+        if trans.GetImbalanceValue().num() != 0:
             trans.Destroy() # undo what we have done
+            trans.xaccTransCommitEdit()
             raise BoKeepBackendException(
                 "transaction doesn't balance")
 
@@ -211,6 +206,7 @@ class GnuCash24(SessionBasedRobustBackendModule):
         if not isinstance(trans_date, str):
             trans.SetDatePostedTS(trans_date)
         trans.SetDateEnteredTS(date.today())
+        trans.CommitEdit()
 
         for i, split_line in enumerate(lines):
             split_line.SetMemo( attribute_or_blank(fin_trans.lines[i],
