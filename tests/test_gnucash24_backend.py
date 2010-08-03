@@ -248,6 +248,18 @@ class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):
         self.assert_(reason_dirty.endswith(
                 "transaction currency and account don't match") )       
 
+    def test_bad_account_path(self):
+        self.test_trans.fin_trans.lines[0].account_spec = ("garbage",)
+        self.backend_module.flush_backend()
+        self.assertFalse(self.backend_module.transaction_is_clean(
+                self.front_end_id) )
+        self.assert_(
+            self.backend_module.reason_transaction_is_dirty(
+                self.front_end_id).endswith(
+                "path garbage could not be found"))
+        # should do a flush, screw it up, re-flush and check for
+        # transaction removal but not recreation as well
+
 class GnuCash24StartsWithMarkTestsXML(
     GetProtocolXML, GnuCash24StartsWithMarkTests):
     pass
