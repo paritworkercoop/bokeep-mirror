@@ -257,6 +257,11 @@ class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):
             self.backend_module.reason_transaction_is_dirty(
                 self.front_end_id).endswith(
                 "path garbage could not be found"))
+        self.test_trans.fin_trans.lines[0].account_spec = BANK_FULL_SPEC
+        self.backend_module.flush_backend()
+        self.assert_(self.backend_module.transaction_is_clean(
+                self.front_end_id))
+        self.assert_(self.check_of_test_trans_present())
         # should do a flush, screw it up, re-flush and check for
         # transaction removal but not recreation as well
 
