@@ -227,6 +227,7 @@ class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):
 
         self.assertFalse(self.backend_module.transaction_is_clean(
                 self.front_end_id) )
+        # why not clean, the reason should be checked?
 
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
