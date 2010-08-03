@@ -192,6 +192,10 @@ class GnuCash24StartsWithMarkSetup(GnuCash24BasicSetup):
         # perhaps we this restriction be done away with to make the
         # test more flexible and the actual transaction of interest
         # fished out amougst others (if they exist)
+        #
+        # but there is an upside to this retriction, when the transaction
+        # is being delete and re-created a lot, checking for one and only
+        # transaction helps ensure that the going away side really is happening
         if len(bank_splits) == 1 and len(petty_cash_splits) == 1:
             # compare the bank account splists
             if bank_splits[0].GetAmount().equal( ONE ):
