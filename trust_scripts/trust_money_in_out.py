@@ -15,7 +15,7 @@ from bokeep.modules.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 from bokeep.backend_modules.module import BoKeepBackendException
 
-def run_edit_or_new_gui(trans_id, trust_trans):
+def run_edit_or_new_gui(trans_id, trust_trans, trust_module):
     # the code here is basically going to be, setup gtk gui, run gtk main()
     # do any cleanup after gtk main is done()
     trust_trans.transfer_amount = Decimal(raw_input("> "))
@@ -23,7 +23,7 @@ def run_edit_or_new_gui(trans_id, trust_trans):
 def print_trans_error(backend, trans_id):
     if not backend.transaction_is_clean(trans_id):
         sys.stderr.write("%s is not clean, error\n%s\n" % 
-                         reason_transaction_is_dirty)
+                         backend.reason_transaction_is_dirty(trans_id))
 
 def trust_in_out_main():
     parser = OptionParser()
@@ -53,12 +53,12 @@ def trust_in_out_main():
         assert( options.id != None )
         trans_id = int(options.id)
         trust_trans = book.get_transaction(trans_id)
-        run_edit_or_new_gui(trans_id, trust_trans)
+        run_edit_or_new_gui(trans_id, trust_trans, trust_module)
     elif options.remove:
         assert( options.id != None )
         trans_id = int(options.id)
-        book.remove_transaction(trans_id)
         trust_module.remove_transaction(trans_id)
+        book.remove_transaction(trans_id)
         # the above is doing this
         #backend.mark_transaction_for_removal(id)
         backend.flush_backend()
@@ -87,7 +87,7 @@ def trust_in_out_main():
         trans_id = book.insert_transaction(trust_trans)
         trust_module.register_transaction(trans_id, trust_trans)
         print "new transaction is is", trans_id
-        run_edit_or_new_gui(trans_id, trust_trans)
+        run_edit_or_new_gui(trans_id, trust_trans, trust_module)
 
     transaction.get().commit()
     backend.mark_transaction_dirty(trans_id, trust_trans)
