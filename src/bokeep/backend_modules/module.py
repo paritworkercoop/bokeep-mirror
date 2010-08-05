@@ -171,6 +171,10 @@ class BackendModule(Persistent):
         pass
 
     @ends_with_commit
+    def mark_transaction_for_removal(self, trans_id):
+        pass
+
+    @ends_with_commit
     def mark_transaction_for_forced_remove(self, trans_id):
         """Will ensure a transaction in a held state is removed despite
         being out of sync. If you want to try recreating the transaction
