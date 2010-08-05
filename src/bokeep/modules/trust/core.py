@@ -10,8 +10,11 @@ NEG_1 = Decimal(-1)
 class TrustTransaction(Transaction):
     def __init__(self):
         self.transfer_amount = Decimal(0)
+        self.trustor = None
 
     def get_financial_transactions(self):
+        # you should throw BoKeepTransactionNotMappableToFinancialTransaction
+        # under some conditions
         return FinancialTransaction(
             (FinancialTransactionLine(self.get_transfer_amount()),
              FinancialTranactionLine(self.get_transfer_amount() * NEG_1) )
@@ -20,6 +23,9 @@ class TrustTransaction(Transaction):
     def get_transfer_amount(self):
         return self.transfer_amount
 
+    def set_trustor(self, trustor):
+        self.trustor = trustor
+        
 class TrustMoneyInTransaction(TrustTransaction):
     pass
 
