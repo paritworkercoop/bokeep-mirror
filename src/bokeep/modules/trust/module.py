@@ -50,7 +50,7 @@ class TrustModule(Persistent):
     def associate_transaction_with_trustor(self, front_end_id,
                                            trust_trans, trustor_name):
         self.ensure_trust_database()
-        if not trustor in self.trust_database:
+        if not trustor in self.trustors_database:
             raise Exception("there is no trustor %s, you should check with "
                             "has_trustor() or find the trustor via "
                             "get_trustors() " % trustor_name)
@@ -84,6 +84,6 @@ class TrustModule(Persistent):
 
     def get_trustors(self):
         self.ensure_trust_database()
-        return self.trust_database.iterkeys()
+        return self.trustors_database.iterkeys()
             
     
