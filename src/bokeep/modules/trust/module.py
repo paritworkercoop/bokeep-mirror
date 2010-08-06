@@ -71,6 +71,7 @@ class TrustModule(Persistent):
     def register_transaction(self, front_end_id, trust_trans):
         self.ensure_trust_database()
         self.transaction_track_database[front_end_id] = (trust_trans, None)
+        self._p_changed = True
 
     def remove_transaction(self, front_end_id):
         self.ensure_trust_database()
