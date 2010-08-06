@@ -1,4 +1,5 @@
 from persistent import Persistent
+from bokeep.util import ends_with_commit
 
 class Trustor(Persistent):
     def __init__(self, name=None):
@@ -37,11 +38,14 @@ class TrustModule(Persistent):
         self.ensure_trust_database()
         return trustor in self.trustors_database
 
+    @ends_with_commit
     def add_trustor_by_name(self, trustor_name):
         self.ensure_trust_database()
-        if self.has_trustor(trustor):
+        if self.has_trustor(trustor_name):
             raise Exception("there already is a trustor named %s")
-        self.trustors_database[trustor] = Trustor(name=trustor)
+        self.trustors_database[trustor_name] = Trustor(name=trustor_name)
+        self._p_changed = True
+
 
     def get_trustor(self, trustor_name):
         self.ensure_trust_database()
