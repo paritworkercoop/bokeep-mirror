@@ -60,7 +60,7 @@ class TrustModule(Persistent):
                                                          trustor_name)
         trust_trans.set_trustor(trustor)
 
-    def diassociate_trustor_with_transaction(self, front_end_id,
+    def disassociate_trustor_with_transaction(self, front_end_id,
                                              trust_trans, trustor_name):
         self.ensure_trust_database()
         trustor = self.get_trustor(trustor_name)

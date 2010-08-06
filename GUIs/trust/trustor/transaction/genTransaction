@@ -1,0 +1,10 @@
+#!/bin/sh
+./GladeGen.py aggregates.glade cashout_aggregates cashout_aggregates
+./GladeGen.py bookstore.glade cashout_bookstore cashout_bookstore
+./GladeGen.py cafe.glade cashout_cafe cashout_cafe
+./GladeGen.py cash_counts.glade cashout_cashcounts cashout_cashcounts
+./GladeGen.py charges.glade cashout_charges cashout_charges
+./GladeGen.py cheques.glade cashout_cheques cashout_cheques
+./GladeGen.py final_screen.glade cashout_finalscreen cashout_finalscreen
+./GladeGen.py introduction_screen.glade cashout_introscreen cashout_introscreen
+./GladeGen.py other.glade cashout_other cashout_other
