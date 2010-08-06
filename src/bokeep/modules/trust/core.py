@@ -31,6 +31,6 @@ class TrustMoneyInTransaction(TrustTransaction):
 
 class TrustMoneyOutTransaction(TrustTransaction):
     def get_transfer_amount(self):
-        return TrustTransaction.get_transfer_amount(self) * NEG_ONE
+        return TrustTransaction.get_transfer_amount(self) * NEG_1
 
 
