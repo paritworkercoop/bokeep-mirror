@@ -1,3 +1,0 @@
-#!/bin/sh
-./GladeGen.py aggregates.glade cashout_aggregates cashout_aggregates
-./GladeGen.py bookstore.glade cashout_bookstore cashout_bookstore
