@@ -3,7 +3,7 @@ from bokeep.util import ends_with_commit
 
 class Trustor(Persistent):
     def __init__(self, name=None):
-        self.name = None
+        self.name = name
         self.transactions = []
     
     def add_transaction(self, trust_trans):
@@ -88,6 +88,7 @@ class TrustModule(Persistent):
 
     def get_trustors(self):
         self.ensure_trust_database()
-        return self.trustors_database.iterkeys()
+        return self.trustors_database
+#        return self.trustors_database.iterkeys()
             
     
