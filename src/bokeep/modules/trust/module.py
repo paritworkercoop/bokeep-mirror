@@ -14,6 +14,10 @@ class Trustor(Persistent):
         self.transactions.remove(trust_trans)
         self._p_changed = True
 
+    def clear_transactions(self):
+        while len(self.transactions) > 0:
+            self.del_transaction(self.transactions[0])
+
 class TrustModule(Persistent):
     def __init__(self):
         self.init_trust_database()
@@ -37,6 +41,19 @@ class TrustModule(Persistent):
     def has_trustor(self, trustor):
         self.ensure_trust_database()
         return trustor in self.trustors_database
+
+    @ends_with_commit
+    def drop_trustor_by_name(self, trustor_name):
+        if not(self.has_trustor(trustor_name)):
+            raise Exception("there is no trustor named %s")
+        
+        trustor = self.get_trustor(trustor_name)
+
+        if len(trustor.transactions) > 0:
+            raise Exception("Cannot delete trustor named %s, there are associated transactions")
+        
+        del self.trustors_database[trustor_name]
+        self._p_changed = True
 
     @ends_with_commit
     def add_trustor_by_name(self, trustor_name):
