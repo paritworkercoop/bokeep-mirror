@@ -14,13 +14,13 @@ from gtk.glade import XML
 from members import member_list, MEMBER_NAME
 from glade_util import load_glade_file_get_widgets_and_connect_signals
 from transactions import transaction_classes, transaction_view_classes
-from gnucash_thread import GnuCashThread
+#from gnucash_thread import GnuCashThread
 
 def main():
-    from sys import argv
-    assert( len(argv) == 2 )
-    gnucash_file = argv[1]
-    
+    #from sys import argv
+    #assert( len(argv) == 2 )
+    #gnucash_file = argv[1]
+    gnucash_file = ""
     import main as main_module
     glade_file =  join( dirname( abspath( main_module.__file__ ) ),
                         'data', 'parrot_house_money.glade')
@@ -31,7 +31,7 @@ def main():
 
 class MainWindow(object):
     def __init__(self, gnucash_file, glade_file):
-        self.gnucash_thread = GnuCashThread(gnucash_file)
+        #self.gnucash_thread = GnuCashThread(gnucash_file)
         self.build_gui(glade_file)
 
         # TODO, load transactions from file,
@@ -88,12 +88,12 @@ class MainWindow(object):
         current_view.set_transaction( current_transaction )
 
     def on_remove(self, window, event):
-        self.gnucash_thread.join_init_thread()
+        #self.gnucash_thread.join_init_thread()
         
         for transaction in self.transactions:
             transaction.convert_to_pickable_form()
-            transaction.save_in_gnucash(self.gnucash_thread)
-        self.gnucash_thread.end()
+            #transaction.save_in_gnucash(self.gnucash_thread)
+        #self.gnucash_thread.end()
         main_quit()
 
     def forward_button_clicked(self, *args):
