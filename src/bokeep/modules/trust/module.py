@@ -2,6 +2,33 @@ from persistent import Persistent
 from bokeep.util import ends_with_commit
 from decimal import Decimal
 
+from core import TrustMoneyInTransaction, TrustMoneyOutTransaction
+
+TRUST_MONEY_IN, TRUST_MONEY_OUT = range(2)
+
+trust_transaction_types = {
+    TRUST_MONEY_IN: TrustMoneyInTransaction,
+    TRUST_MONEY_OUT: TrustMoneyOutTransaction
+}
+
+def null_edit_function(*args):
+    pass
+
+trust_edit_interfaces_hooks = {
+    TRUST_MONEY_IN: null_function,
+    TRUST_MONEY_OUT: null_function,
+    }
+
+trust_view_interfaces_hooks = {
+    TRUST_MONEY_IN: null_function,
+    TRUST_MONEY_OUT: null_function,
+    }
+
+trust_transaction_descriptors = {
+    TRUST_MONEY_IN: "Trust Money In",
+    TRUST_MONEY_OUT: "Trust Money Out",
+}
+
 class Trustor(Persistent):
     def __init__(self, name=None):
         self.name = name
@@ -129,5 +156,25 @@ class TrustModule(Persistent):
     def get_trustors(self):
         self.ensure_trust_database()
         return self.trustors_database
-            
+
+    @staticmethod
+    def get_transaction_type_codes():
+        return trust_transaction_types.keys()
+
+    @staticmethod
+    def get_transaction_type_from_code(code):
+        return trust_transaction_types[code]
+
+    @staticmethod
+    def get_transaction_type_pulldown_string_from_code(code):
+        return trust_transaction_descriptors[code]
+        
+    @staticmethod
+    def get_transaction_edit_interface_hook_from_code(code):
+        return trust_edit_interfaces_hooks[code]
+
+    @staticmethod
+    def get_transaction_view_interface_hook_fom_code(code):
+        return trust_view_interfaces_hooks[code]
+
     
