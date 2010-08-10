@@ -31,12 +31,30 @@ class MainWindow(gobject.GObject):
      
     def __init__(self, bookset, commit_thread):
         gobject.GObject.__init__(self)
+        self.gui_built = False
         self.bookset = bookset
-        self.commit_thread = commit_thread
+#        self.commit_thread = commit_thread
         self.current_book_name = None
         self.current_transaction_id = None
         self.build_gui()
+        self.gui_built = True
+        print str(type(self.edit_frame))
         
+    def refresh_trans_types(self):
+        book = self.get_current_book()
+
+        self.trans_type_model = ListStore(str, int, object)
+
+        modules = book.get_modules()
+
+        for module in modules:
+            trans_codes = modules[module].get_transaction_type_codes()
+            for trans_code in trans_codes:
+                self.trans_type_model.append([modules[module].get_transaction_type_pulldown_string_from_code(trans_code), trans_code, modules[module]]) 
+
+        self.trans_type_combo.set_model(self.trans_type_model)
+
+
     def build_gui(self):
         glade_file = join( dirname( abspath(get_this_module_file_path() ) ),
                            'glade', 'bokeep_main_window.glade' )
@@ -54,6 +72,8 @@ class MainWindow(gobject.GObject):
         if len(self.books_combobox_model) > 0:
             self.books_combobox.set_active(0)
 
+        self.refresh_trans_types()
+
     def on_remove(self, window, event):
         main_quit()
 
@@ -69,21 +89,39 @@ class MainWindow(gobject.GObject):
     def delete_button_clicked(self, *args):
         pass
 
+    def reset_frame(self):
+        currindex = self.trans_type_combo.get_active_iter()
+        currcode = self.trans_type_combo.get_model().get_value(currindex,1)
+        currmodule = self.trans_type_combo.get_model().get_value(currindex,2)
+        print 'currcode: ' + str(type(currcode))
+        print 'currmodule: ' + str(type(currmodule))
+
     def trans_type_changed(self, *args):
-        pass
+        self.reset_frame()
+
+    def get_current_book(self):
+        return self.books_combobox_model[self.books_combobox.get_active()][2]
+
+    def get_current_bookname(self):
+        return self.books_combobox_model[self.books_combobox.get_active()][1]
 
     def on_books_combobox_changed(self, combobox):
+        #don't mess with stuff until we've finished constructing the gui
+        if not self.gui_built:
+            return
+
+        book = self.get_current_book()
+
         # close the current book and transaction
         if self.current_book_name != None and \
-                self.current_transaction_id != None:
-            self.commit_thread.remove_transaction(
-                self.current_book_name, self.current_transaction_id )
+                self.current_transaction_id != None:            
+            print 'trying a transaction remove'
+            book.remove_transaction(self.current_transaction_id)
+#            self.commit_thread.remove_transaction(
+#                self.current_book_name, self.current_transaction_id )
 
         # get the new book name
-        self.current_book_name = \
-            self.books_combobox_model[self.books_combobox.get_active()][1]
-        # get the new current book
-        book = self.books_combobox_model[self.books_combobox.get_active()][2]
+        self.current_book_name = self.get_current_bookname()
 
         # the curent transaction becomes the latest in the new book, or
         # None if there is none
@@ -105,10 +143,10 @@ class MainWindow(gobject.GObject):
         # The order matters. If we do this second step first, if we didn't
         # our callback function could be called before the events triggered
         # by self.trans_type_combo.set_active(-1) have been procesed
-        if self.current_transaction_id != None:
-            self.commit_thread.call_when_entity_uptodate(
-                (self.current_book_name, self.current_transaction_id),
-                self.emit_transaction_availible_signal )
+#        if self.current_transaction_id != None:
+#            self.commit_thread.call_when_entity_uptodate(
+#                (self.current_book_name, self.current_transaction_id),
+#                self.emit_transaction_availible_signal )
                 
     def emit_transaction_availible_signal(self, book_name, transaction_id):
         # we're going to have to think very carefully about this,

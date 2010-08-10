@@ -12,10 +12,11 @@ from bokeep.book_transaction import \
 
 def bokeep_main():
     bookset = BoKeepBookSet( get_database_cfg_file() )
-    commit_thread = new_transaction_committing_thread(bookset)
-    window = MainWindow(bookset, commit_thread)
+#    commit_thread = new_transaction_committing_thread(bookset)
+#    window = MainWindow(bookset, commit_thread)
+    window = MainWindow(bookset, None)
     gtk.main()
-    commit_thread.end_trans_thread()
+#    commit_thread.end_trans_thread()
     bookset.close_primary_connection()
     
 if __name__ == "__main__":

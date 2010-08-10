@@ -2,6 +2,8 @@ from persistent import Persistent
 from bokeep.util import ends_with_commit
 from decimal import Decimal
 
+from trustor_entry import trustor_entry
+
 from core import TrustMoneyInTransaction, TrustMoneyOutTransaction
 
 TRUST_MONEY_IN, TRUST_MONEY_OUT = range(2)
@@ -14,14 +16,22 @@ trust_transaction_types = {
 def null_edit_function(*args):
     pass
 
+def trustor_editable_editor(trans, module):
+    editor = trustor_entry(trans, module, True)
+    return editor
+
+def trustor_viewonly_editor(trans, module):
+    editor = trustor_entry(trans, module, False)
+    return editor
+
 trust_edit_interfaces_hooks = {
-    TRUST_MONEY_IN: null_function,
-    TRUST_MONEY_OUT: null_function,
+    TRUST_MONEY_IN: trustor_editable_editor,
+    TRUST_MONEY_OUT: trustor_editable_editor,
     }
 
 trust_view_interfaces_hooks = {
-    TRUST_MONEY_IN: null_function,
-    TRUST_MONEY_OUT: null_function,
+    TRUST_MONEY_IN: trustor_viewonly_editor,
+    TRUST_MONEY_OUT: trustor_viewonly_editor,
     }
 
 trust_transaction_descriptors = {

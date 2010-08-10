@@ -80,6 +80,9 @@ class BoKeepBook(Persistent):
     def get_module(self, module_name):
         return self.enabled_modules[module_name]
 
+    def get_modules(self):
+        return self.enabled_modules
+
     def has_module_enabled(self, module_name):
         return module_name in self.enabled_modules
 
