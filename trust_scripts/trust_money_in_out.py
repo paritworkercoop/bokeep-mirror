@@ -29,6 +29,9 @@ def run_edit_or_new_gui(trans_id, trust_trans, trust_module):
 
 #    enter.transfer_amount = enter.get_transfer_amount()
 
+def view_only_gui(trans_id, trust_trans, trust_module):
+    pass
+
 def print_trans_error(backend, trans_id):
     if not backend.transaction_is_clean(trans_id):
         sys.stderr.write("%s is not clean, error\n%s\n" % 
@@ -41,6 +44,9 @@ def trust_in_out_main():
     parser.add_option("-u", "--update", dest="update",
                       default=False, action="store_true",
                       help="specify a transaction being updated")
+    parser.add_option("-v", "--view-only", dest="viewonly",
+                      default=False, action="store_true",
+                      help="specify a transaction should be viewed only")
     parser.add_option("-i", "--id", dest="id",
                       default=None,
                       help="specify a transaction id if updating or deleting")
@@ -62,7 +68,10 @@ def trust_in_out_main():
         assert( options.id != None )
         trans_id = int(options.id)
         trust_trans = book.get_transaction(trans_id)
-        run_edit_or_new_gui(trans_id, trust_trans, trust_module)
+        if options.viewonly:
+            view_only_gui(trans_id, trust_trans, trust_module)
+        else:
+            run_edit_or_new_gui(trans_id, trust_trans, trust_module)
     elif options.remove:
         assert( options.id != None )
         trans_id = int(options.id)
