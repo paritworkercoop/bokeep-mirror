@@ -1,0 +1,3 @@
+#!/bin/sh
+
+gnucash-env python -m parrot_house_money/main $@
