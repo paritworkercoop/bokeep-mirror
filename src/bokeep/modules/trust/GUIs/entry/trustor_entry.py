@@ -27,7 +27,6 @@ class trustor_entry(GladeWindow):
         self.trustors = self.trust_module.get_trustors()
         self.editable = editable
         self.trans_trustor = self.trust_trans.get_trustor()
-        self.edit_trustor = True
 
         ''' '''
         
@@ -53,8 +52,6 @@ class trustor_entry(GladeWindow):
         if use_index > -1:
             self.trustor_combo.set_active(use_index)
             self.widgets['amount_entry'].set_text(str(self.trust_trans.get_transfer_amount()))
-            self.trustor_combo.set_sensitive(False)
-            self.edit_trustor = False
         else:
             self.trustor_combo.set_active(0)
 
@@ -83,8 +80,7 @@ class trustor_entry(GladeWindow):
         self.trust_trans.transfer_amount = Decimal(self.widgets['amount_entry'].get_text())
         trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
         trustor.add_transaction(self.trust_trans)
-        if self.edit_trustor:
-            self.trust_trans.set_trustor(trustor)
+        self.trust_trans.set_trustor(trustor)
 
     def on_window_destroy(self, *args):
         if self.editable:
