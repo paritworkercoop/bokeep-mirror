@@ -24,6 +24,8 @@ from GladeWindow import *
 
 from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
 
+from datetime import datetime
+
 #----------------------------------------------------------------------
 
 class trustor_management(GladeWindow):
@@ -57,17 +59,19 @@ class trustor_management(GladeWindow):
         
         self.reset_view()
 
-        self.trustor_list = ListStore( str )
+        self.trustor_list = ListStore( str, str )
         self.trustor_view.set_model(self.trustor_list)
 
-        self.trustor_view.append_column(
-            TreeViewColumn('Trustor',CellRendererText(), text=0 ) )
+
+        for i, title in enumerate(('Trustor', 'Balance')):
+            self.trustor_view.append_column(
+                TreeViewColumn(title,CellRendererText(), text=i ) )
 
         for trustor in self.trustors:
-            self.trustor_list.append([trustor])
+            self.trustor_list.append([trustor, str(self.trustors[trustor].get_balance())])
 
     def extended_init(self):
-        self.add_widgets('trustor_view')
+        self.add_widgets('trustor_view', 'dyn_balance')
 
         
         self.trustor_view = self.widgets['trustor_view']
@@ -85,6 +89,7 @@ class trustor_management(GladeWindow):
             'zoom_button',
             'name_entry',
             'save_button',
+            'report_button',
             ]
 
         handlers = [
@@ -94,6 +99,7 @@ class trustor_management(GladeWindow):
             'on_trustor_view_cursor_changed',
             'on_zoom_button_clicked',
             'on_save_button_clicked',
+            'on_report_button_clicked',
             ]
 
         top_window = 'TrustManagement'
@@ -140,7 +146,10 @@ class trustor_management(GladeWindow):
             trustor_name = self.widgets['name_entry'].set_text('')
         else:
             #we're updating the name of someone who already exists
-            pass
+            new_name = self.widgets['name_entry'].get_text()
+            self.trust_module.rename_trustor(self.current_name, new_name)
+            self.current_name = new_name            
+            self.refresh_trustor_list()
 
     #----------------------------------------------------------------------
 
@@ -149,6 +158,7 @@ class trustor_management(GladeWindow):
 
         self.current_name = trustor.name
         self.widgets['name_entry'].set_text(trustor.name)
+        self.widgets['dyn_balance'].set_text(str(trustor.get_balance()))
 
     def on_trustor_view_cursor_changed(self, *args):
         sel = self.trustor_view.get_selection()
@@ -156,6 +166,25 @@ class trustor_management(GladeWindow):
         sel_row = self.trustor_list[sel_iter]
         trustor_selected = sel_row[0]
         self.set_trustor(trustor_selected)
+    #----------------------------------------------------------------------
+
+    def generate_balance_report(self, filename):
+        report_file = open(filename, 'w')
+        now = datetime.today()
+        nowstring = now.strftime("%B %d, %Y, %H:%M")
+        report_file.write("Trustor balance report as at " + nowstring + "\n\n")
+        for trustor in self.trustors:
+            report_file.write(trustor + ' ' + str(self.trustors[trustor].get_balance()) + '\n')
+
+        report_file.close()
+
+    def on_report_button_clicked(self, *args):
+        filesel = gtk.FileSelection(title="Choose report file and location")
+        filesel.run()        
+        filename = filesel.get_filename()
+        filesel.hide()
+        self.generate_balance_report(filename)
+
 
 
 
