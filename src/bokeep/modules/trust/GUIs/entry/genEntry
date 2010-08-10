@@ -1,0 +1,3 @@
+#!/bin/sh
+./GladeGen.py trustor_entry.glade trustor_entry trustor_entry
+

@@ -1,5 +1,6 @@
 from persistent import Persistent
 from bokeep.util import ends_with_commit
+from decimal import Decimal
 
 class Trustor(Persistent):
     def __init__(self, name=None):
@@ -17,6 +18,13 @@ class Trustor(Persistent):
     def clear_transactions(self):
         while len(self.transactions) > 0:
             self.del_transaction(self.transactions[0])
+
+    def get_balance(self):
+        curr_balance = Decimal('0')
+        for transaction in self.transactions:
+            curr_balance += transaction.get_transfer_amount()
+
+        return curr_balance
 
 class TrustModule(Persistent):
     def __init__(self):
@@ -50,7 +58,7 @@ class TrustModule(Persistent):
         trustor = self.get_trustor(trustor_name)
 
         if len(trustor.transactions) > 0:
-            raise Exception("Cannot delete trustor named %s, there are associated transactions")
+            raise Exception("Cannot delete trustor named %s, there are associated transactions" % trustor_name)
         
         del self.trustors_database[trustor_name]
         self._p_changed = True
@@ -59,7 +67,7 @@ class TrustModule(Persistent):
     def add_trustor_by_name(self, trustor_name):
         self.ensure_trust_database()
         if self.has_trustor(trustor_name):
-            raise Exception("there already is a trustor named %s")
+            raise Exception("there already is a trustor named %s" % trustor_name)
         self.trustors_database[trustor_name] = Trustor(name=trustor_name)
         self._p_changed = True
 
@@ -67,6 +75,21 @@ class TrustModule(Persistent):
     def get_trustor(self, trustor_name):
         self.ensure_trust_database()
         return self.trustors_database[trustor_name]
+
+    @ends_with_commit
+    def rename_trustor(self, old_name, new_name):
+        if not(self.has_trustor(old_name)):
+            raise Exception("there is no trustor named %s" % old_name)
+
+        if self.has_trustor(new_name):
+            raise Exception("there is already a trustor named %s" % new_name)
+
+        trustor = self.get_trustor(old_name)
+        trustor.name = new_name
+        del self.trustors_database[old_name]
+        self.trustors_database[new_name] = trustor
+        self._p_changed = True
+        
 
     def associate_transaction_with_trustor(self, front_end_id,
                                            trust_trans, trustor_name):
@@ -106,6 +129,5 @@ class TrustModule(Persistent):
     def get_trustors(self):
         self.ensure_trust_database()
         return self.trustors_database
-#        return self.trustors_database.iterkeys()
             
     

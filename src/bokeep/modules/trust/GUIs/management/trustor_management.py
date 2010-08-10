@@ -26,6 +26,7 @@ from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
 
 from datetime import datetime
 
+from trustor_transactions import trustor_transactions
 #----------------------------------------------------------------------
 
 class trustor_management(GladeWindow):
@@ -132,7 +133,10 @@ class trustor_management(GladeWindow):
     #----------------------------------------------------------------------
 
     def on_zoom_button_clicked(self, *args):
-        print 'zoom button clicked'
+        trustor = self.trust_module.get_trustor(self.current_name)
+        trans = trustor_transactions(trustor)
+        trans.show()
+#        print 'zoom button clicked'
 
     #----------------------------------------------------------------------
 

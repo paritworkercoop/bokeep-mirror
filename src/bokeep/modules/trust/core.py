@@ -1,5 +1,5 @@
 from decimal import Decimal
-
+from datetime import datetime
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine, \
     BoKeepTransactionNotMappableToFinancialTransaction
@@ -11,6 +11,7 @@ class TrustTransaction(Transaction):
     def __init__(self):
         self.transfer_amount = Decimal(0)
         self.trustor = None
+        self.trans_date = datetime.today()
 
     def get_financial_transactions(self):
         # you should throw BoKeepTransactionNotMappableToFinancialTransaction

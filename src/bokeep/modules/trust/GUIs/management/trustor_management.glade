@@ -5,7 +5,7 @@
 
 <widget class="GtkWindow" id="TrustManagement">
   <property name="width_request">800</property>
-  <property name="height_request">300</property>
+  <property name="height_request">335</property>
   <property name="visible">True</property>
   <property name="title" translatable="yes">Trust Management</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
