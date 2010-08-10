@@ -26,6 +26,9 @@ class TrustTransaction(Transaction):
 
     def set_trustor(self, trustor):
         self.trustor = trustor
+
+    def get_trustor(self):
+        return self.trustor
         
 class TrustMoneyInTransaction(TrustTransaction):
     pass

@@ -23,14 +23,17 @@ def run_edit_or_new_gui(trans_id, trust_trans, trust_module):
     # the code here is basically going to be, setup gtk gui, run gtk main()
     # do any cleanup after gtk main is done()
 #    trust_trans.transfer_amount = Decimal(raw_input("> "))
-    enter = trustor_entry(trust_trans, trust_module)
+    enter = trustor_entry(trust_trans, trust_module, True)
     enter.show()
     gtk.main()
 
 #    enter.transfer_amount = enter.get_transfer_amount()
 
 def view_only_gui(trans_id, trust_trans, trust_module):
-    pass
+    enter = trustor_entry(trust_trans, trust_module, False)
+    enter.show()
+    gtk.main()
+
 
 def print_trans_error(backend, trans_id):
     if not backend.transaction_is_clean(trans_id):
