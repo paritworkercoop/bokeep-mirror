@@ -26,12 +26,19 @@ from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
 
 from datetime import datetime
 
-from trustor_transactions import trustor_transactions
+from bokeep.modules.trust.GUIs.management import trustor_transactions
+
+from os.path import abspath, dirname, join, exists
+
 #----------------------------------------------------------------------
 
 class trustor_management(GladeWindow):
 
     #----------------------------------------------------------------------
+    def construct_filename(self, filename):
+        import trustor_management as trust_module
+        return join( dirname( abspath( trust_module.__file__ ) ),
+                              filename)
 
     def __init__(self):
 
@@ -81,7 +88,7 @@ class trustor_management(GladeWindow):
 
     def init(self):
 
-        filename = 'trustor_management.glade'
+        filename = 'data/trustor_management.glade'
 
         widget_list = [
             'TrustManagement',
@@ -104,7 +111,7 @@ class trustor_management(GladeWindow):
             ]
 
         top_window = 'TrustManagement'
-        GladeWindow.__init__(self, filename, top_window, widget_list, handlers)
+        GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
 
     #----------------------------------------------------------------------
 
