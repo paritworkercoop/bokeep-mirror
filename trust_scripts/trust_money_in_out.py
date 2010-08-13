@@ -15,7 +15,7 @@ from bokeep.modules.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 from bokeep.backend_modules.module import BoKeepBackendException
 
-from trustor_entry import trustor_entry
+from bokeep.modules.trust.GUIs.entry import trustor_entry
 
 import gtk
 

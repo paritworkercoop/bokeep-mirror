@@ -65,7 +65,7 @@ class MainWindow(gobject.GObject):
         trans = book.get_transaction(latest_id)
 
         ##testee
-        print trans.get_trustor().name
+#        print trans.get_trustor().name
 
 
         self.set_transcombo_from_type(type(trans))
