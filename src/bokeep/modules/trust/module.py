@@ -16,12 +16,13 @@ trust_transaction_types = {
 def null_edit_function(*args):
     pass
 
-def trustor_editable_editor(trans, module):
-    editor = trustor_entry(trans, module, True)
+def trustor_editable_editor(trans, trans_id, module, gui_parent):
+    print 'generating an editor for trustors'
+    editor = trustor_entry(trans, trans_id, module, gui_parent, True)
     return editor
 
-def trustor_viewonly_editor(trans, module):
-    editor = trustor_entry(trans, module, False)
+def trustor_viewonly_editor(trans, trans_id, module, gui_parent):
+    editor = trustor_entry(trans, trans_id, module, gui_parent, False)
     return editor
 
 trust_edit_interfaces_hooks = {
@@ -51,6 +52,12 @@ class Trustor(Persistent):
     def del_transaction(self, trust_trans):
         self.transactions.remove(trust_trans)
         self._p_changed = True
+
+    def has_transaction(self, trust_trans):
+        for transaction in self.transactions:
+            if transaction == trust_trans:
+                return True
+        return False
 
     def clear_transactions(self):
         while len(self.transactions) > 0:
@@ -128,19 +135,34 @@ class TrustModule(Persistent):
         self._p_changed = True
         
 
+    @ends_with_commit
     def associate_transaction_with_trustor(self, front_end_id,
                                            trust_trans, trustor_name):
         self.ensure_trust_database()
-        if not trustor in self.trustors_database:
+        if not trustor_name in self.trustors_database:
             raise Exception("there is no trustor %s, you should check with "
                             "has_trustor() or find the trustor via "
                             "get_trustors() " % trustor_name)
+
+
         trustor = self.get_trustor(trustor_name)
-        trustor.add_transaction(trust_trans)
-        self.transaction_track_database[front_end_id] = (trust_trans,
-                                                         trustor_name)
+
+        #if the transaction was already associated with another trustor, 
+        #dissociate it
+        if not trust_trans.get_trustor() == None and not trust_trans.get_trustor() == trustor:
+            self.disassociate_trustor_with_transaction(front_end_id, trust_trans, trust_trans.get_trustor().name)
+
         trust_trans.set_trustor(trustor)
 
+        #don't re-add...
+        if not trustor.has_transaction(trust_trans):
+            trustor.add_transaction(trust_trans)
+
+        self.transaction_track_database[front_end_id] = (trust_trans,
+                                                         trustor_name)
+        self._p_changed = True
+
+    @ends_with_commit
     def disassociate_trustor_with_transaction(self, front_end_id,
                                              trust_trans, trustor_name):
         self.ensure_trust_database()
@@ -148,6 +170,7 @@ class TrustModule(Persistent):
         trustor.del_transaction(trust_trans)
         self.transaction_track_database[front_end_id] = (trust_trans, None)
         trust_trans.set_trustor(None)
+        self._p_changed = True
 
     def register_transaction(self, front_end_id, trust_trans):
         self.ensure_trust_database()
@@ -176,6 +199,14 @@ class TrustModule(Persistent):
         return trust_transaction_types[code]
 
     @staticmethod
+    def get_transaction_code_from_type(ty):
+        for entry in trust_transaction_types:
+            if trust_transaction_types[entry] == ty:
+                return entry
+
+        return None
+
+    @staticmethod
     def get_transaction_type_pulldown_string_from_code(code):
         return trust_transaction_descriptors[code]
         
@@ -184,7 +215,24 @@ class TrustModule(Persistent):
         return trust_edit_interfaces_hooks[code]
 
     @staticmethod
-    def get_transaction_view_interface_hook_fom_code(code):
+    def get_transaction_view_interface_hook_from_code(code):
         return trust_view_interfaces_hooks[code]
 
+    @staticmethod
+    def get_transaction_edit_interface_hook_from_type(ty):
+        code = TrustModule.get_transaction_code_from_type(ty)
+
+        if not code == None:
+            return trust_edit_interfaces_hooks[code]
+        else:
+            return None
+
+    @staticmethod
+    def get_transaction_view_interface_hook_from_type(ty):
+        code = TrustModule.get_transaction_code_from_type(ty)
+
+        if not code == None:
+            return trust_view_interfaces_hooks[code]
+        else:
+            return None
     

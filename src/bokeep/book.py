@@ -122,6 +122,9 @@ class BoKeepBook(Persistent):
         assert( result == 1 )
         return key
 
+    def get_transaction_count(self):
+        return len(self.trans_tree)
+
     def get_transaction(self, trans_id):
         return self.trans_tree[trans_id]
 

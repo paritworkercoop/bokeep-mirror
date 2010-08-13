@@ -14,15 +14,21 @@ from gtk import ListStore
 
 from decimal import Decimal
 
+from os.path import abspath, dirname, join, exists
+
 #----------------------------------------------------------------------
 
 class trustor_entry(GladeWindow):
 
     #----------------------------------------------------------------------
 
-    def __init__(self, trust_trans, trust_module, editable):
+    def detach(self):
+        self.widgets['vbox1'].reparent(self.top_window)
+
+    def __init__(self, trust_trans, trans_id, trust_module, gui_parent, editable):
 
         self.trust_trans = trust_trans 
+        self.trans_id = trans_id
         self.trust_module = trust_module
         self.trustors = self.trust_module.get_trustors()
         self.editable = editable
@@ -32,12 +38,14 @@ class trustor_entry(GladeWindow):
         
         self.init()
         self.extended_init()
+        self.widgets['vbox1'].reparent(gui_parent)
+        self.top_window.hide()
 
 
     #----------------------------------------------------------------------
 
     def extended_init(self):
-        self.add_widgets('trustor_combo')
+        self.add_widgets('trustor_combo', 'vbox1')
         self.trustor_combo = self.widgets['trustor_combo']
         self.trustor_list = ListStore( str )
         self.trustor_combo.set_model(self.trustor_list)
@@ -59,9 +67,14 @@ class trustor_entry(GladeWindow):
             self.widgets['amount_entry'].set_sensitive(False)
 
 
+    def construct_filename(self, filename):
+        import trustor_entry as trust_module
+        return join( dirname( abspath( trust_module.__file__ ) ),
+                              filename)
+        
     def init(self):
 
-        filename = 'trustor_entry.glade'
+        filename = 'data/trustor_entry.glade'
 
         widget_list = [
             'window1',
@@ -70,22 +83,41 @@ class trustor_entry(GladeWindow):
 
         handlers = [
             'on_window_destroy',
+            'on_trustor_combo_changed',
+            'on_amount_entry_changed',
             ]
 
         top_window = 'window1'
-        GladeWindow.__init__(self, filename, top_window, widget_list, handlers)
+        GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
 
 
     def update_trans(self):
-        self.trust_trans.transfer_amount = Decimal(self.widgets['amount_entry'].get_text())
+        entered_amount = self.widgets['amount_entry'].get_text()
+
+        if entered_amount == '':
+            self.trust_trans.transfer_amount = Decimal('0')
+        else:
+            print 'using ' + entered_amount + ' for amount'
+            self.trust_trans.transfer_amount = Decimal(entered_amount)
+
+        print self.trust_trans.get_transfer_amount()
         trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
-        trustor.add_transaction(self.trust_trans)
-        self.trust_trans.set_trustor(trustor)
+        self.trust_module.associate_transaction_with_trustor(self.trans_id, self.trust_trans, trustor.name)
 
     def on_window_destroy(self, *args):
         if self.editable:
             self.update_trans()
         GladeWindow.on_window_destroy(self, *args)
+    #----------------------------------------------------------------------
+
+    def on_trustor_combo_changed(self, *args):
+        self.update_trans()
+
+    #----------------------------------------------------------------------
+
+    def on_amount_entry_changed(self, *args):
+        self.update_trans()
+
 
 #----------------------------------------------------------------------
 

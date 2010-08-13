@@ -17,28 +17,124 @@ from bokeep.book_transaction import \
 from bokeep.gui.glade_util import \
      load_glade_file_get_widgets_and_connect_signals
 
+from bokeep.modules.gui.module import GuiStateMachine
+
 def get_this_module_file_path():
     import mainwindow as mainwindow_module
     return mainwindow_module.__file__
 
 TRANSACTION_AVAILIBLE_SIGNAL = "transaction_availible_signal"
+GUI_MODULE = "bokeep.modules.gui"
+
 
 class MainWindow(gobject.GObject):
     __gsignals__ = {
         TRANSACTION_AVAILIBLE_SIGNAL:
             (gobject.SIGNAL_RUN_LAST, None, (str, int))
         }
+
+    def transaction_count(self):
+        book = self.get_current_book()
+        return book.get_transaction_count()
      
+    def has_transactions(self):
+        book = self.get_current_book()
+        id = book.get_latest_transaction_id()
+        if book.get_latest_transaction_id() == None:
+            return False
+        else:
+            return True
+
+    def set_transcombo_from_type(self, ty):
+        i = 0
+        for item in self.trans_type_model:
+            currtype = item[2].get_transaction_type_from_code(item[1])
+            if currtype == ty:
+                self.set_transcombo_index(i)
+                break
+            i += 1
+
+
+    def load_latest_transaction(self):
+        book = self.get_current_book()
+    
+        latest_id = book.get_latest_transaction_id()
+        if latest_id == None:
+            return
+
+        trans = book.get_transaction(latest_id)
+
+        ##testee
+        print trans.get_trustor().name
+
+
+        self.set_transcombo_from_type(type(trans))
+ 
+        book = self.get_current_book()
+
+        modules = book.get_modules()
+
+        #search for an editor
+        editor_creator = None
+        edit_module = None
+        for module in modules:
+            editor_creator = modules[module].get_transaction_edit_interface_hook_from_type(type(trans))
+            if not editor_creator == None:
+                edit_module = modules[module] 
+                break
+
+        self.gui_module.set_trans_location(latest_id)
+        self.trans_being_edited = trans
+        self.trans_being_edited_id = latest_id
+
+        editor = editor_creator(trans, latest_id, edit_module, self.main_vbox)
+
+        if not self.current_editor == None: 
+            self.current_editor.detach()
+
+        self.current_editor = editor
+    
+    def set_initial_state(self):
+        book = self.get_current_book()
+
+        if not book.has_module(GUI_MODULE):
+            print 'can not run without bokeep.modules.gui installed and enabled'
+            exit(0)
+
+        self.gui_module = book.get_module(GUI_MODULE)
+
+        initial_state = self.gui_module.get_state()
+
+        if initial_state == None:
+            print 'set unknown'
+            self.state_machine = GuiStateMachine(GuiStateMachine.UNKNOWN, self, self.gui_module)
+            self.state_machine.run_until_steady_state()
+        else:
+            print 'set ' + str(initial_state)
+
+            self.state_machine = GuiStateMachine(initial_state, self, self.gui_module)
+            self.state_machine.run_until_steady_state()
+
+        
     def __init__(self, bookset, commit_thread):
         gobject.GObject.__init__(self)
         self.gui_built = False
+        self.trans_being_edited = None
+        self.current_editor = None
         self.bookset = bookset
 #        self.commit_thread = commit_thread
         self.current_book_name = None
         self.current_transaction_id = None
         self.build_gui()
         self.gui_built = True
-        print str(type(self.edit_frame))
+        self.set_initial_state()
+        self.programmatic_transcombo_index = False
+
+    def set_transcombo_index(self, indx):        
+        self.programmatic_transcombo_index = True
+        self.trans_type_combo.set_active(indx)
+        self.programmatic_transcombo_index = False
+
         
     def refresh_trans_types(self):
         book = self.get_current_book()
@@ -54,6 +150,15 @@ class MainWindow(gobject.GObject):
 
         self.trans_type_combo.set_model(self.trans_type_model)
 
+    def load_iteration_location(self):
+        pass
+
+    def load_state(self):
+        pass
+
+    def load_gui_info(self):
+        self.load_iteration_location()
+        self.load_transaction_mode()
 
     def build_gui(self):
         glade_file = join( dirname( abspath(get_this_module_file_path() ) ),
@@ -72,7 +177,7 @@ class MainWindow(gobject.GObject):
         if len(self.books_combobox_model) > 0:
             self.books_combobox.set_active(0)
 
-        self.refresh_trans_types()
+        self.refresh_trans_types()     
 
     def on_remove(self, window, event):
         main_quit()
@@ -89,15 +194,44 @@ class MainWindow(gobject.GObject):
     def delete_button_clicked(self, *args):
         pass
 
-    def reset_frame(self):
+    def set_back_sensitive(self, sens):
+        self.back_button.set_sensitive(sens)
+
+    def set_forward_sensitive(self, sens):
+        self.forward_button.set_sensitive(sens)
+
+    def set_delete_sensitive(self, sens):
+        self.button6.set_sensitive(sens)
+ 
+    def set_transcombo_sensitive(self, sens):
+        self.trans_type_combo.set_sensitive(sens)
+
+    def set_edit_transaction(self, trans):
+        book = self.get_current_book()
+
+        if not self.trans_being_edited == None:
+            #transaction was in "mid edit" when we changed gears, drop it.
+            book.remove_transaction(self.trans_being_edited_id)
+            
+        self.trans_being_edited = trans
+        self.trans_being_edited_id = book.insert_transaction(self.trans_being_edited)
+
+    def reset_trans_view(self):
         currindex = self.trans_type_combo.get_active_iter()
         currcode = self.trans_type_combo.get_model().get_value(currindex,1)
         currmodule = self.trans_type_combo.get_model().get_value(currindex,2)
-        print 'currcode: ' + str(type(currcode))
-        print 'currmodule: ' + str(type(currmodule))
+        editor_generator = currmodule.get_transaction_edit_interface_hook_from_code(currcode)
+        self.set_edit_transaction(currmodule.get_transaction_type_from_code(currcode)())
+        self.gui_module.set_trans_location(self.trans_being_edited_id)
+        if not self.current_editor == None: 
+            self.current_editor.detach()
+        self.current_editor = editor_generator(self.trans_being_edited, self.trans_being_edited_id, currmodule, self.main_vbox)
 
     def trans_type_changed(self, *args):
-        self.reset_frame()
+        #only refresh the trans view if it was the user changing the 
+        #transaction type
+        if not self.programmatic_transcombo_index:
+            self.reset_trans_view()
 
     def get_current_book(self):
         return self.books_combobox_model[self.books_combobox.get_active()][2]
@@ -126,14 +260,10 @@ class MainWindow(gobject.GObject):
         # the curent transaction becomes the latest in the new book, or
         # None if there is none
         self.current_transaction_id = book.get_latest_transaction_id()
-
-        # First set the trans tpye combo to inactive, which will clear the
-        # transaction gui section out
-        # if self.current_transaction_id is None, it will stay this way
-        # if not None, it will infrom the user that the transaction is
-        # loading
-        self.trans_type_combo.set_active(-1)
         
+        self.refresh_trans_types()
+        self.set_initial_state()
+
         # Second, if there is a non-None current transaction id,
         # tell the commit thread that we would like to be woken
         # up when the current transaction is availible for being
