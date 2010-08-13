@@ -2,7 +2,7 @@ from persistent import Persistent
 from bokeep.util import ends_with_commit
 from decimal import Decimal
 
-from trustor_entry import trustor_entry
+from GUIs.entry.trustor_entry import trustor_entry
 
 from core import TrustMoneyInTransaction, TrustMoneyOutTransaction
 
