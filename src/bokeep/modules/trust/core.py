@@ -29,6 +29,10 @@ class TrustTransaction(Transaction):
 
     def get_trustor(self):
         return self.trustor
+
+    def get_displayable_amount(self):
+        return TrustTransaction.get_transfer_amount(self)
+
         
 class TrustMoneyInTransaction(TrustTransaction):
     pass
@@ -36,5 +40,4 @@ class TrustMoneyInTransaction(TrustTransaction):
 class TrustMoneyOutTransaction(TrustTransaction):
     def get_transfer_amount(self):
         return TrustTransaction.get_transfer_amount(self) * NEG_1
-
 

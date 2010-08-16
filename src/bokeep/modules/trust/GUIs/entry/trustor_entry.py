@@ -70,7 +70,7 @@ class trustor_entry(GladeWindow):
  
         if use_index > -1:
             self.trustor_combo.set_active(use_index)
-            self.widgets['amount_entry'].set_text(str(self.trust_trans.get_transfer_amount()))
+            self.widgets['amount_entry'].set_text(str(self.trust_trans.get_displayable_amount()))
         else:
             self.trustor_combo.set_active(0)
 
@@ -112,7 +112,7 @@ class trustor_entry(GladeWindow):
             print 'using ' + entered_amount + ' for amount'
             self.trust_trans.transfer_amount = Decimal(entered_amount)
 
-        print self.trust_trans.get_transfer_amount()
+        print self.trust_trans.get_displayable_amount()
         trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
         self.trust_module.associate_transaction_with_trustor(self.trans_id, self.trust_trans, trustor.name)
 
