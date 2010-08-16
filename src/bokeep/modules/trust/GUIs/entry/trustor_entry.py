@@ -16,6 +16,12 @@ from decimal import Decimal
 
 from os.path import abspath, dirname, join, exists
 
+from bokeep.modules.trust import \
+    TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
+
+from bokeep.book import BoKeepBookSet
+from bokeep.config import get_database_cfg_file
+
 #----------------------------------------------------------------------
 
 class trustor_entry(GladeWindow):
@@ -27,6 +33,7 @@ class trustor_entry(GladeWindow):
 
     def __init__(self, trust_trans, trans_id, trust_module, gui_parent, editable):
 
+        self.gui_built = False
         self.trust_trans = trust_trans 
         self.trans_id = trans_id
         self.trust_module = trust_module
@@ -38,8 +45,12 @@ class trustor_entry(GladeWindow):
         
         self.init()
         self.extended_init()
-        self.widgets['vbox1'].reparent(gui_parent)
+
+        if not gui_parent == None:
+            self.widgets['vbox1'].reparent(gui_parent)
         self.top_window.hide()
+        self.gui_built = True
+
 
 
     #----------------------------------------------------------------------
@@ -95,6 +106,7 @@ class trustor_entry(GladeWindow):
         entered_amount = self.widgets['amount_entry'].get_text()
 
         if entered_amount == '':
+            print 'setting amount to zero'
             self.trust_trans.transfer_amount = Decimal('0')
         else:
             print 'using ' + entered_amount + ' for amount'
@@ -111,19 +123,26 @@ class trustor_entry(GladeWindow):
     #----------------------------------------------------------------------
 
     def on_trustor_combo_changed(self, *args):
-        self.update_trans()
+        if self.gui_built:
+            self.update_trans()
 
     #----------------------------------------------------------------------
 
-    def on_amount_entry_changed(self, *args):
-        self.update_trans()
+    def on_amount_entry_changed(self, *args): 
+        if self.gui_built:
+            self.update_trans()
 
 
 #----------------------------------------------------------------------
 
 def main(argv):
+    bookset = BoKeepBookSet( get_database_cfg_file() )
+    book = bookset.get_book('testbook')
+    trust_module = book.get_module('bokeep.modules.trust')
 
-    w = trustor_entry()
+    trust_trans = TrustMoneyInTransaction()
+    trans_id = book.insert_transaction(trust_trans)
+    w = trustor_entry(trust_trans, trans_id, trust_module, None, True)
     w.show()
     gtk.main()
 

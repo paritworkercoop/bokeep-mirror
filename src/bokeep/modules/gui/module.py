@@ -59,32 +59,65 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
 
         self.gmodule.set_state(self.STARTUP_TRANSACTION)
 
-    def init_newtrans(self):
-        pass
+    def init_basicnew(self):
+        print 'doing init basicnew'
+        self.gui.set_back_sensitive(True)
+        self.gui.set_forward_sensitive(False)
+        self.gui.set_delete_sensitive(True)
+        self.gui.set_transcombo_sensitive(True)
+        self.gui.set_transcombo_index(0)
+        self.gui.reset_trans_view()  
+        self.new_trans_id = self.gui.current_transaction_id
+
+        self.gmodule.set_state(self.BASIC_NEW_TRANSACTION)
       
     def init_browsing(self):
-        pass
+        print 'doing init browsing'
+        self.gui.set_delete_sensitive(True)
+        self.gui.set_transcombo_sensitive(False)
+#        self.gui.reset_trans_view()  
+
+        loc = self.gmodule.get_trans_location() 
+
+        if loc == None:
+            print 'going to latest'
+            self.gui.load_latest_transaction()
+        else:
+            print 'going to ' + str(loc)
+            self.gui.browse_to_transaction(loc)
+
+        self.gmodule.set_state(self.BROWSING)
 
     def notrans_to_startup(self, *args):
         self.init_startup()
   
     def check_startup_to_basicnew(self, *args):
-        print 'check_startup_to_basicnew with ' + str(args)
+        if self.gui.new_requested:
+            return True
+        else:
+            return False
 
     def startup_to_basicnew(self, *args):
-        print 'startup_to_basicnew with ' + str(args)
+        self.init_basicnew()
 
     def check_basicnew_to_basicnew(self, *args):
-        print 'check_basicnew_to_basicnew with ' + str(args)
+        if self.gui.new_requested and self.new_trans_id == None:
+            return True
+        else:
+            return False
 
     def basicnew_to_basicnew(self, *args):
-        print 'basicnew_to_basicnew with ' + str(args)
+        self.init_basicnew()
 
-    def check_basicnew_to_browsing(self, *args):
-        print 'check_basicnew_to_browsing with ' + str(args)
+    def check_basicnew_to_browsing(self, *args):    
+        #if we're still editing, don't go to browsing
+        if self.gui.new_requested:
+            return False
+        else:
+            return True
 
     def basicnew_to_browsing(self, *args):
-        print 'basicnew_to_browsing with ' + str(args)
+        self.init_browsing()
 
     def check_browsing_to_notrans(self, *args):
         print 'check_browsing_to_notrans with ' + str(args)
@@ -93,10 +126,13 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
         print 'browsing_to_notrans with ' + str(args)
 
     def check_browsing_to_basicnew(self, *args):
-        print 'check_browsing_to_basicnew with ' + str(args)
+        if self.gui.new_requested:
+            return True
+        else:
+            return False
 
     def browsing_to_basicnew(self, *args):
-        print 'browsing_to_basicnew with ' + str(args)
+        self.init_basicnew()
 
     def __init__(self, state, gui, gmodule):
         state_transitions = (
@@ -144,7 +180,7 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
             elif state == self.STARTUP_TRANSACTION:
                 self.init_startup()
             elif state == self.BASIC_NEW_TRANSACTION:
-                self.init_newtrans()
+                self.init_basicnew()
             elif state == self.BROWSING:
                 self.init_browsing()
 

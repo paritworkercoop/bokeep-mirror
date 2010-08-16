@@ -125,6 +125,48 @@ class BoKeepBook(Persistent):
     def get_transaction_count(self):
         return len(self.trans_tree)
 
+    def has_transaction(self, trans_id):
+        return self.trans_tree.has_key(trans_id)
+
+    def get_previous_trans(self, trans_id):
+        if not self.has_transaction(trans_id):
+            return None
+
+        #since the insertion algorithm generates keys that are one apart, try going backwards one at a time
+        trykey = trans_id - 1
+        while trykey >= self.trans_tree.minKey() and not self.has_transaction(trykey):
+            trykey = trykey - 1
+
+        if trykey < self.trans_tree.minKey():
+            return None, None
+
+        prior_trans = self.get_transaction(trykey)
+        return trykey, prior_trans
+        
+    def has_next_trans(self, trans_id):
+        print 'has_next_trans, comparing ' + str(trans_id) + ' and ' + str(self.trans_tree.maxKey())
+        return trans_id < self.trans_tree.maxKey()
+
+    def has_previous_trans(self, trans_id):
+        print 'has_previous_trans, comparing ' + str(trans_id) + ' and ' + str(self.trans_tree.minKey())
+
+        return trans_id > self.trans_tree.minKey()
+
+    def get_next_trans(self, trans_id):
+        if not self.has_transaction(trans_id):
+            return None
+
+        #since the insertion algorithm generates keys that are one apart, try going forwards one at a time
+        trykey = trans_id + 1
+        while trykey <= self.trans_tree.maxKey() and not self.has_transaction(trykey):
+            trykey = trykey + 1
+
+        if trykey > self.trans_tree.maxKey():
+            return None, None
+
+        next_trans = self.get_transaction(trykey)
+        return trykey, next_trans
+
     def get_transaction(self, trans_id):
         return self.trans_tree[trans_id]
 

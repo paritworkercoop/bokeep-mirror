@@ -182,7 +182,7 @@ class TrustModule(Persistent):
         trust_trans, trustor_name = \
             self.transaction_track_database[front_end_id]
         if trustor_name != None:
-            self.diassociate_trustor_with_transaction(
+            self.disassociate_trustor_with_transaction(
                 front_end_id, trust_trans, trustor_name)
         del self.transaction_track_database[front_end_id]
 

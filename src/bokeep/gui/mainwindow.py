@@ -55,22 +55,33 @@ class MainWindow(gobject.GObject):
             i += 1
 
 
-    def load_latest_transaction(self):
+    #go to the requested transaction and set the back/forward button 
+    #sensitivity appropriately
+    def browse_to_transaction(self, trans_id):
         book = self.get_current_book()
-    
-        latest_id = book.get_latest_transaction_id()
-        if latest_id == None:
-            return
+        
+        trans = book.get_transaction(trans_id)
 
-        trans = book.get_transaction(latest_id)
+        self.sync_to_transaction(trans, trans_id)
 
-        ##testee
-#        print trans.get_trustor().name
-
-
+    def sync_to_transaction(self, trans, trans_id):
         self.set_transcombo_from_type(type(trans))
- 
+
         book = self.get_current_book()
+
+        if book.has_previous_trans(trans_id):
+            print 'we do indeed have previous for ' + str(trans_id)
+            self.set_back_sensitive(True)
+        else:
+            print 'we do not have previous for ' + str(trans_id)
+            self.set_back_sensitive(False)
+
+        if book.has_next_trans(trans_id):
+            print 'we do indeed have next for ' + str(trans_id)
+            self.set_forward_sensitive(True)
+        else:
+            print 'we do not have next for ' + str(trans_id)
+            self.set_forward_sensitive(False)
 
         modules = book.get_modules()
 
@@ -83,16 +94,27 @@ class MainWindow(gobject.GObject):
                 edit_module = modules[module] 
                 break
 
-        self.gui_module.set_trans_location(latest_id)
+        self.gui_module.set_trans_location(trans_id)
         self.trans_being_edited = trans
-        self.trans_being_edited_id = latest_id
+        self.trans_being_edited_id = trans_id
 
-        editor = editor_creator(trans, latest_id, edit_module, self.main_vbox)
+        editor = editor_creator(trans, trans_id, edit_module, self.main_vbox)
 
         if not self.current_editor == None: 
             self.current_editor.detach()
 
         self.current_editor = editor
+
+    def load_latest_transaction(self):
+        book = self.get_current_book()
+    
+        latest_id = book.get_latest_transaction_id()
+        if latest_id == None:
+            return
+
+        trans = book.get_transaction(latest_id)
+
+        self.sync_to_transaction(trans, latest_id)
     
     def set_initial_state(self):
         book = self.get_current_book()
@@ -118,6 +140,8 @@ class MainWindow(gobject.GObject):
         
     def __init__(self, bookset, commit_thread):
         gobject.GObject.__init__(self)
+        self.new_requested = False
+        self.new_trans_id = None
         self.gui_built = False
         self.trans_being_edited = None
         self.current_editor = None
@@ -180,16 +204,60 @@ class MainWindow(gobject.GObject):
         self.refresh_trans_types()     
 
     def on_remove(self, window, event):
+        #close off the state machine, anything mid-edit can be committed now
+        self.new_requested = False        
+
+        self.state_machine.run_until_steady_state()
         main_quit()
 
     def forward_button_clicked(self, *args):
-        pass
+        book = self.get_current_book()
+ 
+        next_id, next_trans = book.get_next_trans(self.trans_being_edited_id)
+
+        if next_trans == None:
+            #we were mistaken about being able to go next, grey it out
+            self.set_forward_sensitive(False)
+            return
+
+        self.transaction_being_edited = next_trans
+        self.transaction_being_edited_id = next_id
+       
+        print 'id: ' + str(next_id) + ', trans: ' + str(type(next_trans))
+        self.gui_module.set_trans_location(next_id)
+        self.sync_to_transaction(next_trans, next_id)
+
+        self.state_machine.run_until_steady_state()
     
     def back_button_clicked(self, *args):
-        pass
+        book = self.get_current_book()
+ 
+        prior_id, prior_trans = book.get_previous_trans(self.trans_being_edited_id)
+
+        if prior_trans == None:
+            #we were mistaken about being able to go back, grey it out
+            self.set_back_sensitive(False)
+            return
+
+        self.transaction_being_edited = prior_trans
+        self.transaction_being_edited_id = prior_id
+       
+        print 'id: ' + str(prior_id) + ', trans: ' + str(type(prior_trans))
+        self.gui_module.set_trans_location(prior_id)
+
+        self.sync_to_transaction(prior_trans, prior_id)
+
+        self.state_machine.run_until_steady_state()
 
     def new_button_clicked(self, *args):
-        pass
+        self.new_requested = True
+        self.new_trans_id = None
+
+        #if we were mid-edit, clicking new commits it so set it back to None
+        self.trans_being_edited = None
+        self.trans_being_edited_id = None
+
+        self.state_machine.run_until_steady_state()
 
     def delete_button_clicked(self, *args):
         pass
