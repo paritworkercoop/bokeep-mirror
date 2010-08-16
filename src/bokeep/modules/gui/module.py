@@ -101,7 +101,7 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
         self.init_basicnew()
 
     def check_basicnew_to_basicnew(self, *args):
-        if self.gui.new_requested and self.new_trans_id == None:
+        if self.gui.new_requested and self.gui.new_trans_id == None:
             return True
         else:
             return False

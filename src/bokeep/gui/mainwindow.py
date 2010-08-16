@@ -70,17 +70,13 @@ class MainWindow(gobject.GObject):
         book = self.get_current_book()
 
         if book.has_previous_trans(trans_id):
-            print 'we do indeed have previous for ' + str(trans_id)
             self.set_back_sensitive(True)
         else:
-            print 'we do not have previous for ' + str(trans_id)
             self.set_back_sensitive(False)
 
         if book.has_next_trans(trans_id):
-            print 'we do indeed have next for ' + str(trans_id)
             self.set_forward_sensitive(True)
         else:
-            print 'we do not have next for ' + str(trans_id)
             self.set_forward_sensitive(False)
 
         modules = book.get_modules()
