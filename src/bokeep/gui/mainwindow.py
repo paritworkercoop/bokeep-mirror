@@ -211,6 +211,9 @@ class MainWindow(gobject.GObject):
         main_quit()
 
     def forward_button_clicked(self, *args):
+        self.new_requested = False
+        self.state_machine.run_until_steady_state()
+
         book = self.get_current_book()
  
         next_id, next_trans = book.get_next_trans(self.trans_being_edited_id)
@@ -230,6 +233,10 @@ class MainWindow(gobject.GObject):
         self.state_machine.run_until_steady_state()
     
     def back_button_clicked(self, *args):
+        self.new_requested = False
+
+        self.state_machine.run_until_steady_state()
+
         book = self.get_current_book()
  
         prior_id, prior_trans = book.get_previous_trans(self.trans_being_edited_id)
@@ -283,6 +290,9 @@ class MainWindow(gobject.GObject):
             
         self.trans_being_edited = trans
         self.trans_being_edited_id = book.insert_transaction(self.trans_being_edited)
+
+        self.gui_module.set_trans_location(self.trans_being_edited_id)
+        self.current_transaction_id = self.trans_being_edited_id
 
     def reset_trans_view(self):
         currindex = self.trans_type_combo.get_active_iter()
