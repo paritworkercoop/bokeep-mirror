@@ -40,10 +40,10 @@ class trustor_management(GladeWindow):
         return join( dirname( abspath( trust_module.__file__ ) ),
                               filename)
 
-    def __init__(self):
+    def __init__(self, bookname):
 
         self.bookset = BoKeepBookSet( get_database_cfg_file() )
-        self.book = self.bookset.get_book('testbook')
+        self.book = self.bookset.get_book(bookname)
         self.backend = self.book.get_backend_module()
         self.trust_module = self.book.get_module('bokeep.modules.trust')
         self.trustors = self.trust_module.get_trustors()
@@ -203,7 +203,7 @@ class trustor_management(GladeWindow):
 
 def main(argv):
 
-    w = trustor_management()
+    w = trustor_management(argv[1])
     w.show()
     gtk.main()
 

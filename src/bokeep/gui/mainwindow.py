@@ -318,6 +318,14 @@ class MainWindow(gobject.GObject):
         if not self.gui_built:
             return
 
+        self.new_requested = False
+        self.new_trans_id = None
+        self.trans_being_edited = None
+        self.current_transaction_id = None
+        if not self.current_editor == None: 
+            self.current_editor.detach()
+        self.current_editor = None
+
         book = self.get_current_book()
 
         # close the current book and transaction
@@ -337,6 +345,7 @@ class MainWindow(gobject.GObject):
         
         self.refresh_trans_types()
         self.set_initial_state()
+        self.state_machine.run_until_steady_state()
 
         # Second, if there is a non-None current transaction id,
         # tell the commit thread that we would like to be woken
