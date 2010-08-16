@@ -26,7 +26,7 @@ from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
 
 from datetime import datetime
 
-from bokeep.modules.trust.GUIs.management import trustor_transactions
+from bokeep.modules.trust.GUIs.management.trustor_transactions import trustor_transactions
 
 from os.path import abspath, dirname, join, exists
 

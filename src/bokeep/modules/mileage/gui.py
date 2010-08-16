@@ -1,6 +1,6 @@
 import sys
 
-from GladeWindow import GladeWindow
+from bokeep.gui.gladesupport import GladeWindow
 
 from gtk import ListStore
 

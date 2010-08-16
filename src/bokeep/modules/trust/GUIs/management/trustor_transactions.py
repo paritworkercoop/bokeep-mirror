@@ -16,10 +16,15 @@ from bokeep.modules.trust import \
 
 from datetime import datetime
 
+from os.path import abspath, dirname, join, exists
 
 #----------------------------------------------------------------------
 
 class trustor_transactions(GladeWindow):
+    def construct_filename(self, filename):
+        import trustor_management as trust_module
+        return join( dirname( abspath( trust_module.__file__ ) ),
+                              filename)
 
     #----------------------------------------------------------------------
 
@@ -65,7 +70,7 @@ class trustor_transactions(GladeWindow):
 
     def init(self):
 
-        filename = 'trustor_transactions.glade'
+        filename = 'data/trustor_transactions.glade'
 
         widget_list = [
             'window1',
@@ -77,7 +82,7 @@ class trustor_transactions(GladeWindow):
             ]
 
         top_window = 'window1'
-        GladeWindow.__init__(self, filename, top_window, widget_list, handlers)
+        GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
     #----------------------------------------------------------------------
 
     def generate_transaction_report(self, filename):
