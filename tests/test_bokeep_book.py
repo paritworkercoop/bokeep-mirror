@@ -6,7 +6,7 @@ import ZODB.config
 import transaction
 
 # bokeep
-from bokeep.book import BoKeepBookSet, BoKeepBook
+from bokeep.book import BoKeepBookSet, BoKeepBook, BOOKS_SUB_DB_KEY
 
 
 TESTBOOK = "testbook"
@@ -25,12 +25,15 @@ class TestBoKeepBookSetup(TestCase):
 class TestBoKeepBookAddChanged(TestBoKeepBookSetup):
 
     def test_p_changed_odd(self):
-        self.books.dbroot[TESTBOOK] = book = BoKeepBook(TESTBOOK)
+        self.books.dbroot[BOOKS_SUB_DB_KEY][TESTBOOK] = book = \
+            BoKeepBook(TESTBOOK)
+        self.books.dbroot._p_changed = True
         self.assert_(self.books.dbroot._p_changed)
         transaction.get().commit()
         self.assertFalse(self.books.dbroot._p_changed)
-        self.books.dbroot[TESTBOOK].boo = "boo"
-        self.assert_(self.books.dbroot[TESTBOOK]._p_changed)
+        self.books.dbroot[BOOKS_SUB_DB_KEY][TESTBOOK].boo = "boo"
+        self.books.dbroot._p_changed = True
+        self.assert_(self.books.dbroot[BOOKS_SUB_DB_KEY][TESTBOOK]._p_changed)
 
 
 

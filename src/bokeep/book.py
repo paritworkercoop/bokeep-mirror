@@ -8,11 +8,14 @@ from util import ends_with_commit
 
 DEFAULT_BACKEND_MODULE = "bokeep.backend_modules.null"
 
+BOOKS_SUB_DB_KEY = 'books'
+
 class BoKeepBookSet(object):
     def __init__(self, books_db_conf_file):
         self.zodb = ZODB.config.databaseFromURL(books_db_conf_file)
         self.dbcon = self.get_new_dbcon()
         self.dbroot = self.dbcon.root()
+        self.establish_books_sub_db()
 
     def get_new_dbcon(self):
         return self.zodb.open()
@@ -28,23 +31,31 @@ class BoKeepBookSet(object):
         self.zodb.close()      
 
     def iterbooks(self):
-        return self.dbroot.iteritems()
+        return self.dbroot[BOOKS_SUB_DB_KEY].iteritems()
 
     def get_book(self, book_name):
-        return self.dbroot[book_name]
+        return self.dbroot[BOOKS_SUB_DB_KEY][book_name]
 
     def has_book(self, book_name):
-        return book_name in self.dbroot
+        return book_name in self.dbroot[BOOKS_SUB_DB_KEY]
 
     @ends_with_commit
     def add_book(self, new_book_name):
         assert( new_book_name not in self.dbroot )
-        self.dbroot[new_book_name] = book = BoKeepBook(new_book_name)
+        self.dbroot[BOOKS_SUB_DB_KEY][new_book_name] = book = \
+            BoKeepBook(new_book_name)
+        self.dbroot._p_changed = True
         return book
 
     @ends_with_commit
     def remove_book(self, book_name):
-        del self.dbroot[book_name]
+        del self.dbroot[BOOKS_SUB_DB_KEY][book_name]
+        self.dbroot._p_changed = True        
+
+    @ends_with_commit
+    def establish_books_sub_db(self):
+        if BOOKS_SUB_DB_KEY not in self.dbroot:
+            self.dbroot[BOOKS_SUB_DB_KEY] = {}
 
 class BoKeepBook(Persistent):
     def __init__(self, new_book_name):

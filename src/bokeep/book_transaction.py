@@ -89,12 +89,14 @@ def new_transaction_committing_thread(book_set):
     commit_thread.start()
     return commit_thread
 
-class TransactionComittingThread(ChangeMessageRecievingThread):   
+class TransactionComittingThread(ChangeMessageRecievingThread):
     def __init__(self, book_set):
         ChangeMessageRecievingThread.__init__(self)
         self.book_set = book_set
 
     def get_arguments_for_exec_procedure(self):
+        # not sure what was going on here, but keep in mind
+        # there is now a sub-database for books
         return ((self.dbroot,), {})
 
     def new_entity_change_manager(self, entity_identifier):
@@ -124,8 +126,13 @@ class TransactionComittingThread(ChangeMessageRecievingThread):
         delta.change_list.append( (function, args, kargs) )
 
     def get_entity_from_identifier(self, entity_identifier):
+        # probably a good sign that TransactionCommingThread should be
+        # elsewhere...
+        from book import BOOKS_SUB_DB_KEY
+
         (book_name, trans_id) = entity_identifier
-        return self.dbroot[book_name].get_transaction(trans_id)
+        return self.dbroot[BOOKS_SUB_DB_KEY][book_name].get_transaction(
+            trans_id)
     
     def run(self):
         dbcon = self.book_set.get_new_dbcon()
