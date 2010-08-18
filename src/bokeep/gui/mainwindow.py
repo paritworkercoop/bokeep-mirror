@@ -14,7 +14,7 @@ import gobject
 # Bo-Keep
 from bokeep.book_transaction import \
      Transaction
-from bokeep.gui.glade_support.glade_util import \
+from bokeep.gui.gladesupport.glade_util import \
      load_glade_file_get_widgets_and_connect_signals
 
 from bokeep.modules.gui.module import GuiStateMachine
