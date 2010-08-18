@@ -1,4 +1,0 @@
-#!/bin/sh
-./GladeGen.py trustor_management.glade trustor_management trustor_management
-./GladeGen.py trustor_transactions.glade trustor_transactions trustor_transactions
-
