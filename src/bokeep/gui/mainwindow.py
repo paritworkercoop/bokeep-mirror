@@ -33,6 +33,22 @@ class MainWindow(gobject.GObject):
             (gobject.SIGNAL_RUN_LAST, None, (str, int))
         }
 
+    def __init__(self, bookset, commit_thread):
+        gobject.GObject.__init__(self)
+        self.new_requested = False
+        self.new_trans_id = None
+        self.gui_built = False
+        self.trans_being_edited = None
+        self.current_editor = None
+        self.bookset = bookset
+#        self.commit_thread = commit_thread
+        self.current_book_name = None
+        self.current_transaction_id = None
+        self.build_gui()
+        self.gui_built = True
+        self.set_initial_state()
+        self.programmatic_transcombo_index = False
+        
     def transaction_count(self):
         book = self.get_current_book()
         return book.get_transaction_count()
@@ -132,23 +148,6 @@ class MainWindow(gobject.GObject):
 
             self.state_machine = GuiStateMachine(initial_state, self, self.gui_module)
             self.state_machine.run_until_steady_state()
-
-        
-    def __init__(self, bookset, commit_thread):
-        gobject.GObject.__init__(self)
-        self.new_requested = False
-        self.new_trans_id = None
-        self.gui_built = False
-        self.trans_being_edited = None
-        self.current_editor = None
-        self.bookset = bookset
-#        self.commit_thread = commit_thread
-        self.current_book_name = None
-        self.current_transaction_id = None
-        self.build_gui()
-        self.gui_built = True
-        self.set_initial_state()
-        self.programmatic_transcombo_index = False
 
     def set_transcombo_index(self, indx):        
         self.programmatic_transcombo_index = True
