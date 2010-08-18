@@ -6,6 +6,10 @@
 # 12/15/2002
 #----------------------------------------------------------------------
 
+
+# We need to remove our dependance on this, as we don't have
+# copyright on it
+
 import os
 import gtk
 import gtk.glade
