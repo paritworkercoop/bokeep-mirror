@@ -10,52 +10,87 @@ DEFAULT_BACKEND_MODULE = "bokeep.backend_modules.null"
 
 BOOKS_SUB_DB_KEY = 'books'
 
+class BoKeepDBHandle(object):
+    def __init__(self, dbcon):
+        self.dbcon = dbcon
+        self.dbroot = self.dbcon.root()
+
+    def close(self):
+        self.dbcon.close()
+
+    def get_sub_database(self, sub_db):
+        return self.dbroot[sub_db]
+
+    def has_sub_database(self, sub_db):
+        return sub_db in self.dbroot
+
+    def set_sub_database(self, sub_db, value):
+        self.dbroot[sub_db] = value
+
+    def sub_db_changed(self):
+        """If you implement your sub database with a class that doesn't
+        subclass Persistent, then call this when your sub database changes
+        """
+        self.dbroot._p_changed = True
+
+    def get_sub_database_do_cls_init(self, sub_db, init_cls,
+                                     *args, **kargs):
+        if not self.has_sub_database(sub_db):
+            self.set_sub_database(sub_db, init_cls(*args, **kargs))
+        return self.get_sub_database(sub_db)
+        
+
 class BoKeepBookSet(object):
     def __init__(self, books_db_conf_file):
         self.zodb = ZODB.config.databaseFromURL(books_db_conf_file)
-        self.dbcon = self.get_new_dbcon()
-        self.dbroot = self.dbcon.root()
+        self.dbhandle = self.get_new_dbhandle()
         self.establish_books_sub_db()
 
+    def get_new_dbhandle(self):
+        return BoKeepDBHandle(self.zodb.open())
+
+    # this is slated for deletion
     def get_new_dbcon(self):
         return self.zodb.open()
 
     def close_primary_connection(self):
-        self.dbcon.close()
+        self.dbhandle.close()
    
     def close(self):
         #flush out whatever's pending
         transaction.get().commit()
         for book_name, book in self.iterbooks():
             book.get_backend_module().close()
+        self.close_primary_connection()
         self.zodb.close()      
 
     def iterbooks(self):
-        return self.dbroot[BOOKS_SUB_DB_KEY].iteritems()
+        return self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY).iteritems()
 
     def get_book(self, book_name):
-        return self.dbroot[BOOKS_SUB_DB_KEY][book_name]
+        return self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY)[book_name]
 
     def has_book(self, book_name):
-        return book_name in self.dbroot[BOOKS_SUB_DB_KEY]
+        return book_name in self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY)
 
     @ends_with_commit
     def add_book(self, new_book_name):
-        assert( new_book_name not in self.dbroot )
-        self.dbroot[BOOKS_SUB_DB_KEY][new_book_name] = book = \
-            BoKeepBook(new_book_name)
-        self.dbroot._p_changed = True
+        books_dict = self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY)
+        if new_book_name in books_dict:
+            raise Exception("a book named %s already exists" % new_book_name )
+        books_dict[new_book_name] = book = BoKeepBook(new_book_name)
+        self.dbhandle.sub_db_changed()
         return book
 
     @ends_with_commit
     def remove_book(self, book_name):
-        del self.dbroot[BOOKS_SUB_DB_KEY][book_name]
-        self.dbroot._p_changed = True        
+        books_dict = self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY)
+        del books_dict[book_name]
+        self.dbhandle.sub_db_changed()
 
     @ends_with_commit
     def establish_books_sub_db(self):
-        if BOOKS_SUB_DB_KEY not in self.dbroot:
-            self.dbroot[BOOKS_SUB_DB_KEY] = {}
+        self.dbhandle.get_sub_database_do_cls_init(BOOKS_SUB_DB_KEY, dict)
 
 class BoKeepBook(Persistent):
     def __init__(self, new_book_name):
