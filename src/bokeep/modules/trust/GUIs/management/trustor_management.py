@@ -20,7 +20,7 @@ from bokeep.modules.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 from bokeep.backend_modules.module import BoKeepBackendException
 
-from GladeWindow import *
+from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
 from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
 
