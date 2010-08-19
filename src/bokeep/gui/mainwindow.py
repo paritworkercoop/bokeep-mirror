@@ -23,25 +23,17 @@ def get_this_module_file_path():
     import mainwindow as mainwindow_module
     return mainwindow_module.__file__
 
-TRANSACTION_AVAILIBLE_SIGNAL = "transaction_availible_signal"
 GUI_MODULE = "bokeep.modules.gui"
 
 
-class MainWindow(gobject.GObject):
-    __gsignals__ = {
-        TRANSACTION_AVAILIBLE_SIGNAL:
-            (gobject.SIGNAL_RUN_LAST, None, (str, int))
-        }
-
-    def __init__(self, bookset, commit_thread):
-        gobject.GObject.__init__(self)
+class MainWindow(object):
+    def __init__(self, bookset):
         self.new_requested = False
         self.new_trans_id = None
         self.gui_built = False
         self.trans_being_edited = None
         self.current_editor = None
         self.bookset = bookset
-#        self.commit_thread = commit_thread
         self.current_book_name = None
         self.current_transaction_id = None
         self.build_gui()
@@ -332,8 +324,6 @@ class MainWindow(gobject.GObject):
                 self.current_transaction_id != None:            
             print 'trying a transaction remove'
             book.remove_transaction(self.current_transaction_id)
-#            self.commit_thread.remove_transaction(
-#                self.current_book_name, self.current_transaction_id )
 
         # get the new book name
         self.current_book_name = self.get_current_bookname()
@@ -346,33 +336,6 @@ class MainWindow(gobject.GObject):
         self.set_initial_state()
         self.state_machine.run_until_steady_state()
 
-        # Second, if there is a non-None current transaction id,
-        # tell the commit thread that we would like to be woken
-        # up when the current transaction is availible for being
-        # acted on. (if there are still changes being made to it, we don't
-        # want to read it until they are done)
-        #
-        # The order matters. If we do this second step first, if we didn't
-        # our callback function could be called before the events triggered
-        # by self.trans_type_combo.set_active(-1) have been procesed
-#        if self.current_transaction_id != None:
-#            self.commit_thread.call_when_entity_uptodate(
-#                (self.current_book_name, self.current_transaction_id),
-#                self.emit_transaction_availible_signal )
-                
-    def emit_transaction_availible_signal(self, book_name, transaction_id):
-        # we're going to have to think very carefully about this,
-        # what happens when a user requets a load, goes away, and requets
-        # it again?
-        self.emit(
-            TRANSACTION_AVAILIBLE_SIGNAL, book_name, transaction_id)
-
-    def do_transaction_availible_signal(self, book_name, transaction_id):
-        if self.current_book_name == book_name and \
-                self.current_transaction_id == transaction_id:
-            # commit the database so we have the latest
-            transaction.get().commit()
-            self.bookset.get_book(book_name).get_transaction(transaction_id)
             
 
-gobject.type_register(MainWindow)
+
