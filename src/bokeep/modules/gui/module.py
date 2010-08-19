@@ -12,6 +12,57 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
      #and needs reinitialization on a system that was already running.
     (UNKNOWN, NO_TRANSACTIONS, STARTUP_TRANSACTION, BASIC_NEW_TRANSACTION, BROWSING) = range(NUM_STATES)
 
+    def __init__(self, state, gui, gmodule):
+        state_transitions = (
+            #UNKNOWN
+            ( (self.check_unknown_to_startup,
+               self.unknown_to_startup, self.STARTUP_TRANSACTION),
+              (self.check_unknown_to_browsing,
+               self.unknown_to_browsing, self.BROWSING ), 
+            ),
+
+            #NO_TRANSACTIONS
+            ( (self.check_notrans_to_startup,
+               self.notrans_to_startup, self.STARTUP_TRANSACTION),
+            ),
+        
+            #STARTUP_TRANSACTION
+            ( (self.check_startup_to_basicnew,
+               self.startup_to_basicnew, self.BASIC_NEW_TRANSACTION),
+            ),
+   
+            #BASIC_NEW_TRANSACTION
+            ( (self.check_basicnew_to_basicnew,
+               self.basicnew_to_basicnew, self.BASIC_NEW_TRANSACTION), 
+              (self.check_basicnew_to_browsing,
+               self.basicnew_to_browsing, self.BROWSING),
+            ), 
+     
+            #BROWSING
+            ( (self.check_browsing_to_notrans,
+               self.browsing_to_notrans, self.NO_TRANSACTIONS), 
+              (self.check_browsing_to_basicnew,
+               self.browsing_to_basicnew, self.BASIC_NEW_TRANSACTION),
+            ), 
+
+            )
+
+        super(GuiStateMachine, self).__init__(None, state, None, state_transitions)
+        self.gui = gui
+        self.gmodule = gmodule
+
+        #if we start out with a state, do the initialization associated with that state.
+        if not state == None:
+            if state == self.NO_TRANSACTIONS:
+                self.init_notrans()
+            elif state == self.STARTUP_TRANSACTION:
+                self.init_startup()
+            elif state == self.BASIC_NEW_TRANSACTION:
+                self.init_basicnew()
+            elif state == self.BROWSING:
+                self.init_browsing()
+
+
     def check_unknown_to_startup(self, *args):
         if not self.gui.has_transactions() or self.gui.transaction_count() == 1:
             return True
@@ -133,56 +184,6 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
 
     def browsing_to_basicnew(self, *args):
         self.init_basicnew()
-
-    def __init__(self, state, gui, gmodule):
-        state_transitions = (
-            #UNKNOWN
-            ( (self.check_unknown_to_startup,
-               self.unknown_to_startup, self.STARTUP_TRANSACTION),
-              (self.check_unknown_to_browsing,
-               self.unknown_to_browsing, self.BROWSING ), 
-            ),
-
-            #NO_TRANSACTIONS
-            ( (self.check_notrans_to_startup,
-               self.notrans_to_startup, self.STARTUP_TRANSACTION),
-            ),
-        
-            #STARTUP_TRANSACTION
-            ( (self.check_startup_to_basicnew,
-               self.startup_to_basicnew, self.BASIC_NEW_TRANSACTION),
-            ),
-   
-            #BASIC_NEW_TRANSACTION
-            ( (self.check_basicnew_to_basicnew,
-               self.basicnew_to_basicnew, self.BASIC_NEW_TRANSACTION), 
-              (self.check_basicnew_to_browsing,
-               self.basicnew_to_browsing, self.BROWSING),
-            ), 
-     
-            #BROWSING
-            ( (self.check_browsing_to_notrans,
-               self.browsing_to_notrans, self.NO_TRANSACTIONS), 
-              (self.check_browsing_to_basicnew,
-               self.browsing_to_basicnew, self.BASIC_NEW_TRANSACTION),
-            ), 
-
-            )
-
-        super(GuiStateMachine, self).__init__(None, state, None, state_transitions)
-        self.gui = gui
-        self.gmodule = gmodule
-
-        #if we start out with a state, do the initialization associated with that state.
-        if not state == None:
-            if state == self.NO_TRANSACTIONS:
-                self.init_notrans()
-            elif state == self.STARTUP_TRANSACTION:
-                self.init_startup()
-            elif state == self.BASIC_NEW_TRANSACTION:
-                self.init_basicnew()
-            elif state == self.BROWSING:
-                self.init_browsing()
 
 class GuiModule(Persistent):
 
