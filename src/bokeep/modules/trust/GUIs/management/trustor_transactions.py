@@ -13,19 +13,17 @@ from datetime import datetime
 from os.path import abspath, dirname, join, exists
 
 class trustor_transactions(GladeWindow):
-    def construct_filename(self, filename):
-        import trustor_management as trust_module
-        return join( dirname( abspath( trust_module.__file__ ) ),
-                              filename)
-
     def __init__(self, trustor):
 
         self.trustor = trustor
 
-        ''' '''
-        
         self.init()
         self.extended_init()
+
+    def construct_filename(self, filename):
+        import trustor_management as trust_module
+        return join( dirname( abspath( trust_module.__file__ ) ),
+                              filename)
 
     def get_tran_type(self, transaction):
         if isinstance(transaction, TrustMoneyInTransaction):

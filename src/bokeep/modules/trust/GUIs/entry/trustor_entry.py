@@ -17,12 +17,7 @@ from bokeep.book import BoKeepBookSet
 from bokeep.config import get_database_cfg_file
 
 class trustor_entry(GladeWindow):
-
-    def detach(self):
-        self.widgets['vbox1'].reparent(self.top_window)
-
     def __init__(self, trust_trans, trans_id, trust_module, gui_parent, editable):
-
         self.gui_built = False
         self.trust_trans = trust_trans 
         self.trans_id = trans_id
@@ -31,8 +26,6 @@ class trustor_entry(GladeWindow):
         self.editable = editable
         self.trans_trustor = self.trust_trans.get_trustor()
 
-        ''' '''
-        
         self.init()
         self.extended_init()
 
@@ -41,9 +34,8 @@ class trustor_entry(GladeWindow):
         self.top_window.hide()
         self.gui_built = True
 
-
-
-    #----------------------------------------------------------------------
+    def detach(self):
+        self.widgets['vbox1'].reparent(self.top_window)
 
     def extended_init(self):
         self.add_widgets('trustor_combo', 'vbox1')

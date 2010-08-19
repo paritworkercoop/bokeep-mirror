@@ -26,14 +26,7 @@ from bokeep.modules.trust.GUIs.management.trustor_transactions import trustor_tr
 from os.path import abspath, dirname, join, exists
 
 class trustor_management(GladeWindow):
-
-    def construct_filename(self, filename):
-        import trustor_management as trust_module
-        return join( dirname( abspath( trust_module.__file__ ) ),
-                              filename)
-
     def __init__(self, bookname):
-
         self.bookset = BoKeepBookSet( get_database_cfg_file() )
         self.book = self.bookset.get_book(bookname)
         self.backend = self.book.get_backend_module()
@@ -41,12 +34,14 @@ class trustor_management(GladeWindow):
         self.trustors = self.trust_module.get_trustors()
         self.current_name = None
 
-        ''' '''
-        
         self.init()
 
         self.extended_init()
 
+    def construct_filename(self, filename):
+        import trustor_management as trust_module
+        return join( dirname( abspath( trust_module.__file__ ) ),
+                              filename)
     def reset_view(self):
         if self.trustor_view.get_column(0) == None:
             #no columns to remove
