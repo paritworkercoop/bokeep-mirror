@@ -195,12 +195,10 @@ class BoKeepGuiState(Persistent):
     @ends_with_commit
     def set_state(self, state):
         self.current_state = state
-        self._p_changed = True
 
     @ends_with_commit
     def set_trans_location(self, location):
         self.trans_location = location       
-        self._p_changed = True
 
     @ends_with_commit
     def set_book_name(self, book):
