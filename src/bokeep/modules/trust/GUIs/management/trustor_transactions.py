@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-    
-#----------------------------------------------------------------------
-# trustor_transactions.py
-# Dave Reed
-# 08/10/2010
-#----------------------------------------------------------------------
 
 import sys
 
@@ -18,15 +12,11 @@ from datetime import datetime
 
 from os.path import abspath, dirname, join, exists
 
-#----------------------------------------------------------------------
-
 class trustor_transactions(GladeWindow):
     def construct_filename(self, filename):
         import trustor_management as trust_module
         return join( dirname( abspath( trust_module.__file__ ) ),
                               filename)
-
-    #----------------------------------------------------------------------
 
     def __init__(self, trustor):
 
@@ -36,8 +26,6 @@ class trustor_transactions(GladeWindow):
         
         self.init()
         self.extended_init()
-
-    #----------------------------------------------------------------------
 
     def get_tran_type(self, transaction):
         if isinstance(transaction, TrustMoneyInTransaction):
@@ -83,7 +71,6 @@ class trustor_transactions(GladeWindow):
 
         top_window = 'window1'
         GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
-    #----------------------------------------------------------------------
 
     def generate_transaction_report(self, filename):
         report_file = open(filename, 'w')
@@ -106,17 +93,12 @@ class trustor_transactions(GladeWindow):
 
 
     
-
-
-#----------------------------------------------------------------------
-
 def main(argv):
 
     w = trustor_transactions()
     w.show()
     gtk.main()
 
-#----------------------------------------------------------------------
 
 if __name__ == '__main__':
     main(sys.argv)

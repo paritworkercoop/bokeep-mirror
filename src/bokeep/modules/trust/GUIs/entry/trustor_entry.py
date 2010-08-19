@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-    
-#----------------------------------------------------------------------
-# trustor_entry.py
-# Dave Reed
-# 08/09/2010
-#----------------------------------------------------------------------
 
 import sys
 
@@ -22,11 +16,7 @@ from bokeep.modules.trust import \
 from bokeep.book import BoKeepBookSet
 from bokeep.config import get_database_cfg_file
 
-#----------------------------------------------------------------------
-
 class trustor_entry(GladeWindow):
-
-    #----------------------------------------------------------------------
 
     def detach(self):
         self.widgets['vbox1'].reparent(self.top_window)
@@ -120,20 +110,14 @@ class trustor_entry(GladeWindow):
         if self.editable:
             self.update_trans()
         GladeWindow.on_window_destroy(self, *args)
-    #----------------------------------------------------------------------
 
     def on_trustor_combo_changed(self, *args):
         if self.gui_built:
             self.update_trans()
 
-    #----------------------------------------------------------------------
-
     def on_amount_entry_changed(self, *args): 
         if self.gui_built:
             self.update_trans()
-
-
-#----------------------------------------------------------------------
 
 def main(argv):
     bookset = BoKeepBookSet( get_database_cfg_file() )
@@ -145,8 +129,6 @@ def main(argv):
     w = trustor_entry(trust_trans, trans_id, trust_module, None, True)
     w.show()
     gtk.main()
-
-#----------------------------------------------------------------------
 
 if __name__ == '__main__':
     main(sys.argv)

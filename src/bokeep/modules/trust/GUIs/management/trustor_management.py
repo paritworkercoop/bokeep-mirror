@@ -1,11 +1,5 @@
 #!/usr/bin/env python
     
-#----------------------------------------------------------------------
-# trustor_management.py
-# Dave Reed
-# 08/06/2010
-#----------------------------------------------------------------------
-
 # python imports
 import sys
 from decimal import Decimal
@@ -31,11 +25,8 @@ from bokeep.modules.trust.GUIs.management.trustor_transactions import trustor_tr
 
 from os.path import abspath, dirname, join, exists
 
-#----------------------------------------------------------------------
-
 class trustor_management(GladeWindow):
 
-    #----------------------------------------------------------------------
     def construct_filename(self, filename):
         import trustor_management as trust_module
         return join( dirname( abspath( trust_module.__file__ ) ),
@@ -56,7 +47,6 @@ class trustor_management(GladeWindow):
 
         self.extended_init()
 
-    #----------------------------------------------------------------------
     def reset_view(self):
         if self.trustor_view.get_column(0) == None:
             #no columns to remove
@@ -114,13 +104,9 @@ class trustor_management(GladeWindow):
         top_window = 'TrustManagement'
         GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
 
-    #----------------------------------------------------------------------
-
     def on_add_button_clicked(self, *args):
         self.current_name = None
         self.widgets['name_entry'].set_text('')
-
-    #----------------------------------------------------------------------
 
     def on_delete_button_clicked(self, *args):
         for_delete = self.widgets['name_entry'].get_text()
@@ -138,15 +124,11 @@ class trustor_management(GladeWindow):
             self.trust_module.drop_trustor_by_name(for_delete)
             self.refresh_trustor_list()
 
-    #----------------------------------------------------------------------
-
     def on_zoom_button_clicked(self, *args):
         trustor = self.trust_module.get_trustor(self.current_name)
         trans = trustor_transactions(trustor)
         trans.show()
 #        print 'zoom button clicked'
-
-    #----------------------------------------------------------------------
 
     def on_save_button_clicked(self, *args):
         if self.current_name == None:
@@ -163,8 +145,6 @@ class trustor_management(GladeWindow):
             self.current_name = new_name            
             self.refresh_trustor_list()
 
-    #----------------------------------------------------------------------
-
     def set_trustor(self, trustor_selected):
         trustor = self.trust_module.get_trustor(trustor_selected)
 
@@ -178,7 +158,6 @@ class trustor_management(GladeWindow):
         sel_row = self.trustor_list[sel_iter]
         trustor_selected = sel_row[0]
         self.set_trustor(trustor_selected)
-    #----------------------------------------------------------------------
 
     def generate_balance_report(self, filename):
         report_file = open(filename, 'w')
@@ -197,18 +176,11 @@ class trustor_management(GladeWindow):
         filesel.hide()
         self.generate_balance_report(filename)
 
-
-
-
-#----------------------------------------------------------------------
-
 def main(argv):
 
     w = trustor_management(argv[1])
     w.show()
     gtk.main()
-
-#----------------------------------------------------------------------
 
 if __name__ == '__main__':
     main(sys.argv)
