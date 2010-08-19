@@ -46,6 +46,9 @@ class BoKeepBookSet(object):
         self.dbhandle = self.get_new_dbhandle()
         self.establish_books_sub_db()
 
+    def get_dbhandle(self):
+        return self.dbhandle
+    
     def get_new_dbhandle(self):
         return BoKeepDBHandle(self.zodb.open())
 

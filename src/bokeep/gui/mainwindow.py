@@ -17,13 +17,13 @@ from bokeep.book_transaction import \
 from bokeep.gui.gladesupport.glade_util import \
      load_glade_file_get_widgets_and_connect_signals
 
-from state import GuiStateMachine
+from state import GuiStateMachine, BoKeepGuiState
+
+GUI_STATE_SUB_DB = 'gui_state'
 
 def get_this_module_file_path():
     import mainwindow as mainwindow_module
     return mainwindow_module.__file__
-
-GUI_MODULE = "bokeep.modules.gui"
 
 
 class MainWindow(object):
@@ -36,6 +36,9 @@ class MainWindow(object):
         self.bookset = bookset
         self.current_book_name = None
         self.current_transaction_id = None
+        self.guistate = self.bookset.get_dbhandle().\
+            get_sub_database_do_cls_init(
+            GUI_STATE_SUB_DB, BoKeepGuiState)
         self.build_gui()
         self.gui_built = True
         self.set_initial_state()
@@ -98,7 +101,7 @@ class MainWindow(object):
                 edit_module = modules[module] 
                 break
 
-        self.gui_module.set_trans_location(trans_id)
+        self.guistate.set_trans_location(trans_id)
         self.trans_being_edited = trans
         self.trans_being_edited_id = trans_id
 
@@ -121,31 +124,14 @@ class MainWindow(object):
         self.sync_to_transaction(trans, latest_id)
     
     def set_initial_state(self):
-        book = self.get_current_book()
-
-        if not book.has_module(GUI_MODULE):
-            print 'can not run without bokeep.modules.gui installed and enabled'
-            exit(0)
-
-        self.gui_module = book.get_module(GUI_MODULE)
-
-        initial_state = self.gui_module.get_state()
-
-        if initial_state == None:
-            print 'set unknown'
-            self.state_machine = GuiStateMachine(GuiStateMachine.UNKNOWN, self, self.gui_module)
-            self.state_machine.run_until_steady_state()
-        else:
-            print 'set ' + str(initial_state)
-
-            self.state_machine = GuiStateMachine(initial_state, self, self.gui_module)
-            self.state_machine.run_until_steady_state()
+        self.state_machine = \
+            GuiStateMachine(self.guistate.get_state(), self, self.guistate)
+        self.state_machine.run_until_steady_state()
 
     def set_transcombo_index(self, indx):        
         self.programmatic_transcombo_index = True
         self.trans_type_combo.set_active(indx)
         self.programmatic_transcombo_index = False
-
         
     def refresh_trans_types(self):
         book = self.get_current_book()
@@ -214,7 +200,7 @@ class MainWindow(object):
         self.transaction_being_edited_id = next_id
        
         print 'id: ' + str(next_id) + ', trans: ' + str(type(next_trans))
-        self.gui_module.set_trans_location(next_id)
+        self.guistate.set_trans_location(next_id)
         self.sync_to_transaction(next_trans, next_id)
 
         self.state_machine.run_until_steady_state()
@@ -237,7 +223,7 @@ class MainWindow(object):
         self.transaction_being_edited_id = prior_id
        
         print 'id: ' + str(prior_id) + ', trans: ' + str(type(prior_trans))
-        self.gui_module.set_trans_location(prior_id)
+        self.guistate.set_trans_location(prior_id)
 
         self.sync_to_transaction(prior_trans, prior_id)
 
@@ -278,7 +264,7 @@ class MainWindow(object):
         self.trans_being_edited = trans
         self.trans_being_edited_id = book.insert_transaction(self.trans_being_edited)
 
-        self.gui_module.set_trans_location(self.trans_being_edited_id)
+        self.guistate.set_trans_location(self.trans_being_edited_id)
         self.current_transaction_id = self.trans_being_edited_id
 
     def reset_trans_view(self):
@@ -287,7 +273,7 @@ class MainWindow(object):
         currmodule = self.trans_type_combo.get_model().get_value(currindex,2)
         editor_generator = currmodule.get_transaction_edit_interface_hook_from_code(currcode)
         self.set_edit_transaction(currmodule.get_transaction_type_from_code(currcode)())
-        self.gui_module.set_trans_location(self.trans_being_edited_id)
+        self.guistate.set_trans_location(self.trans_being_edited_id)
         if not self.current_editor == None: 
             self.current_editor.detach()
         self.current_editor = editor_generator(self.trans_being_edited, self.trans_being_edited_id, currmodule, self.main_vbox)

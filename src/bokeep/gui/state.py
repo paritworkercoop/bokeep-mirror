@@ -185,8 +185,12 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
     def browsing_to_basicnew(self, *args):
         self.init_basicnew()
 
-class GuiModule(Persistent):
-
+class BoKeepGuiState(Persistent):
+    def __init__(self, init_state=GuiStateMachine.UNKNOWN):
+        super(BoKeepGuiState, self).__init__()
+        self.current_state = init_state
+        self.trans_location = None
+    
     @ends_with_commit
     def set_state(self, state):
         self.current_state = state
@@ -198,48 +202,10 @@ class GuiModule(Persistent):
         self._p_changed = True
 
     def get_state(self):
-        if hasattr(self, "current_state"):
             return self.current_state
-        else:
-            return None
 
     def get_trans_location(self):
-        if hasattr(self, "trans_location"):
-            return self.trans_location
-        else:
-            return None
-
-    @staticmethod
-    def get_transaction_type_codes():
-        return []
-
-    @staticmethod
-    def get_transaction_type_from_code(code):
-        return None 
-
-    @staticmethod
-    def get_transaction_type_pulldown_string_from_code(code):
-        return None
-        
-    @staticmethod
-    def get_transaction_edit_interface_hook_from_code(code):
-        return None
-
-    @staticmethod
-    def get_transaction_view_interface_hook_fom_code(code):
-        return None
-
-    @staticmethod
-    def get_transaction_edit_interface_hook_from_type(ty):
-        return None
-
-    @staticmethod
-    def get_transaction_view_interface_hook_from_type(ty):
-        return None
-    
-    @staticmethod
-    def get_transaction_code_from_type(ty):
-        return None
+        return self.trans_location
 
 def get_module_class():
     return GuiModule

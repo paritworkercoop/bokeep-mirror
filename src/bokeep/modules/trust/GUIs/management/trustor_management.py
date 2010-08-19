@@ -23,6 +23,7 @@ from bokeep.backend_modules.module import BoKeepBackendException
 from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
 from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
+import gtk
 
 from datetime import datetime
 
