@@ -168,11 +168,19 @@ class MainWindow(object):
         cell = CellRendererText()
         self.books_combobox.pack_start(cell, True)
         self.books_combobox.add_attribute(cell, 'text', 0)
-        
-        for book_name, book in self.bookset.iterbooks():
+
+        cur_book_index = None
+        for i, (book_name, book) in enumerate(self.bookset.iterbooks()):
             self.books_combobox_model.append((book_name, book_name, book))
+            if self.guistate.get_book_name() !=None and \
+                    self.guistate.get_book_name() == book_name:
+                cur_book_index = i
         if len(self.books_combobox_model) > 0:
-            self.books_combobox.set_active(0)
+            if cur_book_index == None:
+                self.books_combobox.set_active(0)
+            else:
+                self.books_combobox.set_active(cur_book_index)
+            self.guistate.set_book_name(self.get_current_bookname())
 
         self.refresh_trans_types()     
 
@@ -305,23 +313,17 @@ class MainWindow(object):
 
         book = self.get_current_book()
 
-        # close the current book and transaction
-        if self.current_book_name != None and \
-                self.current_transaction_id != None:            
-            print 'trying a transaction remove'
-            book.remove_transaction(self.current_transaction_id)
-
         # get the new book name
         self.current_book_name = self.get_current_bookname()
-
+        self.guistate.set_book_name(self.get_current_bookname())
         # the curent transaction becomes the latest in the new book, or
         # None if there is none
         self.current_transaction_id = book.get_latest_transaction_id()
+        self.guistate.set_trans_location(self.current_transaction_id)
+        if self.current_transaction_id == None:
+            self.guistate.set_state(GuiStateMachine.NO_TRANSACTIONS)
+        else:
+            self.guistate.set_state(GuiStateMachine.BROWSING)
         
         self.refresh_trans_types()
         self.set_initial_state()
-        self.state_machine.run_until_steady_state()
-
-            
-
-

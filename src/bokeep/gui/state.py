@@ -190,6 +190,7 @@ class BoKeepGuiState(Persistent):
         super(BoKeepGuiState, self).__init__()
         self.current_state = init_state
         self.trans_location = None
+        self.current_book_name = None
     
     @ends_with_commit
     def set_state(self, state):
@@ -201,11 +202,18 @@ class BoKeepGuiState(Persistent):
         self.trans_location = location       
         self._p_changed = True
 
+    @ends_with_commit
+    def set_book_name(self, book):
+        self.current_book_name = book
+
     def get_state(self):
-            return self.current_state
+        return self.current_state
 
     def get_trans_location(self):
         return self.trans_location
 
+    def get_book_name(self):
+        return self.current_book_name
+    
 def get_module_class():
     return GuiModule
