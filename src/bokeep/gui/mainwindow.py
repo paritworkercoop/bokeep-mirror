@@ -17,7 +17,7 @@ from bokeep.book_transaction import \
 from bokeep.gui.gladesupport.glade_util import \
      load_glade_file_get_widgets_and_connect_signals
 
-from bokeep.modules.gui.module import GuiStateMachine
+from state import GuiStateMachine
 
 def get_this_module_file_path():
     import mainwindow as mainwindow_module

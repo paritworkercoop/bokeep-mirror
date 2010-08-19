@@ -241,3 +241,5 @@ class GuiModule(Persistent):
     def get_transaction_code_from_type(ty):
         return None
 
+def get_module_class():
+    return GuiModule
