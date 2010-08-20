@@ -171,6 +171,8 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
         self.init_browsing()
 
     def check_browsing_to_notrans(self, *args):
+        # where is the boolean return? probaly not written
+        # yet due to no need for delete suport
         print 'check_browsing_to_notrans with ' + str(args)
 
     def browsing_to_notrans(self, *args):
