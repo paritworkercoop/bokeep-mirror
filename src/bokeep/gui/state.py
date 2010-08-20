@@ -212,6 +212,3 @@ class BoKeepGuiState(Persistent):
 
     def get_book_name(self):
         return self.current_book_name
-    
-def get_module_class():
-    return GuiModule
