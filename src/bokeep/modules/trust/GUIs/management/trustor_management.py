@@ -117,6 +117,7 @@ class trustor_management(GladeWindow):
             cantDeleteDia.hide()
         else:            
             self.trust_module.drop_trustor_by_name(for_delete)
+            transaction.get().commit()
             self.refresh_trustor_list()
 
     def on_zoom_button_clicked(self, *args):
@@ -131,12 +132,14 @@ class trustor_management(GladeWindow):
             trustor_name = self.widgets['name_entry'].get_text()
             self.current_name = trustor_name
             self.trust_module.add_trustor_by_name(trustor_name)
+            transaction.get().commit()
             self.refresh_trustor_list()
             trustor_name = self.widgets['name_entry'].set_text('')
         else:
             #we're updating the name of someone who already exists
             new_name = self.widgets['name_entry'].get_text()
             self.trust_module.rename_trustor(self.current_name, new_name)
+            transaction.get().commit()
             self.current_name = new_name            
             self.refresh_trustor_list()
 
