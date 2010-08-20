@@ -1,5 +1,4 @@
 from persistent import Persistent
-from bokeep.util import ends_with_commit
 from decimal import Decimal
 
 from GUIs.entry.trustor_entry import trustor_entry
@@ -94,7 +93,6 @@ class TrustModule(Persistent):
         self.ensure_trust_database()
         return trustor in self.trustors_database
 
-    @ends_with_commit
     def drop_trustor_by_name(self, trustor_name):
         if not(self.has_trustor(trustor_name)):
             raise Exception("there is no trustor named %s")
@@ -107,7 +105,6 @@ class TrustModule(Persistent):
         del self.trustors_database[trustor_name]
         self._p_changed = True
 
-    @ends_with_commit
     def add_trustor_by_name(self, trustor_name):
         self.ensure_trust_database()
         if self.has_trustor(trustor_name):
@@ -120,7 +117,6 @@ class TrustModule(Persistent):
         self.ensure_trust_database()
         return self.trustors_database[trustor_name]
 
-    @ends_with_commit
     def rename_trustor(self, old_name, new_name):
         if not(self.has_trustor(old_name)):
             raise Exception("there is no trustor named %s" % old_name)
@@ -133,9 +129,7 @@ class TrustModule(Persistent):
         del self.trustors_database[old_name]
         self.trustors_database[new_name] = trustor
         self._p_changed = True
-        
 
-    @ends_with_commit
     def associate_transaction_with_trustor(self, front_end_id,
                                            trust_trans, trustor_name):
         self.ensure_trust_database()
@@ -162,7 +156,6 @@ class TrustModule(Persistent):
                                                          trustor_name)
         self._p_changed = True
 
-    @ends_with_commit
     def disassociate_trustor_with_transaction(self, front_end_id,
                                              trust_trans, trustor_name):
         self.ensure_trust_database()

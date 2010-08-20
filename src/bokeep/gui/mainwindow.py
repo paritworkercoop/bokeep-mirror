@@ -189,6 +189,7 @@ class MainWindow(object):
         self.new_requested = False        
 
         self.state_machine.run_until_steady_state()
+        transaction.get().commit()
         main_quit()
 
     def forward_button_clicked(self, *args):
