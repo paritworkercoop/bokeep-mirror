@@ -109,9 +109,22 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
             self.gui.reset_trans_view()
 
         self.gmodule.set_state(self.STARTUP_TRANSACTION)
-
+        
     def init_basicnew(self):
         print 'doing init basicnew'
+        self.gui.set_back_sensitive(True)
+        self.gui.set_forward_sensitive(False)
+        self.gui.set_delete_sensitive(True)
+        self.gui.set_transcombo_sensitive(True)
+        self.new_trans_id = self.gmodule.get_trans_location()
+        self.gui.browse_to_transaction(self.gmodule.get_trans_location())
+        self.new_requested = False
+        #if we were mid-edit, clicking new commits it so set it back to None
+        self.trans_being_edited = None
+        self.trans_being_edited_id = None
+
+    def transition_to_basicnew(self):
+        print 'doing transition to basicnew'
         self.gui.set_back_sensitive(True)
         self.gui.set_forward_sensitive(False)
         self.gui.set_delete_sensitive(True)
@@ -149,7 +162,7 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
             return False
 
     def startup_to_basicnew(self, *args):
-        self.init_basicnew()
+        self.transition_to_basicnew()
 
     def check_basicnew_to_basicnew(self, *args):
         if self.gui.new_requested and self.gui.new_trans_id == None:
@@ -185,7 +198,7 @@ class GuiStateMachine(FunctionAndDataDrivenStateMachine):
             return False
 
     def browsing_to_basicnew(self, *args):
-        self.init_basicnew()
+        self.transition_to_basicnew()
 
 class BoKeepGuiState(Persistent):
     def __init__(self, init_state=GuiStateMachine.UNKNOWN):
