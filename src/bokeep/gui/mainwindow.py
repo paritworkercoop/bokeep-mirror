@@ -10,14 +10,14 @@ from gtk.glade import XML
 import gobject
 
 
-
 # Bo-Keep
+from state import \
+    BoKeepGuiState, \
+    NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE
 from bokeep.book_transaction import \
      Transaction
 from bokeep.gui.gladesupport.glade_util import \
      load_glade_file_get_widgets_and_connect_signals
-
-from state import GuiStateMachine, BoKeepGuiState
 
 GUI_STATE_SUB_DB = 'gui_state'
 
@@ -25,137 +25,22 @@ def get_this_module_file_path():
     import mainwindow as mainwindow_module
     return mainwindow_module.__file__
 
+COMBO_SELECTION_NONE = -1
 
 class MainWindow(object):
+    # Functions for window initialization 
+
     def __init__(self, bookset):
-        self.new_requested = False
-        self.new_trans_id = None
         self.gui_built = False
-        self.trans_being_edited = None
         self.current_editor = None
         self.bookset = bookset
-        self.current_book_name = None
-        self.current_transaction_id = None
         self.guistate = self.bookset.get_dbhandle().\
             get_sub_database_do_cls_init(
             GUI_STATE_SUB_DB, BoKeepGuiState)
+        transaction.get().commit()
         self.build_gui()
         self.gui_built = True
-        self.set_initial_state()
         self.programmatic_transcombo_index = False
-        
-    def transaction_count(self):
-        book = self.get_current_book()
-        return book.get_transaction_count()
-     
-    def has_transactions(self):
-        book = self.get_current_book()
-        id = book.get_latest_transaction_id()
-        if book.get_latest_transaction_id() == None:
-            return False
-        else:
-            return True
-
-    def set_transcombo_from_type(self, ty):
-        i = 0
-        for item in self.trans_type_model:
-            currtype = item[2].get_transaction_type_from_code(item[1])
-            if currtype == ty:
-                self.set_transcombo_index(i)
-                break
-            i += 1
-
-
-    #go to the requested transaction and set the back/forward button 
-    #sensitivity appropriately
-    def browse_to_transaction(self, trans_id):
-        book = self.get_current_book()
-        
-        trans = book.get_transaction(trans_id)
-
-        self.sync_to_transaction(trans, trans_id)
-
-    def sync_to_transaction(self, trans, trans_id):
-        self.set_transcombo_from_type(type(trans))
-
-        book = self.get_current_book()
-
-        if book.has_previous_trans(trans_id):
-            self.set_back_sensitive(True)
-        else:
-            self.set_back_sensitive(False)
-
-        if book.has_next_trans(trans_id):
-            self.set_forward_sensitive(True)
-        else:
-            self.set_forward_sensitive(False)
-
-        modules = book.get_modules()
-
-        #search for an editor
-        editor_creator = None
-        edit_module = None
-        for module in modules:
-            editor_creator = modules[module].get_transaction_edit_interface_hook_from_type(type(trans))
-            if not editor_creator == None:
-                edit_module = modules[module] 
-                break
-
-        self.guistate.set_trans_location(trans_id)
-        self.trans_being_edited = trans
-        self.trans_being_edited_id = trans_id
-
-        editor = editor_creator(trans, trans_id, edit_module, self.main_vbox)
-
-        if not self.current_editor == None: 
-            self.current_editor.detach()
-
-        self.current_editor = editor
-
-    def load_latest_transaction(self):
-        book = self.get_current_book()
-    
-        latest_id = book.get_latest_transaction_id()
-        if latest_id == None:
-            return
-
-        trans = book.get_transaction(latest_id)
-
-        self.sync_to_transaction(trans, latest_id)
-    
-    def set_initial_state(self):
-        self.state_machine = \
-            GuiStateMachine(self.guistate.get_state(), self, self.guistate)
-        self.state_machine.run_until_steady_state()
-
-    def set_transcombo_index(self, indx):        
-        self.programmatic_transcombo_index = True
-        self.trans_type_combo.set_active(indx)
-        self.programmatic_transcombo_index = False
-        
-    def refresh_trans_types(self):
-        book = self.get_current_book()
-
-        self.trans_type_model = ListStore(str, int, object)
-
-        modules = book.get_modules()
-
-        for module in modules:
-            trans_codes = modules[module].get_transaction_type_codes()
-            for trans_code in trans_codes:
-                self.trans_type_model.append([modules[module].get_transaction_type_pulldown_string_from_code(trans_code), trans_code, modules[module]]) 
-
-        self.trans_type_combo.set_model(self.trans_type_model)
-
-    def load_iteration_location(self):
-        pass
-
-    def load_state(self):
-        pass
-
-    def load_gui_info(self):
-        self.load_iteration_location()
-        self.load_transaction_mode()
 
     def build_gui(self):
         glade_file = join( dirname( abspath(get_this_module_file_path() ) ),
@@ -172,159 +57,160 @@ class MainWindow(object):
         cur_book_index = None
         for i, (book_name, book) in enumerate(self.bookset.iterbooks()):
             self.books_combobox_model.append((book_name, book_name, book))
-            if self.guistate.get_book_name() !=None and \
-                    self.guistate.get_book_name() == book_name:
+            if self.guistate.get_book() != None and \
+                    self.guistate.get_book() == book:
                 cur_book_index = i
         if len(self.books_combobox_model) > 0:
             if cur_book_index == None:
                 self.books_combobox.set_active(0)
+                self.set_book_from_combo()
             else:
                 self.books_combobox.set_active(cur_book_index)
-            self.guistate.set_book_name(self.get_current_bookname())
+        
+        self.refresh_trans_types_and_set_sensitivities()
 
-        self.refresh_trans_types()     
+    # Functions for window initialization and use thereafter
 
-    def on_remove(self, window, event):
-        #close off the state machine, anything mid-edit can be committed now
-        self.new_requested = False        
+    def set_book_from_combo(self):
+        self.guistate.do_action(
+            BOOK_CHANGE, 
+            self.books_combobox_model[
+                self.books_combobox.get_active()][2]
+            )
 
-        self.state_machine.run_until_steady_state()
-        transaction.get().commit()
-        main_quit()
+    def refresh_trans_types_and_set_sensitivities(self):
+        self.refresh_trans_types()
+        self.set_sensitivities()
 
-    def forward_button_clicked(self, *args):
-        self.new_requested = False
-        self.state_machine.run_until_steady_state()
-
-        book = self.get_current_book()
- 
-        next_id, next_trans = book.get_next_trans(self.trans_being_edited_id)
-
-        if next_trans == None:
-            #we were mistaken about being able to go next, grey it out
-            self.set_forward_sensitive(False)
+    def refresh_trans_types(self):
+        book = self.guistate.get_book()
+        if book == None:
             return
 
-        self.transaction_being_edited = next_trans
-        self.transaction_being_edited_id = next_id
-       
-        print 'id: ' + str(next_id) + ', trans: ' + str(type(next_trans))
-        self.guistate.set_trans_location(next_id)
-        self.sync_to_transaction(next_trans, next_id)
+        self.trans_type_model = ListStore(str, int, object)
 
-        self.state_machine.run_until_steady_state()
-    
-    def back_button_clicked(self, *args):
-        self.new_requested = False
+        cur_trans = None
+        if self.guistate.get_transaction_id() != None:
+            cur_trans = book.get_transaction(self.guistate.get_transaction_id())
 
-        self.state_machine.run_until_steady_state()
+        modules = book.get_modules()
+        current_trans_type_index = COMBO_SELECTION_NONE
+        for i, (code, trans_cls, module) in \
+                enumerate(book.get_iter_of_code_class_module_tripplets()):
+            self.trans_type_model.append( (
+                module.get_transaction_type_pulldown_string_from_code(code),
+                code, module ) )
+            if cur_trans != None and isinstance(cur_trans, trans_cls):
+                current_trans_type_index = i
 
-        book = self.get_current_book()
- 
-        prior_id, prior_trans = book.get_previous_trans(self.trans_being_edited_id)
+        self.trans_type_combo.set_model(self.trans_type_model)
+        assert( self.trans_type_combo.get_active() == COMBO_SELECTION_NONE )
 
-        if prior_trans == None:
-            #we were mistaken about being able to go back, grey it out
-            self.set_back_sensitive(False)
-            return
+        if current_trans_type_index != COMBO_SELECTION_NONE:
+            self.set_transcombo_index(current_trans_type_index)
+            self.reset_trans_view()
 
-        self.transaction_being_edited = prior_trans
-        self.transaction_being_edited_id = prior_id
-       
-        print 'id: ' + str(prior_id) + ', trans: ' + str(type(prior_trans))
-        self.guistate.set_trans_location(prior_id)
-
-        self.sync_to_transaction(prior_trans, prior_id)
-
-        self.state_machine.run_until_steady_state()
-
-    def new_button_clicked(self, *args):
-        self.new_requested = True
-        self.new_trans_id = None
-
-        #if we were mid-edit, clicking new commits it so set it back to None
-        self.trans_being_edited = None
-        self.trans_being_edited_id = None
-
-        self.state_machine.run_until_steady_state()
-
-    def delete_button_clicked(self, *args):
-        pass
-
-    def set_back_sensitive(self, sens):
-        self.back_button.set_sensitive(sens)
-
-    def set_forward_sensitive(self, sens):
-        self.forward_button.set_sensitive(sens)
-
-    def set_delete_sensitive(self, sens):
-        self.button6.set_sensitive(sens)
- 
-    def set_transcombo_sensitive(self, sens):
-        self.trans_type_combo.set_sensitive(sens)
-
-    def set_edit_transaction(self, trans):
-        book = self.get_current_book()
-
-        if not self.trans_being_edited == None:
-            #transaction was in "mid edit" when we changed gears, drop it.
-            book.remove_transaction(self.trans_being_edited_id)
-            
-        self.trans_being_edited = trans
-        self.trans_being_edited_id = book.insert_transaction(self.trans_being_edited)
-
-        self.guistate.set_trans_location(self.trans_being_edited_id)
-        self.current_transaction_id = self.trans_being_edited_id
+    def set_transcombo_index(self, indx):        
+        self.programmatic_transcombo_index = True
+        self.trans_type_combo.set_active(indx)
+        self.programmatic_transcombo_index = False      
 
     def reset_trans_view(self):
+        book = self.guistate.get_book()
         currindex = self.trans_type_combo.get_active_iter()
         currcode = self.trans_type_combo.get_model().get_value(currindex,1)
         currmodule = self.trans_type_combo.get_model().get_value(currindex,2)
-        editor_generator = currmodule.get_transaction_edit_interface_hook_from_code(currcode)
-        self.set_edit_transaction(currmodule.get_transaction_type_from_code(currcode)())
-        self.guistate.set_trans_location(self.trans_being_edited_id)
-        if not self.current_editor == None: 
+        editor_generator = currmodule.\
+            get_transaction_edit_interface_hook_from_code(currcode)
+        self.clear_trans_view()
+        trans_id = self.guistate.get_transaction_id()
+        self.current_editor = editor_generator(
+            book.get_transaction(trans_id), trans_id, currmodule,
+            self.main_vbox)
+
+    def clear_trans_view(self):
+        if self.current_editor != None: 
             self.current_editor.detach()
-        self.current_editor = editor_generator(self.trans_being_edited, self.trans_being_edited_id, currmodule, self.main_vbox)
 
-    def trans_type_changed(self, *args):
-        #only refresh the trans view if it was the user changing the 
-        #transaction type
-        if not self.programmatic_transcombo_index:
-            self.reset_trans_view()
+    def set_sensitivities(self):
+        for (sensitive_widget, action_code) in \
+                ( (self.back_button, BACKWARD),
+                  (self.forward_button, FORWARD),
+                  (self.new_button, NEW),
+                  (self.delete_button, DELETE),
+                  (self.trans_type_combo, TYPE_CHANGE),
+                  (self.books_combobox, BOOK_CHANGE), ):
+            sensitive_widget.set_sensitive(
+                self.guistate.action_allowed(action_code) )
 
-    def get_current_book(self):
-        return self.books_combobox_model[self.books_combobox.get_active()][2]
+    # Functions for use to event handlers, not used during initialization
 
-    def get_current_bookname(self):
-        return self.books_combobox_model[self.books_combobox.get_active()][1]
+    def set_trans_type_combo_to_current_and_reset_view(self):
+        book = self.guistate.get_book()
+        trans_id = self.guistate.get_transaction_id()
+        assert( trans_id != None )
+        assert( isinstance(trans_id, int) )
+        self.set_transcombo_index(
+            book.get_index_and_code_class_module_tripplet_for_transaction(
+                trans_id )[0] )
+        self.reset_trans_view()
+     
+    # Event handlers
 
     def on_books_combobox_changed(self, combobox):
         #don't mess with stuff until we've finished constructing the gui
         if not self.gui_built:
             return
 
-        self.new_requested = False
-        self.new_trans_id = None
-        self.trans_being_edited = None
-        self.current_transaction_id = None
-        if not self.current_editor == None: 
-            self.current_editor.detach()
-        self.current_editor = None
-
-        book = self.get_current_book()
-
-        # get the new book name
-        self.current_book_name = self.get_current_bookname()
-        self.guistate.set_book_name(self.get_current_bookname())
-        # the curent transaction becomes the latest in the new book, or
-        # None if there is none
-        self.current_transaction_id = book.get_latest_transaction_id()
-        self.guistate.set_trans_location(self.current_transaction_id)
-        if self.current_transaction_id == None:
-            self.guistate.set_state(GuiStateMachine.NO_TRANSACTIONS)
-        else:
-            self.guistate.set_state(GuiStateMachine.BROWSING)
+        self.set_book_from_combo()
+        self.refresh_trans_types_and_set_sensitivities()
         
-        self.refresh_trans_types()
-        self.set_initial_state()
+    def new_button_clicked(self, *args):
+        self.guistate.do_action(NEW)
+        self.set_trans_type_combo_to_current_and_reset_view()
+        self.set_sensitivities()
+
+    def delete_button_clicked(self, *args):
+        self.guistate.do_action(DELETE)
+        book = self.guistate.get_book()
+        if self.guistate.get_transaction_id() == None:
+            self.set_transcombo_index(COMBO_SELECTION_NONE)
+            self.clear_trans_view()
+        else:
+            self.set_trans_type_combo_to_current_and_reset_view()
+        self.set_sensitivities()
+        
+    def trans_type_changed(self, *args):
+        """Event handler for when the transaction type on a new transaction
+        changes
+        """
+        #only refresh the trans view if it was the user changing the 
+        #transaction type
+        if not self.programmatic_transcombo_index:
+            assert( self.gui_built ) # and never during gui building..
+
+            # odd, when this was called without the second argument, the
+            # program rightly crashed if a NEW transaction was created,
+            # followed by TYPE_CHANGE here. But, on re-launch, the memory of
+            # the old type transaction seemed to remain in the state
+            # stuff but was no longer available in the book. The
+            # zodb transaction should of prevented this, what gives?
+            self.guistate.do_action(TYPE_CHANGE,
+                                    self.trans_type_combo.get_active())
+            self.reset_trans_view()
+            self.set_sensitivities()
+
+    def forward_button_clicked(self, *args):
+        self.guistate.do_action(FORWARD)
+        self.set_trans_type_combo_to_current_and_reset_view()
+        self.set_sensitivities()
+    
+    def back_button_clicked(self, *args):
+        self.guistate.do_action(BACKWARD)
+        self.set_trans_type_combo_to_current_and_reset_view()
+        self.set_sensitivities()
+
+    def on_remove(self, window, event):
+        self.guistate.do_action(CLOSE)
+        main_quit()
+    

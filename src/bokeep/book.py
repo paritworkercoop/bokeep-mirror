@@ -1,3 +1,6 @@
+# python imports
+from itertools import chain
+
 import ZODB.config
 from persistent import Persistent
 import transaction
@@ -143,6 +146,31 @@ class BoKeepBook(Persistent):
             self.has_module_enabled(module_name) or \
             self.has_module_disabled(module_name)
 
+    def get_iter_of_code_class_module_tripplets(self):
+        # there has good to be a more functional way to write this..
+        # while also maintaining that good ol iterator don't waste memory
+        # property... some kind of nice nested generator expressions
+        # with some kind of functional/itertool y thing
+        for module in self.enabled_modules.itervalues():
+            for code in module.get_transaction_type_codes():
+                yield (code, module.get_transaction_type_from_code(code),
+                       module)
+            
+        
+
+    def get_index_and_code_class_module_tripplet_for_transaction(
+        self, trans_id):
+        actual_trans = self.get_transaction(trans_id)
+        for i, (code, cls, module) in \
+                enumerate(self.get_iter_of_code_class_module_tripplets()):
+            # the assumption here is that each class only co-responds
+            # to one code, that needs to be clarified in the module
+            # api
+            if module.has_transaction(trans_id) and \
+                    actual_trans.__class__ == cls:
+                return i, (code, cls, module)
+        return None, (None, None, None)
+
     @ends_with_commit
     def set_backend_module(self, backend_module_name):
         self.__backend_module = __import__(
@@ -161,7 +189,6 @@ class BoKeepBook(Persistent):
 
     backend_module = property(get_backend_module, set_backend_module)
 
-    @ends_with_commit
     def insert_transaction(self, trans):
         if len(self.trans_tree) == 0:
             key = 0
@@ -183,9 +210,9 @@ class BoKeepBook(Persistent):
         try:
             prev_key = self.trans_tree.maxKey(trans_id-1)
         except ValueError:
-            return None, None
+            return None
         else:
-            return prev_key, self.trans_tree[prev_key]
+            return prev_key
         
     def has_next_trans(self, trans_id):
         return trans_id < self.trans_tree.maxKey()
@@ -199,9 +226,9 @@ class BoKeepBook(Persistent):
         try:
             next_key = self.trans_tree.minKey(trans_id+1)
         except ValueError:
-            return None, None
+            return None
         else:
-            return next_key, self.trans_tree[next_key]
+            return next_key
 
     def get_transaction(self, trans_id):
         return self.trans_tree[trans_id]
@@ -212,7 +239,6 @@ class BoKeepBook(Persistent):
         else:
             return self.trans_tree.maxKey()
 
-    @ends_with_commit
     def remove_transaction(self, trans_id):
         del self.trans_tree[trans_id]
         self.backend_module.mark_transaction_for_removal(trans_id)

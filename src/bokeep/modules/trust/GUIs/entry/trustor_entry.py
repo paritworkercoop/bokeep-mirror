@@ -4,6 +4,9 @@ import sys
 
 from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
+# ZOPEDB imports
+import transaction
+
 from gtk import ListStore
 
 from decimal import Decimal
@@ -118,6 +121,7 @@ def main(argv):
 
     trust_trans = TrustMoneyInTransaction()
     trans_id = book.insert_transaction(trust_trans)
+    transaction.get().commit()
     w = trustor_entry(trust_trans, trans_id, trust_module, None, True)
     w.show()
     gtk.main()

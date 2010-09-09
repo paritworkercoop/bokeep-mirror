@@ -2,12 +2,15 @@ from unittest import TestCase, main
 
 import sys
 
+# ZODB imports
+import transaction
+
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
     Transaction, new_transaction_committing_thread, TransactionMirror
 from bokeep.util import ends_with_commit
 
-from bokeep.modules.test.module import Type1Transaction
+from bokeep.modules.test import Type1Transaction
 
 
 class BoKeepBasicTest(TestCase):
@@ -20,6 +23,7 @@ class BoKeepBasicTest(TestCase):
 
         self.trans_key = self.test_book_1.insert_transaction(
             Type1Transaction() )
+        transaction.get().commit()
 
     def test_interesting_sequence(self):
 
@@ -99,6 +103,7 @@ class BoKeepBasicTest(TestCase):
         trans = self.test_book_1.get_transaction(self.trans_key)
         self.assertEquals( trans.data, "blah maker" )
         self.test_book_1.remove_transaction(self.trans_key)
+        transaction.get().commit()
 
 if __name__ == "__main__":
     main()

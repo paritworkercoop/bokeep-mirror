@@ -299,6 +299,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
 
     payday = Payday(paydate, period_start, period_end)
     payday_trans_id = book.insert_transaction(payday)
+    # this can't really be the best place...
+    transaction.get().commit()
     payroll_module.add_payday(paydate, payday_serial,
                               payday_trans_id, payday)
 
@@ -335,6 +337,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
                         PaystubNetPaySummaryLine)))):
             payroll_module.remove_payday(paydate, payday_serial)
             book.remove_transaction(payday_trans_id)
+            transaction.get().commit()
             return PAYROLL_MISSING_NET_PAY, employee_name
 
         #net pay must be zero or greater than zero, cannot have negative net pay
@@ -350,6 +353,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
 
             payroll_module.remove_payday(paydate, payday_serial)
             book.remove_transaction(payday_trans_id)
+            transaction.get().commit()
             return (PAYROLL_TOO_MANY_DEDUCTIONS,
                     [employee_name, gross_pay, sum_ded] )
    
@@ -466,6 +470,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
     else:
         payroll_module.remove_payday(paydate, payday_serial)
         book.remove_transaction(payday_trans_id)
+        transaction.get().commit()
         return PAYROLL_ACCOUNTING_LINES_IMBALANCE, None
 
     print list(book.trans_tree.iteritems())
@@ -525,6 +530,7 @@ def payroll_remove_payday(bookname, date, serial, bookset=None):
         (payday_trans_id, payday) = payroll_module.get_payday(date, serial)
         payroll_module.remove_payday(date, serial)
         book.remove_transaction(payday_trans_id)
+        transaction.get().commit()
         return True
     else:
         return False

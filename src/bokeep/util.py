@@ -3,6 +3,7 @@ from threading import Thread, Condition, Event
 
 # ZODB
 import transaction
+from persistent import Persistent
 
 # simplifies common ussage of transaction.get().commit()
 def ends_with_commit(dec_function):
@@ -290,7 +291,7 @@ class ChangeMessageRecievingThread(MessageRecievingThread):
         if self.end_change_lookup_dict[message.entity_identifier] == message:
             del self.end_change_lookup_dict[message.entity_identifier]
 
-class FunctionAndDataDrivenStateMachine(object):
+class FunctionAndDataDrivenStateMachine(Persistent):
     """A state machine where posible transitions are tested by boolean
     functions and followed up by transition functions, and a piece of
     data is kept at all times and altered during each transition.
@@ -343,10 +344,9 @@ class FunctionAndDataDrivenStateMachine(object):
         """Initialize with transition rules for each state, and optionally
         include the initial state (default 0) or data (default None).
         """
-        if transition_function == None:
-            self.__transition_function = self.next_state_and_data_from_table
-        else:
-            self.__transition_function = transition_function
+        Persistent.__init__(self)
+        if transition_function != None:
+            self.transition_function = transition_function
         self.__transition_table = transition_table
         self.__data = data
         self.__state = initial_state
@@ -355,12 +355,12 @@ class FunctionAndDataDrivenStateMachine(object):
         return self.__data
 
     data = property(get_data)
-    
+
     def get_state(self):
         return self.__state
 
     state = property(get_state)
-
+    
     def next_state_and_data_from_table(self):
         new_state = self.__state
         new_data = self.__data
@@ -378,8 +378,11 @@ class FunctionAndDataDrivenStateMachine(object):
 
     table = property(get_table)
 
+    def transition_function(self):
+        return self.next_state_and_data_from_table()
+
     def advance_state_machine(self):
-        self.__state, self.__data = self.__transition_function()
+        self.__state, self.__data = self.transition_function()
 
     def run_until_steady_state(self):
         old_state = None

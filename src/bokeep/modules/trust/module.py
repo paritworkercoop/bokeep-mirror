@@ -179,6 +179,9 @@ class TrustModule(Persistent):
                 front_end_id, trust_trans, trustor_name)
         del self.transaction_track_database[front_end_id]
 
+    def has_transaction(self, front_end_id):
+        return front_end_id in self.transaction_track_database
+
     def get_trustors(self):
         self.ensure_trust_database()
         return self.trustors_database
