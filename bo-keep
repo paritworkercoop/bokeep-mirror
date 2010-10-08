@@ -4,17 +4,50 @@
 import gtk
 
 # Bo-Keep
-from bokeep.config import get_bokeep_bookset()
+from bokeep.config import \
+    get_bokeep_bookset, get_bokeep_config_paths, \
+    BoKeepConfigurationException, \
+    BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException
 from bokeep.book import BoKeepBookSet
 from bokeep.gui.mainwindow import MainWindow
 from bokeep.book_transaction import \
      new_transaction_committing_thread
+from bokeep.gui.config.bokeepconfig import establish_bokeep_config
+from bokeep.gui.config.bokeepdb import establish_bokeep_db
 
-def bokeep_main():
-    bookset = get_bokeep_bookset()
+# python
+from optparse import OptionParser
+
+def run_regular_bokeep(bookset):
     window = MainWindow(bookset)
     gtk.main()
     bookset.close_primary_connection()
+    # should close db handle as well eh?
+
+def bokeep_main():
+    op = OptionParser()
+    op.add_option("-c", "--config", dest="configfile",
+                  default=None,
+                  help="specify configuration file" )
+    (options, args) = op.parse_args()
+    config_paths = get_bokeep_config_paths(options.configfile)
+    try:
+        bookset = get_bokeep_bookset(config_paths[0])
+    except BoKeepConfigurationFileException, e:
+        config_path = establish_bokeep_config(config_paths, e)
+        if config_path == None:
+            return # should really something indicating exit status..
+        bookset = establish_bokeep_db(config_path, None)
+        if bookset == None:
+            return # should really something indicating exit status..
+    except BoKeepConfigurationDatabaseException, e:
+        bookset = establish_bokeep_db(config_path, e)
+        if bookset == None:
+            return # should really something indicating exit status..
+
+    # we'll do a return somewhere above
+    # to avoid hitting this it we need to just exit
+    run_regular_bokeep(bookset)
     
 if __name__ == "__main__":
-    bokeep_main()
+    bokeep_main() # should really look at return value and set exit status
