@@ -44,8 +44,8 @@ class BoKeepDBHandle(object):
         
 
 class BoKeepBookSet(object):
-    def __init__(self, books_db_conf_file):
-        self.zodb = ZODB.config.databaseFromURL(books_db_conf_file)
+    def __init__(self, zodb):
+        self.zodb = zodb
         self.dbhandle = self.get_new_dbhandle()
         self.establish_books_sub_db()
 

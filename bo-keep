@@ -4,14 +4,14 @@
 import gtk
 
 # Bo-Keep
-from bokeep.config import get_database_cfg_file
+from bokeep.config import get_bokeep_bookset()
 from bokeep.book import BoKeepBookSet
 from bokeep.gui.mainwindow import MainWindow
 from bokeep.book_transaction import \
      new_transaction_committing_thread
 
 def bokeep_main():
-    bookset = BoKeepBookSet( get_database_cfg_file() )
+    bookset = get_bokeep_bookset()
     window = MainWindow(bookset)
     gtk.main()
     bookset.close_primary_connection()
