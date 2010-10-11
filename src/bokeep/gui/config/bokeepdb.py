@@ -17,7 +17,15 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
-from bokeep.config import BoKeepConfigurationDatbaseException
+# python imports
+from os.path import \
+    exists, basename, split as path_split, join as path_join
+from os import mkdir
+
+# bokeep imports
+from bokeep.config import \
+    BoKeepConfigurationDatbaseException, get_bokeep_configuration, \
+    DEFAULT_BOOKS_FILESTORAGE_FILE
 
 def establish_bokeep_db(config_path, db_exception):
     assert(db_exception == None or
@@ -25,4 +33,36 @@ def establish_bokeep_db(config_path, db_exception):
     if db_exception != None:
         print db_exception.message
         print "BoKeep requires a working database to operate"
+        config = get_bokeep_configuration(config_path)
+        filestorage_path = config.get(ZODB_CONFIG_SECTION,
+                                      ZODB_CONFIG_FILESTORAGE)
+        new_path = raw_input(
+            "Where should the database be located?\n"
+            "default: %s\n> " % config_path)
+        if new_path == '':
+            new_path = config_path
+        new_path = abspath(new_path)
+        if not exists(new_path):
+            directory, filename = split_path(new_path)
+            if not exists(directory):
+                makedirs(directory)
+            # the user is welcome to just specify a directory without
+            # a file, and we'll use the default filestorage filename
+            if filename == '':
+                new_path = path_join(directory,
+                                     DEFAULT_BOOKS_FILESTORAGE_FILE)
+            try:
+                fs = FileStorage(new_path, create=True )
+                db = DB(fs)
+                db.close()
+            except IOError, e:
+                print "there was a problem creating the database", \
+                    new_path, e.message
+                return None        
+        try:
+            fs = FileStorage(new_path, create=False )
+            return BoKeepBookSet( DB(fs) )
+        except IOError, e:
+            pass
+
     return None

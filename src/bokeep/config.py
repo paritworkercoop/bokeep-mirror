@@ -33,8 +33,8 @@ CONFIG_HOME = expanduser("~/%s" % CONFIG_FILE)
 
 ZODB_CONFIG_SECTION = 'zodb'
 ZODB_CONFIG_FILESTORAGE = 'filestorage'
-DEFAULT_BOOKS_PICKLE_DIR = 'bo-keep-database'
-DEFAULT_BOOKS_PICKLE_FILE = 'bokeep_books.fs'
+DEFAULT_BOOKS_FILESTORAGE_DIR = 'bo-keep-database'
+DEFAULT_BOOKS_FILESTORAGE_FILE = 'bokeep_books.fs'
 
 DATABASE_VERSION_SUBDB_KEY = 'db_version'
 
@@ -52,8 +52,8 @@ class BoKeepConfigurationDatabaseException(BoKeepConfigurationException):
 def initialize_config(config):
     config.add_section(ZODB_CONFIG_SECTION)
     config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
-               expanduser("~/%s/%s" % (DEFAULT_BOOKS_PICKLE_DIR,
-                                       DEFAULT_BOOKS_PICKLE_FILE) ) )
+               expanduser("~/%s/%s" % (DEFAULT_BOOKS_FILESTORAGE_DIR,
+                                       DEFAULT_BOOKS_FILESTORAGE_FILE) ) )
 
 def create_config_file(path):
     """Creates a configuration file at path.
