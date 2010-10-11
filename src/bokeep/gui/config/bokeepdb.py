@@ -27,6 +27,48 @@ from bokeep.config import \
     BoKeepConfigurationDatbaseException, get_bokeep_configuration, \
     DEFAULT_BOOKS_FILESTORAGE_FILE
 
+def do_new_book(bookset):
+    newbookname = raw_input("What is the new book called?\n"
+                            "(hit with nothing to cancel)\n> ")
+    if newbookname != '':
+        bookset.add_book(newbookname)
+    # actual gui should prevent duplicate book names
+    print "\n"
+
+def do_remove_book(bookset):
+    newbookname = raw_input("What is the book being removed called?\n"
+                            "(hit with nothing to cancel)\n> ")
+    if newbookname != '' and bookset.has_book(newbookname)
+        bookset.remove_book(newbookname)
+    print "\n"    
+
+def do_change_book(bookset):
+    newbookname = raw_input("What is the book being changed called?\n"
+                            "(hit with nothing to cancel)\n> ")
+    if newbookname != '' and bookset.has_book(newbookname):
+        print "change", newbookname
+    print "\n"
+
+def do_list_books(bookset):
+    print "\n".join(name for name, book in bookset.iterbooks() )
+    print "\n"
+
+def manage_available_books(bookset):
+    while True:
+        option = raw_input("Manage your books, "
+                           "New (N/n), Delete (D/d), Change (C/c), "
+                           "List (L/l) Quit (Q/q)\n> " )
+        if option in "Nn":
+            do_new_book(bookset)
+        elif option in "Dd":
+            do_remove_book(bookset)
+        elif option in "Cc":
+            do_change_book(bookset)
+        elif option in "Ll":
+            do_list_books(bookset)
+        elif option in "Qq":
+            break
+
 def establish_bokeep_db(config_path, db_exception):
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatbaseException))
