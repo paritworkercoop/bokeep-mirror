@@ -24,10 +24,10 @@ from persistent import Persistent
 import transaction
 from BTrees.IOBTree import IOBTree
 
-from backend_modules.module import BackendModule
+from backend_plugins.module import BackendModule
 from util import ends_with_commit
 
-DEFAULT_BACKEND_MODULE = "bokeep.backend_modules.null"
+DEFAULT_BACKEND_MODULE = "bokeep.backend_plugins.null"
 
 BOOKS_SUB_DB_KEY = 'books'
 

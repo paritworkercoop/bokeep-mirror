@@ -23,7 +23,7 @@ import sys
 from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
 from gtk import ListStore, TreeViewColumn, CellRendererText
-from bokeep.modules.trust import \
+from bokeep.plugins.trust import \
     TrustMoneyInTransaction, TrustMoneyOutTransaction
 
 from datetime import datetime

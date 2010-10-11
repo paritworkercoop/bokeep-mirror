@@ -28,9 +28,9 @@ import transaction
 # bo-keep imports
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bokeep.modules.trust import \
+from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
-from bokeep.backend_modules.module import BoKeepBackendException
+from bokeep.backend_plugins.module import BoKeepBackendException
 
 from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
@@ -39,7 +39,7 @@ import gtk
 
 from datetime import datetime
 
-from bokeep.modules.trust.GUIs.management.trustor_transactions import trustor_transactions
+from bokeep.plugins.trust.GUIs.management.trustor_transactions import trustor_transactions
 
 from os.path import abspath, dirname, join, exists
 
@@ -48,7 +48,7 @@ class trustor_management(GladeWindow):
         self.bookset = BoKeepBookSet( get_database_cfg_file() )
         self.book = self.bookset.get_book(bookname)
         self.backend = self.book.get_backend_module()
-        self.trust_module = self.book.get_module('bokeep.modules.trust')
+        self.trust_module = self.book.get_module('bokeep.plugins.trust')
         self.trustors = self.trust_module.get_trustors()
         self.current_name = None
 

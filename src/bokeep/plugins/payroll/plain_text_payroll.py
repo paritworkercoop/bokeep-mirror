@@ -31,11 +31,11 @@ from cdnpayroll.paystub_line import sum_paystub_lines
 from cdnpayroll.vacation_pay import VacationPayoutTooMuchException
 
 # Bo-Keep (keeper of the Bo) imports
-from bokeep.modules.payroll.payroll import PaystubWageLine
+from bokeep.plugins.payroll.payroll import PaystubWageLine
 
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bokeep.modules.payroll.payroll import Payday, Employee, \
+from bokeep.plugins.payroll.payroll import Payday, Employee, \
     PaystubCalculatedLine, PaystubNetPaySummaryLine
 from bokeep.util import ends_with_commit
 
@@ -44,7 +44,7 @@ from datetime import date, datetime
 
 from decimal import Decimal
 
-PAYROLL_MODULE = 'bokeep.modules.payroll'
+PAYROLL_MODULE = 'bokeep.plugins.payroll'
 
 RUN_PAYROLL_SUCCEEDED = 0
 PAYROLL_ALREADY_EXISTS = 1 

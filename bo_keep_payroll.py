@@ -3,7 +3,7 @@ from sys import argv
 
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bokeep.modules.payroll.plain_text_payroll import \
+from bokeep.plugins.payroll.plain_text_payroll import \
     payroll_payday_command, payroll_employee_command
 
 def bokeep_main():

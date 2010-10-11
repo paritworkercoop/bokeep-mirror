@@ -31,7 +31,7 @@ from decimal import Decimal
 
 from os.path import abspath, dirname, join, exists
 
-from bokeep.modules.trust import \
+from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 
 from bokeep.book import BoKeepBookSet
@@ -135,7 +135,7 @@ class trustor_entry(GladeWindow):
 def main(argv):
     bookset = BoKeepBookSet( get_database_cfg_file() )
     book = bookset.get_book('testbook')
-    trust_module = book.get_module('bokeep.modules.trust')
+    trust_module = book.get_module('bokeep.plugins.trust')
 
     trust_trans = TrustMoneyInTransaction()
     trans_id = book.insert_transaction(trust_trans)
