@@ -42,11 +42,71 @@ def do_remove_book(bookset):
         bookset.remove_book(newbookname)
     print "\n"    
 
+def do_plugin_add(book):
+    new_plugin = raw_input("Name of new plugin, blank to cancel\n> ")
+    if new_plugin == '': return
+    book.add_module(new_plugin)
+
+def do_plugin_config(book):
+    plugin_name = raw_input("Name of new plugin, blank to cancel\n> ")
+    if plugin_name == '': return
+    book.get_module(plugin_name).do_config()
+
+def do_plugin_enable(book):
+    plugin_name = raw_input("Name of plugin, blank to cancel\n> ")
+    if plugin_name == '': return
+    book.get_module(plugin_name)
+
+def do_plugin_disable(book):
+    plugin_name = raw_input("Name of plugin, blank to cancel\n> ")
+    if plugin_name == '': return
+    book.disable_plugin(plugin_name)
+
+def do_set_backend_plugin(book):
+    plugin_name = raw_input("Name of backend plugin, blank to cancel\n> ")
+    if plugin_name == '': return
+    book.set_backend_module(plugin_name)
+
+def do_backend_plugin_config(book):
+    book.get_backend_module().do_config()
+
+def do_plugin_listing(book):
+    print "enabled modules"
+    print "\n".join(sorted(book.enabled_modules.iterkeys()))
+    print 
+    print "disabled modules"
+    print "\n".join(sorted(book.disabled_modules.iterkeys()))
+    print
+
+    print "backend module:", book.get_backend_module()
+
 def do_change_book(bookset):
     newbookname = raw_input("What is the book being changed called?\n"
                             "(hit with nothing to cancel)\n> ")
     if newbookname != '' and bookset.has_book(newbookname):
-        print "change", newbookname
+        book = bookset.get_book(newbookname)
+        task = raw_input("Add plugin (A/a), Config plugin (C/c), "
+                         "Enable plugin (E/e), Disable plugin (D/d), "
+                         "Set backend plugin (S/s), "
+                         "Backend plugin config (B/b), "
+                         "Plugin listing (L/l), "
+                         "blank for no action\n> ")
+        if task in "Aa":
+            do_plugin_add(book)
+        elif task in "Cc":
+            do_plugin_config(book)
+        elif task in "Ee":
+            do_plugin_enable(book)
+        elif task in "Dd":
+            do_plugin_disable(book)
+        elif task in "Ss":
+            do_set_backend_plugin(book)
+        elif task in "Bb":
+            do_backend_plugin_config(book)
+        elif task in "Ll":
+            do_plugin_listing(book)
+        else:
+            return
     print "\n"
 
 def do_list_books(bookset):
