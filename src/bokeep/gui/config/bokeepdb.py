@@ -24,7 +24,7 @@ from os import mkdir
 
 # bokeep imports
 from bokeep.config import \
-    BoKeepConfigurationDatbaseException, get_bokeep_configuration, \
+    BoKeepConfigurationDatabaseException, get_bokeep_configuration, \
     DEFAULT_BOOKS_FILESTORAGE_FILE
 
 def do_new_book(bookset):
@@ -38,7 +38,7 @@ def do_new_book(bookset):
 def do_remove_book(bookset):
     newbookname = raw_input("What is the book being removed called?\n"
                             "(hit with nothing to cancel)\n> ")
-    if newbookname != '' and bookset.has_book(newbookname)
+    if newbookname != '' and bookset.has_book(newbookname):
         bookset.remove_book(newbookname)
     print "\n"    
 
