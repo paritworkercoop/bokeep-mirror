@@ -27,7 +27,7 @@ def answer_yes(msg):
     return answer in ("Yes", "yes", "y", "Y")
         
 
-def establish_bokeep_config(paths, config_exception):
+def establish_bokeep_config(mainwindow, paths, config_exception):
     assert(isinstance(config_exception, BoKeepConfigurationFileException))
     print config_exception.message
     print "BoKeep requires a configuration file to operate"

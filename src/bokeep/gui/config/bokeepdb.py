@@ -119,7 +119,7 @@ def do_list_books(bookset):
     print "\n".join(name for name, book in bookset.iterbooks() )
     print "\n"
 
-def manage_available_books(bookset):
+def manage_available_books(mainwindow, bookset):
     while True:
         option = raw_input("Manage your books, "
                            "New (N/n), Delete (D/d), Change (C/c), "
@@ -135,7 +135,7 @@ def manage_available_books(bookset):
         elif option in "Qq":
             break
 
-def establish_bokeep_db(config_path, db_exception):
+def establish_bokeep_db(mainwindow, config_path, db_exception):
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
     if db_exception != None:

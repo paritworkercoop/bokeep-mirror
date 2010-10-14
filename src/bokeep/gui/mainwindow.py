@@ -97,26 +97,30 @@ class MainWindow(object):
         try:
             self.bookset = get_bokeep_bookset(config_paths[0])
         except BoKeepConfigurationFileException, e:
-            config_path = establish_bokeep_config(config_paths, e)
+            config_path = establish_bokeep_config(
+                self.mainwindow, config_paths, e)
             if config_path == None:
                 self.application_shutdown()
                 return
-            self.bookset = establish_bokeep_db(config_path, None)
+            self.bookset = establish_bokeep_db(
+                self.mainwindow, config_path, None)
             if self.bookset == None:
                 self.application_shutdown()
                 return
-            manage_available_books(self.bookset)
+            manage_available_books(
+                self.mainwindow, self.bookset)
         except BoKeepConfigurationDatabaseException, e:
             config_path = first_config_file_in_list_to_exist_and_parse(
                 config_paths)
             if config_path == None:
                 self.application_shutdown()
                 return
-            self.bookset = establish_bokeep_db(config_path, e)
+            self.bookset = establish_bokeep_db(
+                self.mainwindow, config_path, e)
             if self.bookset == None:
                 self.application_shutdown()
                 return
-            manage_available_books(self.bookset)
+            manage_available_books(self.mainwindow, self.bookset)
 
         self.guistate = (
             self.bookset.get_dbhandle().get_sub_database_do_cls_init(
