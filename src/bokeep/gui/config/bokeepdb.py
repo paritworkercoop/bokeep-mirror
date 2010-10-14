@@ -141,36 +141,36 @@ def establish_bokeep_db(config_path, db_exception):
     if db_exception != None:
         print db_exception.message
         print "BoKeep requires a working database to operate"
-        config = get_bokeep_configuration(config_path)
-        filestorage_path = config.get(ZODB_CONFIG_SECTION,
-                                      ZODB_CONFIG_FILESTORAGE)
-        new_path = raw_input(
-            "Where should the database be located?\n"
-            "default: %s\n> " % filestorage_path)
-        if new_path == '':
-            new_path = filestorage_path
-        new_path = abspath(new_path)
-        if not exists(new_path):
-            directory, filename = path_split(new_path)
-            if not exists(directory):
-                makedirs(directory)
-            # the user is welcome to just specify a directory without
-            # a file, and we'll use the default filestorage filename
-            if filename == '':
-                new_path = path_join(directory,
-                                     DEFAULT_BOOKS_FILESTORAGE_FILE)
-            try:
-                fs = FileStorage(new_path, create=True )
-                db = DB(fs)
-                db.close()
-            except IOError, e:
-                print "there was a problem creating the database", \
-                    new_path, e.message
-                return None        
+    
+    config = get_bokeep_configuration(config_path)
+    filestorage_path = config.get(ZODB_CONFIG_SECTION,
+                                  ZODB_CONFIG_FILESTORAGE)
+    new_path = raw_input(
+        "Where should the database be located?\n"
+        "default: %s\n> " % filestorage_path)
+    if new_path == '':
+        new_path = filestorage_path
+    new_path = abspath(new_path)
+    if not exists(new_path):
+        directory, filename = path_split(new_path)
+        if not exists(directory):
+            makedirs(directory)
+        # the user is welcome to just specify a directory without
+        # a file, and we'll use the default filestorage filename
+        if filename == '':
+            new_path = path_join(directory,
+                                 DEFAULT_BOOKS_FILESTORAGE_FILE)
         try:
-            fs = FileStorage(new_path, create=False )
-            return BoKeepBookSet( DB(fs) )
+            fs = FileStorage(new_path, create=True )
+            db = DB(fs)
+            db.close()
         except IOError, e:
-            pass
-
+            print "there was a problem creating the database", \
+                new_path, e.message
+            return None        
+    try:
+        fs = FileStorage(new_path, create=False )
+        return BoKeepBookSet( DB(fs) )
+    except IOError, e:
+        pass
     return None

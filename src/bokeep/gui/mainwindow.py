@@ -36,6 +36,16 @@ from bokeep.book_transaction import \
      Transaction
 from bokeep.gui.gladesupport.glade_util import \
      load_glade_file_get_widgets_and_connect_signals
+from bokeep.config import \
+    get_bokeep_bookset, get_bokeep_config_paths, \
+    first_config_file_in_list_to_exist_and_parse, \
+    BoKeepConfigurationException, \
+    BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException
+from bokeep.book import BoKeepBookSet
+from bokeep.gui.config.bokeepconfig import establish_bokeep_config
+from bokeep.gui.config.bokeepdb import \
+    establish_bokeep_db, manage_available_books
+
 
 GUI_STATE_SUB_DB = 'gui_state'
 
@@ -48,10 +58,11 @@ COMBO_SELECTION_NONE = -1
 class MainWindow(object):
     # Functions for window initialization 
 
-    def __init__(self, bookset):
+    def __init__(self, options, args):
         self.gui_built = False
         self.current_editor = None
-        self.bookset = bookset
+        self.cmdline_options = options
+        self.cmdline_args = args
         self.build_gui()
         self.programmatic_transcombo_index = False
 
@@ -60,6 +71,17 @@ class MainWindow(object):
         # self.startup_event_handler to disconnect itself
         self.startup_event_handler = self.mainwindow.connect(
             "window-state-event", self.startup_event_handler )
+        # should we do an emit to ensure it happens, or be satisfyed
+        # that it always happens in tests?
+
+    def application_shutdown(self):
+        if hasattr(self, 'guistate'):
+            self.guistate.do_action(CLOSE)
+        if hasattr(self, 'bookset') and self.bookset != None:
+            self.bookset.close()
+            # or, should I be only doing
+            # self.bookset.close_primary_connection() instead..?
+        main_quit()       
 
     def startup_event_handler(self, *args):
         # this should only be programmed to run once
@@ -69,15 +91,42 @@ class MainWindow(object):
         # cause the event handler to fail
         delattr(self, 'startup_event_handler')
         assert(not self.gui_built)
-        self.after_background_load()
-        assert(self.gui_built)
 
-    def build_gui(self):
+        config_paths = get_bokeep_config_paths(
+            self.cmdline_options.configfile)
+        try:
+            self.bookset = get_bokeep_bookset(config_paths[0])
+        except BoKeepConfigurationFileException, e:
+            config_path = establish_bokeep_config(config_paths, e)
+            if config_path == None:
+                self.application_shutdown()
+                return
+            self.bookset = establish_bokeep_db(config_path, None)
+            if self.bookset == None:
+                self.application_shutdown()
+                return
+            manage_available_books(self.bookset)
+        except BoKeepConfigurationDatabaseException, e:
+            config_path = first_config_file_in_list_to_exist_and_parse(
+                config_paths)
+            if config_path == None:
+                self.application_shutdown()
+                return
+            self.bookset = establish_bokeep_db(config_path, e)
+            if self.bookset == None:
+                self.application_shutdown()
+                return
+            manage_available_books(self.bookset)
+
         self.guistate = (
             self.bookset.get_dbhandle().get_sub_database_do_cls_init(
                 GUI_STATE_SUB_DB, BoKeepGuiState) )
         transaction.get().commit()
-        
+
+        self.after_background_load()
+        assert(self.gui_built)
+
+    def build_gui(self):
         glade_file = join( dirname( abspath(get_this_module_file_path() ) ),
                            'glade', 'bokeep_main_window.glade' )
         load_glade_file_get_widgets_and_connect_signals(
@@ -265,6 +314,5 @@ class MainWindow(object):
         self.set_sensitivities()
 
     def on_remove(self, window, event):
-        self.guistate.do_action(CLOSE)
-        main_quit()
+        self.application_shutdown()
     
