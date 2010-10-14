@@ -19,13 +19,19 @@
 
 # python imports
 from os.path import \
-    exists, basename, split as path_split, join as path_join
-from os import mkdir
+    exists, basename, split as path_split, join as path_join, abspath
+from os import makedirs
+
+# ZODB imports
+from ZODB.FileStorage import FileStorage
+from ZODB import DB
 
 # bokeep imports
 from bokeep.config import \
     BoKeepConfigurationDatabaseException, get_bokeep_configuration, \
-    DEFAULT_BOOKS_FILESTORAGE_FILE
+    DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
+    ZODB_CONFIG_FILESTORAGE
+from bokeep.book import BoKeepBookSet
 
 def do_new_book(bookset):
     newbookname = raw_input("What is the new book called?\n"
@@ -131,7 +137,7 @@ def manage_available_books(bookset):
 
 def establish_bokeep_db(config_path, db_exception):
     assert(db_exception == None or
-           isinstance(db_exception, BoKeepConfigurationDatbaseException))
+           isinstance(db_exception, BoKeepConfigurationDatabaseException))
     if db_exception != None:
         print db_exception.message
         print "BoKeep requires a working database to operate"
@@ -140,12 +146,12 @@ def establish_bokeep_db(config_path, db_exception):
                                       ZODB_CONFIG_FILESTORAGE)
         new_path = raw_input(
             "Where should the database be located?\n"
-            "default: %s\n> " % config_path)
+            "default: %s\n> " % filestorage_path)
         if new_path == '':
-            new_path = config_path
+            new_path = filestorage_path
         new_path = abspath(new_path)
         if not exists(new_path):
-            directory, filename = split_path(new_path)
+            directory, filename = path_split(new_path)
             if not exists(directory):
                 makedirs(directory)
             # the user is welcome to just specify a directory without

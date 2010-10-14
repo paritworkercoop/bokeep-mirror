@@ -6,6 +6,7 @@ import gtk
 # Bo-Keep
 from bokeep.config import \
     get_bokeep_bookset, get_bokeep_config_paths, \
+    first_config_file_in_list_to_exist_and_parse, \
     BoKeepConfigurationException, \
     BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException
 from bokeep.book import BoKeepBookSet
@@ -41,6 +42,10 @@ def bokeep_main():
         if bookset == None:
             return # should really something indicating exit status..
     except BoKeepConfigurationDatabaseException, e:
+        config_path = first_config_file_in_list_to_exist_and_parse(
+            config_paths)
+        if config_path == None:
+            return # should really something indicating exit status..
         bookset = establish_bokeep_db(config_path, e)
         if bookset == None:
             return # should really something indicating exit status..

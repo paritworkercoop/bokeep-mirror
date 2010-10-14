@@ -88,7 +88,7 @@ def first_config_file_in_list_to_exist_and_parse(files):
         files_read = config.read( [config_file] )
         assert( len(files_read) == 1 or len(files_read) == 0 )
         if len(files_read) == 1:
-            return i
+            return config_file
     return None
 
 def get_bokeep_config_paths(provided_path=None):
@@ -107,7 +107,7 @@ def get_bokeep_configuration(provided_path=None):
             file_list[0] )
     else:
         config = ConfigParser()
-        config.read( (file_list[good_config],)) 
+        config.read( (good_config,)) 
 
     return config
     
@@ -122,7 +122,7 @@ def get_bokeep_bookset(provided_config_path=None):
     filestorage_path = config.get(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE)
 
     if not exists(filestorage_path):
-        raise BoKeepConfigurationFileException(
+        raise BoKeepConfigurationDatabaseException(
             "bokeep database filestorage path %s does not exist" %
             filestorage_path)
     try:
