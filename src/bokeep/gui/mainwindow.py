@@ -52,15 +52,32 @@ class MainWindow(object):
         self.gui_built = False
         self.current_editor = None
         self.bookset = bookset
-        self.guistate = self.bookset.get_dbhandle().\
-            get_sub_database_do_cls_init(
-            GUI_STATE_SUB_DB, BoKeepGuiState)
-        transaction.get().commit()
         self.build_gui()
-        self.gui_built = True
         self.programmatic_transcombo_index = False
 
+        # program in an event that will only run once on startup
+        # the startup_event_handler function will use
+        # self.startup_event_handler to disconnect itself
+        self.startup_event_handler = self.mainwindow.connect(
+            "window-state-event", self.startup_event_handler )
+
+    def startup_event_handler(self, *args):
+        # this should only be programmed to run once
+        assert( hasattr(self, 'startup_event_handler') )
+        self.mainwindow.disconnect(self.startup_event_handler)
+        # remove the attribute startup_event_handler to intentionally
+        # cause the event handler to fail
+        delattr(self, 'startup_event_handler')
+        assert(not self.gui_built)
+        self.after_background_load()
+        assert(self.gui_built)
+
     def build_gui(self):
+        self.guistate = (
+            self.bookset.get_dbhandle().get_sub_database_do_cls_init(
+                GUI_STATE_SUB_DB, BoKeepGuiState) )
+        transaction.get().commit()
+        
         glade_file = join( dirname( abspath(get_this_module_file_path() ) ),
                            'glade', 'bokeep_main_window.glade' )
         load_glade_file_get_widgets_and_connect_signals(
@@ -71,6 +88,13 @@ class MainWindow(object):
         cell = CellRendererText()
         self.books_combobox.pack_start(cell, True)
         self.books_combobox.add_attribute(cell, 'text', 0)
+        self.set_sensitivities()
+        
+    def after_background_load(self):
+        # we should do some checking that self.guistate is still reasonable
+        # it is possible at this point that the current book or
+        # current transaction could be gone due to someone playing with
+        # the config or database in some way
 
         cur_book_index = None
         for i, (book_name, book) in enumerate(self.bookset.iterbooks()):
@@ -87,6 +111,15 @@ class MainWindow(object):
         
         self.refresh_trans_types_and_set_sensitivities()
 
+        self.gui_built = True        
+
+    def closedown_for_config(self):
+        self.guistate.do_action(CLOSE)
+        self.books_combobox.set_active(COMBO_SELECTION_NONE)
+        self.books_combobox_model.clear()
+        self.set_transcombo_index(COMBO_SELECTION_NONE)
+        self.trans_type_model.clear()
+        
     # Functions for window initialization and use thereafter
 
     def set_book_from_combo(self):
@@ -158,8 +191,11 @@ class MainWindow(object):
                   (self.delete_button, DELETE),
                   (self.trans_type_combo, TYPE_CHANGE),
                   (self.books_combobox, BOOK_CHANGE), ):
-            sensitive_widget.set_sensitive(
-                self.guistate.action_allowed(action_code) )
+                if self.gui_built:
+                    sensitive_widget.set_sensitive(
+                        self.guistate.action_allowed(action_code) )
+                else:
+                    sensitive_widget.set_sensitive(False)
 
     # Functions for use to event handlers, not used during initialization
 

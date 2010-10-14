@@ -292,6 +292,8 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
                     (self.state == BoKeepGuiState.BROWSING or 
                      self.state == BoKeepGuiState.NEW_TRANSACTION) and 
                     self.data[BOOK].has_previous_trans(self.data[TRANS]) ),
+                # could ammend this to check if there are even
+                # more than one type available
                 TYPE_CHANGE: lambda: (
                     self.state == BoKeepGuiState.NEW_TRANSACTION),
 

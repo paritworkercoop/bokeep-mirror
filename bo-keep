@@ -14,7 +14,8 @@ from bokeep.gui.mainwindow import MainWindow
 from bokeep.book_transaction import \
      new_transaction_committing_thread
 from bokeep.gui.config.bokeepconfig import establish_bokeep_config
-from bokeep.gui.config.bokeepdb import establish_bokeep_db
+from bokeep.gui.config.bokeepdb import \
+    establish_bokeep_db, manage_available_books
 
 # python
 from optparse import OptionParser
@@ -41,6 +42,7 @@ def bokeep_main():
         bookset = establish_bokeep_db(config_path, None)
         if bookset == None:
             return # should really something indicating exit status..
+        manage_available_books(bookset)
     except BoKeepConfigurationDatabaseException, e:
         config_path = first_config_file_in_list_to_exist_and_parse(
             config_paths)
@@ -49,7 +51,8 @@ def bokeep_main():
         bookset = establish_bokeep_db(config_path, e)
         if bookset == None:
             return # should really something indicating exit status..
-
+        manage_available_books(bookset)
+    
     # we'll do a return somewhere above
     # to avoid hitting this it we need to just exit
     run_regular_bokeep(bookset)
