@@ -26,6 +26,7 @@
                         <property name="label" translatable="yes">Configuration</property>
                         <property name="visible">True</property>
                         <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_bokeep_config"/>
                         <child internal-child="image">
                           <widget class="GtkImage" id="image1">
                             <property name="visible">True</property>
@@ -39,6 +40,7 @@
                         <property name="label" translatable="yes">Book management</property>
                         <property name="visible">True</property>
                         <property name="use_stock">False</property>
+                        <signal name="activate" handler="on_bokeep_book_config"/>
                         <child internal-child="image">
                           <widget class="GtkImage" id="image2">
                             <property name="visible">True</property>

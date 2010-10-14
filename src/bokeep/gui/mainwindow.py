@@ -167,6 +167,7 @@ class MainWindow(object):
         self.gui_built = True        
 
     def closedown_for_config(self):
+        self.gui_built = False
         self.guistate.do_action(CLOSE)
         self.books_combobox.set_active(COMBO_SELECTION_NONE)
         self.books_combobox_model.clear()
@@ -320,3 +321,30 @@ class MainWindow(object):
     def on_remove(self, window, event):
         self.application_shutdown()
     
+    def on_bokeep_config(self, *args):
+        assert( self.gui_built )
+        self.closedown_for_config()
+        assert( not self.gui_built )
+        # this probably isn't right, should actually retain config path
+        # from startup or even the config object, and adjust this api
+        # to take tht instead
+        config_paths = get_bokeep_config_paths(
+            self.cmdline_options.configfile)
+        # major flaw right now is that we don't want this to
+        # re-open the same DB at the end, and we need to do something
+        # the the return value and seting bookset
+        establish_bokeep_db(self.mainwindow, config_paths[0], None)
+        self.after_background_load()
+        # we need to act differently if its now a tottally new bookset
+        # need to do stuff to self.guistate that is more radical
+        # then the ussual checks that after_background_load() will be
+        # doing
+        assert( self.gui_built )
+
+    def on_bokeep_book_config(self, *args):
+        assert( self.gui_built )
+        self.closedown_for_config()
+        assert( not self.gui_built )
+        manage_available_books(self.mainwindow, self.bookset )
+        self.after_background_load()
+        assert( self.gui_built )
