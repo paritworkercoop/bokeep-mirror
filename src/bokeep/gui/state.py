@@ -208,6 +208,8 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
             new_transaction_instance)
         module.register_transaction(new_transaction_id,
                                     new_transaction_instance)
+        self.get_book().get_backend_module().mark_transaction_dirty(
+                new_transaction_id, new_transaction_instance )
         return new_transaction_id
 
     # state machine transition functions
@@ -240,6 +242,13 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
             get_index_and_code_class_module_tripplet_for_transaction(
             self.data[TRANS])
         module.remove_transaction(self.data[TRANS])
+        # the below calls backend.mark_transaction_for_removal so we don't
+        # need to take care of that like we did in
+        # __new_transaction_using_current_type and __type_change
+        # where state.py ended up responsible for calling 
+        # backend.mark_transaction_dirty
+        #
+        # This is kind of inconsistent, eh?
         self.data[BOOK].remove_transaction(self.data[TRANS])
         return (self.data[BOOK], None)
 
@@ -313,3 +322,14 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
 
     def get_book(self):
         return self.data[BOOK]
+
+    def record_trans_dirty_in_backend(self):
+        book = self.get_book()
+        trans_id = self.get_transaction_id()
+        if book != None and trans_id != None:
+            book.get_backend_module().mark_transaction_dirty(
+                trans_id, book.get_transaction(trans_id) )
+
+    record_trans_dirty_in_backend_with_commit = \
+        ends_with_commit(record_trans_dirty_in_backend)
+
