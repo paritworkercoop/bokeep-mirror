@@ -18,8 +18,6 @@
 # Author: Mark Jenkins <mark@parit.ca>
 #!/usr/bin/env python
 
-import sys
-
 from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
 # ZOPEDB imports
@@ -33,9 +31,6 @@ from os.path import abspath, dirname, join, exists
 
 from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
-
-from bokeep.book import BoKeepBookSet
-from bokeep.config import get_database_cfg_file
 
 class trustor_entry(GladeWindow):
     def __init__(self, trust_trans, trans_id, trust_module, gui_parent, editable):
@@ -132,17 +127,3 @@ class trustor_entry(GladeWindow):
         if self.gui_built:
             self.update_trans()
 
-def main(argv):
-    bookset = BoKeepBookSet( get_database_cfg_file() )
-    book = bookset.get_book('testbook')
-    trust_module = book.get_module('bokeep.plugins.trust')
-
-    trust_trans = TrustMoneyInTransaction()
-    trans_id = book.insert_transaction(trust_trans)
-    transaction.get().commit()
-    w = trustor_entry(trust_trans, trans_id, trust_module, None, True)
-    w.show()
-    gtk.main()
-
-if __name__ == '__main__':
-    main(sys.argv)
