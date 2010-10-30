@@ -15,19 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
-#!/usr/bin/env python
+# Authors: Jamie Campbell <jamie@parit.ca>, Mark Jenkins <mark@parit.ca>
     
 # python imports
-import sys
 from decimal import Decimal
 
 # zopedb imports
 import transaction
 
 # bo-keep imports
-from bokeep.config import get_database_cfg_file
-from bokeep.book import BoKeepBookSet
 from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 from bokeep.backend_plugins.module import BoKeepBackendException
@@ -44,11 +40,8 @@ from bokeep.plugins.trust.GUIs.management.trustor_transactions import trustor_tr
 from os.path import abspath, dirname, join, exists
 
 class trustor_management(GladeWindow):
-    def __init__(self, bookname):
-        self.bookset = BoKeepBookSet( get_database_cfg_file() )
-        self.book = self.bookset.get_book(bookname)
-        self.backend = self.book.get_backend_module()
-        self.trust_module = self.book.get_module('bokeep.plugins.trust')
+    def __init__(self, trust_module):
+        self.trust_module = trust_module
         self.trustors = self.trust_module.get_trustors()
         self.current_name = None
 
@@ -192,11 +185,3 @@ class trustor_management(GladeWindow):
         filesel.hide()
         self.generate_balance_report(filename)
 
-def main(argv):
-
-    w = trustor_management(argv[1])
-    w.show()
-    gtk.main()
-
-if __name__ == '__main__':
-    main(sys.argv)

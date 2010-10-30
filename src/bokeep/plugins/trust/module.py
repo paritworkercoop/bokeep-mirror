@@ -20,6 +20,7 @@ from persistent import Persistent
 from decimal import Decimal
 
 from GUIs.entry.trustor_entry import trustor_entry
+from GUIs.management.trustor_management import trustor_management
 
 from core import TrustMoneyInTransaction, TrustMoneyOutTransaction
 
@@ -90,6 +91,9 @@ class Trustor(Persistent):
 class TrustModule(Persistent):
     def __init__(self):
         self.init_trust_database()
+
+    def do_config(self):
+        trustor_management(self)
 
     def init_trustors_database(self):
         self.trustors_database = {}        
