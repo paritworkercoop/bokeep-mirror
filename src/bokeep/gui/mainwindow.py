@@ -162,9 +162,9 @@ class MainWindow(object):
             else:
                 self.books_combobox.set_active(cur_book_index)
         
-        self.refresh_trans_types_and_set_sensitivities()
+        self.gui_built = True
 
-        self.gui_built = True        
+        self.refresh_trans_types_and_set_sensitivities()
 
     def closedown_for_config(self):
         self.gui_built = False
@@ -172,7 +172,13 @@ class MainWindow(object):
         self.books_combobox.set_active(COMBO_SELECTION_NONE)
         self.books_combobox_model.clear()
         self.set_transcombo_index(COMBO_SELECTION_NONE)
+
+        # this clear actually triggers the event handler even after we
+        # set to none, I guess losing your model counts as a change!
+        self.programmatic_transcombo_index = True
         self.trans_type_model.clear()
+        self.programmatic_transcombo_index = False      
+
         
     # Functions for window initialization and use thereafter
 
