@@ -56,7 +56,9 @@ def do_plugin_add(book):
 def do_plugin_config(book):
     plugin_name = raw_input("Name of new plugin, blank to cancel\n> ")
     if plugin_name == '': return
-    book.get_module(plugin_name).do_config()
+    # argument is for parent window, None right now, but this will actually
+    # be something once bokeepdb.py becomes a real gui
+    book.get_module(plugin_name).do_config(None)
 
 def do_plugin_enable(book):
     plugin_name = raw_input("Name of plugin, blank to cancel\n> ")
