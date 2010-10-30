@@ -61,7 +61,7 @@ def do_plugin_config(book):
 def do_plugin_enable(book):
     plugin_name = raw_input("Name of plugin, blank to cancel\n> ")
     if plugin_name == '': return
-    book.get_module(plugin_name)
+    book.enable_module(plugin_name)
 
 def do_plugin_disable(book):
     plugin_name = raw_input("Name of plugin, blank to cancel\n> ")
