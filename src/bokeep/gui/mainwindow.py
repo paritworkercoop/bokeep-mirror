@@ -240,7 +240,7 @@ class MainWindow(object):
         trans_id = self.guistate.get_transaction_id()
         self.current_editor = editor_generator(
             book.get_transaction(trans_id), trans_id, currmodule,
-            self.main_vbox)
+            self.main_vbox, self.guistate.record_trans_dirty_in_backend)
 
     def clear_trans_view(self):
         if self.current_editor != None: 

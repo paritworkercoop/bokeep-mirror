@@ -323,13 +323,12 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
     def get_book(self):
         return self.data[BOOK]
 
+    @ends_with_commit
     def record_trans_dirty_in_backend(self):
         book = self.get_book()
         trans_id = self.get_transaction_id()
         if book != None and trans_id != None:
             book.get_backend_module().mark_transaction_dirty(
                 trans_id, book.get_transaction(trans_id) )
-
-    record_trans_dirty_in_backend_with_commit = \
-        ends_with_commit(record_trans_dirty_in_backend)
+    
 

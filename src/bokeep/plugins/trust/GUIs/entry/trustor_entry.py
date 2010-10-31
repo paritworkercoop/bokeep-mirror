@@ -33,7 +33,9 @@ from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 
 class trustor_entry(GladeWindow):
-    def __init__(self, trust_trans, trans_id, trust_module, gui_parent, editable):
+    def __init__(self, trust_trans, trans_id, trust_module, gui_parent,
+                 editable, change_register_function):
+        self.change_register_function = change_register_function
         self.gui_built = False
         self.trust_trans = trust_trans 
         self.trans_id = trans_id
@@ -111,6 +113,7 @@ class trustor_entry(GladeWindow):
             self.trust_trans.transfer_amount = Decimal(entered_amount)
 
         print self.trust_trans.get_displayable_amount()
+        self.change_register_function()
         trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
         self.trust_module.associate_transaction_with_trustor(self.trans_id, self.trust_trans, trustor.name)
 

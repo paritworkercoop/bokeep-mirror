@@ -34,13 +34,17 @@ trust_transaction_types = {
 def null_edit_function(*args):
     pass
 
-def trustor_editable_editor(trans, trans_id, module, gui_parent):
+def trustor_editable_editor(trans, trans_id, module, gui_parent,
+                            change_register_function):
     print 'generating an editor for trustors'
-    editor = trustor_entry(trans, trans_id, module, gui_parent, True)
+    editor = trustor_entry(trans, trans_id, module, gui_parent, True,
+                           change_register_function)
     return editor
 
-def trustor_viewonly_editor(trans, trans_id, module, gui_parent):
-    editor = trustor_entry(trans, trans_id, module, gui_parent, False)
+def trustor_viewonly_editor(trans, trans_id, module, gui_parent,
+                            change_register_function):
+    editor = trustor_entry(trans, trans_id, module, gui_parent, False,
+                           change_register_function)
     return editor
 
 trust_edit_interfaces_hooks = {
