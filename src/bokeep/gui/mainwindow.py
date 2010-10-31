@@ -80,6 +80,7 @@ class MainWindow(object):
         if hasattr(self, 'bookset') and self.bookset != None:
             for bookname, book in self.bookset.iterbooks():
                 book.get_backend_module().flush_backend()
+                transaction.get().commit()
             self.bookset.close()
             # or, should I be only doing
             # self.bookset.close_primary_connection() instead..?
