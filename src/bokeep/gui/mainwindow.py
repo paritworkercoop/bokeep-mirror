@@ -78,6 +78,8 @@ class MainWindow(object):
         if hasattr(self, 'guistate'):
             self.guistate.do_action(CLOSE)
         if hasattr(self, 'bookset') and self.bookset != None:
+            for bookname, book in self.bookset.iterbooks():
+                book.get_backend_module().flush_backend()
             self.bookset.close()
             # or, should I be only doing
             # self.bookset.close_primary_connection() instead..?
