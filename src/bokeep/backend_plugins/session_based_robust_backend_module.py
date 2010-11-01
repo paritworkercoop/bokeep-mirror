@@ -24,9 +24,12 @@ from robust_backend_module import RobustBackendModule
 import transaction
 
 class SessionBasedRobustBackendModule(RobustBackendModule):
-    def flush_backend(self):
+    def open_session_and_retain(self):
         if not self.__has_active_session_attr():
             self._v_session_active = self.open_session()
+
+    def flush_backend(self):
+        self.open_session_and_retain()
         if not self.can_write():
             self.close()
         else:

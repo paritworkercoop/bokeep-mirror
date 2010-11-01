@@ -458,7 +458,7 @@ class RobustBackendModule(BackendModule):
     verify_trans_and_close, setattr
     
     Many backend modules are easier to implement if you do choose to
-    subclass BackendModule, and just implemnt functions such as 
+    subclass RobustBackendModule, and just implemnt functions such as 
     create_backend_transaction, remove_backend_transaction, can_write, save,
     close, and setattr.
 

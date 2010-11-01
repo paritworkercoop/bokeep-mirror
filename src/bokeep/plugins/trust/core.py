@@ -34,10 +34,10 @@ class TrustTransaction(Transaction):
     def get_financial_transactions(self):
         # you should throw BoKeepTransactionNotMappableToFinancialTransaction
         # under some conditions
-        return FinancialTransaction(
-            (FinancialTransactionLine(self.get_transfer_amount()),
-             FinancialTranactionLine(self.get_transfer_amount() * NEG_1) )
-            )
+        return ( FinancialTransaction(
+                (FinancialTransactionLine(self.get_transfer_amount()),
+                 FinancialTransactionLine(self.get_transfer_amount() * NEG_1) )
+                ), )
 
     def get_transfer_amount(self):
         return self.transfer_amount

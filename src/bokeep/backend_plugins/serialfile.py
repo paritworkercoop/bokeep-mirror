@@ -17,36 +17,34 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 # bokeep imports
-from module import BackendModule
+from session_based_robust_backend_module import SessionBasedRobustBackendModule
 from bokeep.util import attribute_or_blank
 from decimal import Decimal 
 
 ZERO = Decimal(0)
 
-class SerialFileModule(BackendModule):
+class SerialFileModule(SessionBasedRobustBackendModule):
     def __init__(self):
-        BackendModule.__init__(self)
+        SessionBasedRobustBackendModule.__init__(self)
         self.count = 0
         self.accounting_file = "AccountingFile.txt"
 
-    def write_to_file(self, msg):
-        f = open(self.accounting_file, 'a')
-        f.write(msg)
-        f.close()
-
-    def can_write(self):
+    def open_session(self):
         try:
-            f = open(self.accounting_file, 'a')
-            f.close()
+            return open(self.accounting_file, 'a')
         except IOError:
-            return False
-        else:
-            return True
+            return None
+
+    def write_to_file(self, msg):
+        try:
+            self._v_session_active.write(msg)
+        except IOError, e:
+             raise BoKeepBackendException(e.message)
 
     def remove_backend_transaction(self, backend_ident):
         assert( backend_ident < self.count )
-        self.write_to_file("remove transaction with identifier %s\n\n" % \
-                               backend_ident )
+        self.write_to_file("remove transaction with identifier %s\n\n" % 
+                          backend_ident )
         
     def create_backend_transaction(self, fin_trans):
         description = attribute_or_blank(fin_trans, "description")
@@ -66,8 +64,7 @@ class SerialFileModule(BackendModule):
             return "%s %s" % (amount,
                               attribute_or_blank(line, 'comment') )
 
-        try:
-            self.write_to_file( """transaction with identifier %(trans_id)s
+        self.write_to_file( """transaction with identifier %(trans_id)s
 %(description)s
 chequenum %(chequenum)s
 debits
@@ -87,16 +84,23 @@ credits
             "\n".join( str_repr_of_line(line, True)
                        for line in credits )
         } )
-        except IOError:
-            raise BoKeepBackendException
-                
+                      
         return_value = self.count
-        self.count = self.count + 1
+        self.count += 1
         return return_value
 
+    def close(self):
+        try:
+            self._v_session_active.close()
+        except IOError:
+            # probably nothing to do here, super class close() will del
+            # self._v_session_active
+            pass
+        SessionBasedRobustBackendModule.close(self)
+
     def save(self):
-        # nothing to do here, we always save after each write...
-        pass
+        self.close()
+        self.open_session_and_retain()
 
 def get_module_class():
     return SerialFileModule
