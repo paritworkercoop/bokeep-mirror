@@ -33,6 +33,12 @@ from bokeep.config import \
     ZODB_CONFIG_FILESTORAGE
 from bokeep.book import BoKeepBookSet
 
+# gtk imports
+from gtk import \
+    Dialog, MessageDialog, \
+    STOCK_CANCEL, RESPONSE_REJECT, STOCK_OK, RESPONSE_ACCEPT, \
+    DIALOG_MODEL, DIALOG_DESTROY_WITH_PARENT
+
 def do_new_book(bookset):
     newbookname = raw_input("What is the new book called?\n"
                             "(hit with nothing to cancel)\n> ")
@@ -140,13 +146,24 @@ def manage_available_books(mainwindow, bookset):
 def establish_bokeep_db(mainwindow, config_path, db_exception):
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
-    if db_exception != None:
-        print db_exception.message
-        print "BoKeep requires a working database to operate"
+    if db_exception == None:
+        extra_error_info = ""
+    else:
+        extra_error_info = "%s\n%s" %(
+            str(db_exception), 
+            "BoKeep requires a working database to operate" )
     
     config = get_bokeep_configuration(config_path)
     filestorage_path = config.get(ZODB_CONFIG_SECTION,
                                   ZODB_CONFIG_FILESTORAGE)
+    print extra_error_info
+    #database_location  = Dialog(
+    #    "Where should the database be located?",
+    #    mainwindow, DIALOG_MODEL | DIALOG_DESTROY_WITH_PARENT,
+    #    (STOCK_CANCEL, RESPONSE_REJECT,
+    #     STOCK_OK, RESPONSE_ACCEPT)
+    #    )
+    #database_location.run()
     new_path = raw_input(
         "Where should the database be located?\n"
         "default: %s\n> " % filestorage_path)

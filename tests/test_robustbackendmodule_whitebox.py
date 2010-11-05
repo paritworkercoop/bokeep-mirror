@@ -2,9 +2,9 @@ from unittest import TestCase, main
 from decimal import Decimal
 from itertools import chain
 
-from bokeep.backend_modules.module import \
+from bokeep.backend_plugins.module import \
     BoKeepBackendException, BoKeepBackendResetException
-from bokeep.backend_modules.robust_backend_module import \
+from bokeep.backend_plugins.robust_backend_module import \
     RobustBackendModule, BackendDataStateMachine
 from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \

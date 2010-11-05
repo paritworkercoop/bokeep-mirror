@@ -16,10 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 # bokeep imports
+from module import \
+    BoKeepBackendException, BoKeepBackendResetException
 from session_based_robust_backend_module import SessionBasedRobustBackendModule
 from bokeep.util import attribute_or_blank
 from decimal import Decimal 
+from sys import stderr
 
 ZERO = Decimal(0)
 
@@ -32,14 +36,20 @@ class SerialFileModule(SessionBasedRobustBackendModule):
     def open_session(self):
         try:
             return open(self.accounting_file, 'a')
-        except IOError:
+        except IOError, e:
+            stderr.write("trouble opening %s %s" %
+                         (self.accounting_file, str(e) ) )
+            # its sufficient to return None here,
+            # SessionBasedRobustBackendModule is expecting that, no exception
+            # neede
             return None
 
     def write_to_file(self, msg):
         try:
             self._v_session_active.write(msg)
         except IOError, e:
-             raise BoKeepBackendException(e.message)
+            stderr.write(str(e))
+            raise BoKeepBackendException(str(e))
 
     def remove_backend_transaction(self, backend_ident):
         assert( backend_ident < self.count )
@@ -93,14 +103,20 @@ credits
         try:
             self._v_session_active.close()
         except IOError:
-            # probably nothing to do here, super class close() will del
-            # self._v_session_active
+            # nothing to do here, super class close() will del
+            # self._v_session_active, callers of close are expecting
+            # us to silently catch exceptions
             pass
         SessionBasedRobustBackendModule.close(self)
 
     def save(self):
-        self.close()
-        self.open_session_and_retain()
+        try:
+            self._v_session_active.close()
+        except IOError, e:
+            stderr.write(str(e))
+            raise BoKeepBackendException(str(e.message))
+        else:
+            self.open_session_and_retain()
 
 def get_module_class():
     return SerialFileModule

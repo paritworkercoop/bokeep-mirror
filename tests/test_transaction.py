@@ -1,33 +1,45 @@
+# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+#
+# This file is part of Bo-Keep.
+#
+# Bo-Keep is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Author: Mark Jenkins <mark@parit.ca>
+
+# python imports
 from unittest import TestCase, main
-
 import sys
-
 # ZODB imports
 import transaction
+from ZODB.FileStorage import FileStorage
+from ZODB import DB
 
 from bokeep.book import BoKeepBookSet
-from bokeep.book_transaction import \
-    Transaction, new_transaction_committing_thread, TransactionMirror
 from bokeep.util import ends_with_commit
 
-from bokeep.modules.test import Type1Transaction
+from test_transaction_and_module import Type1Transaction
+from test_bokeep_book import BoKeepWithBookSetup, TESTBOOK
 
-
-class BoKeepBasicTest(TestCase):
+class BoKeepBasicTest(BoKeepWithBookSetup):
     def setUp(self):
-        self.books = BoKeepBookSet("tests/test_books.conf")
-        if self.books.has_book("test_book_1"):
-            self.test_book_1 = self.books.get_book("test_book_1")
-        else:
-            self.test_book_1 = self.books.add_book("test_book_1")
-
+        BoKeepWithBookSetup.setUp(self)        
         self.trans_key = self.test_book_1.insert_transaction(
             Type1Transaction() )
         transaction.get().commit()
 
     def test_interesting_sequence(self):
-
-        self.assertEquals( self.test_book_1.book_name, "test_book_1" )
+        self.assertEquals( self.test_book_1.book_name, TESTBOOK )
 
         @ends_with_commit
         def simple_tests(book, key):
@@ -49,59 +61,6 @@ class BoKeepBasicTest(TestCase):
 
         after_commit_read(self.test_book_1, self.trans_key)
 
-        @ends_with_commit
-        def use_commit_thread(trans_thread, book, trans_key):
-            trans_thread.add_change_tracker_block((book.book_name, trans_key))
-            trans_thread.mod_transaction_attr(
-                (book.book_name, trans_key), 'data', 'fuck')
-            trans_thread.remove_change_tracker((book.book_name, trans_key))
-            trans_thread.add_change_tracker_block((book.book_name, trans_key))
-            trans_thread.remove_change_tracker((book.book_name, trans_key))
-            
-        trans_thread = new_transaction_committing_thread(self.books)
-        use_commit_thread(trans_thread, self.test_book_1, self.trans_key)
-
-        trans = self.test_book_1.get_transaction(self.trans_key)
-        self.assertEquals( trans.data, "fuck" )
-
-        @ends_with_commit
-        def use_commit_thread_again(trans_thread, books, book, trans_key):
-            trans_thread.add_change_tracker_block((book.book_name, trans_key))
-            trans_thread.mod_transaction_with_func(
-                (book.book_name, trans_key), 'reset_data', (), {} )
-            trans_thread.mod_transaction_with_func(
-                (book.book_name, trans_key), 'append_data',
-                (' shoot',), {} )
-            trans_thread.remove_change_tracker((book.book_name, trans_key))
-            trans_thread.add_change_tracker_block((book.book_name, trans_key))
-            trans_thread.remove_change_tracker((book.book_name, trans_key))
-            
-        use_commit_thread_again(trans_thread, self.books,
-                                self.test_book_1, self.trans_key)
-
-        trans = self.test_book_1.get_transaction(self.trans_key)
-        self.assertEquals( trans.data, "blah shoot" )
-
-        @ends_with_commit
-        def use_mirror_class(books, book, trans_key):
-            trans_thread.add_change_tracker_block((book.book_name, trans_key))
-            mirror = TransactionMirror( book.book_name, trans_key, trans_thread)
-            # we should test for all three of these states, not just the final
-            # state ...
-            mirror.reset_data()
-            mirror.append_data(" maker")
-            # this isn't working...
-            #mirror.data = "juice maker"
-            trans_thread.remove_change_tracker((book.book_name, trans_key))
-            trans_thread.add_change_tracker_block((book.book_name, trans_key))
-            trans_thread.remove_change_tracker((book.book_name, trans_key))
-
-        use_mirror_class(self.books, self.test_book_1, self.trans_key)
-
-        trans_thread.end_thread_and_join()
-
-        trans = self.test_book_1.get_transaction(self.trans_key)
-        self.assertEquals( trans.data, "blah maker" )
         self.test_book_1.remove_transaction(self.trans_key)
         transaction.get().commit()
 
