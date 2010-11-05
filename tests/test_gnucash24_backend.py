@@ -5,7 +5,7 @@ from glob import glob
 from tempfile import NamedTemporaryFile
 from decimal import Decimal
 
-from bokeep.backend_modules.gnucash_backend24 import \
+from bokeep.backend_plugins.gnucash_backend24 import \
     GnuCash24, call_catch_qofbackend_exception_reraise_important
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
@@ -269,10 +269,53 @@ class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):
         # should do a flush, screw it up, re-flush and check for
         # transaction removal but not recreation as well
 
+
+    def check_if_transaction_is_missing(self):
+        self.backend_module.close()
+        (s, book, root, accounts) = \
+            self.acquire_gnucash_session_book_root_and_accounts()
+        assets, bank, petty_cash = accounts[:3]
+
+        return_value = False
+        bank_splits = [Split(instance=split_inst)
+                       for split_inst in bank.GetSplitList() ]
+        petty_cash_splits = [Split(instance=split_inst)
+                             for split_inst in petty_cash.GetSplitList() ]
+        self.assertEquals(len(bank_splits), 0)
+        self.assertEquals(len(petty_cash_splits), 0)
+        self.gnucash_session_termination(s)
+
+    def test_bad_account_removes_success_trans(self):
+        self.backend_module.flush_backend()
+        self.assert_(self.check_of_test_trans_present())
+        self.assert_(self.backend_module.transaction_is_clean(
+                self.front_end_id) )
+        self.test_trans.fin_trans.lines[0].account_spec = ("garbage",)
+        self.backend_module.mark_transaction_dirty(
+            self.front_end_id, self.test_trans)
+        self.backend_module.flush_backend()
+        self.assertFalse(self.backend_module.transaction_is_clean(
+                self.front_end_id) )
+        self.assert_(
+            self.backend_module.reason_transaction_is_dirty(
+                self.front_end_id).endswith(
+                "path garbage could not be found"))
+        self.check_if_transaction_is_missing()
+
+        # should do a flush, screw it up, re-flush and check for
+        # transaction removal but not recreation as well
+        self.test_trans.fin_trans.lines[0].account_spec = BANK_FULL_SPEC
+        self.assertFalse(
+            self.backend_module.transaction_is_clean(self.front_end_id))
+        self.backend_module.flush_backend()
+        self.assert_(
+            self.backend_module.transaction_is_clean(self.front_end_id))
+        self.assert_(self.check_of_test_trans_present())
+
 class GnuCash24StartsWithMarkTestsXML(
     GetProtocolXML, GnuCash24StartsWithMarkTests):
     pass
 
 if __name__ == "__main__":
     main()
-        
+
