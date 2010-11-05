@@ -26,7 +26,8 @@ ZERO = Decimal(0)
 NEG_1 = Decimal(-1)
 
 class TrustTransaction(Transaction):
-    def __init__(self):
+    def __init__(self, trust_module):
+        self.trust_module = trust_module
         self.transfer_amount = Decimal(0)
         self.trustor = None
         self.trans_date = datetime.today()
@@ -34,10 +35,15 @@ class TrustTransaction(Transaction):
     def get_financial_transactions(self):
         # you should throw BoKeepTransactionNotMappableToFinancialTransaction
         # under some conditions
-        return ( FinancialTransaction(
-                (FinancialTransactionLine(self.get_transfer_amount()),
-                 FinancialTransactionLine(self.get_transfer_amount() * NEG_1) )
-                ), )
+        cash_line = FinancialTransactionLine(self.get_transfer_amount())
+        if hasattr(self.trust_module, 'cash_account'):
+            cash_line.account_spec = self.trust_module.cash_account
+        liability_line = \
+            FinancialTransactionLine(self.get_transfer_amount() * NEG_1)
+        if hasattr(self.trust_module, 'trust_liability_account'):
+            liability_line.account_spec = \
+                self.trust_module.trust_liability_account
+        return ( FinancialTransaction( (cash_line, liability_line) ), )
 
     def get_transfer_amount(self):
         return self.transfer_amount
@@ -57,5 +63,8 @@ class TrustMoneyInTransaction(TrustTransaction):
 
 class TrustMoneyOutTransaction(TrustTransaction):
     def get_transfer_amount(self):
+        # when Trust money is paid out, the cash line needs to be negative
+        # (credit) and the liability line needs to be positive (debit)
+        # see TrustTransaction.get_financial_transactions
         return TrustTransaction.get_transfer_amount(self) * NEG_1
 

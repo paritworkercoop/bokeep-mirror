@@ -212,6 +212,12 @@ class TrustModule(Persistent):
         self.ensure_trust_database()
         return self.trustors_database
 
+    def set_cash_account(self, account_spec_obj):
+        self.cash_account = account_spec_obj
+
+    def set_trust_liability_account(self, account_spec_obj):
+        self.trust_liability_account = account_spec_obj
+
     @staticmethod
     def get_transaction_type_codes():
         return trust_transaction_types.keys()

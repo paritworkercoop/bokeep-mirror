@@ -203,7 +203,7 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
                 ))[index]        
 
     def __add_transaction_instance_to_book_and_module(self, cls, module):
-        new_transaction_instance = cls()
+        new_transaction_instance = cls(module)
         new_transaction_id = self.data[BOOK].insert_transaction(
             new_transaction_instance)
         module.register_transaction(new_transaction_id,
