@@ -1,5 +1,6 @@
 # python
 from unittest import TestCase, main
+from decimal import Decimal
 
 # bo-keep
 from bokeep.gui.state import \
@@ -37,7 +38,16 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCash24BasicSetup):
         self.state.do_action(BOOK_CHANGE, self.test_book_1)
 
     def test_mu(self):
-        pass
+        self.state.do_action(NEW)
+        self.assert_(self.test_book_1.has_transaction(0))
+        trust_trans = self.test_book_1.get_transaction(0)
+        trust_trans.set_trustor(TEST_TRUSTOR)
+        trust_trans.transfer_amount = Decimal(10)
+        self.state.do_action(CLOSE)
+        self.assertFalse(self.backend_module.transaction_is_clean(0))
+
+        self.backend_module.flush_backend()
+        self.assert_(self.backend_module.transaction_is_clean(0))
 
     def tearDown(self):
         self.state.do_action(CLOSE)
