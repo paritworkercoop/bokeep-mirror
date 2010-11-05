@@ -1,14 +1,18 @@
+# python
 from unittest import TestCase, main
 from os.path import abspath
 from os import remove
 from glob import glob
-from tempfile import NamedTemporaryFile
 from decimal import Decimal
 
+# bokeep
 from bokeep.backend_plugins.gnucash_backend24 import \
     GnuCash24, call_catch_qofbackend_exception_reraise_important
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
+
+# bokeep tests
+from test_bokeep_book import create_tmp_filename
 
 from gnucash import Session, Account, GnuCashBackendException, Split, \
     GncNumeric
@@ -38,12 +42,10 @@ class TestTransaction(Transaction):
 
 class GnuCash24BasicSetup(TestCase):
     def setUp(self):
-        tmp = NamedTemporaryFile(
-            suffix='.gnucash',
-            prefix='Gnucash24_test_' + self.get_protocol(),
-            dir='.')
-        self.gnucash_file_name = tmp.name
-        tmp.close()
+        self.gnucash_file_name = create_tmp_filename(
+            'Gnucash24_test_' + self.get_protocol(),
+            '.gnucash' )
+
         s, book, root = self.acquire_gnucash_session_book_and_root(True)
         # this is neccesary for the sqlite3 backend to work, a new
         # book has to be saved right away.

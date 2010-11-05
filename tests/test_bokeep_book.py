@@ -16,14 +16,18 @@ from bokeep.book import BoKeepBookSet, BoKeepBook, BOOKS_SUB_DB_KEY
 
 TESTBOOK = "testbook"
 
-def create_tmp_filestorage_filename():
+def create_tmp_filename(prefix, suffix):
     tmp = NamedTemporaryFile(
-            suffix='.fs',
-            prefix='tmp_bokeep_db_',
+            suffix=suffix,
+            prefix=prefix,
             dir='.')
-    filestorage_file = tmp.name
+    filename = tmp.name
     tmp.close()
-    return filestorage_file
+    return filename
+
+def create_tmp_filestorage_filename():
+    return create_tmp_filename('tmp_bokeep_db_', '.fs')
+
 
 def create_filestorage_backed_bookset_from_file(filestorage_path):
     fs = FileStorage(filestorage_path, create=True )
