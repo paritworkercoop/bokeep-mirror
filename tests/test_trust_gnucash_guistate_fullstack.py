@@ -37,7 +37,7 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCash24BasicSetup):
         self.state = BoKeepGuiState()
         self.state.do_action(BOOK_CHANGE, self.test_book_1)
 
-    def test_mu(self):
+    def test_basic_transaction(self):
         self.state.do_action(NEW)
         self.assert_(self.test_book_1.has_transaction(0))
         trust_trans = self.test_book_1.get_transaction(0)
