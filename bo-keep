@@ -5,8 +5,6 @@ import gtk
 
 # Bo-Keep
 from bokeep.gui.mainwindow import MainWindow
-from bokeep.book_transaction import \
-     new_transaction_committing_thread
 
 # python
 from optparse import OptionParser

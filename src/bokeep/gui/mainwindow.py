@@ -16,8 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 # Python library
-from os.path import abspath, dirname, join, exists
+from os.path import exists
 
 # ZOPE
 import transaction
@@ -45,13 +46,9 @@ from bokeep.book import BoKeepBookSet
 from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
     establish_bokeep_db, manage_available_books
-
+from main_window_glade import get_main_window_glade_file
 
 GUI_STATE_SUB_DB = 'gui_state'
-
-def get_this_module_file_path():
-    import mainwindow as mainwindow_module
-    return mainwindow_module.__file__
 
 COMBO_SELECTION_NONE = -1
 
@@ -134,8 +131,7 @@ class MainWindow(object):
         assert(self.gui_built)
 
     def build_gui(self):
-        glade_file = join( dirname( abspath(get_this_module_file_path() ) ),
-                           'glade', 'bokeep_main_window.glade' )
+        glade_file = get_main_window_glade_file()
         load_glade_file_get_widgets_and_connect_signals(
             glade_file, "mainwindow", self, self )
 

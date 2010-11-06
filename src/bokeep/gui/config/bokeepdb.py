@@ -32,12 +32,10 @@ from bokeep.config import \
     DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
     ZODB_CONFIG_FILESTORAGE
 from bokeep.book import BoKeepBookSet
+from bokeep.gui.main_window_glade import get_main_window_glade_file
 
 # gtk imports
-from gtk import \
-    Dialog, MessageDialog, \
-    STOCK_CANCEL, RESPONSE_REJECT, STOCK_OK, RESPONSE_ACCEPT, \
-    DIALOG_MODEL, DIALOG_DESTROY_WITH_PARENT
+from gtk.glade import XML
 
 def do_new_book(bookset):
     newbookname = raw_input("What is the new book called?\n"
@@ -157,13 +155,12 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
     filestorage_path = config.get(ZODB_CONFIG_SECTION,
                                   ZODB_CONFIG_FILESTORAGE)
     print extra_error_info
-    #database_location  = Dialog(
-    #    "Where should the database be located?",
-    #    mainwindow, DIALOG_MODEL | DIALOG_DESTROY_WITH_PARENT,
-    #    (STOCK_CANCEL, RESPONSE_REJECT,
-    #     STOCK_OK, RESPONSE_ACCEPT)
-    #    )
-    #database_location.run()
+    #glade_xml = XML(get_main_window_glade_file(), "bokeep_config_dialog")
+    #bokeep_config_dialog = glade_xml.get_widget("bokeep_config_dialog")
+    #bokeep_config_dialog.set_transient_for(mainwindow) 
+    #bokeep_config_dialog.run()
+    #bokeep_config_dialog.hide()
+    
     new_path = raw_input(
         "Where should the database be located?\n"
         "default: %s\n> " % filestorage_path)
