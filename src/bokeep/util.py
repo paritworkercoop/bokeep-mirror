@@ -408,6 +408,25 @@ class FunctionAndDataDrivenStateMachine(Persistent):
             old_state = self.state
             self.advance_state_machine()
 
+    @staticmethod
+    def __make_action_check_function(action):
+        def check_function(self, next_state):
+            if hasattr(self, "_v_last_action"):
+                result = self._v_last_action == action
+                if result:
+                    delattr(self, "_v_last_action")
+                    return result
+                else: return False
+        return check_function
+
+    @ends_with_commit
+    def do_action(self, action, arg=None):
+        assert( self.action_allowed(action) )
+        self._v_action_arg = arg
+        self._v_last_action = action
+        self.run_until_steady_state()
+        delattr(self, '_v_action_arg')
+
 def state_machine_always_true(state_machine, next_state):
     return True
 

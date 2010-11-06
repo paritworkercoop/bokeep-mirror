@@ -159,7 +159,7 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
     #bokeep_config_dialog = glade_xml.get_widget("bokeep_config_dialog")
     #bokeep_config_dialog.set_transient_for(mainwindow) 
     #bokeep_config_dialog.run()
-    #bokeep_config_dialog.hide()
+    #bokeep_config_dialog.destroy()
     
     new_path = raw_input(
         "Where should the database be located?\n"

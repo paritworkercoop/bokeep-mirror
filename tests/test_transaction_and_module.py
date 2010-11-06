@@ -19,7 +19,7 @@
 from bokeep.book_transaction import Transaction
 
 class Type1Transaction(Transaction):
-    def __init__(self):
+    def __init__(self, module):
         Transaction.__init__(self)
         self.reset_data()
     

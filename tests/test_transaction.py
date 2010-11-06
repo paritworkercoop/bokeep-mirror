@@ -35,7 +35,7 @@ class BoKeepBasicTest(BoKeepWithBookSetup):
     def setUp(self):
         BoKeepWithBookSetup.setUp(self)        
         self.trans_key = self.test_book_1.insert_transaction(
-            Type1Transaction() )
+            Type1Transaction(None) )
         transaction.get().commit()
 
     def test_interesting_sequence(self):
