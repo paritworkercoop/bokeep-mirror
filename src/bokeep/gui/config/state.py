@@ -17,6 +17,11 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# python imports
+from os.path import \
+    exists, basename, split as path_split, join as path_join, abspath
+from os import makedirs
+
 # gtk
 from gtk import ListStore
 
@@ -24,6 +29,7 @@ from gtk import ListStore
 from bokeep.util import \
     ends_with_commit, FunctionAndDataDrivenStateMachine, \
     state_machine_do_nothing, state_machine_always_true
+from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE
 
 # possible actions
 (DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE) = \
@@ -43,12 +49,11 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         BOOK_SELECTED,
         ) = range(NUM_STATES)
 
-    def __init__(self, config, db_error_msg=""):
+    def __init__(self, db_error_msg=""):
         FunctionAndDataDrivenStateMachine.__init__(
             self,
             data=("", None, None), # DB_PATH, DB_HANDLE, BOOK
             initial_state=BoKeepGuiState.NO_DATABASE)
-        self.config = config
         self.db_error_msg = db_error_msg
         self.book_liststore = ListStore()
         self.plugin_liststore = ListStore()
@@ -126,34 +131,66 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
 
     def __db_path_useable(self, next_state):
         if self.data[DB_PATH] != '':
-            pass
+            new_path = self.data[DB_PATH]
+            new_path = abspath(new_path)
+            if not exists(new_path):
+                directory, filename = path_split(new_path)
+                if not exists(directory):
+                    makedirs(directory)
+                if filename == '':
+                    new_path = path_join(directory,
+                                         DEFAULT_BOOKS_FILESTORAGE_FILE)
+                try:
+                    fs = FileStorage(new_path, create=True )
+                    db = DB(fs)
+                    db.close()
+                except IOError, e:
+                    self.db_error_msg = str(e)
+                    return False
+            try:
+                fs = FileStorage(new_path, create=False )
+                db = DB(fs)
+                db.close()
+            except IOError, e:
+                self.db_error_msg = str(e)
+                return False
+            else:
+                return True
         return False
 
     def __null_book_selected(self, next_state):
-        return False
+        return self.data[BOOK] != None
 
     # transition functions
 
     def __load_book_list(self, next_state):
-        return self.data
+        db_handle = Db(FileStorage(self.data[DB_PATH], create=False ))
+        return (self.data[DB_PATH], db_handle, self.data[BOOK])
 
     def __absorb_changed_db_path(self, next_state):
-        return (self._v_action_arg, self.data[DB_HANDLE], self.data[BOOK] )
+        return (self._v_action_arg, self.data[DB_HANDLE], self.data[BOOK]) 
 
     def __clear_book_list(self, next_state):
-        return self.data
+        self.book_liststore.clear()
+        return (self.data[DB_PATH], self.data[DB_HANDLE], None)
 
     def __set_plugin_list(self, next_state):
-        return self.data
+        self.plugin_liststore.clear()
+        new_book_name = self._v_action_arg
+        new_book = BoKeepBookSet(self.DB_HANDLE).get_book(new_book_name)
+        # construct plugin_liststore from book
+        return (self.data[DB_PATH], self.data[DB_HANDLE], new_book )
 
     def __clear_plugin_list(self, next_state):
+        self.plugin_liststore.clear()
         return self.data
 
     def __absorb_path_clear_book_and_plugin_list(self, next_state):
         return self.data
 
     def __clear_book_and_plugin_list(self, next_state):
-        return self.data
+        self.__clear_plugin_list()
+        return self.__clear_book_list()
 
     def __apply_plugin_changes_and_reset_plugin_list(self, next_state):
         return self.data
