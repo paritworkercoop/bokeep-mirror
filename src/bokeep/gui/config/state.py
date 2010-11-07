@@ -43,11 +43,12 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         BOOK_SELECTED,
         ) = range(NUM_STATES)
 
-    def __init__(self, db_error_msg=""):
+    def __init__(self, config, db_error_msg=""):
         FunctionAndDataDrivenStateMachine.__init__(
             self,
             data=("", None, None), # DB_PATH, DB_HANDLE, BOOK
             initial_state=BoKeepGuiState.NO_DATABASE)
+        self.config = config
         self.db_error_msg = db_error_msg
         self.book_liststore = ListStore()
         self.plugin_liststore = ListStore()
@@ -64,7 +65,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
               BoKeepConfigGuiState.__load_book_list,
               BoKeepConfigGuiState.NO_BOOK),
              (BoKeepConfigGuiState.__make_action_check_function(DB_PATH_CHANGE),
-              BoKeepConfigGuiState.__use_changed_db_path,
+              BoKeepConfigGuiState.__absorb_changed_db_path,
               BoKeepConfigGuiState.NO_DATABASE ),
              ), # NO_DATABASE
               
@@ -92,7 +93,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
               BoKeepConfigGuiState.NO_DATABASE ),
              (BoKeepConfigGuiState.__make_action_check_function(
                             DB_PATH_CHANGE),
-               BoKeepConfigGuiState.__clear_book_and_plugin_list,
+               BoKeepConfigGuiState.__absorb_path_clear_book_and_plugin_list,
                BoKeepConfigGuiState.NO_DATABASE ),
              (BoKeepConfigGuiState.__make_action_check_function(BOOK_CHANGE),
               BoKeepConfigGuiState.__apply_plugin_changes_and_reset_plugin_list,
@@ -124,7 +125,9 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     # transition test functions
 
     def __db_path_useable(self, next_state):
-        return True
+        if self.data[DB_PATH] != '':
+            pass
+        return False
 
     def __null_book_selected(self, next_state):
         return False
@@ -134,8 +137,8 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     def __load_book_list(self, next_state):
         return self.data
 
-    def __use_changed_db_path(self, next_state):
-        return self.data
+    def __absorb_changed_db_path(self, next_state):
+        return (self._v_action_arg, self.data[DB_HANDLE], self.data[BOOK] )
 
     def __clear_book_list(self, next_state):
         return self.data
@@ -144,6 +147,9 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         return self.data
 
     def __clear_plugin_list(self, next_state):
+        return self.data
+
+    def __absorb_path_clear_book_and_plugin_list(self, next_state):
         return self.data
 
     def __clear_book_and_plugin_list(self, next_state):
