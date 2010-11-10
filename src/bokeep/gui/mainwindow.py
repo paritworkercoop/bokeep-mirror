@@ -107,8 +107,6 @@ class MainWindow(object):
             if self.bookset == None:
                 self.application_shutdown()
                 return
-            manage_available_books(
-                self.mainwindow, self.bookset)
         except BoKeepConfigurationDatabaseException, e:
             config_path = first_config_file_in_list_to_exist_and_parse(
                 config_paths)
@@ -120,7 +118,6 @@ class MainWindow(object):
             if self.bookset == None:
                 self.application_shutdown()
                 return
-            manage_available_books(self.mainwindow, self.bookset)
 
         self.guistate = (
             self.bookset.get_dbhandle().get_sub_database_do_cls_init(

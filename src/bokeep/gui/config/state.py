@@ -25,18 +25,23 @@ from os import makedirs
 # gtk
 from gtk import ListStore
 
+# ZODB
+from ZODB import DB
+from ZODB.FileStorage import FileStorage
+
 # bo-keep
 from bokeep.util import \
     ends_with_commit, FunctionAndDataDrivenStateMachine, \
     state_machine_do_nothing, state_machine_always_true
 from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE
+from bokeep.book import BoKeepBookSet
 
 # possible actions
 (DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE) = \
     range(4)
 
 # tuple indexes for data stored in BoKeepConfigGuiState
-(DB_PATH, DB_HANDLE, BOOK) = range(3)
+(DB_PATH, BOOKSET, BOOK) = range(3)
 
 class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     NUM_STATES = 3
@@ -49,16 +54,16 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         BOOK_SELECTED,
         ) = range(NUM_STATES)
 
-    def __init__(self, db_error_msg=""):
+    def __init__(self, db_error_msg=None):
         FunctionAndDataDrivenStateMachine.__init__(
             self,
-            data=("", None, None), # DB_PATH, DB_HANDLE, BOOK
-            initial_state=BoKeepGuiState.NO_DATABASE)
+            data=(None, None, None), # DB_PATH, BOOKSET, BOOK
+            initial_state=BoKeepConfigGuiState.NO_DATABASE)
         self.db_error_msg = db_error_msg
-        self.book_liststore = ListStore()
-        self.plugin_liststore = ListStore()
+        self.book_liststore = ListStore(str)
+        self.plugin_liststore = ListStore(str, bool)
         self.run_until_steady_state()
-        assert(self.state == BoKeepGuiState.NO_DATABASE)
+        assert(self.state == BoKeepConfigGuiState.NO_DATABASE)
 
     def get_table(self):
         if hasattr(self, '_v_table_cache'):
@@ -66,44 +71,41 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         
         self._v_table_cache = (
             # NO_DATABASE
-            ((BoKeepConfigGuiState.__db_path_useable,
-              BoKeepConfigGuiState.__load_book_list,
-              BoKeepConfigGuiState.NO_BOOK),
-             (BoKeepConfigGuiState.__make_action_check_function(DB_PATH_CHANGE),
-              BoKeepConfigGuiState.__absorb_changed_db_path,
+            ( (BoKeepConfigGuiState.make_action_check_function(
+                        DB_ENTRY_CHANGE),
+              lambda selfish, next_state:
+                  (selfish._v_action_arg, None, None),
               BoKeepConfigGuiState.NO_DATABASE ),
+             (BoKeepConfigGuiState.make_action_check_function(DB_PATH_CHANGE),
+              BoKeepConfigGuiState.__open_bookset_load_list,
+              BoKeepConfigGuiState.NO_BOOK ),
              ), # NO_DATABASE
               
             # NO_BOOK
-            ((BoKeepConfigGuiState.__make_action_check_function(
+            ( (lambda selfish, next_state: selfish.data[BOOKSET] == None,
+               lambda selfish, next_state: selfish.data,
+               BoKeepConfigGuiState.NO_DATABASE),
+              (BoKeepConfigGuiState.make_action_check_function(
                         DB_ENTRY_CHANGE),
-              BoKeepConfigGuiState.__clear_book_list,
+              BoKeepConfigGuiState.__clear_book_list_absorb_changed_path,
               BoKeepConfigGuiState.NO_DATABASE ),
-             (BoKeepConfigGuiState.__make_action_check_function(
-                            DB_PATH_CHANGE),
-               BoKeepConfigGuiState.__clear_book_list,
-               BoKeepConfigGuiState.NO_DATABASE ),
-             (BoKeepConfigGuiState.__make_action_check_function(BOOK_CHANGE),
-              BoKeepConfigGuiState.__set_plugin_list,
+             (BoKeepConfigGuiState.make_action_check_function(BOOK_CHANGE),
+              BoKeepConfigGuiState.__handle_book_change_load_plugin_list,
               BoKeepConfigGuiState.BOOK_SELECTED),
              ), # NO_BOOK
 
             # BOOK_SELECTED
-            ((BoKeepConfigGuiState.__null_book_selected,
+            ((lambda selfish, next_state: selfish.data[BOOK] == None,
               BoKeepConfigGuiState.__clear_plugin_list,
               BoKeepConfigGuiState.NO_BOOK),
-             (BoKeepConfigGuiState.__make_action_check_function(
+             (BoKeepConfigGuiState.make_action_check_function(
                         DB_ENTRY_CHANGE),
-              BoKeepConfigGuiState.__clear_book_and_plugin_list,
+              BoKeepConfigGuiState.__apply_plugin_changes_and_clear,
               BoKeepConfigGuiState.NO_DATABASE ),
-             (BoKeepConfigGuiState.__make_action_check_function(
-                            DB_PATH_CHANGE),
-               BoKeepConfigGuiState.__absorb_path_clear_book_and_plugin_list,
-               BoKeepConfigGuiState.NO_DATABASE ),
-             (BoKeepConfigGuiState.__make_action_check_function(BOOK_CHANGE),
+             (BoKeepConfigGuiState.make_action_check_function(BOOK_CHANGE),
               BoKeepConfigGuiState.__apply_plugin_changes_and_reset_plugin_list,
               BoKeepConfigGuiState.BOOK_SELECTED),
-             (BoKeepConfigGuiState.__make_action_check_function(
+             (BoKeepConfigGuiState.make_action_check_function(
                         BACKEND_PLUGIN_CHANGE),
               BoKeepConfigGuiState.__record_backend_plugin,
               BoKeepConfigGuiState.BOOK_SELECTED),
@@ -116,85 +118,124 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     def action_allowed(self, action):
         if not hasattr(self, '_v_action_allowed_table'):
             self._v_action_allowed_table = {
-                DB_ENTRY_CHANGE: lambda True,
-                DB_PATH_CHANGE: lambda True,
-                BOOK_CHANGE: self.state != BoKeepConfigGuiState.NO_DATABASE,
+                DB_ENTRY_CHANGE: lambda: True,
+                DB_PATH_CHANGE: lambda:
+                    self.state==BoKeepConfigGuiState.NO_DATABASE and \
+                    self.data[DB_PATH] != None,
+                BOOK_CHANGE: lambda:
+                    self.state != BoKeepConfigGuiState.NO_DATABASE,
                 BACKEND_PLUGIN_CHANGE:
-                    self.state == BoKeepConfigGuiState.BOOK_SELECTED,
+                    lambda: self.state == BoKeepConfigGuiState.BOOK_SELECTED,
                 }
         if action in self._v_action_allowed_table:
             return self._v_action_allowed_table[action]()
         else:
             raise Exception("action %s is not defined" % action)
 
-    # transition test functions
-
-    def __db_path_useable(self, next_state):
-        if self.data[DB_PATH] != '':
-            new_path = self.data[DB_PATH]
-            new_path = abspath(new_path)
-            if not exists(new_path):
-                directory, filename = path_split(new_path)
-                if not exists(directory):
-                    makedirs(directory)
-                if filename == '':
-                    new_path = path_join(directory,
-                                         DEFAULT_BOOKS_FILESTORAGE_FILE)
-                try:
-                    fs = FileStorage(new_path, create=True )
-                    db = DB(fs)
-                    db.close()
-                except IOError, e:
-                    self.db_error_msg = str(e)
-                    return False
+    # transition functions
+    def __open_bookset_load_list(self, next_state):
+        assert(self.data[DB_PATH] != None)
+        new_path = self.data[DB_PATH]
+        new_path = abspath(new_path)
+        if not exists(new_path):
+            directory, filename = path_split(new_path)
+            if not exists(directory):
+                makedirs(directory)
+            if filename == '':
+                new_path = path_join(directory,
+                                     DEFAULT_BOOKS_FILESTORAGE_FILE)
             try:
-                fs = FileStorage(new_path, create=False )
+                fs = FileStorage(new_path, create=True )
                 db = DB(fs)
                 db.close()
             except IOError, e:
                 self.db_error_msg = str(e)
-                return False
-            else:
-                return True
-        return False
-
-    def __null_book_selected(self, next_state):
-        return self.data[BOOK] != None
-
-    # transition functions
+                return (None, None, None)
+        try:
+            fs = FileStorage(new_path, create=False )
+            db = DB(fs)
+        except IOError, e:
+            self.db_error_msg = str(e)
+            return (None, None, None)
+        else:
+            self.db_error_msg = None
+            bs = BoKeepBookSet(db)
+            for book_name, book in bs.iterbooks():
+                self.book_liststore.append((book_name,))
+            return (self.data[DB_PATH], bs, None)
 
     def __load_book_list(self, next_state):
-        db_handle = Db(FileStorage(self.data[DB_PATH], create=False ))
-        return (self.data[DB_PATH], db_handle, self.data[BOOK])
-
-    def __absorb_changed_db_path(self, next_state):
-        return (self._v_action_arg, self.data[DB_HANDLE], self.data[BOOK]) 
+        assert(self.data[BOOKSET] != None)
+        return self.data
 
     def __clear_book_list(self, next_state):
         self.book_liststore.clear()
-        return (self.data[DB_PATH], self.data[DB_HANDLE], None)
+        self.data[BOOKSET].close()
+        return (self.data[DB_PATH], None, None)
 
-    def __set_plugin_list(self, next_state):
+    def __clear_book_list_absorb_changed_path(self, next_state):
+        self.__clear_book_list(next_state)
+        return (self._v_action_arg, None, None)
+
+    def __handle_book_change_load_plugin_list(self, next_state):
         self.plugin_liststore.clear()
         new_book_name = self._v_action_arg
-        new_book = BoKeepBookSet(self.DB_HANDLE).get_book(new_book_name)
+        if new_book_name == None:
+            return (self.data[DB_PATH], self.data[BOOKSET], None)
+        if not self.data[BOOKSET].has_book(new_book_name):
+            self.data[BOOKSET].add_book(new_book_name)
+        new_book = self.data[BOOKSET].get_book(new_book_name)
         # construct plugin_liststore from book
-        return (self.data[DB_PATH], self.data[DB_HANDLE], new_book )
+        for plugin_name in new_book.get_modules().iterkeys():
+            self.plugin_liststore.append((plugin_name, True))
+        for plugin_name in new_book.disabled_modules.iterkeys():
+            self.plugin_liststore.append((plugin_name, False))
+        return (self.data[DB_PATH], self.data[BOOKSET], new_book )
 
     def __clear_plugin_list(self, next_state):
         self.plugin_liststore.clear()
         return self.data
 
-    def __absorb_path_clear_book_and_plugin_list(self, next_state):
-        return self.data
-
-    def __clear_book_and_plugin_list(self, next_state):
+    def __apply_plugin_changes_and_clear(self, next_state):
+        self.__apply_plugin_changes()
         self.__clear_plugin_list()
-        return self.__clear_book_list()
+        return self.__clear_book_list(next_state)
 
     def __apply_plugin_changes_and_reset_plugin_list(self, next_state):
-        return self.data
+        self.__apply_plugin_changes()
+        return self.__handle_book_change_load_plugin_list(next_state)
 
     def __record_backend_plugin(self, next_state):
+        self._v_backend_plugin = self._v_action_arg
         return self.data
-    
+
+    # helper functions that aren't transition functions
+
+    def __apply_plugin_changes(self):
+        for plugin_name, plugin_enabled in self.plugin_liststore:
+            # fix any plugins that are marked enabled, but not
+            if plugin_enabled and \
+                    not self.data[BOOK].has_module_enabled(plugin_name):
+                # if such a plugin isn't disabled, it has to be added
+                if not self.data[BOOK].has_module_disabled(plugin_name):
+                    self.data[BOOK].add_module(plugin_name)
+                # now we can enable it
+                self.data[BOOK].enable_module(plugin_name)
+            # fix any plugins that are marked disabled, but aren't
+            elif not plugin_enabled and \
+                    not self.data[BOOK].has_module_disabled(plugin_name):
+                # such a plugin might be enabled and just need to be disabled
+                if self.data[BOOK].has_module_enabled(plugin_name):
+                    self.data[BOOK].disable_module(plugin_name)
+                # or it may have never been added
+                else:
+                    self.data[BOOK].add_module(plugin_name)        
+
+        if self.data[BOOK] != None and hasattr(self, '_v_backend_plugin'):
+            self.data[BOOK].set_backend_module(self._v_backend_plugin)
+            del self._v_backend_plugin
+        
+
+    def close(self):
+        if self.data[BOOKSET] != None:
+            self.data[BOOKSET].close()

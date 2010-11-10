@@ -409,7 +409,7 @@ class FunctionAndDataDrivenStateMachine(Persistent):
             self.advance_state_machine()
 
     @staticmethod
-    def __make_action_check_function(action):
+    def make_action_check_function(action):
         def check_function(self, next_state):
             if hasattr(self, "_v_last_action"):
                 result = self._v_last_action == action
