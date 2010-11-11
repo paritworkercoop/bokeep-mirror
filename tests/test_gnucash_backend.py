@@ -5,18 +5,27 @@ from os import remove
 from glob import glob
 from decimal import Decimal
 
-# bokeep
-from bokeep.backend_plugins.gnucash_backend import \
-    GnuCash, call_catch_qofbackend_exception_reraise_important
+# bokeep imports
+#
+# commented out because test_gnucash_backend22 imports this file
+# and we don't want to cause the python bindings to be imported early
+# on because the 2.2 python bindings break when that happens
+#from bokeep.backend_plugins.gnucash_backend import \
+#    GnuCash, call_catch_qofbackend_exception_reraise_important
+
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
 
 # bokeep tests
 from test_bokeep_book import create_tmp_filename
 
-from gnucash import Session, Account, GnuCashBackendException, Split, \
-    GncNumeric
-from gnucash.gnucash_core_c import ACCT_TYPE_ASSET, ERR_FILEIO_BACKUP_ERROR 
+# commented out because test_gnucash_backend22 imports this file
+# and we don't want to cause the python bindings to be imported early
+# on because the 2.2 python bindings break when that happens
+#
+#from gnucash import Session, Account, GnuCashBackendException, Split, \
+#    GncNumeric
+#from gnucash.gnucash_core_c import ACCT_TYPE_ASSET, ERR_FILEIO_BACKUP_ERROR 
 
 SQLITE3 = 'sqlite3'
 XML = 'xml'
@@ -42,6 +51,12 @@ class TestTransaction(Transaction):
 
 class GnuCashBasicSetup(TestCase):
     def setUp(self):
+        from bokeep.backend_plugins.gnucash_backend import \
+            GnuCash
+        from gnucash import Account, GnuCashBackendException
+        from gnucash.gnucash_core_c import \
+            ACCT_TYPE_ASSET, ERR_FILEIO_BACKUP_ERROR 
+        
         self.gnucash_file_name = create_tmp_filename(
             'Gnucash_test_' + self.get_protocol(),
             '.gnucash' )
@@ -119,6 +134,7 @@ class GnuCashBasicSetup(TestCase):
             self.gnucash_session_termination(s)
 
     def acquire_gnucash_session_book_and_root(self, is_new=False):
+        from gnucash import Session
         s = Session(self.get_gnucash_file_name_with_protocol(), is_new)
         book = s.book
         root = s.book.get_root_account()
@@ -140,6 +156,8 @@ class GnuCashBasicSetup(TestCase):
         return (s, book, root, self.acquire_test_accounts_from_root(root) )
 
     def gnucash_session_termination(self, s, with_save=False):
+        from bokeep.backend_plugins.gnucash_backend import \
+            call_catch_qofbackend_exception_reraise_important
         if with_save:
             call_catch_qofbackend_exception_reraise_important(s.save)
         s.end()
@@ -178,6 +196,7 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
             self.front_end_id, self.test_trans)
 
     def check_of_test_trans_present(self):
+        from gnucash import Split, GncNumeric
         self.backend_module.close()
         
         (s, book, root, accounts) = \
@@ -191,6 +210,7 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
                              for split_inst in petty_cash.GetSplitList() ]
         ONE = GncNumeric(1)
         NEG_ONE = GncNumeric(-1)
+        print 'only got here'
         # perhaps we this restriction be done away with to make the
         # test more flexible and the actual transaction of interest
         # fished out amougst others (if they exist)
@@ -199,6 +219,7 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
         # is being delete and re-created a lot, checking for one and only
         # transaction helps ensure that the going away side really is happening
         if len(bank_splits) == 1 and len(petty_cash_splits) == 1:
+            print 'got this far!'
             # compare the bank account splists
             if bank_splits[0].GetAmount().equal( ONE ):
                 if petty_cash_splits[0].GetAmount().equal(NEG_ONE):
@@ -273,6 +294,7 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
 
 
     def check_if_transaction_is_missing(self):
+        from gnucash import Split
         self.backend_module.close()
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
