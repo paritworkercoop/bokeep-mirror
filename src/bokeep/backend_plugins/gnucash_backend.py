@@ -155,7 +155,7 @@ def call_catch_qofbackend_exception_reraise_important(call_me):
         else:
             break # break while
 
-class GnuCash24(SessionBasedRobustBackendModule):
+class GnuCash(SessionBasedRobustBackendModule):
     def __init__(self):
         SessionBasedRobustBackendModule.__init__(self)
         self.gnucash_file = None
@@ -271,4 +271,4 @@ class GnuCash24(SessionBasedRobustBackendModule):
         SessionBasedRobustBackendModule.close(self, close_reason)
 
 def get_module_class():
-    return GnuCash24
+    return GnuCash

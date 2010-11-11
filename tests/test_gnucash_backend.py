@@ -6,8 +6,8 @@ from glob import glob
 from decimal import Decimal
 
 # bokeep
-from bokeep.backend_plugins.gnucash_backend24 import \
-    GnuCash24, call_catch_qofbackend_exception_reraise_important
+from bokeep.backend_plugins.gnucash_backend import \
+    GnuCash, call_catch_qofbackend_exception_reraise_important
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
 
@@ -40,10 +40,10 @@ class TestTransaction(Transaction):
     def get_financial_transactions(self):
        return [self.fin_trans]
 
-class GnuCash24BasicSetup(TestCase):
+class GnuCashBasicSetup(TestCase):
     def setUp(self):
         self.gnucash_file_name = create_tmp_filename(
-            'Gnucash24_test_' + self.get_protocol(),
+            'Gnucash_test_' + self.get_protocol(),
             '.gnucash' )
 
         s, book, root = self.acquire_gnucash_session_book_and_root(True)
@@ -77,7 +77,7 @@ class GnuCash24BasicSetup(TestCase):
                 raise e
         self.gnucash_session_termination(s)
 
-        self.backend_module = GnuCash24()
+        self.backend_module = GnuCash()
         self.assertFalse(self.backend_module.can_write())
         self.backend_module.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
@@ -150,9 +150,9 @@ class GetProtocolXML(object):
     def get_protocol(self):
         return XML
 
-class GnuCash24BasicTest(GnuCash24BasicSetup):
+class GnuCashBasicTest(GnuCashBasicSetup):
     test_account_tree_is_present = \
-        GnuCash24BasicSetup.check_account_tree_is_present
+        GnuCashBasicSetup.check_account_tree_is_present
 
     def do_close_and_tree_check(self):
         self.backend_module.close()
@@ -166,11 +166,11 @@ class GnuCash24BasicTest(GnuCash24BasicSetup):
         self.assert_(self.backend_module.can_write() )
         self.do_close_and_tree_check()
 
-class GnuCash24BasicTestXML(GetProtocolXML, GnuCash24BasicTest): pass
+class GnuCashBasicTestXML(GetProtocolXML, GnuCashBasicTest): pass
 
-class GnuCash24StartsWithMarkSetup(GnuCash24BasicSetup):
+class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
     def setUp(self):
-        GnuCash24BasicSetup.setUp(self)
+        GnuCashBasicSetup.setUp(self)
         self.test_trans = TestTransaction(Decimal(1), BANK_FULL_SPEC,
                                           Decimal(-1), PETTY_CASH_FULL_SPEC )
         self.front_end_id = 1
@@ -208,7 +208,7 @@ class GnuCash24StartsWithMarkSetup(GnuCash24BasicSetup):
 
         return return_value
 
-class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):   
+class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):   
     def test_simple_flush(self):
         self.backend_module.flush_backend()
         if not self.backend_module.transaction_is_clean(
@@ -314,8 +314,8 @@ class GnuCash24StartsWithMarkTests(GnuCash24StartsWithMarkSetup):
             self.backend_module.transaction_is_clean(self.front_end_id))
         self.assert_(self.check_of_test_trans_present())
 
-class GnuCash24StartsWithMarkTestsXML(
-    GetProtocolXML, GnuCash24StartsWithMarkTests):
+class GnuCashStartsWithMarkTestsXML(
+    GetProtocolXML, GnuCashStartsWithMarkTests):
     pass
 
 if __name__ == "__main__":

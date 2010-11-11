@@ -10,8 +10,8 @@ from bokeep.gui.state import \
 
 # bo-keep tests
 from test_bokeep_book import BoKeepWithBookSetup
-from test_gnucash24_backend import \
-    GnuCash24BasicSetup, BANK_FULL_SPEC, PETTY_CASH_FULL_SPEC
+from test_gnucash_backend import \
+    GnuCashBasicSetup, BANK_FULL_SPEC, PETTY_CASH_FULL_SPEC
 
 # gnucash
 from gnucash import GncNumeric, Split
@@ -19,14 +19,14 @@ from gnucash import GncNumeric, Split
 TRUST_PLUGIN = 'bokeep.plugins.trust'
 TEST_TRUSTOR = 'testtrustor'
 
-BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend24'
+BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend'
 
-class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCash24BasicSetup):
+class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
     def setUp(self):
         BoKeepWithBookSetup.setUp(self)
         
         # set up GnuCash backend plugin
-        GnuCash24BasicSetup.setUp(self)
+        GnuCashBasicSetup.setUp(self)
         self.backend_module.close()
         self.test_book_1.set_backend_module(BACKEND_PLUGIN)
         self.backend_module = self.test_book_1.get_backend_module()
@@ -75,7 +75,7 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCash24BasicSetup):
 
     def tearDown(self):
         self.state.do_action(CLOSE)
-        GnuCash24BasicSetup.tearDown(self)
+        GnuCashBasicSetup.tearDown(self)
         BoKeepWithBookSetup.tearDown(self)
 
 if __name__ == "__main__":
