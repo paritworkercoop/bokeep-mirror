@@ -45,7 +45,7 @@ from bokeep.config import \
 from bokeep.book import BoKeepBookSet
 from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
-    establish_bokeep_db, manage_available_books
+    establish_bokeep_db
 from main_window_glade import get_main_window_glade_file
 
 GUI_STATE_SUB_DB = 'gui_state'
@@ -151,6 +151,11 @@ class MainWindow(object):
             if self.guistate.get_book() != None and \
                     self.guistate.get_book() == book:
                 cur_book_index = i
+        # this would be the fucked up consequence of a book being deleted
+        # ... until we can deal with it, say it can't happen
+        assert( not(
+                self.guistate.get_book() != None and cur_book_index == None) )
+        # should do something similar for the current transaction
         if len(self.books_combobox_model) > 0:
             if cur_book_index == None:
                 self.books_combobox.set_active(0)
@@ -165,6 +170,7 @@ class MainWindow(object):
     def closedown_for_config(self):
         self.gui_built = False
         self.guistate.do_action(CLOSE)
+        transaction.get().commit() # redundant
         self.books_combobox.set_active(COMBO_SELECTION_NONE)
         self.books_combobox_model.clear()
         self.set_transcombo_index(COMBO_SELECTION_NONE)
@@ -174,7 +180,6 @@ class MainWindow(object):
         self.programmatic_transcombo_index = True
         self.trans_type_model.clear()
         self.programmatic_transcombo_index = False      
-
         
     # Functions for window initialization and use thereafter
 
@@ -323,9 +328,10 @@ class MainWindow(object):
     def on_remove(self, window, event):
         self.application_shutdown()
     
-    def on_bokeep_config(self, *args):
+    def on_configuration1_activate(self, *args):
         assert( self.gui_built )
         self.closedown_for_config()
+        self.bookset.close()
         assert( not self.gui_built )
         # this probably isn't right, should actually retain config path
         # from startup or even the config object, and adjust this api
@@ -335,18 +341,21 @@ class MainWindow(object):
         # major flaw right now is that we don't want this to
         # re-open the same DB at the end, and we need to do something
         # the the return value and seting bookset
-        establish_bokeep_db(self.mainwindow, config_paths[0], None)
-        self.after_background_load()
-        # we need to act differently if its now a tottally new bookset
-        # need to do stuff to self.guistate that is more radical
-        # then the ussual checks that after_background_load() will be
-        # doing
-        assert( self.gui_built )
+        self.bookset = \
+            establish_bokeep_db(self.mainwindow, config_paths[0], None)
 
-    def on_bokeep_book_config(self, *args):
-        assert( self.gui_built )
-        self.closedown_for_config()
-        assert( not self.gui_built )
-        manage_available_books(self.mainwindow, self.bookset )
+        # if there's uncommited stuff, we need to ditch it because
+        # the above function killed off and re-opened the db connecion
+        # we had. But, if there aren't any changes anywhere, this shuldn't
+        # be a problem, right? .. but on the other hand a new transaction
+        # probably begins as new one dies
+        transaction.get().abort()
+
+        self.guistate = (
+            self.bookset.get_dbhandle().get_sub_database_do_cls_init(
+                GUI_STATE_SUB_DB, BoKeepGuiState) )
+        transaction.get().commit()
+
         self.after_background_load()
         assert( self.gui_built )
+        

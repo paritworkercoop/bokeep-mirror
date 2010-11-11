@@ -25,8 +25,14 @@
                         <property name="label">_Configuration</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_configuration1_activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image1">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-preferences</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -59,8 +65,14 @@
                         <property name="label">_Configure backend</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_configure_backend1_activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image2">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-properties</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                   </widget>
@@ -70,7 +82,7 @@
             <child>
               <widget class="GtkMenuItem" id="plugin1">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Plugin</property>
+                <property name="label" translatable="yes">_Plugin</property>
                 <property name="use_underline">True</property>
                 <signal name="activate" handler="on_plugin1_activate"/>
               </widget>

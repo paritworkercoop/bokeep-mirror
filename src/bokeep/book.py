@@ -25,7 +25,6 @@ import transaction
 from BTrees.IOBTree import IOBTree
 
 from backend_plugins.module import BackendModule
-from util import ends_with_commit
 
 DEFAULT_BACKEND_MODULE = "bokeep.backend_plugins.null"
 
@@ -97,7 +96,6 @@ class BoKeepBookSet(object):
     def has_book(self, book_name):
         return book_name in self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY)
 
-    @ends_with_commit
     def add_book(self, new_book_name):
         books_dict = self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY)
         if new_book_name in books_dict:
@@ -106,13 +104,11 @@ class BoKeepBookSet(object):
         self.dbhandle.sub_db_changed()
         return book
 
-    @ends_with_commit
     def remove_book(self, book_name):
         books_dict = self.dbhandle.get_sub_database(BOOKS_SUB_DB_KEY)
         del books_dict[book_name]
         self.dbhandle.sub_db_changed()
 
-    @ends_with_commit
     def establish_books_sub_db(self):
         self.dbhandle.get_sub_database_do_cls_init(BOOKS_SUB_DB_KEY, dict)
 
@@ -124,7 +120,6 @@ class BoKeepBook(Persistent):
         self.enabled_modules = {}
         self.disabled_modules = {}
 
-    @ends_with_commit
     def add_module(self, module_name):
         assert( module_name not in self.enabled_modules and 
                 module_name not in self.disabled_modules )
@@ -133,14 +128,12 @@ class BoKeepBook(Persistent):
             module_name, globals(), locals(), [""]).get_module_class()()
         self._p_changed = True
 
-    @ends_with_commit
     def enable_module(self, module_name):
         assert( module_name in self.disabled_modules )
         self.enabled_modules[module_name] = self.disabled_modules[module_name]
         del self.disabled_modules[module_name]
         self._p_changed = True
         
-    @ends_with_commit
     def disable_module(self, module_name):
         assert( module_name in self.enabled_modules )
         self.disabled_modules[module_name] = self.enabled_modules[module_name]
@@ -189,8 +182,8 @@ class BoKeepBook(Persistent):
                 return i, (code, cls, module)
         return None, (None, None, None)
 
-    @ends_with_commit
     def set_backend_module(self, backend_module_name):
+        self.__backend_module_name = backend_module_name
         self.__backend_module = __import__(
             backend_module_name, globals(), locals(), [""] ).\
             get_module_class()()
@@ -204,6 +197,9 @@ class BoKeepBook(Persistent):
 
     def get_backend_module(self):
         return self.__backend_module
+
+    def get_backend_module_name(self):
+        return self.__backend_module_name
 
     backend_module = property(get_backend_module, set_backend_module)
 

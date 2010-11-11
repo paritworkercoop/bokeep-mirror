@@ -31,7 +31,9 @@ import transaction
 # gtk imports
 from gtk import \
     TreeView, TreeViewColumn, CellRendererText, CellRendererToggle, \
-    RESPONSE_OK, RESPONSE_CANCEL, RESPONSE_CLOSE
+    RESPONSE_OK, RESPONSE_CANCEL, RESPONSE_DELETE_EVENT, \
+    FILE_CHOOSER_ACTION_SAVE, FileChooserDialog, \
+    STOCK_CANCEL, STOCK_SAVE
 
 # bokeep imports
 from bokeep.config import \
@@ -48,115 +50,11 @@ from state import BoKeepConfigGuiState, \
     DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE, \
     BOOK
 
-def do_new_book(bookset):
-    newbookname = raw_input("What is the new book called?\n"
-                            "(hit with nothing to cancel)\n> ")
-    if newbookname != '':
-        bookset.add_book(newbookname)
-    # actual gui should prevent duplicate book names
-    print "\n"
-
-def do_remove_book(bookset):
-    newbookname = raw_input("What is the book being removed called?\n"
-                            "(hit with nothing to cancel)\n> ")
-    if newbookname != '' and bookset.has_book(newbookname):
-        bookset.remove_book(newbookname)
-    print "\n"    
-
-def do_plugin_add(book):
-    new_plugin = raw_input("Name of new plugin, blank to cancel\n> ")
-    if new_plugin == '': return
-    book.add_module(new_plugin)
-
-def do_plugin_config(book):
-    plugin_name = raw_input("Name of new plugin, blank to cancel\n> ")
-    if plugin_name == '': return
-    # argument is for parent window, None right now, but this will actually
-    # be something once bokeepdb.py becomes a real gui
-    book.get_module(plugin_name).do_config(None)
-
-def do_plugin_enable(book):
-    plugin_name = raw_input("Name of plugin, blank to cancel\n> ")
-    if plugin_name == '': return
-    book.enable_module(plugin_name)
-
-def do_plugin_disable(book):
-    plugin_name = raw_input("Name of plugin, blank to cancel\n> ")
-    if plugin_name == '': return
-    book.disable_plugin(plugin_name)
-
-def do_set_backend_plugin(book):
-    plugin_name = raw_input("Name of backend plugin, blank to cancel\n> ")
-    if plugin_name == '': return
-    book.set_backend_module(plugin_name)
-
-def do_backend_plugin_config(book):
-    book.get_backend_module().do_config()
-
-def do_plugin_listing(book):
-    print "enabled modules"
-    print "\n".join(sorted(book.enabled_modules.iterkeys()))
-    print 
-    print "disabled modules"
-    print "\n".join(sorted(book.disabled_modules.iterkeys()))
-    print
-
-    print "backend module:", book.get_backend_module()
-
-def do_change_book(bookset):
-    newbookname = raw_input("What is the book being changed called?\n"
-                            "(hit with nothing to cancel)\n> ")
-    if newbookname != '' and bookset.has_book(newbookname):
-        book = bookset.get_book(newbookname)
-        task = raw_input("Add plugin (A/a), Config plugin (C/c), "
-                         "Enable plugin (E/e), Disable plugin (D/d), "
-                         "Set backend plugin (S/s), "
-                         "Backend plugin config (B/b), "
-                         "Plugin listing (L/l), "
-                         "blank for no action\n> ")
-        if task in "Aa":
-            do_plugin_add(book)
-        elif task in "Cc":
-            do_plugin_config(book)
-        elif task in "Ee":
-            do_plugin_enable(book)
-        elif task in "Dd":
-            do_plugin_disable(book)
-        elif task in "Ss":
-            do_set_backend_plugin(book)
-        elif task in "Bb":
-            do_backend_plugin_config(book)
-        elif task in "Ll":
-            do_plugin_listing(book)
-        else:
-            return
-    print "\n"
-
-def do_list_books(bookset):
-    print "\n".join(name for name, book in bookset.iterbooks() )
-    print "\n"
-
-def manage_available_books(mainwindow, bookset):
-    while True:
-        option = raw_input("Manage your books, "
-                           "New (N/n), Delete (D/d), Change (C/c), "
-                           "List (L/l) Quit (Q/q)\n> " )
-        if option in "Nn":
-            do_new_book(bookset)
-        elif option in "Dd":
-            do_remove_book(bookset)
-        elif option in "Cc":
-            do_change_book(bookset)
-        elif option in "Ll":
-            do_list_books(bookset)
-        elif option in "Qq":
-            break
-
 def establish_bokeep_db(mainwindow, config_path, db_exception):
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
     if db_exception == None:
-        extra_error_info = ""
+        extra_error_info = None
     else:
         extra_error_info = "%s\n%s" %(
             str(db_exception), 
@@ -169,7 +67,7 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
     result, new_filestorage_path = config_dialog.run()
     
     assert( result == RESPONSE_OK or result==RESPONSE_CANCEL or
-            result==RESPONSE_CLOSE )
+            result==RESPONSE_DELETE_EVENT )
     if new_filestorage_path == None or result!=RESPONSE_OK:
         return None
 
@@ -215,7 +113,9 @@ class BoKeepConfigDialog(object):
         if error_msg == None:
             error_msg = ""
         self.message_label.set_label(error_msg)
+        self.path_entry_lock = True
         self.db_path_entry.set_text(filestorage_path)
+        self.path_entry_lock = False
 
         self.set_sensitivities()
         self.selection_change_lock = False
@@ -223,6 +123,8 @@ class BoKeepConfigDialog(object):
 
     def run(self):
         return_value = self.bokeep_config_dialog.run()
+        if self.state.action_allowed(BOOK_CHANGE):
+            self.state.do_action(BOOK_CHANGE, None)
         if return_value == RESPONSE_OK:
             transaction.get().commit()
         else:
@@ -245,18 +147,62 @@ class BoKeepConfigDialog(object):
             ):
             obj.set_sensitive( self.state.action_allowed(action) )
 
+    def get_currentely_selected_book(self, *args):
+        sel = self.books_tv.get_selection()
+        sel_iter = sel.get_selected()[1]
+        if sel_iter == None:
+            return None
+        else:
+            sel_row = self.state.book_liststore[sel_iter]
+            return sel_row[0]
+
+    # event handles
+
     def on_apply_db_change_button_clicked(self, *args):
-        pass
+        self.last_commit_db_path = self.db_path_entry.get_text()
+        self.selection_change_lock = True
+        self.state.do_action(DB_PATH_CHANGE)
+        self.selection_change_lock = False
+        self.set_sensitivities()
 
     def on_selectdb_button_clicked(self, *args):
-        pass
+        fcd = FileChooserDialog(
+            "Where should the database be?",
+            self.bokeep_config_dialog,
+            FILE_CHOOSER_ACTION_SAVE,
+            (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_SAVE, RESPONSE_OK) )
+        fcd.set_modal(True)
+        result = fcd.run()
+        filestorage_path = fcd.get_filename()
+        fcd.destroy()
+        if result == RESPONSE_OK and filestorage_path != None:
+            self.path_entry_lock = True
+            self.db_path_entry.set_text(filestorage_path)
+            self.path_entry_lock = False
+            self.selection_change_lock = True
+            self.state.do_action(DB_ENTRY_CHANGE,
+                                 filestorage_path)
+            self.state.do_action(DB_PATH_CHANGE)
+            self.selection_change_lock = False
+            self.last_commit_db_path = filestorage_path
+            self.set_sensitivities()            
 
     def on_db_path_entry_changed(self, *args):
-        pass
+        if not self.path_entry_lock:
+            filestorage_path = self.db_path_entry.get_text()
+            self.selection_change_lock = True
+            self.state.do_action(DB_ENTRY_CHANGE, filestorage_path)
+            self.selection_change_lock = False
+            self.set_sensitivities()
 
     def on_bookadd_clicked(self, *args):
-        self.state.book_liststore.append( (self.book_add_entry.get_text(),))
+        new_book = self.book_add_entry.get_text()
+        self.state.book_liststore.append( (new_book,))
         self.book_add_entry.set_text("")
+        cur_book = self.get_currentely_selected_book()
+        # this ensures the book get added
+        self.state.do_action(BOOK_CHANGE, new_book)
+        self.state.do_action(BOOK_CHANGE, cur_book)
 
     def on_plugin_add_clicked(self, *args):
         self.state.plugin_liststore.append(
@@ -265,26 +211,22 @@ class BoKeepConfigDialog(object):
 
     def on_backend_pugin_entry_changed(self, *args):
         if not self.backend_entry_lock:
-            pass
+            self.state.do_action(
+                BACKEND_PLUGIN_CHANGE, self.backend_pugin_entry.get_text())
 
     def on_book_selection_change(self, *args):
         if not self.selection_change_lock:
-            sel = self.books_tv.get_selection()
-            sel_iter = sel.get_selected()[1]
-            if sel_iter == None:
+            sel_book = self.get_currentely_selected_book()
+            if sel_book == None:
                 self.state.do_action(BOOK_CHANGE, None)
                 self.backend_entry_lock = True
                 self.backend_pugin_entry.set_text("")
                 self.backend_entry_lock = False
             else:
-                sel_row = self.state.book_liststore[sel_iter]
-                book_selected = sel_row[0]
-                self.state.do_action(BOOK_CHANGE, book_selected)
+                self.state.do_action(BOOK_CHANGE, sel_book)
                 self.backend_entry_lock = True
-                self.backend_pugin_entry.set_text("blah")
-                # backend plugins need to be able to identify themselves
-                    #self.state.data[BOOK].get_backend_module().__file__)
+                self.backend_pugin_entry.set_text(
+                    self.state.data[BOOK].get_backend_module_name() )
                 self.backend_entry_lock = False
             self.set_sensitivities()
             
-

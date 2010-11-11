@@ -1,3 +1,0 @@
-#!/bin/sh
-
-PYTHONPATH=$PYTHONPATH:src/ python -m main $@
