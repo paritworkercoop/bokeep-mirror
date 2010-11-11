@@ -137,6 +137,7 @@ class MainWindow(object):
         cell = CellRendererText()
         self.books_combobox.pack_start(cell, True)
         self.books_combobox.add_attribute(cell, 'text', 0)
+        self.trans_type_model = ListStore(str, int, object)
         self.set_sensitivities()
         
     def after_background_load(self):
@@ -199,7 +200,9 @@ class MainWindow(object):
         if book == None:
             return
 
-        self.trans_type_model = ListStore(str, int, object)
+        self.programmatic_transcombo_index = True
+        self.trans_type_model.clear()
+        self.programmatic_transcombo_index = False
 
         cur_trans = None
         if self.guistate.get_transaction_id() != None:
