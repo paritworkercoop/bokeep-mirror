@@ -97,8 +97,10 @@ def account_from_path(top_account, account_path, original_path=None):
         return account
 
 def get_account_from_trans_line(top_level_account, trans_line):
-    # shouldn't we raise a catchable exception intead of asserting here
-    assert( hasattr(trans_line, "account_spec") )
+    if not hasattr(trans_line, "account_spec"):
+        raise BoKeepBackendException("the gnucash backend needs the "
+                                     "optional attribute account_spec "
+                                     "to be set" )
     return account_from_path(top_level_account, trans_line.account_spec)
 
 def make_new_split(book, amount, account, trans, currency):
