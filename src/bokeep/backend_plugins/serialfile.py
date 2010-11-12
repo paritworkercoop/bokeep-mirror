@@ -25,6 +25,12 @@ from bokeep.util import attribute_or_blank
 from decimal import Decimal 
 from sys import stderr
 
+# gtk imports
+from gtk import \
+    RESPONSE_OK, RESPONSE_CANCEL, \
+    FILE_CHOOSER_ACTION_SAVE, FileChooserDialog, \
+    STOCK_CANCEL, STOCK_SAVE
+
 ZERO = Decimal(0)
 
 class SerialFileModule(SessionBasedRobustBackendModule):
@@ -101,7 +107,8 @@ credits
 
     def close(self):
         try:
-            self._v_session_active.close()
+            if hasattr(self, '_v_session_active'):
+                self._v_session_active.close()
         except IOError:
             # nothing to do here, super class close() will del
             # self._v_session_active, callers of close are expecting
@@ -117,6 +124,19 @@ credits
             raise BoKeepBackendException(str(e.message))
         else:
             self.open_session_and_retain()
+
+    def configure_backend(self, parent_window=None):
+        fcd = FileChooserDialog(
+            "Where should the serial file be?",
+            parent_window,
+            FILE_CHOOSER_ACTION_SAVE,
+            (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_SAVE, RESPONSE_OK) )
+        fcd.set_modal(True)
+        result = fcd.run()
+        serialfile_path = fcd.get_filename()
+        fcd.destroy()
+        if result == RESPONSE_OK and serialfile_path != None:
+            self.setattr('accounting_file', serialfile_path)
 
 def get_module_class():
     return SerialFileModule

@@ -239,6 +239,12 @@ class BackendModule(Persistent):
         """
         pass
 
+    def configure_backend(self, parent_window=None):
+        """Instructs the plugin to create a configuration dialog
+        provide the parent window or None
+        """
+        pass
+
     @ends_with_commit
     def update_trans_flush_check_and_close(self, trans_id, transaction):
         """When this is done, it does a zopedb transaction commit, if you're

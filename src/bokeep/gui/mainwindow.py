@@ -343,7 +343,7 @@ class MainWindow(object):
             self.cmdline_options.configfile)
         # major flaw right now is that we don't want this to
         # re-open the same DB at the end, and we need to do something
-        # the the return value and seting bookset
+        # the return value and seting bookset
         self.bookset = \
             establish_bokeep_db(self.mainwindow, config_paths[0], None)
 
@@ -362,3 +362,16 @@ class MainWindow(object):
         self.after_background_load()
         assert( self.gui_built )
         
+
+    def on_configure_backend1_activate(self, *args):
+        book = self.guistate.get_book()
+        if book != None:
+            backend = book.get_backend_module()
+            backend.close()
+            backend.configure_backend(self.mainwindow)
+
+    def on_configure_plugin1_activate(self, *args):
+        pass
+
+    def on_about_activate(self, *args):
+        pass

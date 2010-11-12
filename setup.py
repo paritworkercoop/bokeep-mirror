@@ -67,7 +67,8 @@ setup(name='Bo-Keep',
                 ]
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
-      package_data={PACKAGE_NAME: ['gui/glade/bokeep_main_window.glade'] },
+      package_data={PACKAGE_NAME: ['gui/glade/bokeep_main_window.glade',
+                                   'gui/glade/bokeep.ico'] },
       data_files=[('share/bokeep_initialization',
                    ['examples/bokeep_configuration/bo-keep.cfg'] ),
                   
