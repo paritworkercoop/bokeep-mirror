@@ -96,6 +96,9 @@ class GnuCashStartsWithMarkSetup22(GnuCashBasicSetup22,
 class GnuCashStartsWithMarkTests22(GnuCashStartsWithMarkSetup22,
                                    GnuCashStartsWithMarkTests):
     def test_close_account_commod_change_then_flush(self):
+        from gnucash import GncCommodityTable
+        from gnucash.gnucash_core_c import \
+            gnc_commodity_table_get_table, gnc_commodity_table_lookup
         self.backend_module.close()
 
         self.assertFalse(self.backend_module.transaction_is_clean(

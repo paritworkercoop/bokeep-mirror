@@ -208,9 +208,9 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
                        for split_inst in bank.GetSplitList() ]
         petty_cash_splits = [Split(instance=split_inst)
                              for split_inst in petty_cash.GetSplitList() ]
-        ONE = GncNumeric(1)
-        NEG_ONE = GncNumeric(-1)
-        print 'only got here'
+        ONE = GncNumeric(1, 1)
+        NEG_ONE = GncNumeric(-1, 1)
+
         # perhaps we this restriction be done away with to make the
         # test more flexible and the actual transaction of interest
         # fished out amougst others (if they exist)
@@ -219,8 +219,6 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
         # is being delete and re-created a lot, checking for one and only
         # transaction helps ensure that the going away side really is happening
         if len(bank_splits) == 1 and len(petty_cash_splits) == 1:
-            print 'got this far!'
-            # compare the bank account splists
             if bank_splits[0].GetAmount().equal( ONE ):
                 if petty_cash_splits[0].GetAmount().equal(NEG_ONE):
                     return_value = True
