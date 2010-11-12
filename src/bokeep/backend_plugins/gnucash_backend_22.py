@@ -31,6 +31,12 @@ from session_based_robust_backend_module import \
     SessionBasedRobustBackendModule
 from bokeep.util import attribute_or_blank
 
+# gtk imports
+from gtk import \
+    RESPONSE_OK, RESPONSE_CANCEL, \
+    FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, \
+    STOCK_CANCEL, STOCK_OPEN
+
 # there should be some fairly serrious unit testing for this
 def gnc_numeric_from_decimal(decimal_value):
     # a kludge because we can't import at the top!
@@ -318,6 +324,19 @@ class GnuCash22(SessionBasedRobustBackendModule):
             close_reason = "close() called because gnucash session failed " + \
                 self.current_session_error 
         SessionBasedRobustBackendModule.close(self, close_reason)
+
+    def configure_backend(self, parent_window=None):
+        fcd = FileChooserDialog(
+            "Where is the gnucash file?",
+            parent_window,
+            FILE_CHOOSER_ACTION_OPEN,
+            (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_OPEN, RESPONSE_OK) )
+        fcd.set_modal(True)
+        result = fcd.run()
+        gnucashfile_path = fcd.get_filename()
+        fcd.destroy()
+        if result == RESPONSE_OK and gnucashfile_path != None:
+            self.setattr('gnucashfile_path', 'file' + ':' + gnucashfile_path)
 
 def get_module_class():
     return GnuCash22

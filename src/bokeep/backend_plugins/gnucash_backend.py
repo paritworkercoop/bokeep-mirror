@@ -38,6 +38,11 @@ from gnucash.gnucash_core_c import \
         string_to_guid, \
         guid_to_string # NOTE, this is deprecated and non thread safe
                        # it is probably a very bad idea to be using this
+# gtk imports
+from gtk import \
+    RESPONSE_OK, RESPONSE_CANCEL, \
+    FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, \
+    STOCK_CANCEL, STOCK_OPEN
         
 SQLITE3 = 'sqlite3'
 XML = 'xml'
@@ -269,6 +274,21 @@ class GnuCash(SessionBasedRobustBackendModule):
             close_reason = "close() called because gnucash session failed " + \
                 self.current_session_error 
         SessionBasedRobustBackendModule.close(self, close_reason)
+
+    def configure_backend(self, parent_window=None):
+        fcd = FileChooserDialog(
+            "Where is the gnucash file?",
+            parent_window,
+            FILE_CHOOSER_ACTION_OPEN,
+            (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_OPEN, RESPONSE_OK) )
+        fcd.set_modal(True)
+        result = fcd.run()
+        gnucashfile_path = fcd.get_filename()
+        fcd.destroy()
+        if result == RESPONSE_OK and gnucashfile_path != None:
+            # should make this a more sophisticated dialog to choose between
+            # xml and sqlite
+            self.setattr('gnucashfile_path', 'xml' + '://' + gnucashfile_path)
 
 def get_module_class():
     return GnuCash
