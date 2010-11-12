@@ -19,6 +19,7 @@
 
 # Python library
 from os.path import exists
+import sys
 
 # ZOPE
 import transaction
@@ -353,6 +354,9 @@ class MainWindow(object):
         # be a problem, right? .. but on the other hand a new transaction
         # probably begins as new one dies
         transaction.get().abort()
+
+        if self.bookset == None:
+            sys.exit()
 
         self.guistate = (
             self.bookset.get_dbhandle().get_sub_database_do_cls_init(
