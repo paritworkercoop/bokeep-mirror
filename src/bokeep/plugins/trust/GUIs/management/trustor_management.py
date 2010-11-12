@@ -40,12 +40,15 @@ from bokeep.plugins.trust.GUIs.management.trustor_transactions import trustor_tr
 from os.path import abspath, dirname, join, exists
 
 class trustor_management(GladeWindow):
-    def __init__(self, trust_module):
+    def __init__(self, trust_module, parent_window):
         self.trust_module = trust_module
         self.trustors = self.trust_module.get_trustors()
         self.current_name = None
 
         self.init()
+        if parent_window != None:
+            self.top_window.set_transient_for(parent_window)
+            self.top_window.set_modal(True)
 
         self.extended_init()
 

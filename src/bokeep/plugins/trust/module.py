@@ -96,8 +96,8 @@ class TrustModule(Persistent):
     def __init__(self):
         self.init_trust_database()
 
-    def do_config(self, parent_window):
-        trustor_management(self)
+    def run_configuration_interface(self, parent_window):
+        trustor_management(self, parent_window)
 
     def init_trustors_database(self):
         self.trustors_database = {}        

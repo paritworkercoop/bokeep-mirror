@@ -375,7 +375,18 @@ class MainWindow(object):
             backend.configure_backend(self.mainwindow)
 
     def on_configure_plugin1_activate(self, *args):
-        pass
+        if self.guistate.get_book() == None:
+            return
+        
+        currindex = self.trans_type_combo.get_active_iter()
+        if currindex == COMBO_SELECTION_NONE:
+            return
+        currmodule = self.trans_type_combo.get_model().get_value(
+            currindex,2)
+        currmodule.run_configuration_interface(self.mainwindow)
+        # hmm, this doesn't seem to be getting it done
+        self.clear_trans_view()
+        self.reset_trans_view()
 
     def on_about_activate(self, *args):
         pass
