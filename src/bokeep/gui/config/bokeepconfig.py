@@ -22,31 +22,40 @@ from os.path import exists
 # BoKeep imports
 from bokeep.config import BoKeepConfigurationFileException, create_config_file  
 
-def answer_yes(msg):
-    answer = raw_input(msg + " (y/n)\n> ")
-    return answer in ("Yes", "yes", "y", "Y")
-        
+# gtk imports
+from gtk import MessageDialog, MESSAGE_QUESTION, BUTTONS_YES_NO, DIALOG_MODAL, \
+    RESPONSE_YES
 
 def establish_bokeep_config(mainwindow, paths, config_exception):
     assert(isinstance(config_exception, BoKeepConfigurationFileException))
-    print config_exception.message
-    print "BoKeep requires a configuration file to operate"
 
     # This is here to support the old default
     # current working directory config vs home directory configs
     # but maybe there should only be one default place to look (home dir)?
     for path in paths:
-        if answer_yes("Would you like %s to be created from scratch?" %
-                      path):
+        md = MessageDialog(
+            mainwindow, DIALOG_MODAL, MESSAGE_QUESTION, BUTTONS_YES_NO,
+            str(config_exception) + "\n" + 
+            """BoKeep requires a configuration file to operate
+Would you like %s to be created from scratch?""" % path)
+        result = md.run()
+        md.destroy()
+        if result == RESPONSE_YES:
             # important to make a distinction to the user between
             # creating something from nothing and overwrite
-            if exists(path) and not answer_yes(
-                "%s already exists, overwrite?" % path):
+            if exists(path):
+                md = MessageDialog(
+                    mainwindow, DIALOG_MODAL, MESSAGE_QUESTION, BUTTONS_YES_NO,
+                    "%s exists, overwrite?" % path)
+                result = md.run()
+                md.destroy()
+                if result != RESPONSE_YES:
                     return None
             try:
                 create_config_file(path)
             except BoKeepConfigurationFileException, e:
-                print path, "could not be created %s" % e.message
+                pass
+                #print path, "could not be created %s" % e.message
             else:
                 return path
     # it would be nice if this wasn't communicated in prompt form,
@@ -54,6 +63,6 @@ def establish_bokeep_config(mainwindow, paths, config_exception):
     # were the obvious default option, perhaps the result of closing the
     # the window / hitting cancel, or even the default option for a radio
     # button set
-    print "no configuration file created, goodbye"
+    #print "no configuration file created, goodbye"
     return None
                 
