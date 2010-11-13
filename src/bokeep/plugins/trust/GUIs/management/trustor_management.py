@@ -40,7 +40,8 @@ from bokeep.plugins.trust.GUIs.management.trustor_transactions import trustor_tr
 from os.path import abspath, dirname, join, exists
 
 class trustor_management(GladeWindow):
-    def __init__(self, trust_module, parent_window):
+    def __init__(self, trust_module, parent_window, backend_account_fetch):
+        self.backend_account_fetch = backend_account_fetch
         self.trust_module = trust_module
         self.trustors = self.trust_module.get_trustors()
         self.current_name = None
@@ -51,6 +52,12 @@ class trustor_management(GladeWindow):
             self.top_window.set_modal(True)
 
         self.extended_init()
+        if hasattr(self.trust_module, 'trust_liability_account_str'):
+            self.trust_liability_account_label.set_text(
+                self.trust_module.trust_liability_account_str)
+        if hasattr(self.trust_module, 'cash_account_str'):
+            self.cash_account_label.set_text(
+                self.trust_module.cash_account_str )
 
     def construct_filename(self, filename):
         import trustor_management as trust_module
@@ -98,6 +105,8 @@ class trustor_management(GladeWindow):
             'name_entry',
             'save_button',
             'report_button',
+            'trust_liability_account_label',
+            'cash_account_label',
             ]
 
         handlers = [
@@ -108,6 +117,8 @@ class trustor_management(GladeWindow):
             'on_zoom_button_clicked',
             'on_save_button_clicked',
             'on_report_button_clicked',
+            'on_select_trust_liability_clicked',
+            'on_select_cash_account_clicked',
             ]
 
         top_window = 'TrustManagement'
@@ -188,3 +199,25 @@ class trustor_management(GladeWindow):
         filesel.hide()
         self.generate_balance_report(filename)
 
+
+    def handle_account_fetch(self, label, setter):
+        account_spec, account_str = self.backend_account_fetch(
+            self.top_window)
+        if account_spec != None:
+            setter(account_spec, account_str)
+            label.set_text(account_str)
+
+    def on_select_trust_liability_clicked(self, *args):
+        self.handle_account_fetch(
+            self.widgets['trust_liability_account_label'],
+            self.trust_module.set_trust_liability_account )
+    
+    def on_select_cash_account_clicked(self, *args):
+        self.handle_account_fetch(
+            self.widgets['cash_account_label'],
+            self.trust_module.set_cash_account )
+        
+
+
+
+    

@@ -96,8 +96,9 @@ class TrustModule(Persistent):
     def __init__(self):
         self.init_trust_database()
 
-    def run_configuration_interface(self, parent_window):
-        trustor_management(self, parent_window)
+    def run_configuration_interface(self, parent_window,
+                                    backend_account_fetch=None):
+        trustor_management(self, parent_window, backend_account_fetch)
 
     def init_trustors_database(self):
         self.trustors_database = {}        
@@ -212,11 +213,14 @@ class TrustModule(Persistent):
         self.ensure_trust_database()
         return self.trustors_database
 
-    def set_cash_account(self, account_spec_obj):
+    def set_cash_account(self, account_spec_obj, cash_acct_str='cash'):
         self.cash_account = account_spec_obj
+        self.cash_account_str = cash_acct_str
 
-    def set_trust_liability_account(self, account_spec_obj):
+    def set_trust_liability_account(self, account_spec_obj,
+                                    liability_account_str='liability'):
         self.trust_liability_account = account_spec_obj
+        self.trust_liability_account_str = liability_account_str
 
     @staticmethod
     def get_transaction_type_codes():

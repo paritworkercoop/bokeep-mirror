@@ -245,6 +245,9 @@ class BackendModule(Persistent):
         """
         pass
 
+    def backend_account_dialog(self, parent_window=None):
+        return None, ''
+    
     @ends_with_commit
     def update_trans_flush_check_and_close(self, trans_id, transaction):
         """When this is done, it does a zopedb transaction commit, if you're

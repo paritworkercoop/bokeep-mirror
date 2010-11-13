@@ -41,8 +41,8 @@ from gnucash.gnucash_core_c import \
 # gtk imports
 from gtk import \
     RESPONSE_OK, RESPONSE_CANCEL, \
-    FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, \
-    STOCK_CANCEL, STOCK_OPEN
+    FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, Dialog, Entry, \
+    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL
         
 SQLITE3 = 'sqlite3'
 XML = 'xml'
@@ -291,6 +291,24 @@ class GnuCash(SessionBasedRobustBackendModule):
             # should make this a more sophisticated dialog to choose between
             # xml and sqlite
             self.setattr('gnucashfile_path', 'xml' + '://' + gnucashfile_path)
+
+    def backend_account_dialog(self, parent_window=None):
+        dia = Dialog("Please enter a gnucash account",
+                     parent_window, DIALOG_MODAL,
+                     (STOCK_OK, RESPONSE_OK,
+                      STOCK_CANCEL, RESPONSE_CANCEL ) )
+        account_entry = Entry()
+        account_entry.set_width_chars(60)
+        dia.vbox.pack_start(account_entry)
+        account_entry.show()
+        dia.vbox.show_all()
+        result = dia.run()
+        account_text = account_entry.get_text()
+        dia.destroy()
+        if result == RESPONSE_OK:
+            return tuple(account_text.split(':')), account_text
+        else:
+            return None, ''
 
 def get_module_class():
     return GnuCash

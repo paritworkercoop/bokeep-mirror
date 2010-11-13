@@ -373,6 +373,7 @@ class MainWindow(object):
             backend = book.get_backend_module()
             backend.close()
             backend.configure_backend(self.mainwindow)
+            transaction.get().commit()
 
     def on_configure_plugin1_activate(self, *args):
         if self.guistate.get_book() == None:
@@ -383,10 +384,13 @@ class MainWindow(object):
             return
         currmodule = self.trans_type_combo.get_model().get_value(
             currindex,2)
-        currmodule.run_configuration_interface(self.mainwindow)
+        currmodule.run_configuration_interface(
+            self.mainwindow, self.guistate.get_book().get_backend_module(
+                ).backend_account_dialog)
         # hmm, this doesn't seem to be getting it done
         self.clear_trans_view()
         self.reset_trans_view()
+        transaction.get().commit()
 
     def on_about_activate(self, *args):
         pass
