@@ -54,6 +54,12 @@ GUI_STATE_SUB_DB = 'gui_state'
 
 COMBO_SELECTION_NONE = -1
 
+def get_bo_keep_logo():
+    import mainwindow as main_window_module
+    return join( dirname( abspath(main_window_module.__file__)),
+                 'bo-keep.svg')
+
+
 class MainWindow(object):
     # Functions for window initialization 
 
@@ -133,6 +139,7 @@ class MainWindow(object):
         glade_file = get_main_window_glade_file()
         load_glade_file_get_widgets_and_connect_signals(
             glade_file, "mainwindow", self, self )
+        self.mainwindow.set_icon_from_file("src/bokeep/gui/bo-keep.svg")
 
         self.books_combobox_model = ListStore(str, str, object)
         self.books_combobox.set_model(self.books_combobox_model)
@@ -394,10 +401,7 @@ class MainWindow(object):
         transaction.get().commit()
 
     def on_about_activate(self, *args):
-        import mainwindow as main_window_module
-        bo_keep_logo_path = \
-            join( dirname( abspath(main_window_module.__file__)),
-                  'bo-keep.svg')
+        bo_keep_logo_path = get_bo_keep_logo()
         ab = AboutDialog()
         ab.set_transient_for(self.mainwindow)
         ab.set_modal(True)
