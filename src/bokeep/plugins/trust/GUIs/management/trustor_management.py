@@ -53,10 +53,10 @@ class trustor_management(GladeWindow):
 
         self.extended_init()
         if hasattr(self.trust_module, 'trust_liability_account_str'):
-            self.trust_liability_account_label.set_text(
+            self.widgets['trust_liability_account_label'].set_text(
                 self.trust_module.trust_liability_account_str)
         if hasattr(self.trust_module, 'cash_account_str'):
-            self.cash_account_label.set_text(
+            self.widgets['cash_account_label'].set_text(
                 self.trust_module.cash_account_str )
 
     def construct_filename(self, filename):

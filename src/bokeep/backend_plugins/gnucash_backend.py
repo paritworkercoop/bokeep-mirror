@@ -290,7 +290,7 @@ class GnuCash(SessionBasedRobustBackendModule):
         if result == RESPONSE_OK and gnucashfile_path != None:
             # should make this a more sophisticated dialog to choose between
             # xml and sqlite
-            self.setattr('gnucashfile_path', 'xml' + '://' + gnucashfile_path)
+            self.setattr('gnucash_file', 'xml' + '://' + gnucashfile_path)
 
     def backend_account_dialog(self, parent_window=None):
         dia = Dialog("Please enter a gnucash account",

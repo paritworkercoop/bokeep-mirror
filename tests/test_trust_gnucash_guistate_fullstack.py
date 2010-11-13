@@ -47,8 +47,8 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
 
     def test_basic_transaction(self):
         ONE_INT = 1
-        ONE = GncNumeric(ONE_INT)
-        NEG_ONE = GncNumeric(-ONE_INT)
+        ONE = GncNumeric(ONE_INT, 1)
+        NEG_ONE = GncNumeric(-ONE_INT, 1)
 
         self.state.do_action(NEW)
         self.assert_(self.test_book_1.has_transaction(0))

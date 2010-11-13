@@ -338,7 +338,7 @@ class GnuCash22(SessionBasedRobustBackendModule):
         gnucashfile_path = fcd.get_filename()
         fcd.destroy()
         if result == RESPONSE_OK and gnucashfile_path != None:
-            self.setattr('gnucashfile_path', 'file' + ':' + gnucashfile_path)
+            self.setattr('gnucash_file', 'file' + ':' + gnucashfile_path)
     def backend_account_dialog(self, parent_window=None):
         dia = Dialog("Please enter a gnucash account",
                      parent_window, DIALOG_MODAL,

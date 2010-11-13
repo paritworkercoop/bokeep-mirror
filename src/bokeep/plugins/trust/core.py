@@ -43,7 +43,17 @@ class TrustTransaction(Transaction):
         if hasattr(self.trust_module, 'trust_liability_account'):
             liability_line.account_spec = \
                 self.trust_module.trust_liability_account
-        return ( FinancialTransaction( (cash_line, liability_line) ), )
+        fin_trans = FinancialTransaction( (cash_line, liability_line) )
+        if self.trustor != None:
+            # this should never be so, yet in the unit tests it comes up
+            if isinstance(self.trustor, str):
+                fin_trans.description = self.trustor
+            else:
+                fin_trans.description = self.trustor.name
+        fin_trans.trans_date = self.trans_date
+        # should add chequenum at some point, legal aid requested this
+        # for ordering
+        return ( fin_trans, )
 
     def get_transfer_amount(self):
         return self.transfer_amount
