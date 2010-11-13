@@ -73,6 +73,10 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         self.assert_(bank_splits[0].GetAmount().equal( NEG_ONE ) )
         self.gnucash_session_termination(s)                             
 
+    def test_change_transaction(self):
+        self.state.do_action(NEW)
+        self.state.do_action(TYPE_CHANGE, 1)
+
     def tearDown(self):
         self.state.do_action(CLOSE)
         GnuCashBasicSetup.tearDown(self)

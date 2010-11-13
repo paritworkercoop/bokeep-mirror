@@ -205,9 +205,15 @@ class BoKeepBook(Persistent):
 
     def insert_transaction(self, trans):
         if len(self.trans_tree) == 0:
-            key = 0
+            largest_in_current = -1
         else:
-            key = self.trans_tree.maxKey() + 1
+            largest_in_current = self.trans_tree.maxKey()
+
+        if not hasattr(self, 'largest_key_ever'):
+            self.largest_key_ever = largest_in_current
+
+        key = max(largest_in_current, self.largest_key_ever) + 1
+        self.largest_key_ever = key
         result = self.trans_tree.insert(key, trans)
         assert( result == 1 )
         return key
