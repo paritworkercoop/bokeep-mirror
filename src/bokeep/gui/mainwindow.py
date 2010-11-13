@@ -18,16 +18,17 @@
 # Author: Mark Jenkins <mark@parit.ca>
 
 # Python library
-from os.path import exists
+from os.path import exists, abspath, dirname, join
 import sys
 
 # ZOPE
 import transaction
 
 # Gtk
-from gtk import main_quit, ListStore, CellRendererText
+from gtk import main_quit, ListStore, CellRendererText, AboutDialog
 from gtk.glade import XML
 import gobject
+from gtk.gdk import pixbuf_new_from_file_at_size
 
 
 # Bo-Keep
@@ -393,4 +394,24 @@ class MainWindow(object):
         transaction.get().commit()
 
     def on_about_activate(self, *args):
-        pass
+        import mainwindow as main_window_module
+        bo_keep_logo_path = \
+            join( dirname( abspath(main_window_module.__file__)),
+                  'bo-keep.svg')
+        ab = AboutDialog()
+        ab.set_transient_for(self.mainwindow)
+        ab.set_modal(True)
+        ab.set_name("Bo-Keep")
+        ab.set_version("1.0")
+        ab.set_copyright("ParIT Worker Co-operative, Ltd. 2010")
+        ab.set_comments(
+            "Bo-Keep helps you keep your books so you don't get lost")
+        ab.set_license("GNU General Public License Version 3")
+        ab.set_authors(("Mark Jenkins <mark@parit.ca>",
+                        "Jamie Campbell <jamie@parit.ca>"))
+        ab.set_artists(("David Henry <david@parit.ca>",))
+        ab.set_program_name("Bo-Keep")
+        ab.set_logo( pixbuf_new_from_file_at_size(
+                bo_keep_logo_path, 300, 266) )
+        ab.run()
+        ab.destroy()

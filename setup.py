@@ -64,11 +64,12 @@ setup(name='Bo-Keep',
                 PACKAGE_NAME + '.plugins.trust.GUIs.entry',
                 PACKAGE_NAME + '.plugins.trust.GUIs.management',
                 PACKAGE_NAME + '.plugins.mileage',
-                ]
+                ],
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
       package_data={PACKAGE_NAME: ['gui/glade/bokeep_main_window.glade',
-                                   'gui/glade/bokeep.ico'] },
+                                   'gui/glade/bokeep.ico',
+                                   'gui/bo-keep.svg'] },
       data_files=[('share/bokeep_initialization',
                    ['examples/bokeep_configuration/bo-keep.cfg'] ),
                   
