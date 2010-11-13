@@ -43,14 +43,9 @@ class TestCommand(Command):
 # twice, what's going to happen when you do a setup.py install on top of
 # an old installation?
 setup(name='Bo-Keep',
-      version='0.9.0',
+      version='1.0.0',
       cmdclass = { 'test': TestCommand },
-      scripts=['bo-keep',
-               'bo_keep_payroll.py',
-               'edit_bokeep_payroll.sh',
-               'run_bokeep_payroll.sh',
-               'bo_keep_fix_bug_in_v0.3_payroll_database.py',
-               'bo_keep_payroll_csv_dump.py'
+      scripts=['bo-keep', 'bo-keep.sh'
                ],
       packages=[PACKAGE_NAME,
                 PACKAGE_NAME + '.backend_plugins',
@@ -67,24 +62,15 @@ setup(name='Bo-Keep',
                 ],
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
-      package_data={PACKAGE_NAME: ['gui/glade/bokeep_main_window.glade',
-                                   'gui/glade/bokeep.ico',
-                                   'gui/bo-keep.svg'] },
-      data_files=[('share/bokeep_initialization',
-                   ['examples/bokeep_configuration/bo-keep.cfg'] ),
-                  
-                  ('share/bokeep_payroll_examples',
-                   ['examples/payroll_configuration/payroll_configuration.py',
-                    'examples/payroll_configuration/payday_data.py']
-                   ),
-
-                  ('share/bokeep_book_examples',
-                   ['examples/books/books.gnucash']),
-
-                  ('share/applications',
-                   ['desktop_files/edit_bokeep_payroll.sh.desktop',
-                    'desktop_files/run_bokeep_payroll.sh.desktop',
-                    'desktop_files/initialize_accounting_system.sh.desktop'
-                    ])
+      package_data={PACKAGE_NAME: [
+            'gui/glade/bokeep_main_window.glade',
+            'gui/glade/bokeep.ico',
+            'gui/bo-keep.svg',
+            'plugins/trust/GUIs/management/data/trustor_transactions.glade',
+            'plugins/trust/GUIs/management/data/trustor_management.glade',
+            'plugins/trust/GUIs/entry/data/trustor_entry.glade',
+            'plugins/mileage/mileage.glade'] },
+      data_files=[('share/applications',
+                   ['desktop_files/bo-keep.sh.desktop' ])
                   ]
       )

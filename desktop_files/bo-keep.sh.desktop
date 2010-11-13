@@ -3,8 +3,8 @@ Encoding=UTF-8
 Version=1.0
 Type=Application
 Terminal=false
-Exec=edit_bokeep_payroll.sh
-Name=Edit BoKeep Payroll
+Exec=bo-keep.sh
+Name=Run Bo-Keep with GnuCash 2.2 path
 Icon=gnome-panel-launcher
 Categories=Office;Finance;
 
