@@ -34,8 +34,8 @@ from bokeep.util import attribute_or_blank
 # gtk imports
 from gtk import \
     RESPONSE_OK, RESPONSE_CANCEL, \
-    FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, \
-    STOCK_CANCEL, STOCK_OPEN
+    FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, Dialog, Entry, \
+    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL
 
 # there should be some fairly serrious unit testing for this
 def gnc_numeric_from_decimal(decimal_value):
