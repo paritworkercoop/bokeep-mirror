@@ -139,7 +139,7 @@ class MainWindow(object):
         glade_file = get_main_window_glade_file()
         load_glade_file_get_widgets_and_connect_signals(
             glade_file, "mainwindow", self, self )
-        self.mainwindow.set_icon_from_file("src/bokeep/gui/bo-keep.svg")
+        self.mainwindow.set_icon_from_file(get_bo_keep_logo())
 
         self.books_combobox_model = ListStore(str, str, object)
         self.books_combobox.set_model(self.books_combobox_model)
