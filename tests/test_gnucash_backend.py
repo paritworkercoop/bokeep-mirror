@@ -135,7 +135,7 @@ class GnuCashBasicSetup(TestCase):
 
     def acquire_gnucash_session_book_and_root(self, is_new=False):
         from gnucash import Session
-        s = Session(self.get_gnucash_file_name_with_protocol(), is_new)
+        s = Session(self.get_gnucash_file_name_with_protocol(), is_new=is_new)
         book = s.book
         root = s.book.get_root_account()
         return (s, book, root)

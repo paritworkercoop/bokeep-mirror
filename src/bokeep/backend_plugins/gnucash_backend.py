@@ -244,7 +244,7 @@ class GnuCash(SessionBasedRobustBackendModule):
 
     def open_session(self):
         try:
-            session = Session(self.gnucash_file, False)
+            session = Session(self.gnucash_file, is_new=False)
             self.current_session_error = None
         except GnuCashBackendException, e:
             session = None
