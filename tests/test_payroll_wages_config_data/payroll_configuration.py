@@ -1,4 +1,4 @@
-from bokeep.modules.payroll.payroll import \
+from bokeep.plugins.payroll.payroll import \
     Paystub, PaystubIncomeLine, \
     PaystubEIDeductionLine, PaystubCPPDeductionLine, \
     PaystubEmployerContributionLine, PaystubCalculatedIncomeTaxDeductionLine, \
@@ -10,7 +10,7 @@ from bokeep.modules.payroll.payroll import \
     PaystubVacpayLine, \
     PaystubDeductionLine
 
-from bokeep.modules.payroll.plain_text_payroll import \
+from bokeep.plugins.payroll.plain_text_payroll import \
     create_paystub_line, create_paystub_wage_line, calc_line_override, \
     do_nothing, \
     amount_from_paystub_function, \

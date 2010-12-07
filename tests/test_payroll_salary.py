@@ -5,54 +5,37 @@ import glob
 import filecmp
 import sys
 
-from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bokeep.modules.payroll.plain_text_payroll import \
+from bokeep.plugins.payroll.plain_text_payroll import \
     payroll_runtime, payroll_has_payday_serial, handle_backend_command
 
-SALARY_TEST_BOOKNAME = 'paytest'
-TEST_ZOPEDB_CONFIG = "tests/test_books.conf"
+from test_bokeep_book import create_filestorage_backed_bookset_from_file
+from test_payroll_employee import PayrollTestCaseSetup, TESTBOOK
 
 PAYROLL_CONFIG_DATA_SYS_PATH_POS = 0
 
-class salaryTestCase(unittest.TestCase):
+class salaryTestCase(PayrollTestCaseSetup):
 
         
     #This runs before EACH test function, not simply once for the whole test 
     #case
     def setUp(self):
-        #nuke data from prior runs
-        if os.path.exists('PaystubPrint.txt'):
-            os.remove('PaystubPrint.txt')
-
-        fs_files = glob.glob('*.fs*')
-        for f in fs_files:
-            os.remove(f)
-
-        #generate the books file
-        bookset = BoKeepBookSet( TEST_ZOPEDB_CONFIG )
-        self.assertFalse( bookset.has_book(SALARY_TEST_BOOKNAME) )
-        bookset.add_book(SALARY_TEST_BOOKNAME)
-	book = bookset.get_book(SALARY_TEST_BOOKNAME)
-
-        #set our backend to serialfile
-        handle_backend_command(book, ["set",
-                                      "bokeep.backend_modules.serialfile"])
-
-        bookset.close()
+        PayrollTestCaseSetup.setUp(self)
         sys.path.insert(
             PAYROLL_CONFIG_DATA_SYS_PATH_POS,
-            "tests/test_payroll_salary_config_data/")
+            "test_payroll_salary_config_data/")
 
     def tearDown(self):
         sys.path.pop(PAYROLL_CONFIG_DATA_SYS_PATH_POS)
-
+        PayrollTestCaseSetup.tearDown(self)
 
     def testSinglerun(self):
         from payday_data import paydate, payday_serial
-        bookset = BoKeepBookSet(TEST_ZOPEDB_CONFIG)
-        payroll_runtime(SALARY_TEST_BOOKNAME, False, bookset=bookset)
+        payroll_runtime(TESTBOOK, False, bookset=self.books)
         # implicit bookset.close()
+
+        self.books = create_filestorage_backed_bookset_from_file(
+            self.filestorage_file, False)
 
         # FIXME, call to payroll_runtime can't result in creation of
         # PaystubPrint.txt
@@ -63,17 +46,20 @@ class salaryTestCase(unittest.TestCase):
         # bookset to it..
         #we should also have an entry for this paydate now.
         #self.assert_(payroll_has_payday_serial(
-        #        SALARY_TEST_BOOKNAME, paydate, payday_serial))
+        #        TESTBOOK, paydate, payday_serial))
         
     def testDoublerun(self):
-        bookset = BoKeepBookSet(TEST_ZOPEDB_CONFIG)
-        payroll_runtime(SALARY_TEST_BOOKNAME, False, bookset=bookset)
+        payroll_runtime(TESTBOOK, False, bookset=self.books)
         # implicit bookset.close()
         
-        bookset = BoKeepBookSet(TEST_ZOPEDB_CONFIG)
-        payroll_runtime(SALARY_TEST_BOOKNAME, False, bookset=bookset)
-        # implicit bookset.close()
+        self.books = create_filestorage_backed_bookset_from_file(
+            self.filestorage_file, False)
+        self.assert_( self.books.has_book(TESTBOOK) )
+        payroll_runtime(TESTBOOK, False, bookset=self.books)
+        # implicit self.books.close()
 
+        self.books = create_filestorage_backed_bookset_from_file(
+            self.filestorage_file, False)
         # FIXME, this test can't be done, call to payroll_runtime can't result in
         # creation of PaystubPrint.txt
 	#self.assert_(filecmp.cmp("PaystubPrint.txt",

@@ -16,16 +16,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 # python
 from decimal import Decimal
 
 import sys
 
 # cndpayroll
-from cdnpayroll.payday import Payday as cdnpayroll_Payday
-from cdnpayroll.paystub import Paystub
-from cdnpayroll.employee import Employee
-from cdnpayroll.paystub_line import \
+from bokeep.plugins.payroll.canada.payday import Payday as cdnpayroll_Payday
+from bokeep.plugins.payroll.canada.paystub import Paystub
+from bokeep.plugins.payroll.canada.employee import Employee
+from bokeep.plugins.payroll.canada.paystub_line import \
     PaystubLine, PaystubIncomeLine, PaystubWageLine, PaystubOvertimeWageLine, \
     PaystubCalculatedLine, PaystubDeductionLine, PaystubSimpleDeductionLine, \
     PaystubCalculatedDeductionLine, PaystubEmployerContributionLine, \
@@ -33,14 +34,14 @@ from cdnpayroll.paystub_line import \
     PaystubSummaryLine, PaystubNetPaySummaryLine, PaystubTotalIncomeLine, \
     PaystubMultipleOfIncomeLine, PaystubDeductionMultipleOfIncomeLine, \
     PaystubEmployerContributionMultipleOfIncomeLine
-from cdnpayroll.cpp import \
+from bokeep.plugins.payroll.canada.cpp import \
     PaystubCPPDeductionLine, PaystubCPPEmployerContributionLine
-from cdnpayroll.ei import \
+from bokeep.plugins.payroll.canada.ei import \
     PaystubEIDeductionLine, PaystubEIEmployerContributionLine
-from cdnpayroll.income_tax import \
+from bokeep.plugins.payroll.canada.income_tax import \
     PaystubIncomeTaxDeductionLine, PaystubExtraIncomeTaxDeductionLine, \
     PaystubCalculatedIncomeTaxDeductionLine
-from cdnpayroll.vacation_pay import PaystubVacpayLine, \
+from bokeep.plugins.payroll.canada.vacation_pay import PaystubVacpayLine, \
     PaystubVacpayPayoutLine, PaystubVacationPayAvailable
 
 # bo-keep

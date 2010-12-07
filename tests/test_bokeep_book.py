@@ -29,8 +29,8 @@ def create_tmp_filestorage_filename():
     return create_tmp_filename('tmp_bokeep_db_', '.fs')
 
 
-def create_filestorage_backed_bookset_from_file(filestorage_path):
-    fs = FileStorage(filestorage_path, create=True )
+def create_filestorage_backed_bookset_from_file(filestorage_path, create=True):
+    fs = FileStorage(filestorage_path, create=create )
     return BoKeepBookSet( DB(fs) )
 
 class BoKeepBasicTestSetup(TestCase):

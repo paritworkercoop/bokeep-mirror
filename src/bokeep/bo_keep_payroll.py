@@ -27,13 +27,13 @@ bo-keep.modules.payroll.plain_text_payroll, and the application script
 So, this file is deprecated. For transition's sake, it imports all of
 the symbols that were moved to plain_text_payroll. Please switch
 your imports to:
-from bokeep.modules.payroll.plain_text_payroll import blah
+from bokeep.plugins.payroll.plain_text_payroll import blah
 
 This file will be removed in a future version,
 any attempt to from bokeep.bo_keep_payroll import blah will break
 """
 
-from bokeep.modules.payroll.plain_text_payroll import \
+from bokeep.plugins.payroll.plain_text_payroll import \
     PAYROLL_MODULE, RUN_PAYROLL_SUCCEEDED, PAYROLL_ALREADY_EXISTS, \
     PAYROLL_ACCOUNTING_LINES_IMBALANCE, PAYROLL_MISSING_NET_PAY, \
     PAYROLL_TOO_MANY_DEDUCTIONS, PAYROLL_DATABASE_MISSING_EMPLOYEE, \

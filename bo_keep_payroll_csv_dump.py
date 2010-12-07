@@ -9,7 +9,7 @@ from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
 
 
-PAYROLL_MODULE = 'bokeep.modules.payroll'
+PAYROLL_MODULE = 'bokeep.plugins.payroll'
 
 def extend_set_with_keys(key_source, key_set):
     for key in key_source.iterkeys():

@@ -12,7 +12,7 @@ import csv
 from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
 
-PAYROLL_MODULE = 'bokeep.modules.payroll'
+PAYROLL_MODULE = 'bokeep.plugins.payroll'
 
 # a dictionary with a period name as key, and number of months in that
 # kind of period as the value

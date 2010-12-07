@@ -5,38 +5,27 @@ import filecmp
 
 #from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-from bokeep.modules.payroll.plain_text_payroll \
+from bokeep.plugins.payroll.plain_text_payroll \
     import payroll_add_employee, payroll_get_employees
 
-EMP_TEST_BOOKNAME = 'paytest'
 
-TEST_ZOPEDB_CONFIG = "tests/test_books.conf"
+from test_bokeep_book import BoKeepWithBookSetup, TESTBOOK
 
-class empTestCase(unittest.TestCase):
+PAYROLL_PLUGIN = 'bokeep.plugins.payroll'
 
-        
-    #This runs before EACH test function, not simply once for the whole test 
-    #case
+class PayrollTestCaseSetup(BoKeepWithBookSetup):
     def setUp(self):
-        fs_files = glob.glob('*.fs*')
-        for f in fs_files:
-            os.remove(f)
+        BoKeepWithBookSetup.setUp(self)
+        self.books.get_book(TESTBOOK).add_module(PAYROLL_PLUGIN)
+        self.books.get_book(TESTBOOK).enable_module(PAYROLL_PLUGIN)
 
-        #generate the books file
-        bookset = BoKeepBookSet( TEST_ZOPEDB_CONFIG)
-        self.assertFalse( bookset.has_book(EMP_TEST_BOOKNAME) )
-        bookset.add_book(EMP_TEST_BOOKNAME)
-	book = bookset.get_book(EMP_TEST_BOOKNAME)
-
-        bookset.close()
-
+class empTestCase(PayrollTestCaseSetup):
     def testEmpAddAndGet(self):
-        bookset = BoKeepBookSet( TEST_ZOPEDB_CONFIG)
-        self.assert_( bookset.has_book(EMP_TEST_BOOKNAME) )
-        payroll_add_employee(EMP_TEST_BOOKNAME, "george costanza", bookset)
-        payroll_add_employee(EMP_TEST_BOOKNAME, "susie", bookset)
+        self.assert_( self.books.has_book(TESTBOOK) )
+        payroll_add_employee(TESTBOOK, "george costanza", self.books)
+        payroll_add_employee(TESTBOOK, "susie", self.books)
         
-        emplist = payroll_get_employees(EMP_TEST_BOOKNAME, bookset)[0] 
+        emplist = payroll_get_employees(TESTBOOK, self.books)[0] 
         FIRST_EMP = 'george costanza'
         SECOND_EMP = 'susie'
         empsWeWant = [FIRST_EMP, SECOND_EMP]
@@ -44,8 +33,6 @@ class empTestCase(unittest.TestCase):
         self.assertEquals(len(empsWeWant), len(emplist))
         self.assertFalse( emplist[FIRST_EMP] == None)
         self.assertFalse( emplist[SECOND_EMP] == None)
-
-        bookset.close()
 
 if __name__ == "__main__":
     unittest.main()

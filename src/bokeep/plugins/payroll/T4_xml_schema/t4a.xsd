@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<!-- @@@@ Definition of T4A ComplexTypes @@@@  2009/may/14  Version# 2.9 -->
+	<xsd:complexType name="T4ASlipType">
+		<xsd:all>
+			<xsd:element name="RCPNT_NM" type="NameType" minOccurs="0"/>
+			<xsd:element name="sin" type="sinType"/>
+			<xsd:element name="rcpnt_bn" type="bnType"/>
+			<xsd:element name="RCPNT_CORP_NM" type="Line2Type" minOccurs="0"/>
+			<xsd:element name="RCPNT_ADDR" type="CanadaAddressType" minOccurs="0"/>
+			<xsd:element name="rcpnt_nbr" type="char20Type" minOccurs="0"/>
+			<xsd:element name="bn" type="bnType"/>
+			<xsd:element name="ppln_dpsp_rgst_nbr" type="int7Type" minOccurs="0"/>
+			<xsd:element name="FTNT" type="FootNoteType" minOccurs="0"/>
+			<xsd:element name="rpt_tcd" type="slipDataType"/>
+			<xsd:element name="T4A_AMT" type="T4aAmtType" minOccurs="0"/>
+			<xsd:element name="pens_spran_cd" type="numeric2Type" minOccurs="0"/>
+			<xsd:element name="lsp_cd" type="numeric2Type" minOccurs="0"/>
+			<xsd:element name="annty_cd" type="numeric2Type" minOccurs="0"/>
+			<xsd:element name="elg_rtir_cd" type="numeric2Type" minOccurs="0"/>
+			<xsd:element name="nelg_rtir_cd" type="numeric2Type" minOccurs="0"/>
+			<xsd:element name="oth_inc_cd" type="numeric2Type" minOccurs="0"/>
+			<xsd:element name="rpp_past_srvc_cd" type="numeric2Type" minOccurs="0"/>
+			<xsd:element name="resp_aip_cd" type="numeric2Type" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:complexType name="FootNoteType">
+		<xsd:all>
+			<xsd:element name="ftnt_cd" type="numeric2Type"/>
+			<xsd:element name="ftnt_txt" type="char60Type" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:complexType name="T4aAmtType">
+		<xsd:all>
+			<xsd:element name="padj_amt" type="decimal7Type" minOccurs="0"/>
+			<xsd:element name="pens_spran_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="nrgst_ppln_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="indn_xmpt_pens_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="lsp_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="pr_71_acr_lsp_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="indn_xmpt_lsp_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="lsp_rpp_nelg_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="lsp_dpsp_nelg_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="nr_lsp_trnsf_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="lsp_nrgst_pens_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="lsp_nelg_trnsf_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="self_empl_cmsn_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="itx_ddct_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="annty_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="dpsp_ins_pay_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="inc_avg_annty_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="elg_rtir_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="indn_elg_rtir_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="nelg_rtir_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="indn_nelg_rtir_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="oth_incamt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="indn_oth_incamt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="ins_rvk_dpsp_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="brd_wrk_site_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="med_trvl_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="loan_ben_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="med_prem_ben_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="rsch_grnt_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="brsy_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="wag_ls_incamt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="dth_ben_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="dsblt_ben_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="grp_trm_life_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="vtrn_ben_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="tx_dfr_ptrng_dvamt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="atp_inctv_grnt_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="rdsp_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="wag_ptct_pgm_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="var_pens_ben_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="tfsa_tax_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="ctrct_srvc_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="ptrng_aloc_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="rpp_past_srvc_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="pr_90_rpp_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="resp_aip_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="resp_educt_ast_amt" type="decimal9Type" minOccurs="0"/>
+			<xsd:element name="chrty_dons_amt" type="decimal9Type" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:complexType name="T4ASummaryType">
+		<xsd:all>
+			<xsd:element name="bn" type="bnType"/>
+			<xsd:element name="PAYR_NM" type="Line3Type"/>
+			<xsd:element name="PAYR_ADDR" type="CanadaAddressType" minOccurs="0"/>
+			<xsd:element name="CNTC" type="ContactType2"/>
+			<xsd:element name="tx_yr" type="yearType"/>
+			<xsd:element name="slp_cnt" type="int7Type"/>
+			<xsd:element name="RPP_NBR" type="RppNumberType" minOccurs="0"/>
+			<xsd:element name="PPRTR_SIN" type="PropSinType" minOccurs="0"/>
+			<xsd:element name="rpt_tcd" type="otherDataType"/>
+			<xsd:element name="T4A_TAMT" type="T4aTotalsType" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:complexType name="T4aTotalsType">
+		<xsd:all>
+			<xsd:element name="tot_pens_spran_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_lsp_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_self_cmsn_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_ptrng_aloc_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_past_srvc_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_annty_incamt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="totr_incamt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_elg_rtir_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_nelg_rtir_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_itx_dedn_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_padj_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_resp_aip_amt" type="decimal13Type" minOccurs="0"/>
+			<xsd:element name="tot_resp_amt" type="decimal13Type" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:complexType name="RppNumberType">
+		<xsd:all>
+			<xsd:element name="rpp_rgst_1_nbr" type="int7Type"/>
+			<xsd:element name="rpp_rgst_2_nbr" type="int7Type" minOccurs="0"/>
+			<xsd:element name="rpp_rgst_3_nbr" type="int7Type" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+</xsd:schema>

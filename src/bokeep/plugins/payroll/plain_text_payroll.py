@@ -27,13 +27,13 @@ from os import P_NOWAIT
 import transaction
 
 # cndpayroll imports
-from cdnpayroll.paystub_line import sum_paystub_lines
-from cdnpayroll.vacation_pay import VacationPayoutTooMuchException
+from bokeep.plugins.payroll.canada.paystub_line import sum_paystub_lines
+from bokeep.plugins.payroll.canada.vacation_pay import VacationPayoutTooMuchException
 
 # Bo-Keep (keeper of the Bo) imports
 from bokeep.plugins.payroll.payroll import PaystubWageLine
 
-from bokeep.config import get_database_cfg_file
+from bokeep.config import get_bokeep_bookset
 from bokeep.book import BoKeepBookSet
 from bokeep.plugins.payroll.payroll import Payday, Employee, \
     PaystubCalculatedLine, PaystubNetPaySummaryLine
@@ -274,7 +274,7 @@ def payday_accounting_lines_balance(transactions):
         for line in trans.lines:
             balance_amount += line.amount
  
-        if not (abs(balance_amount) < Decimal('0.05')):
+        if not (abs(balance_amount) < Decimal('0.10')):
             print 'imbalance amount of ' + str(balance_amount)
             return False
 
@@ -497,7 +497,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
 
 def payroll_init(bookname, bookset=None):
     if (bookset == None):
-        bookset = BoKeepBookSet( get_database_cfg_file() )
+        bookset = get_bokeep_bookset()
 
     book = bookset.get_book(bookname)
 
@@ -530,9 +530,12 @@ def payroll_get_employee(bookname, bookset, emp_name):
     else:
         return [None, bookset]
 
-def payroll_get_paydays(bookname, bookset=None):
+#note that there may be information included before start date and after end 
+#date, it is the PERIODS that contain these dates that serve as the bounding
+#points, not the dates themselves.
+def payroll_get_paydays(bookname, bookset=None, start_date=None, end_date=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
-    return payroll_module.get_paydays()
+    return payroll_module.get_paydays(start_date, end_date)
 
 def payroll_get_payday(bookname, date, serial, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)

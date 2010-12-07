@@ -113,8 +113,23 @@ class PayrollModule(Persistent):
             employee.paystubs = new_paystubs
         self._p_changed = True
 
-    def get_paydays(self):
-        return self.payday_database
+    #note that there may be information included before start date and after end 
+    #date, it is the PERIODS that contain these dates that serve as the bounding
+    #points, not the dates themselves.
+    def get_paydays(self, start_date=None, end_date=None):
+        if start_date == None or end_date == None:
+            return self.payday_database
+        else:
+            #return bounded info
+            bounded_entries = {}
+            for entry in self.payday_database:
+                pstart = self.payday_database[entry][1].period_start
+                pend = self.payday_database[entry][1].period_end
+                if end_date < pstart or start_date > pend:
+                    continue
+                else:                
+                    bounded_entries[entry] = self.payday_database[entry]
+            return bounded_entries
     
     def has_payday(self, payday_date, payday_serial):
         self.ensure_payday_database()
