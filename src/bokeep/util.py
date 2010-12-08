@@ -449,7 +449,7 @@ class StateMachineMinChangeDataStore(object):
         return self.__values[key]
 
 
-class PluginSet(object):
+class PluginSet(Persistent):
     def __init__(self):
         self.enabled_plugins = {}
         self.disabled_plugins = {}
