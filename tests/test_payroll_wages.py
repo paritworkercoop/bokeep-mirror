@@ -7,6 +7,7 @@ import filecmp
 import sys
 from datetime import date
 from decimal import Decimal
+from itertools import izip
 
 # zodb import
 import transaction
@@ -187,10 +188,35 @@ class PayrollPaydayTestCaseSetup(PayrollTestCaseSetup):
 class wageTestCase(PayrollPaydayTestCaseSetup):     
     def testSinglerun(self):
         self.perform_single_run()
-
+        transactions = list(self.payday.get_financial_transactions())
+        self.assertEquals(len(transactions[0].lines), 11)
+        for i in xrange(1, len(transactions)):
+            self.assertEquals(len(transactions[i].lines), 2)
+        for line, expected_value in izip(
+            (line
+             for trans in transactions
+             for line in trans.lines),
+            (
+                '642.20', # wage expense
+                '391.40', # wage expense
+                '62.87', # employer contribution expense
+                '41.35', # vacation pay
+                '-37.84', # employee cpp
+                '0.00', # advance
+                '-41.35', # vacation pay accured
+                '-914.83', # net pay
+                '-63.05', # income tax
+                '-17.88', # employee ei
+                '-62.87', # employer contributions expenses
+                '549.29', '-549.29', # george
+                '365.54', '-365.54', # susie
+                )): 
+            self.assertEquals(Decimal(expected_value), line.amount)
+        
     def testDoublerun(self):
         self.testSinglerun()
         self.testSinglerun()
+
 
     def testTimesheeting(self):
         self.testSinglerun()
@@ -219,7 +245,44 @@ class wageTestCase(PayrollPaydayTestCaseSetup):
         book = self.books.get_book(TESTBOOK)
         self.payday = book.get_transaction(self.bokeep_trans_id)
         self.payroll_mod = book.get_module(PAYROLL_PLUGIN)
-        self.testSinglerun()
+
+        # copy the main emp_list
+        self.emp_list = [ dict(info_dict) for info_dict in emp_list ]
+        for employee_dict in self.emp_list:
+            employee = self.payroll_mod.get_employee(employee_dict['name'])
+            # start sum with existing hours outside of timesheet
+            employee_dict['hours'] = sum(
+                ( timesheet.hours
+                  for timesheet in employee.get_timesheets(
+                        self.payday.period_start,
+                        self.payday.period_end ) ),
+                employee_dict['hours'] )
+
+        self.perform_single_run()
+        transactions = list(self.payday.get_financial_transactions())
+        self.assertEquals(len(transactions[0].lines), 11)
+        for i in xrange(1, len(transactions)):
+            self.assertEquals(len(transactions[i].lines), 2)
+        for line, expected_value in izip(
+            (line
+             for trans in transactions
+             for line in trans.lines),
+            (
+                '991.80', # wage expense
+                '573.80', # wage expense
+                '102.09', # employer contribution expense
+                '62.62', # vacation pay
+                '-64.17', # employee cpp
+                '0.00', # advance
+                '-62.62', # vacation pay accured
+                '-1293.30', # net pay
+                '-181.04', # income tax
+                '-27.09', # employee ei
+                '-102.09', # employer contributions expenses
+                '791.37', '-791.37', # george
+                '501.93', '-501.93', # susie
+                )): 
+            self.assertEquals(Decimal(expected_value), line.amount)        
         
 if __name__ == "__main__":
     unittest.main()
