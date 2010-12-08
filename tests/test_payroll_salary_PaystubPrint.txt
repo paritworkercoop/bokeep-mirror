@@ -1,18 +1,0 @@
-High Lord Testmeister
-income: 400.00
-CPP deduction: 13.14
-EI deduction: 6.92
-Income tax deduction: 7.25
-total deductions: 27.31
-net payment: 372.69
-employer contributions: 22.83
-
-Emperor Auditorius
-income: 800.00
-CPP deduction: 32.94
-EI deduction: 13.84
-Income tax deduction: 96.25
-total deductions: 143.03
-net payment: 656.97
-employer contributions: 52.32
-

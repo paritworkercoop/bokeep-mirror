@@ -4,6 +4,8 @@ import shutil
 import glob
 import filecmp
 import sys
+from itertools import izip, chain
+from decimal import Decimal
 
 # bokeep 
 from bokeep.book import BoKeepBookSet
@@ -128,6 +130,27 @@ class salaryTestCase(PayrollPaydayTestCaseSetup):
 
     def testSinglerun(self):
         self.perform_single_run()
+        transactions = list(self.payday.get_financial_transactions())
+        self.assertEquals(len(transactions[0].lines), 8)
+        for i in xrange(1, len(transactions)):
+            self.assertEquals(len(transactions[i].lines), 2)
+        for line, expected_value in izip(
+            (line
+             for trans in transactions
+             for line in trans.lines),
+            (
+                '400.0', # wage expense
+                '800', # wage expense
+                '75.15', # employer contribution expense
+                '-1031.25', # net pay
+                '-75.15', # employer contributions expenses
+                '-46.08', # employee cpp
+                '-20.76', # employee ei
+                '-101.91', # income tax
+                '372.69', '-372.69', # george
+                '658.56', '-658.56', # susie
+                )): 
+            self.assertEquals(Decimal(expected_value), line.amount)        
         
     def testDoublerun(self):
         self.testSinglerun()
