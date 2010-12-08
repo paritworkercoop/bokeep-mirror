@@ -447,3 +447,47 @@ class StateMachineMinChangeDataStore(object):
 
     def get_value(self, key):
         return self.__values[key]
+
+
+class PluginSet(object):
+    def __init__(self):
+        self.enabled_plugins = {}
+        self.disabled_plugins = {}
+
+    def add_plugin(self, plugin_name):
+        assert( plugin_name not in self.enabled_plugins and 
+                plugin_name not in self.disabled_plugins )
+        # get the plugin class and instantiate as a new disabled plugin
+        self.disabled_plugins[plugin_name] =  __import__(
+            plugin_name, globals(), locals(), [""]).get_plugin_class()()
+        self._p_changed = True
+
+    def enable_plugin(self, plugin_name):
+        assert( plugin_name in self.disabled_plugins )
+        self.enabled_plugins[plugin_name] = self.disabled_plugins[plugin_name]
+        del self.disabled_plugins[plugin_name]
+        self._p_changed = True
+        
+    def disable_plugin(self, plugin_name):
+        assert( plugin_name in self.enabled_plugins )
+        self.disabled_plugins[plugin_name] = self.enabled_plugins[plugin_name]
+        del self.enabled_plugins[plugin_name]
+        self._p_changed = True
+
+    def get_plugin(self, plugin_name):
+        return self.enabled_plugins[plugin_name]
+
+    def get_plugins(self):
+        return self.enabled_plugins
+
+    def has_plugin_enabled(self, plugin_name):
+        return plugin_name in self.enabled_plugins
+
+    def has_plugin_disabled(self, plugin_name):
+        return plugin_name in self.disabled_plugins
+
+    def has_plugin(self, plugin_name):
+        return \
+            self.has_plugin_enabled(plugin_name) or \
+            self.has_plugin_disabled(plugin_name)
+
