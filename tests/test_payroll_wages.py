@@ -151,13 +151,15 @@ class PayrollPaydayTestCaseSetup(PayrollTestCaseSetup):
             PAYROLL_PLUGIN)
         self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
             self.payday)
+        self.emp_list = emp_list
+        self.paystub_line_config = paystub_line_config
+        self.paystub_accounting_line_config = paystub_accounting_line_config
 
-class wageTestCase(PayrollPaydayTestCaseSetup):     
-    def testSinglerun(self):
+    def perform_single_run(self):
         result, msg = setup_paystubs_for_payday_from_dicts(
             self.payroll_mod, self.payday_serial, self.bokeep_trans_id,
-            self.payday, emp_list, 1, paystub_line_config,
-            paystub_accounting_line_config, add_missing_employees=False )
+            self.payday, self.emp_list, 1, self.paystub_line_config,
+            self.paystub_accounting_line_config, add_missing_employees=False )
         
         
         self.assertEquals(result, RUN_PAYROLL_SUCCEEDED)
@@ -181,6 +183,10 @@ class wageTestCase(PayrollPaydayTestCaseSetup):
                 self.assert_(line.amount.as_tuple()[2] >= -2 )
 
         transaction.get().commit()
+
+class wageTestCase(PayrollPaydayTestCaseSetup):     
+    def testSinglerun(self):
+        self.perform_single_run()
 
     def testDoublerun(self):
         self.testSinglerun()

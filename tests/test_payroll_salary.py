@@ -5,65 +5,133 @@ import glob
 import filecmp
 import sys
 
+# bokeep 
 from bokeep.book import BoKeepBookSet
+from bokeep.plugins.payroll.payroll import \
+    Paystub, PaystubIncomeLine, PaystubCPPDeductionLine, \
+    PaystubEIDeductionLine, PaystubCPPDeductionLine, \
+    PaystubEmployerContributionLine, PaystubCalculatedIncomeTaxDeductionLine, \
+    PaystubCalculatedEmployerContributionLine, \
+    PaystubEIEmployerContributionLine, \
+    PaystubIncomeLine, \
+    PaystubNetPaySummaryLine, \
+    PaystubDeductionMultipleOfIncomeLine
+
 from bokeep.plugins.payroll.plain_text_payroll import \
+    create_paystub_line, \
+    do_nothing, \
+    amount_from_paystub_function, \
+    amount_from_paystub_function_reversed, \
+    amount_from_paystub_line_of_class, \
+    amount_from_paystub_line_of_class_reversed, \
+    calculated_value_of_class, \
+    lines_of_class_function, \
     payroll_runtime, payroll_has_payday_serial, handle_backend_command
 
 from test_bokeep_book import create_filestorage_backed_bookset_from_file
-from test_payroll_employee import PayrollTestCaseSetup, TESTBOOK
+from test_payroll_employee import TESTBOOK
+from test_payroll_wages import PayrollPaydayTestCaseSetup
 
-PAYROLL_CONFIG_DATA_SYS_PATH_POS = 0
+emp_list = [
+    dict( name="george costanza",
+          income=400.0,
+          ),
 
-class salaryTestCase(PayrollTestCaseSetup):
+    dict( name="susie",
+          income=800.0,
+          ),
+]
 
-        
-    #This runs before EACH test function, not simply once for the whole test 
-    #case
+PARIT_EQUITY_CONSTANT=0.03
+PARIT_EQUITY_LIMIT=900
+
+#def add_parit_equity_line(employee, employee_info_dict, paystub, value):
+#    equity_line = PaystubDeductionMultipleOfIncomeLine(paystub)
+#    equity_line.constant = PARIT_EQUITY_CONSTANT
+#    old_equity = sum( ( paystub_line.get_value()
+#                        if hasattr(paystub_line, 'parit_equity_deduction')
+#                        for paystub_line in paystub
+#                        for paystub in employee.paystubs) )
+
+ #   equity_line.parit_equity_deduction = True
+    # only add equity line if there is room to deduct for equity
+ #   if old_equity < PARIT_EQUITY_LIMIT:
+ #       new_equity = old_equity + equity_line.get_value()
+ #       if new_equity > PARIT_EQUITY_LIMIT:
+ #           equity_line.set_value(PARIT_EQUITY_LIMIT - old_equity)
+ #       paystub.add_paystub_line(equity_line)
+
+paystub_line_config = (
+    ('income', create_paystub_line(PaystubIncomeLine)),
+#    ('equity', add_parit_equity_line),
+)
+
+
+paystub_accounting_line_config = [
+    # Per employee lines, payroll transaction
+    [
+        # Debits
+        (
+            ( ("Expenses", "Payroll Expenses"), "wages",
+              lines_of_class_function(PaystubIncomeLine) ),
+            ),
+        # Credits
+        (),
+        ],
+    # Cummulative lines, payroll transaction
+    [
+        # Debits
+        (
+            ( 1, ("Expenses", "Payroll Expenses"), "employer cpp, ei",
+              lines_of_class_function(PaystubEmployerContributionLine) ),
+        ),
+        # Credits
+        (
+            ( 1, ("Liabilities", "Payroll Deductions Payable"), "employee cpp",
+              lines_of_class_function(PaystubCPPDeductionLine) ),
+            ( 2, ("Liabilities", "Payroll Deductions Payable"), "employee ei",
+              lines_of_class_function(PaystubEIDeductionLine) ),
+            ( 3, ("Liabilities", "Payroll Deductions Payable"),
+              "employer cpp and ei",
+              lines_of_class_function(PaystubEmployerContributionLine) ),
+            ( 4, ("Liabilities", "Payroll Deductions Payable"), "income tax",
+              lines_of_class_function(PaystubCalculatedIncomeTaxDeductionLine)),
+            ( 5, ("Liabilities", "Payroll payable"), "payment",
+              lines_of_class_function(PaystubNetPaySummaryLine) ),
+        ),
+
+        ],
+    # Per employee transaction lines 
+    [
+        # Debits
+        ( ( ("Liabilities", "Payroll payable"), "payment",
+            lines_of_class_function(PaystubNetPaySummaryLine) ),
+            
+          ),
+
+        # Credits
+        ( ( ("Assets", "Chequing account"), "payment",
+            lines_of_class_function(PaystubNetPaySummaryLine) ),
+          
+          ),
+
+        ],
+]
+
+
+class salaryTestCase(PayrollPaydayTestCaseSetup):
     def setUp(self):
-        PayrollTestCaseSetup.setUp(self)
-        sys.path.insert(
-            PAYROLL_CONFIG_DATA_SYS_PATH_POS,
-            "test_payroll_salary_config_data/")
-
-    def tearDown(self):
-        sys.path.pop(PAYROLL_CONFIG_DATA_SYS_PATH_POS)
-        PayrollTestCaseSetup.tearDown(self)
+        PayrollPaydayTestCaseSetup.setUp(self)
+        self.emp_list = emp_list
+        self.paystub_line_config = paystub_line_config
+        self.paystub_accounting_line_config = paystub_accounting_line_config
 
     def testSinglerun(self):
-        from payday_data import paydate, payday_serial
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit bookset.close()
-
-        self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
-
-        # FIXME, call to payroll_runtime can't result in creation of
-        # PaystubPrint.txt
-        #self.assert_(filecmp.cmp("PaystubPrint.txt",
-        #                         "tests/test_payroll_salary_PaystubPrint.txt") )
-
-        # FIXME, this test can't be done because we can't pass our own
-        # bookset to it..
-        #we should also have an entry for this paydate now.
-        #self.assert_(payroll_has_payday_serial(
-        #        TESTBOOK, paydate, payday_serial))
+        self.perform_single_run()
         
     def testDoublerun(self):
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit bookset.close()
-        
-        self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
-        self.assert_( self.books.has_book(TESTBOOK) )
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit self.books.close()
-
-        self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
-        # FIXME, this test can't be done, call to payroll_runtime can't result in
-        # creation of PaystubPrint.txt
-	#self.assert_(filecmp.cmp("PaystubPrint.txt",
-        #                         "tests/test_payroll_salary_PaystubPrint.txt" ))
+        self.testSinglerun()
+        self.testSinglerun()
 
 if __name__ == "__main__":
     unittest.main()
