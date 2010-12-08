@@ -38,6 +38,8 @@ class TestVacationPay(BasicVacationPayTest):
 
     def test_vac_pay_amount(self):
         self.assertEqual( self.paystub_one_vacpayline.get_value(), Decimal(4) )
+        self.assert_(
+            self.paystub_one_vacpayline.get_value().as_tuple()[2] >= -2 )
 
 class TestBadVacationPayoutCreate(BasicVacationPayTest):
     def setUp(self):

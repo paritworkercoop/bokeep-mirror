@@ -1,72 +1,194 @@
+# python imports
 import unittest
 import os
 import shutil
 import glob
 import filecmp
 import sys
+from datetime import date
+from decimal import Decimal
 
-from bokeep.book import BoKeepBookSet
+# zodb import
+import transaction
+
+# bokeep payroll imports
+from bokeep.plugins.payroll.payroll import \
+    Payday, Paystub, PaystubIncomeLine, \
+    PaystubEIDeductionLine, PaystubCPPDeductionLine, \
+    PaystubEmployerContributionLine, PaystubCalculatedIncomeTaxDeductionLine, \
+    PaystubCalculatedEmployerContributionLine, \
+    PaystubEIEmployerContributionLine, PaystubCPPEmployerContributionLine, \
+    PaystubIncomeLine, \
+    PaystubNetPaySummaryLine, \
+    PaystubDeductionMultipleOfIncomeLine, \
+    PaystubVacpayLine, \
+    PaystubDeductionLine
 from bokeep.plugins.payroll.plain_text_payroll import \
-    payroll_runtime, payroll_has_payday_serial, payroll_employee_command, \
-    handle_backend_command
+    create_paystub_line, create_paystub_wage_line, calc_line_override, \
+    do_nothing, \
+    amount_from_paystub_function, \
+    amount_from_paystub_function_reversed, \
+    amount_from_paystub_line_of_class, \
+    amount_from_paystub_line_of_class_reversed, \
+    calculated_value_of_class, \
+    lines_of_class_function, \
+    create_and_tag_paystub_line, paystub_get_lines_of_class_with_tag, \
+    get_lines_of_class_with_tag, sum_line_of_class_with_tag, \
+    RUN_PAYROLL_SUCCEEDED, \
+    setup_paystubs_for_payday_from_dicts, \
+    payroll_employee_command
 
+
+# bokeep test imports
 from test_bokeep_book import create_filestorage_backed_bookset_from_file
-from test_payroll_employee import PayrollTestCaseSetup, TESTBOOK
+from test_payroll_employee import PayrollTestCaseSetup, TESTBOOK, PAYROLL_PLUGIN
+
+emp_list = [
+    dict( name="george costanza",
+          rate=7.6,
+#initialization hours
+          hours=84.5
+          ),
+
+    dict( name="susie",
+          rate=7.6,
+#initialization hours
+          hours=51.5
+          ),
+]
+
+paystub_line_config = (
+    ('income', create_paystub_line(PaystubIncomeLine) ),
+    ('hours', create_paystub_wage_line ),
+    ('override_employee_cpp', calc_line_override(PaystubCPPDeductionLine)),
+    ('override_employee_ei', calc_line_override(PaystubEIDeductionLine)),
+    ('override_employer_cpp',
+     calc_line_override(PaystubCPPEmployerContributionLine) ),
+    ('override_employer_ei',
+     calc_line_override(PaystubEIEmployerContributionLine) ),
+    ('override_income_tax',
+     calc_line_override(PaystubCalculatedIncomeTaxDeductionLine) ),
+    ('override_vacation_pay', calc_line_override(PaystubVacpayLine)),
+    ('advance', create_and_tag_paystub_line(PaystubDeductionLine, 
+                'advance') ),
+)
+
+paystub_accounting_line_config = [
+    # Per employee lines, payroll transaction
+    [
+        # Debits
+        (
+            ( ("Expenses", "Wages & Benefits", "Wages"), "wages",
+              lines_of_class_function(PaystubIncomeLine) ),
+            ),
+        # Credits
+        (),
+        ],
+    # Cummulative lines, payroll transaction
+    [
+        # Debits
+        (
+            ( 1, ("Expenses", "Wages & Benefits", "Wages", "Remittances"),
+              "employer contributions to EI, CPP, and WCB",
+              lines_of_class_function(PaystubEmployerContributionLine) ),
+            ( 2, ("Expenses", "Wages & Benefits", "Wages", "Vacation Pay"),
+              "vacation pay",
+              lines_of_class_function(PaystubVacpayLine) )
+        ),
+        # Credits
+        (
+            ( 1, ("Liabilities", "Payroll Deductions Payable"),
+              "cpp deductions",
+              lines_of_class_function(PaystubCPPDeductionLine) ),
+            ( 2, ("Liabilities", "Payroll Deductions Payable"),
+              "ei deductions",
+              lines_of_class_function(PaystubEIDeductionLine) ),
+            ( 3, ("Liabilities", "Payroll Deductions Payable"),
+              "employer contributions to EI, CPP, and WCB",
+              lines_of_class_function(PaystubEmployerContributionLine) ),
+            ( 4, ("Liabilities", "Payroll Deductions Payable"),
+              "income tax deductions",
+              lines_of_class_function(PaystubCalculatedIncomeTaxDeductionLine)),
+            ( 5, ("Liabilities", "Vacation pay"),
+              "vacation pay",
+              lines_of_class_function(PaystubVacpayLine) ),
+            ( 6, ("Liabilities", "Payroll tmp clearing"),
+              "net pay",
+              lines_of_class_function(PaystubNetPaySummaryLine) ),
+            ( 7, ("Liabilities", "Payroll tmp clearing"), "advances",
+              get_lines_of_class_with_tag(PaystubDeductionLine, 
+                                          "advance") ),
+        ),
+
+        ],
+    # Per employee transaction lines 
+    [
+        # Debits
+        ( 
+            ( ("Liabilities", "Payroll tmp clearing"), "net pay",
+              lines_of_class_function(PaystubNetPaySummaryLine) ),
+            ),
+
+        # Credits
+        ( 
+            ( ("Assets", "ACU - Overhead"), "net pay",
+              lines_of_class_function(PaystubNetPaySummaryLine) ),
+          
+            ),
+
+        ],
+]
 
 
-PAYROLL_CONFIG_DATA_SYS_PATH_POS = 0
-
-class wageTestCase(PayrollTestCaseSetup):     
-    #This runs before EACH test function, not simply once for the whole test 
-    #case
+class PayrollPaydayTestCaseSetup(PayrollTestCaseSetup):
     def setUp(self):
         PayrollTestCaseSetup.setUp(self)
-        sys.path.insert(
-            PAYROLL_CONFIG_DATA_SYS_PATH_POS,
-            "test_payroll_wages_config_data/")
-    
-    def tearDown(self):
-        sys.path.pop(PAYROLL_CONFIG_DATA_SYS_PATH_POS)
-        PayrollTestCaseSetup.tearDown(self)
-    
+        # implicit bookset.close()
+        self.payday = Payday(date(2009, 04, 22), date(2009, 04, 06),
+                             date(2009, 04, 19) )
+        self.payday_serial = 1
+        self.payroll_mod = self.books.get_book(TESTBOOK).get_module(
+            PAYROLL_PLUGIN)
+        self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
+            self.payday)
+
+class wageTestCase(PayrollPaydayTestCaseSetup):     
     def testSinglerun(self):
-        from payday_data import paydate, payday_serial
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit selfbooks.close()
-
-        self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
+        result, msg = setup_paystubs_for_payday_from_dicts(
+            self.payroll_mod, self.payday_serial, self.bokeep_trans_id,
+            self.payday, emp_list, 1, paystub_line_config,
+            paystub_accounting_line_config, add_missing_employees=False )
         
-        # FIXME, payroll_runtime isn't creating PaystubPrint.txt
-        # self.assert_(filecmp.cmp("PaystubPrint.txt", "tests/test_payroll_wages_PaystubPrint.txt"))       
+        
+        self.assertEquals(result, RUN_PAYROLL_SUCCEEDED)
+        self.assertEquals(msg, None)
+        
+        for paystub in self.payday.paystubs:
+            for paystub_line in paystub.paystub_lines:
+                self.assert_(paystub_line.get_value().as_tuple()[2] >= -2 )
+                self.assert_(paystub_line.get_net_value().as_tuple()[2] >= -2 )
+                
+        transactions = list(self.payday.get_financial_transactions())
+        self.assertEquals(3, len(transactions) )
+        grand_trans, george_trans, susie_trans = transactions
+        # should check of balance of debits and credits, and other things
+        # required to pass stringent gnucash other then account spec
+        # being right
+        for trans in transactions:
+            self.assertEquals( Decimal('0.00'),
+                               sum( line.amount for line in trans.lines ) )
+            for line in trans.lines:
+                self.assert_(line.amount.as_tuple()[2] >= -2 )
 
-        # FIXME, this test can't be done because we can't pass our own
-        # bookset to it..
-        #we should also have an entry for this paydate now.
-        #self.assert_(payroll_has_payday_serial(TESTBOOK, paydate, payday_serial))
+        transaction.get().commit()
 
     def testDoublerun(self):
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit self.books.close()
-
-        self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
-        self.assert_( self.books.has_book(TESTBOOK) )
-
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit bookset.close()
-
-        self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
-
-        # FIXME, payroll_runtime isn't creating PaystubPrint.txt
-	#self.assert_(filecmp.cmp("PaystubPrint.txt", "./wages_testing/PaystubPrint1.txt"))
+        self.testSinglerun()
+        self.testSinglerun()
 
     def testTimesheeting(self):
-        #standard "no timesheets" run first
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit self.books.close()        
-        
+        self.testSinglerun()
+        self.books.close()
         self.books = create_filestorage_backed_bookset_from_file(
             self.filestorage_file, False)
 
@@ -86,17 +208,12 @@ class wageTestCase(PayrollTestCaseSetup):
                                      payroll_info_list )
             # implicit bookset.close()
             self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
+                self.filestorage_file, False)
 
-        payroll_runtime(TESTBOOK, False, bookset=self.books)
-        # implicit bookset.close()
-
-        self.books = create_filestorage_backed_bookset_from_file(
-            self.filestorage_file, False)
-
-        # FIXME, payroll_runtime isn't creating PaystubPrint.txt
-	#self.assert_(filecmp.cmp("PaystubPrint.txt", "tests/test_payroll_wages_PaystubPrint2.txt"))
-
+        book = self.books.get_book(TESTBOOK)
+        self.payday = book.get_transaction(self.bokeep_trans_id)
+        self.payroll_mod = book.get_module(PAYROLL_PLUGIN)
+        self.testSinglerun()
         
 if __name__ == "__main__":
     unittest.main()

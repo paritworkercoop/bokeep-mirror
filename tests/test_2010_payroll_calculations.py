@@ -38,19 +38,19 @@ def create_basic_test_class(name, income, fed_tax_credits, prov_tax_credits,
             self.emp.prov_tax_credits = prov_tax_credits
 
         def test_tax(self):
-            self.assertEqual(self.paystub_one.income_tax_deductions(),
-                             Decimal(expected_tax),
-                             )
+            income_tax = self.paystub_one.income_tax_deductions()
+            self.assertEqual(income_tax, Decimal(expected_tax))
+            self.assert_(income_tax.as_tuple()[2] >= -2)
 
         def test_cpp(self):
-            self.assertEqual(self.paystub_one.cpp_deductions(),
-                             Decimal(expected_cpp),
-                             )
+            cpp = self.paystub_one.cpp_deductions()
+            self.assertEqual(cpp, Decimal(expected_cpp))
+            self.assert_(cpp.as_tuple()[2] >= -2)
 
         def test_ei(self):
-            self.assertEqual(self.paystub_one.ei_deductions(),
-                             Decimal(expected_ei),
-                             )
+            ei = self.paystub_one.ei_deductions()
+            self.assertEquals(ei, Decimal(expected_ei))
+            self.assert_(ei.as_tuple()[2] >= -2 )
 
     new_test_class.__name__ = name
     return new_test_class

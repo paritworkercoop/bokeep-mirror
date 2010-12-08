@@ -18,12 +18,12 @@ class PayrollTestCaseSetup(BoKeepWithBookSetup):
         BoKeepWithBookSetup.setUp(self)
         self.books.get_book(TESTBOOK).add_module(PAYROLL_PLUGIN)
         self.books.get_book(TESTBOOK).enable_module(PAYROLL_PLUGIN)
+        payroll_add_employee(TESTBOOK, "george costanza", self.books)
+        payroll_add_employee(TESTBOOK, "susie", self.books)
 
 class empTestCase(PayrollTestCaseSetup):
     def testEmpAddAndGet(self):
         self.assert_( self.books.has_book(TESTBOOK) )
-        payroll_add_employee(TESTBOOK, "george costanza", self.books)
-        payroll_add_employee(TESTBOOK, "susie", self.books)
         
         emplist = payroll_get_employees(TESTBOOK, self.books)[0] 
         FIRST_EMP = 'george costanza'

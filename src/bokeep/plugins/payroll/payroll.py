@@ -44,6 +44,9 @@ from bokeep.plugins.payroll.canada.income_tax import \
 from bokeep.plugins.payroll.canada.vacation_pay import PaystubVacpayLine, \
     PaystubVacpayPayoutLine, PaystubVacationPayAvailable
 
+from bokeep.plugins.payroll.canada.functions import \
+    decimal_round_two_place_using_third_digit
+
 # bo-keep
 from bokeep.book_transaction import \
     Transaction as BookTransaction, \
@@ -94,9 +97,9 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         for (debit_credit_pos, negate) in \
                 ((0, ONE), (1, NEG_ONE )): # debits then credits
             fin_lines.extend( 
-                make_fin_line(
-                    negate * paystub_line.get_value(),
-                    accounts, comment)
+                make_fin_line( decimal_round_two_place_using_third_digit(
+                        negate * paystub_line.get_value()),
+                               accounts, comment)
                 for (accounts, comment, paystub_line) in \
                 self.payday_accounting_lines[0][debit_credit_pos]
                 )
@@ -105,14 +108,14 @@ class Payday(BookTransaction, cdnpayroll_Payday):
         for (debit_credit_pos, negate) in \
                 ( (0, ONE), (1, NEG_ONE) ): # debits then credits
             fin_lines.extend(
-                make_fin_line(
-                    negate * 
-                    sum( ( line.get_value()
-                           for line in line_list),
-                         ZERO ),
-                    accounts,
-                    comment
-                )
+                make_fin_line( decimal_round_two_place_using_third_digit(
+                        negate * 
+                        sum( ( line.get_value()
+                               for line in line_list),
+                             ZERO )),
+                               accounts,
+                               comment
+                               )
                 
                 for (id, accounts, comment), line_list in \
                     self.payday_accounting_lines[1][debit_credit_pos].\
@@ -131,10 +134,10 @@ class Payday(BookTransaction, cdnpayroll_Payday):
             for (debit_credit_pos, negate) in \
                     ( (0, ONE), (1, NEG_ONE) ): # debits then credits
                 fin_lines.extend( 
-                    make_fin_line(
-                        negate * paystub_line.get_value(),
-                        accounts,
-                        comment )                        
+                    make_fin_line( decimal_round_two_place_using_third_digit(
+                            negate * paystub_line.get_value()),
+                                   accounts,
+                                   comment )                        
                     for (accounts, comment, paystub_line) in \
                         trans[debit_credit_pos]
                     )
