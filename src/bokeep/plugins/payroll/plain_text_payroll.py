@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 # Python library
 from sys import argv
 import sys
@@ -53,6 +54,7 @@ PAYROLL_MISSING_NET_PAY = 3
 PAYROLL_TOO_MANY_DEDUCTIONS = 4
 PAYROLL_DATABASE_MISSING_EMPLOYEE = 5
 PAYROLL_VACPAY_DRAW_TOO_MUCH = 6
+PAYROLL_BACKEND_COMPLAINT = 7
 
 def decimal_from_float(float_value, places=2):
     formatstring = '%.' + str(places) + 'f'
@@ -478,172 +480,27 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         if not (overwrite_existing):
             return PAYROLL_ALREADY_EXISTS, None
         else:
-            # jeez, shouldn't there be a prompt here before we just go
-            # on and remove? Didn't there use to be?
             (payday_trans_id, payday) = payroll_module.get_payday(
                 paydate, payday_serial)
-            payroll_module.remove_payday(paydate, payday_serial)
-            book.remove_transaction(payday_trans_id)
+    else: 
+        payday = Payday(paydate, period_start, period_end)
+        payday_trans_id = book.insert_transaction(payday)
+        payroll_module.add_payday(paydate, payday_serial,
+                                  payday_trans_id, payday)
+        # no harm in committing the above two steps early when the payday is
+        # empty, if there was termination right after this, we would be able
+        # to go strait to the the retrival step above
+        transaction.get().commit()
 
-    payday = Payday(paydate, period_start, period_end)
-    payday_trans_id = book.insert_transaction(payday)
-    # this can't really be the best place...
-    transaction.get().commit()
-    payroll_module.add_payday(paydate, payday_serial,
-                              payday_trans_id, payday)
+    result, msg = setup_paystubs_for_payday_from_dicts(
+        payroll_module, payday_serial, payday_trans_id, payday,
+        emp_list, chequenum_start, paystub_line_config,
+        paystub_accounting_line_config, add_missing_employees=False)   
 
-    for emp in emp_list:
-        employee_name = emp['name']
-        if not payroll_module.has_employee(employee_name):
-            if not add_missing_employees:
-                payroll_module.remove_payday(paydate, payday_serial)
-                book.remove_transaction(payday_trans_id)
-                return PAYROLL_DATABASE_MISSING_EMPLOYEE, employee_name
+    if result != RUN_PAYROLL_SUCCEEDED:
+        return result, msg
 
-            employee = Employee(employee_name)
-            payroll_module.add_employee(employee_name, employee)
-        else:                                        
-            employee = payroll_module.get_employee(employee_name)
-        paystub = employee.create_and_add_new_paystub(payday)
-        paystub.add_paystub_line( PaystubNetPaySummaryLine(paystub))
-
-        try:
-            for key, function in paystub_line_config:
-                if key in emp:
-                    function( employee, emp, paystub, emp[key] )
-        except VacationPayoutTooMuchException:
-            payroll_module.remove_payday(paydate, payday_serial)
-            book.remove_transaction(payday_trans_id)
-            return PAYROLL_VACPAY_DRAW_TOO_MUCH, employee_name 
-    
-        if emp.has_key('cheque_override'):
-            payday.add_cheque_override(emp['name'], emp['cheque_override'])
-
-        #gotta have a net pay line
-        if not (1 ==
-                len(list(paystub.get_paystub_lines_of_class(
-                        PaystubNetPaySummaryLine)))):
-            payroll_module.remove_payday(paydate, payday_serial)
-            book.remove_transaction(payday_trans_id)
-            transaction.get().commit()
-            return PAYROLL_MISSING_NET_PAY, employee_name
-
-        #net pay must be zero or greater than zero, cannot have negative net pay
-        net_pay = paystub.net_pay()
-        if net_pay < 0:
-            sum_ded = Decimal('0')
-            total_deductions = paystub.get_deduction_lines()
-
-            for deduct in total_deductions:
-                sum_ded += deduct.get_value()
-
-            gross_pay = paystub.gross_income()
-
-            payroll_module.remove_payday(paydate, payday_serial)
-            book.remove_transaction(payday_trans_id)
-            transaction.get().commit()
-            return (PAYROLL_TOO_MANY_DEDUCTIONS,
-                    [employee_name, gross_pay, sum_ded] )
-   
-
-    # freeze all calculated paystub lines with current values to avoid
-    # unesessary recalculation
-    for paystub in payday.paystubs:
-        for paystub_line in paystub.get_paystub_lines_of_class(
-            PaystubCalculatedLine):
-            paystub_line.freeze_value()
-    
     print_paystubs(payday, print_paystub_line_config, file_path)
-       
-    #possibility of supporting stuff other than 'name' in futue
-    def parse_accounting_line_variables(paystub, scoping):
-       
-        listver = []
- 
-        for i in range(0, len(scoping)):
-            if scoping[i].startswith('$name'):
-                listver.append(paystub.employee.name)
-            else:
-                listver.append(scoping[i])
-            
-        return tuple(listver)
-
-    def generate_each_paystub_accounting_line(paystub, account_line_config):
-        """Given a paystub and list of accounting specifications
-        (each of which is a three element tuple, consiting of an
-         account in accounting an program,
-         a line description for accounting program,
-         and a function that generates sub subset of paystub lines in
-         the paystub),
-         this function yields a tuple for containing each PaystubLine
-         with account and line description that the configuration specifies
-        """
-        for single_account_line_config in account_line_config:
-            for paystub_line in single_account_line_config[2](paystub):
-                yield ( parse_accounting_line_variables(
-                        paystub, single_account_line_config[0]),
-                        single_account_line_config[1],
-                        paystub_line )
-
-    payday_accounting_lines = [
-        # per employee lines, main payroll transaction
-        # debits (0) and credits (1)
-        [[], []],
-
-        # lines to be accumulated together across
-        # multiple employee paystubs
-        # debits (0) and credits (1)
-        [{}, {}],
-
-        chequenum_start
-        ]
-
-    # for each paystub, build up financial accounting transactions for
-    # all its paystub lines according to the specification in
-    # paystub_accounting_line_config[0][i]
-    for paystub in payday.paystubs:
-        # generate the per employee lines that will appear in the main payroll
-        # transaction
-        #
-        # do both the debits (0) and the credits (1)
-        for i in xrange(2):
-            payday_accounting_lines[0][i].extend(
-                generate_each_paystub_accounting_line(
-                    paystub,
-                    paystub_accounting_line_config[0][i] )
-                )
-        
-        
-        # generate the lines that are to be accumulated together across
-        # multiple employee paystubs
-        #
-        # debits (0) and credits (1)
-        for i in xrange(2):
-            for line_spec in paystub_accounting_line_config[1][i]:
-                line_spec_key = (line_spec[0], line_spec[1], line_spec[2])
-                if line_spec_key not in payday_accounting_lines[1][i]:
-                    payday_accounting_lines[1][i][line_spec_key] = []
-                payday_accounting_lines[1][i][line_spec_key].extend(
-                    paystub_line
-                    for paystub_line in line_spec[3](paystub)
-                    )
-
-        # generate any per employee transactions
-        new_per_employee_trans = [[], []]
-        # do both the debits (0) and the credits (1)
-        for i in xrange(2):
-            new_per_employee_trans[i].extend( 
-                generate_each_paystub_accounting_line(
-                    paystub,
-                    paystub_accounting_line_config[2][i] ) )
-        new_per_employee_trans.append( paystub.employee.name )
-
-        if len(new_per_employee_trans[0]) > 0:
-            if len(new_per_employee_trans[0][0]) > 0:
-                payday_accounting_lines.append(
-                    new_per_employee_trans )
-
-    payday.specify_accounting_lines(payday_accounting_lines)
         
     if payday_accounting_lines_balance(payday):
         backend_module = book.get_backend_module()
@@ -651,13 +508,17 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         backend_module.mark_transaction_dirty(payday_trans_id,
                                               payday)
         backend_module.flush_backend()
+        transaction.get().commit()
+
+        if not backend_module.transaction_is_clean(payday_trans_id):
+            return (PAYROLL_BACKEND_COMPLAINT, 
+                    backend_module.reason_transaction_is_dirty() )
 
         if (display_paystubs):
             print 'spawning oowriter'
             os.spawnv(P_NOWAIT, '/usr/bin/oowriter', ['0', 'PaystubPrint.txt'])
     else:
-        payroll_module.remove_payday(paydate, payday_serial)
-        book.remove_transaction(payday_trans_id)
+        # save this inbalanced transaction so we can inspect it
         transaction.get().commit()
         return PAYROLL_ACCOUNTING_LINES_IMBALANCE, None
 
