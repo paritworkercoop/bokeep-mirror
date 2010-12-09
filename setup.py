@@ -30,12 +30,17 @@ class TestCommand(Command):
         return ( 
             "%s.%s" % ( TESTS_DIR, splitext(basename(t))[0])
             for t in glob(os.path.join(self._dir, TESTS_DIR, '*.py'))
-            if not t.endswith('__init__.py')
+            # don't run tests for the gnucash2.2 backend
+            if not t.endswith('__init__.py') and \
+                not t.endswith('test_gnucash_backend22.py')
             )
     
     def run(self):
         sys.path.insert(0, os.path.join(self._dir, BOKEEP_SRC_DIR) )
-        tests = TestLoader().loadTestsFromNames( self.generate_test_files() )
+        sys.path.insert(0, os.path.join(self._dir, 'tests') )
+        tests = list(self.generate_test_files())
+        #print tests
+        tests = TestLoader().loadTestsFromNames( tests )
         t = TextTestRunner(verbosity = 1)
         t.run(tests)
 

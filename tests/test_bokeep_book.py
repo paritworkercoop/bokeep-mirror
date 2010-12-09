@@ -70,11 +70,11 @@ class BoKeepWithBookSetup(BoKeepBasicTestSetup):
         self.test_book_1 = self.books.add_book(TESTBOOK)
 
 class TestBoKeepBookWithAdd(BoKeepWithBookSetup):
-
     def test_book_enabled_attr(self):
         self.assert_(hasattr(self.books.get_book(TESTBOOK), 'enabled_modules'))
 
     def test_book_enabled_attr_after_close(self):
+        transaction.get().commit()
         self.books.close_primary_connection()
         self.books.dbcon = self.books.get_new_dbcon()
         self.books.dbroot = self.books.dbcon.root()
