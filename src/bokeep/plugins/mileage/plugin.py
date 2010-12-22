@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 from persistent import Persistent
 from bokeep.util import ends_with_commit
 from decimal import Decimal
@@ -73,7 +74,7 @@ trust_transaction_descriptors = {
     0: "Mileage",
 }
 
-class MileageModule(Persistent):
+class MileagePlugin(Persistent):
     def register_transaction(self, front_end_id, trust_trans):
         pass
 

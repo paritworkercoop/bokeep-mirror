@@ -16,7 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
-from module import MileageModule
+
+from plugin import MileagePlugin
 
 def get_plugin_class():
-    return MileageModule
+    return MileagePlugin
