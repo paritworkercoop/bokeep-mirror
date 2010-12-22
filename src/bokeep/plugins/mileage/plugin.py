@@ -21,7 +21,7 @@ from persistent import Persistent
 from bokeep.util import ends_with_commit
 from decimal import Decimal
 
-from gui import trustor_entry
+from gui import mileage_entry
 
 from decimal import Decimal
 from datetime import datetime
@@ -30,51 +30,63 @@ from bokeep.book_transaction import \
     BoKeepTransactionNotMappableToFinancialTransaction
 
 ZERO = Decimal(0)
+ONE = Decimal(1)
 NEG_1 = Decimal(-1)
+TWO_PLACES = Decimal('0.01')
 
 class MileageTransaction(Transaction):
-    def __init__(self):
-        self.transfer_amount = Decimal(0)
+    def __init__(self, mileage_plugin):
+        Transaction.__init__(self, mileage_plugin)
+        self.transfer_amount = Decimal(ZERO)
+
+    def make_trans_line(self, account_spec, negate=False):
+        amount = (self.get_transfer_amount() * \
+            self.associated_plugin.distance_multiplier).quantize(TWO_PLACES)
+        if negate:
+            amount = -amount
+        return_value =  FinancialTransactionLine(amount)
+        return_value.account_spec = account_spec
+        return return_value
 
     def get_financial_transactions(self):
         # you should throw BoKeepTransactionNotMappableToFinancialTransaction
         # under some conditions
-        return FinancialTransaction(
-            (FinancialTransactionLine(self.get_transfer_amount()),
-             FinancialTranactionLine(self.get_transfer_amount() * NEG_1) )
-            )
+        if isinstance(self.get_transfer_amount(), Decimal):
+            return FinancialTransaction(
+                (self.make_trans_line(
+                        self.associated_plugin.get_debit_account() ),
+                 self.make_trans_line(
+                        self.associated_plugin.get_credit_account(), True) )
+                )
+        else:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                "the number of miles is not specified")
 
     def get_transfer_amount(self):
         return self.transfer_amount
 
-trust_transaction_types = {
-    0: MileageTransaction
-}
-
-def null_edit_function(*args):
-    pass
-
-def trustor_editable_editor(trans, trans_id, module, gui_parent):
-    editor = trustor_entry(trans, trans_id, module, gui_parent, True)
+def mileage_editable_editor(
+    trans, transid, plugin, gui_parent, change_register_function):
+    editor = mileage_entry(trans, transid, plugin, gui_parent,
+                           change_register_function)
     return editor
 
-def trustor_viewonly_editor(trans, trans_id, module, gui_parent):
-    editor = trustor_entry(trans, trans_id, module, gui_parent, False)
-    return editor
-
-trust_edit_interfaces_hooks = {
-    0: trustor_editable_editor,
-    }
-
-trust_view_interfaces_hooks = {
-    0: trustor_viewonly_editor,
-    }
-
-trust_transaction_descriptors = {
-    0: "Mileage",
-}
+MILEAGE_CODE = 0
 
 class MileagePlugin(Persistent):
+    def __init__(self):
+        self.debit_account = self.credit_account = None
+        self.distance_multiplier = ONE
+
+    def get_debit_account(self):
+        return self.debit_account
+
+    def get_credit_account(self):
+        return self.credit_account
+
+    def run_configuration_interface(self, parent_window, backend_account_fetch):
+        pass
+
     def register_transaction(self, front_end_id, trust_trans):
         pass
 
@@ -83,47 +95,20 @@ class MileagePlugin(Persistent):
 
     @staticmethod
     def get_transaction_type_codes():
-        return trust_transaction_types.keys()
+        return (MILEAGE_CODE,)
 
     @staticmethod
     def get_transaction_type_from_code(code):
-        return trust_transaction_types[code]
-
-    @staticmethod
-    def get_transaction_code_from_type(ty):
-        for entry in trust_transaction_types:
-            if trust_transaction_types[entry] == ty:
-                return entry
-
-        return None
+        assert(code == MILEAGE_CODE)
+        return MileageTransaction
 
     @staticmethod
     def get_transaction_type_pulldown_string_from_code(code):
-        return trust_transaction_descriptors[code]
+        assert(code == MILEAGE_CODE)
+        return "Mileage"
         
     @staticmethod
     def get_transaction_edit_interface_hook_from_code(code):
-        return trust_edit_interfaces_hooks[code]
-
-    @staticmethod
-    def get_transaction_view_interface_hook_from_code(code):
-        return trust_view_interfaces_hooks[code]
-
-    @staticmethod
-    def get_transaction_edit_interface_hook_from_type(ty):
-        code = TrustModule.get_transaction_code_from_type(ty)
-
-        if not code == None:
-            return trust_edit_interfaces_hooks[code]
-        else:
-            return None
-
-    @staticmethod
-    def get_transaction_view_interface_hook_from_type(ty):
-        code = TrustModule.get_transaction_code_from_type(ty)
-
-        if not code == None:
-            return trust_view_interfaces_hooks[code]
-        else:
-            return None
+        return mileage_editable_editor
+    
     

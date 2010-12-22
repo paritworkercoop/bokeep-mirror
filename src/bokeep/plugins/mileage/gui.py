@@ -30,11 +30,9 @@ class trustor_entry(GladeWindow):
     def detach(self):
         self.widgets['vbox1'].reparent(self.top_window)
 
-    def __init__(self, trust_trans, trans_id, trust_module, gui_parent, editable):
+    def __init__(self, mile_trans, trans_id, mile_plugin, gui_parent):
 
         self.gui_built = False
-        self.editable = editable
-
         
         self.init()
 

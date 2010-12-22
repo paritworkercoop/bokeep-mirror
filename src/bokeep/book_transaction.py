@@ -83,8 +83,8 @@ class BoKeepTransactionNotMappableToFinancialTransaction(Exception):
     pass
 
 class Transaction(Persistent):
-    def __init__(self):
-        pass
+    def __init__(self, associated_plugin):
+        self.associated_plugin = associated_plugin
 
     def get_financial_transactions(self):
         """Return a generator that will provide FinancialTransaction instances
