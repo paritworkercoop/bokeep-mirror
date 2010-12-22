@@ -1,0 +1,2 @@
+Every plugin should have a get_plugin_class function. If your plugin is a single python module, declare get_plugin_class in that file. If your plugin is a python package, declare or import get_plugin_class from your __init__.py.
+

@@ -18,5 +18,5 @@
 # Author: Mark Jenkins <mark@parit.ca>
 from module import MileageModule
 
-def get_module_class():
+def get_plugin_class():
     return MileageModule

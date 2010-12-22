@@ -21,5 +21,5 @@ from core import \
 
 from module import TrustModule, Trustor
 
-def get_module_class():
+def get_plugin_class():
     return TrustModule

@@ -18,5 +18,5 @@
 # Author: Mark Jenkins <mark@parit.ca>
 from module import PayrollModule
 
-def get_module_class():
+def get_plugin_class():
     return PayrollModule

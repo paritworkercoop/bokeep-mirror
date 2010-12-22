@@ -125,7 +125,7 @@ class BoKeepBook(Persistent):
                 module_name not in self.disabled_modules )
         # get the module class and instantiate as a new disabled module
         self.disabled_modules[module_name] =  __import__(
-            module_name, globals(), locals(), [""]).get_module_class()()
+            module_name, globals(), locals(), [""]).get_plugin_class()()
         self._p_changed = True
 
     def enable_module(self, module_name):
