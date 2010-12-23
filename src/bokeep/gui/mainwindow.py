@@ -79,6 +79,10 @@ class MainWindow(object):
         # should we do an emit to ensure it happens, or be satisfyed
         # that it always happens in tests?
 
+    def flush_backend_of_book(self, book):
+        book.get_backend_module().flush_backend()
+        transaction.get().commit()
+
     def application_shutdown(self):
         if hasattr(self, 'guistate'):
             self.guistate.do_action(CLOSE)
@@ -419,3 +423,8 @@ class MainWindow(object):
                 bo_keep_logo_path, 300, 266) )
         ab.run()
         ab.destroy()
+
+    def on_backend_flush_request(self, *args):
+        if self.guistate.get_book() == None:
+            return
+        self.flush_backend_of_book(self.guistate.get_book())
