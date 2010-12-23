@@ -86,6 +86,9 @@ def get_amount_from_trans_line(trans_line):
 
 def account_from_path(top_account, account_path, original_path=None):
     if original_path==None: original_path = account_path
+    if not isinstance(account_path, tuple):
+        raise BoKeepBackendException(
+            "account %s is not a tuple" % str(account_path) )
     account, account_path = account_path[0], account_path[1:]
     account = top_account.lookup_by_name(account)
     if account.get_instance() == None:
