@@ -18,16 +18,13 @@
 # Author: Mark Jenkins <mark@parit.ca>
 
 from persistent import Persistent
-from bokeep.util import ends_with_commit
-from decimal import Decimal
-
-from gui import mileage_entry
 
 from decimal import Decimal
 from datetime import datetime
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine, \
     BoKeepTransactionNotMappableToFinancialTransaction
+from gui import mileage_entry
 
 ZERO = Decimal(0)
 ONE = Decimal(1)
@@ -37,10 +34,11 @@ TWO_PLACES = Decimal('0.01')
 class MileageTransaction(Transaction):
     def __init__(self, mileage_plugin):
         Transaction.__init__(self, mileage_plugin)
-        self.transfer_amount = Decimal(ZERO)
+        self.distance = Decimal(ZERO)
+        self.trans_date = datetime.today()
 
     def make_trans_line(self, account_spec, negate=False):
-        amount = (self.get_transfer_amount() * \
+        amount = (self.get_distance() * \
             self.associated_plugin.distance_multiplier).quantize(TWO_PLACES)
         if negate:
             amount = -amount
@@ -51,19 +49,25 @@ class MileageTransaction(Transaction):
     def get_financial_transactions(self):
         # you should throw BoKeepTransactionNotMappableToFinancialTransaction
         # under some conditions
-        if isinstance(self.get_transfer_amount(), Decimal):
-            return FinancialTransaction(
+        if isinstance(self.get_distance(), Decimal):
+            return_value = FinancialTransaction(
                 (self.make_trans_line(
                         self.associated_plugin.get_debit_account() ),
                  self.make_trans_line(
                         self.associated_plugin.get_credit_account(), True) )
                 )
+            return_value.description = 'mileage'
+            return_value.trans_date = self.trans_date
+            return (return_value,)
         else:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 "the number of miles is not specified")
 
-    def get_transfer_amount(self):
-        return self.transfer_amount
+    def get_distance(self):
+        return self.distance
+
+    def set_distance(self, distance):
+        self.distance = distance
 
 def mileage_editable_editor(
     trans, transid, plugin, gui_parent, change_register_function):
@@ -75,8 +79,10 @@ MILEAGE_CODE = 0
 
 class MileagePlugin(Persistent):
     def __init__(self):
-        self.debit_account = self.credit_account = None
+        #self.debit_account = self.credit_account = None
+        self.debit_account = self.credit_account = ('Assets',)
         self.distance_multiplier = ONE
+        self.trans_registry = {}
 
     def get_debit_account(self):
         return self.debit_account
@@ -84,15 +90,20 @@ class MileagePlugin(Persistent):
     def get_credit_account(self):
         return self.credit_account
 
-    def run_configuration_interface(self, parent_window, backend_account_fetch):
+    def run_configuration_interface(
+        self, parent_window, backend_account_fetch):
         pass
 
     def register_transaction(self, front_end_id, trust_trans):
-        pass
+        assert( not self.has_transaction(front_end_id) )
+        self.trans_registry[front_end_id] = trust_trans
 
     def remove_transaction(self, front_end_id):
-        pass
+        del self.trans_registry[front_end_id]
 
+    def has_transaction(self, trans_id):
+        return trans_id in self.trans_registry
+        
     @staticmethod
     def get_transaction_type_codes():
         return (MILEAGE_CODE,)

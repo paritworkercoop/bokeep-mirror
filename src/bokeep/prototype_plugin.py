@@ -42,6 +42,12 @@ class PrototypePlugin(Persistent):
         """
         pass
 
+    def has_transaction(self, trans_id):
+        """BoKeep asks the plugin if it is taking responsibility for the
+        transaction identified by trans_id
+        """
+        return False
+
     @staticmethod
     def get_transaction_type_codes():
         """Return an iterable object (e.g. list, tuple, generator..) of

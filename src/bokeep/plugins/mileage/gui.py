@@ -16,50 +16,67 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 import sys
 
-from bokeep.gui.gladesupport import GladeWindow
+from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
 from gtk import ListStore
 
-from decimal import Decimal
-
+from decimal import Decimal, InvalidOperation
+from datetime import date
 from os.path import abspath, dirname, join, exists
 
-class trustor_entry(GladeWindow):
-    def detach(self):
-        self.widgets['vbox1'].reparent(self.top_window)
-
-    def __init__(self, mile_trans, trans_id, mile_plugin, gui_parent):
-
+class mileage_entry(GladeWindow):
+    def __init__(self, trans, transid, plugin, gui_parent,
+                 change_register_function):
         self.gui_built = False
-        
-        self.init()
+        GladeWindow.__init__(
+            self, self.construct_filename('mileage.glade'),
+            'window1', ('window1', 'amount_entry', 'vbox1', 'calendar1'),
+            ('on_window_destroy', 'on_amount_entry_changed',
+             'on_cal_date_changed') )
 
+        self.trans = trans
+        self.widgets['calendar1'].select_month(
+            self.trans.trans_date.month-1, self.trans.trans_date.year)
+        self.widgets['calendar1'].select_day(self.trans.trans_date.day)
+        
+        if isinstance(self.trans.get_distance(), Decimal):
+            self.widgets['amount_entry'].set_text(
+                str(self.trans.get_distance()) )
+
+        self.plugin = plugin
+        self.change_register_function = change_register_function
+        
         if not gui_parent == None:
             self.widgets['vbox1'].reparent(gui_parent)
         self.top_window.hide()
         self.gui_built = True
 
+    def detach(self):
+        self.widgets['vbox1'].reparent(self.top_window)
 
     def construct_filename(self, filename):
-        import trustor_entry as trust_module
-        return join( dirname( abspath( trust_module.__file__ ) ),
+        import gui as gui_mod
+        return join( dirname( abspath( gui_mod.__file__ ) ),
                               filename)
         
-    def init(self):
+    def on_amount_entry_changed(self, *args):
+        # skip this if being set by code and not user at init
+        if not self.gui_built: return
+        try:
+            self.trans.set_distance(
+                Decimal(self.widgets['amount_entry'].get_text()))
+        except InvalidOperation: pass
+        else:
+            self.change_register_function()
 
-        filename = 'mileage.glade'
-
-        widget_list = [
-            'window1',
-            ]
-
-        handlers = [
-            'on_window_destroy',
-            ]
-
-        top_window = 'window1'
-        GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
-
-
+    def on_cal_date_changed(self, *args):
+        # skip this if being set by code and not user at init
+        if not self.gui_built: return
+        (year, month, day) = self.widgets['calendar1'].get_date()
+        self.trans.trans_date = \
+            date(year, month+1, day)
+        self.change_register_function()
+       
