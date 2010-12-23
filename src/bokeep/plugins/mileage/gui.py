@@ -25,14 +25,14 @@ from gtk import ListStore
 
 from decimal import Decimal, InvalidOperation
 from datetime import date
-from os.path import abspath, dirname, join, exists
 
 class mileage_entry(GladeWindow):
     def __init__(self, trans, transid, plugin, gui_parent,
                  change_register_function):
+        from plugin import get_mileage_glade_file
         self.gui_built = False
         GladeWindow.__init__(
-            self, self.construct_filename('mileage.glade'),
+            self, get_mileage_glade_file(),
             'window1', ('window1', 'amount_entry', 'vbox1', 'calendar1'),
             ('on_window_destroy', 'on_amount_entry_changed',
              'on_cal_date_changed') )
@@ -57,11 +57,6 @@ class mileage_entry(GladeWindow):
     def detach(self):
         self.widgets['vbox1'].reparent(self.top_window)
 
-    def construct_filename(self, filename):
-        import gui as gui_mod
-        return join( dirname( abspath( gui_mod.__file__ ) ),
-                              filename)
-        
     def on_amount_entry_changed(self, *args):
         # skip this if being set by code and not user at init
         if not self.gui_built: return
