@@ -20,17 +20,18 @@
 from persistent import Persistent
 
 from decimal import Decimal, InvalidOperation
-from datetime import datetime
+from datetime import datetime, date
 from os.path import abspath, dirname, join, exists
 
 from gtk import RESPONSE_OK
 
+from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine, \
     BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
-from gui import mileage_entry
+
 
 ZERO = Decimal(0)
 ONE = Decimal(1)
@@ -135,6 +136,56 @@ class MileagePlugin(Persistent):
     @staticmethod
     def get_transaction_edit_interface_hook_from_code(code):
         return mileage_editable_editor
+
+class mileage_entry(GladeWindow):
+    def __init__(self, trans, transid, plugin, gui_parent,
+                 change_register_function):
+        from plugin import get_mileage_glade_file
+        self.gui_built = False
+        GladeWindow.__init__(
+            self, get_mileage_glade_file(),
+            'window1', ('window1', 'amount_entry', 'vbox1', 'calendar1'),
+            ('on_window_destroy', 'on_amount_entry_changed',
+             'on_cal_date_changed') )
+
+        self.trans = trans
+        self.widgets['calendar1'].select_month(
+            self.trans.trans_date.month-1, self.trans.trans_date.year)
+        self.widgets['calendar1'].select_day(self.trans.trans_date.day)
+        
+        if isinstance(self.trans.get_distance(), Decimal):
+            self.widgets['amount_entry'].set_text(
+                str(self.trans.get_distance()) )
+
+        self.plugin = plugin
+        self.change_register_function = change_register_function
+        
+        if not gui_parent == None:
+            self.widgets['vbox1'].reparent(gui_parent)
+        self.top_window.hide()
+        self.gui_built = True
+
+    def detach(self):
+        self.widgets['vbox1'].reparent(self.top_window)
+
+    def on_amount_entry_changed(self, *args):
+        # skip this if being set by code and not user at init
+        if not self.gui_built: return
+        try:
+            self.trans.set_distance(
+                Decimal(self.widgets['amount_entry'].get_text()))
+        except InvalidOperation: pass
+        else:
+            self.change_register_function()
+
+    def on_cal_date_changed(self, *args):
+        # skip this if being set by code and not user at init
+        if not self.gui_built: return
+        (year, month, day) = self.widgets['calendar1'].get_date()
+        self.trans.trans_date = \
+            date(year, month+1, day)
+        self.change_register_function()
+
     
 class MileageConfigDialog(object):
     def __init__(self, parent_window, backend_account_fetch, plugin):
