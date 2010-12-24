@@ -274,6 +274,25 @@ class MainWindow(object):
                 else:
                     sensitive_widget.set_sensitive(False)
 
+        self.set_backend_error_indicator()
+
+    def set_backend_error_indicator(self):
+        # don't bother if the gui isn't built yet
+        if not self.gui_built: return
+
+        # set the backend error indicator led
+        book = self.guistate.get_book()
+        trans_id = self.guistate.get_transaction_id()
+        if book != None and trans_id != None:
+            backend = book.get_backend_module()
+            if backend.transaction_is_clean(trans_id):
+                self.backend_error_light.hide()
+                self.backend_error_msg_label.set_text("")
+            else:
+                self.backend_error_light.show()
+                self.backend_error_msg_label.set_text(
+                    backend.reason_transaction_is_dirty(trans_id) )
+
     # Functions for use to event handlers, not used during initialization
 
     def set_trans_type_combo_to_current_and_reset_view(self):
@@ -428,3 +447,4 @@ class MainWindow(object):
         if self.guistate.get_book() == None:
             return
         self.flush_backend_of_book(self.guistate.get_book())
+        self.set_backend_error_indicator()
