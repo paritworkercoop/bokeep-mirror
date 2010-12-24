@@ -21,6 +21,8 @@
             <signal name="month_changed" handler="on_cal_date_changed"/>
           </widget>
           <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
             <property name="position">0</property>
           </packing>
         </child>
