@@ -64,7 +64,6 @@ setup(name='Bo-Keep',
                 PACKAGE_NAME + '.plugins.trust.GUIs',
                 PACKAGE_NAME + '.plugins.trust.GUIs.entry',
                 PACKAGE_NAME + '.plugins.trust.GUIs.management',
-                PACKAGE_NAME + '.plugins.mileage',
                 ],
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
@@ -75,7 +74,7 @@ setup(name='Bo-Keep',
             'plugins/trust/GUIs/management/data/trustor_transactions.glade',
             'plugins/trust/GUIs/management/data/trustor_management.glade',
             'plugins/trust/GUIs/entry/data/trustor_entry.glade',
-            'plugins/mileage/mileage.glade'] },
+            'plugins/mileage.glade'] },
       data_files=[('share/applications',
                    ['desktop_files/bo-keep.sh.desktop' ])
                   ]
