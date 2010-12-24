@@ -147,6 +147,10 @@ class MileageConfigDialog(object):
                                self.plugin.debit_account_str )
         self.set_credit_account(self.plugin.get_credit_account(),
                                 self.plugin.credit_account_str )
+        if isinstance(self.plugin.distance_multiplier, Decimal):
+            self.distance_multiple_entry.set_text(
+                str(self.plugin.distance_multiplier) )
+                            
         if parent_window != None:
             self.dialog1.set_transient_for(parent_window)
             self.dialog1.set_modal(True)
@@ -154,35 +158,34 @@ class MileageConfigDialog(object):
     def run(self):
         dia_result = self.dialog1.run()
         if dia_result == RESPONSE_OK:
-            plugin.debit_account = self.debit_account
-            plugin.credit_account = self.credit_account
-            plugin.debit_account_str = self.debit_account_str
-            plugin.credit_account_str = self.credit_account_str
+            self.plugin.debit_account = self.debit_account
+            self.plugin.credit_account = self.credit_account
+            self.plugin.debit_account_str = self.debit_account_str
+            self.plugin.credit_account_str = self.credit_account_str
             try:
                 self.plugin.distance_multiplier = \
                     Decimal(self.distance_multiple_entry.get_text())
             except InvalidOperation: pass
         self.dialog1.destroy()
     
-    def handle_account_fetch(self, label, setter):
+    def handle_account_fetch(self, setter):
         account_spec, account_str = self.backend_account_fetch(
             self.dialog1)
         if account_spec != None:
             setter(account_spec, account_str)
-            label.set_text(account_str)
 
     def set_debit_account(self, spec, string):
         self.debit_account = spec
         self.debit_account_str = string
+        self.expense_account_label.set_text(string)
 
     def set_credit_account(self, spec, string):
         self.credit_account = spec
-        self.credit_account_str = spec
+        self.credit_account_str = string
+        self.credit_account_label.set_text(string)
 
     def on_select_expense_account(self, *args):
-        self.handle_account_fetch(
-            self.expense_account_label, self.set_debit_account )
+        self.handle_account_fetch(self.set_debit_account )
 
     def on_select_credit_account(self, *args):
-        self.handle_account_fetch(
-            self.credit_account_label, self.set_credit_account)
+        self.handle_account_fetch(self.set_credit_account)
