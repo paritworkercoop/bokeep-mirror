@@ -62,7 +62,7 @@ ZERO = Decimal('0.00')
 
 class Payday(BookTransaction, cdnpayroll_Payday):
     def __init__(self, paydate, period_start, period_end):
-        BookTransaction.__init__(self)
+        BookTransaction.__init__(self, None)
         cdnpayroll_Payday.__init__(self, paydate, period_start, period_end)
         self.cheque_overrides = {}
         self._p_changed = True

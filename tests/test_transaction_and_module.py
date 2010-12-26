@@ -17,10 +17,11 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 from bokeep.book_transaction import Transaction
+from bokeep.prototype_plugin import PrototypePlugin
 
 class Type1Transaction(Transaction):
     def __init__(self, module):
-        Transaction.__init__(self)
+        Transaction.__init__(self, module)
         self.reset_data()
     
     def reset_data(self):
@@ -38,7 +39,7 @@ trust_transaction_types = {
     TYPE2: Type2Transaction,
 }
 
-class TestModule(object):
+class TestModule(PrototypePlugin):
     def __init__(self):
         self.transaction_track_database = {}
         
@@ -59,35 +60,7 @@ class TestModule(object):
     def get_transaction_type_from_code(code):
         return trust_transaction_types[code]
 
-    @staticmethod
-    def get_transaction_code_from_type(ty):
-        for entry in trust_transaction_types:
-            if trust_transaction_types[entry] == ty:
-                return entry
-
-        return None
-
-    @staticmethod
-    def get_transaction_type_pulldown_string_from_code(code):
-        return "cool test trasnaction"
-        
-    @staticmethod
-    def get_transaction_edit_interface_hook_from_code(code):
-        return lambda: None
-
-    @staticmethod
-    def get_transaction_view_interface_hook_from_code(code):
-        return lambda: None
-
-    @staticmethod
-    def get_transaction_edit_interface_hook_from_type(ty):
-        return lambda: None
-
-    @staticmethod
-    def get_transaction_view_interface_hook_from_type(ty):
-        return lambda: None
-
-def get_module_class():
+def get_plugin_class():
     return TestModule
 
 

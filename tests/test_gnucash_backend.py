@@ -29,6 +29,7 @@ from test_bokeep_book import create_tmp_filename
 
 SQLITE3 = 'sqlite3'
 XML = 'xml'
+SQLITE3 = XML
 
 ASSETS_ACCOUNT = 'Assets'
 BANK_ACCOUNT = 'Bank'
