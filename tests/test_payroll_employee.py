@@ -18,6 +18,8 @@ class PayrollTestCaseSetup(BoKeepWithBookSetup):
         BoKeepWithBookSetup.setUp(self)
         self.books.get_book(TESTBOOK).add_module(PAYROLL_PLUGIN)
         self.books.get_book(TESTBOOK).enable_module(PAYROLL_PLUGIN)
+        self.payroll_plugin = self.books.get_book(TESTBOOK).get_module(
+            PAYROLL_PLUGIN)
         payroll_add_employee(TESTBOOK, "george costanza", self.books)
         payroll_add_employee(TESTBOOK, "susie", self.books)
 

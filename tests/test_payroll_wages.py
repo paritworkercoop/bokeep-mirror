@@ -145,8 +145,9 @@ class PayrollPaydayTestCaseSetup(PayrollTestCaseSetup):
     def setUp(self):
         PayrollTestCaseSetup.setUp(self)
         # implicit bookset.close()
-        self.payday = Payday(date(2009, 04, 22), date(2009, 04, 06),
-                             date(2009, 04, 19) )
+        self.payday = Payday(self.payroll_plugin)
+        self.payday.set_paydate(date(2009, 04, 22), date(2009, 04, 06),
+                                date(2009, 04, 19) )
         self.payday_serial = 1
         self.payroll_mod = self.books.get_book(TESTBOOK).get_module(
             PAYROLL_PLUGIN)

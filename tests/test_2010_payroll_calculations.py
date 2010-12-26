@@ -5,7 +5,7 @@ from decimal import Decimal
 
 # bokeep.plugins.payroll.canada imports
 from bokeep.plugins.payroll.canada.employee import Employee
-from bokeep.plugins.payroll.canada.payday import Payday
+from bokeep.plugins.payroll.payroll import Payday
 from bokeep.plugins.payroll.canada.paystub import Paystub
 from bokeep.plugins.payroll.canada.paystub_line import PaystubIncomeLine
 from bokeep.plugins.payroll.canada.income_tax import PaystubCalculatedIncomeTaxDeductionLine, \
@@ -24,7 +24,9 @@ class Basic2010PayTest(TestCase):
     def setUp(self):
         self.emp = Employee("test employee")
         date_paydate_one = date(2010, 01, 01)
-        self.payday_one = Payday( *(date_paydate_one for i in xrange(3)) )
+        self.payday_one = Payday(None)
+        self.payday_one.set_paydate(
+            *(date_paydate_one for i in xrange(3)) )
         self.paystub_one = Paystub(self.emp, self.payday_one)
 
 def create_basic_test_class(name, income, fed_tax_credits, prov_tax_credits,
@@ -65,7 +67,9 @@ class TestCarryOverYear(TestCase):
     def setUp(self):
         self.emp = Employee("test employee")
         date_paydate_one = date(2009, 12, 15)
-        self.payday_one = Payday( *(date_paydate_one for i in xrange(3)) )
+        self.payday_one = Payday(None)
+        self.payday_one.set_paydate(
+            *(date_paydate_one for i in xrange(3)) )
         self.paystub_one = Paystub(self.emp, self.payday_one)
         self.paystub_one.add_paystub_line(
             PaystubIncomeLine( self.paystub_one, Decimal(480) ) )
@@ -84,7 +88,9 @@ class TestCarryOverYear(TestCase):
         self.emp.prov_tax_credits = 1
 
         date_paydate_two = date(2010, 01, 03)
-        self.payday_two = Payday( *(date_paydate_two for i in xrange(3)) )
+        self.payday_two = Payday(None)
+        self.payday_two.set_paydate(
+            *(date_paydate_two for i in xrange(3)) )
         self.paystub_two = Paystub(self.emp, self.payday_two)
         self.paystub_two.add_paystub_line(
             PaystubIncomeLine( self.paystub_two, Decimal(480) ) )

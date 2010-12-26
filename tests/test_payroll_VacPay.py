@@ -5,7 +5,7 @@ from decimal import Decimal
 
 # cdnpayroll imports
 from bokeep.plugins.payroll.canada.employee import Employee
-from bokeep.plugins.payroll.canada.payday import Payday
+from bokeep.plugins.payroll.payroll import Payday
 from bokeep.plugins.payroll.canada.paystub import Paystub
 from bokeep.plugins.payroll.canada.paystub_line import PaystubIncomeLine, sum_paystub_lines, \
     PaystubCalculatedLine
@@ -18,7 +18,9 @@ class BasicVacationPayTest(TestCase):
     def setUp(self):
         self.emp = Employee("test employee")
         date_paydate_one = date(2009, 01, 01)
-        self.payday_one = Payday( *(date_paydate_one for i in xrange(3)) )
+        self.payday_one = Payday(None)
+        self.payday_one.set_paydate(
+            *(date_paydate_one for i in xrange(3)) )
         self.paystub_one = Paystub(self.emp, self.payday_one)
         self.paystub_one.add_paystub_line(
             PaystubIncomeLine( self.paystub_one, Decimal(100) ) )
@@ -177,14 +179,18 @@ class ComplexVacationPayout(BasicVacationPayout):
         BasicVacationPayout.setUp(self)
         
         date_paydate_two = date(2009, 01, 15)
-        self.payday_two = Payday( *(date_paydate_two for i in xrange(3)) )
+        self.payday_two = Payday(None)
+        self.payday_two.set_paydate(
+            *(date_paydate_two for i in xrange(3)) )
         self.paystub_two = Paystub(self.emp, self.payday_two)
         self.paystub_two.add_paystub_line(
             PaystubIncomeLine( self.paystub_two, Decimal(200) ) )
         # payday two does not contain a vacation pay widthdrawel line
 
         date_paydate_three = date(2009, 01, 29)
-        self.payday_three = Payday( *(date_paydate_three for i in xrange(3)) )
+        self.payday_three = Payday(None)
+        self.payday_three.set_paydate(
+            *(date_paydate_three for i in xrange(3)) )
         self.paystub_three = Paystub(self.emp, self.payday_three)
         self.paystub_three.add_paystub_line(
             PaystubIncomeLine( self.paystub_three, Decimal(100) ) )
@@ -194,7 +200,9 @@ class ComplexVacationPayout(BasicVacationPayout):
 
 
         date_paydate_four = date(2009, 02, 13)
-        self.payday_four = Payday( *(date_paydate_four for i in xrange(3)) )
+        self.payday_four = Payday(None)
+        self.payday_four.set_paydate(
+            *(date_paydate_four for i in xrange(3)) )
         self.paystub_four = Paystub(self.emp, self.payday_four)
         self.paystub_four.add_paystub_line(
             PaystubIncomeLine( self.paystub_four, Decimal(100) ) )

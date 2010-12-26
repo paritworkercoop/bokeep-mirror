@@ -23,7 +23,6 @@ from decimal import Decimal
 import sys
 
 # cndpayroll
-from bokeep.plugins.payroll.canada.payday import Payday as cdnpayroll_Payday
 from bokeep.plugins.payroll.canada.paystub import Paystub
 from bokeep.plugins.payroll.canada.employee import Employee
 from bokeep.plugins.payroll.canada.paystub_line import \
@@ -60,16 +59,26 @@ ONE = Decimal('1.00')
 NEG_ONE = Decimal('-1.00')
 ZERO = Decimal('0.00')
 
-class Payday(BookTransaction, cdnpayroll_Payday):
-    def __init__(self, paydate, period_start, period_end):
-        BookTransaction.__init__(self, None)
-        cdnpayroll_Payday.__init__(self, paydate, period_start, period_end)
+class Payday(BookTransaction):
+    """A payday consists of a set of paystubs, each with an associated employee
+    """
+    def __init__(self, payroll_plugin):
+        BookTransaction.__init__(self, payroll_plugin)
+        self.paystubs = []
+        self.paydate = self.period_start = self.period_end = None
         self.cheque_overrides = {}
         self._p_changed = True
 
     def add_paystub(self, paystub):
-        cdnpayroll_Payday.add_paystub(self, paystub)
+        self.paystubs.append( paystub )
         self._p_changed = True
+
+    def set_paydate(self, *args):
+        """Set the paydate and period start and end
+        
+        Three arguments, in that order, each of type datetime.date
+        """
+        (self.paydate, self.period_start, self.period_end) = args
 
     def specify_accounting_lines(self, payday_accounting_lines):
         self.payday_accounting_lines = payday_accounting_lines

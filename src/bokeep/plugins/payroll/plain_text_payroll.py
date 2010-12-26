@@ -483,7 +483,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
             (payday_trans_id, payday) = payroll_module.get_payday(
                 paydate, payday_serial)
     else: 
-        payday = Payday(paydate, period_start, period_end)
+        payday = Payday(payroll_module)
+        payday.set_paydate(paydate, period_start, period_end)
         payday_trans_id = book.insert_transaction(payday)
         payroll_module.add_payday(paydate, payday_serial,
                                   payday_trans_id, payday)
