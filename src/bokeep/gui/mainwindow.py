@@ -267,7 +267,9 @@ class MainWindow(object):
                   (self.new_button, NEW),
                   (self.delete_button, DELETE),
                   (self.trans_type_combo, TYPE_CHANGE),
-                  (self.books_combobox, BOOK_CHANGE), ):
+                  (self.books_combobox, BOOK_CHANGE),
+                  (self.plugin1, DELETE),
+                  (self.plugin1_menu, DELETE), ):
                 if self.gui_built:
                     sensitive_widget.set_sensitive(
                         self.guistate.action_allowed(action_code) )
@@ -407,9 +409,12 @@ class MainWindow(object):
             transaction.get().commit()
 
     def on_configure_plugin1_activate(self, *args):
-        if self.guistate.get_book() == None:
-            return
-        
+        # the gui should never allow this event handler to be triggered
+        # if there is no transaction and thus no associated plugin
+        # to configure
+        assert( self.guistate.get_book() != None )
+        assert( self.guistate.get_transaction_id() != None )
+
         currindex = self.trans_type_combo.get_active_iter()
         if currindex == COMBO_SELECTION_NONE:
             return
