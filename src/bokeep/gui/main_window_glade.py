@@ -26,4 +26,4 @@ def get_this_module_file_path():
 
 def get_main_window_glade_file():
     return join( dirname( abspath(get_this_module_file_path() ) ),
-                 'glade', 'bokeep_main_window.glade' )
+                 'bokeep_main_window.glade' )
