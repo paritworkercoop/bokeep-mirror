@@ -17,8 +17,8 @@
 #
 # Author(s): Mark Jenkins <mark@parit.ca>
 
-JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010 = range(6)
-LAST_RULE_PERIOD = JAN_2010
+JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011 = range(7)
+LAST_RULE_PERIOD = JAN_2011
 
 CODE_TO_YEAR_AND_MONTHS = { JUL_2006: (2006, range(7, 12+1) ),
                             JAN_2007: (2007, range(1, 12+1) ),
@@ -26,7 +26,7 @@ CODE_TO_YEAR_AND_MONTHS = { JUL_2006: (2006, range(7, 12+1) ),
                             JAN_2009: (2009, range(1, 3+1) ),
                             APR_2009: (2009, range(4, 12+1) ),
                             JAN_2010: (2010, range(1, 12+1) ),
-
+                            JAN_2011: (2011, range(1, 12+1) ),
                             }
 
 YEAR_AND_MONTH_TO_CODE = {}

@@ -23,7 +23,7 @@ from paystub_line import \
      PaystubCalculatedDeductionLine, PaystubCalculatedEmployerContributionLine
 
 from payroll_rule_period import \
-     JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, \
+     JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
      get_payroll_rule_period_for_paystub
 
 from functions import decimal_round_two_place_using_third_digit, \
@@ -42,6 +42,7 @@ EI_RATE_TABLE = { JUL_2006: '0.0187', # 1.87%
                   JAN_2009: '0.0173', # 1.73%
                   APR_2009: '0.0173', # 1.73%
                   JAN_2010: '0.0173', # 1.73%
+                  JAN_2011: '0.0178', # 1.73%
                   }
 convert_dict_of_string_to_dict_of_decimals_in_place(EI_RATE_TABLE)
 
@@ -51,6 +52,7 @@ MAX_EI_PREMIUM_TABLE = { JUL_2006: '729.30',
                          JAN_2009: '731.79',
                          APR_2009: '731.79',
                          JAN_2010: '747.36',
+                         JAN_2011: '786.76',
                          }
 convert_dict_of_string_to_dict_of_decimals_in_place(MAX_EI_PREMIUM_TABLE)
 
@@ -97,6 +99,6 @@ class PaystubEIEmployerContributionLine(
 
         return EIemp
 
-EI_RATE_QUEBEC = Decimal('0.0153') # 1.53%
-MAX_EI_PREMIUM_QUEBEC = Decimal('596.70')
+EI_RATE_QUEBEC = Decimal('0.0141') # 1.53%
+MAX_EI_PREMIUM_QUEBEC = Decimal('623.22')
     

@@ -25,7 +25,7 @@ from functions import \
     convert_tuple_of_strings_to_tuple_of_decimals
 
 from payroll_rule_period import \
-     JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, \
+     JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
      get_payroll_rule_period_for_paystub
 
 from decimal import Decimal
@@ -62,7 +62,7 @@ class Province(object):
         classmethod( get_provincial_thresholds_and_tax_rates )
 
 class Manitoba( Province ):
-    MINIMUM_WAGE = Decimal('9.00')
+    MINIMUM_WAGE = Decimal('9.50')
     VACATION_PAY_RATE = Decimal('0.04')
     
     PROV_NAME = 'Manitoba'
@@ -144,6 +144,19 @@ class Manitoba( Province ):
                             '22524.50', # 10
                             ), # JAN_2010
 
+                JAN_2011: ( '0.00',     # 0
+                            '8134.00',  # 1
+                            '8980.50',  # 2
+                            '10673.50', # 3
+                            '12366.50', # 4
+                            '14059.50', # 5
+                            '15752.50', # 6
+                            '17445.50', # 7
+                            '19138.50', # 8
+                            '20831.50', # 9
+                            '22524.50', # 10
+                            ), # JAN_2010
+
                 } # TD_PROV
 
     # convert the above table values from string constants to Decimal values
@@ -188,6 +201,12 @@ class Manitoba( Province ):
                       ('0.1275', '605'),   # 31000 < A <= 67000
                       ('0.1740', '3720'), )# 67000 < A
                     ), # JAN_2010
+
+        JAN_2011: ( ('31000', '67000'),
+                    ( ('0.1080', '0'),     #         A <= 31000
+                      ('0.1275', '605'),   # 31000 < A <= 67000
+                      ('0.1740', '3720'), )# 67000 < A
+                    ), # JAN_2011
         
         } # PROVINCIAL_THRESHOLDS_AND_TAX_RATES
 
