@@ -285,40 +285,31 @@ def payday_accounting_lines_balance(transactions):
 def add_new_payroll_from_import(
     book, payroll_module, display_paystubs,
     overwrite_existing=False, add_missing_employees=False):
-    from payday_data import paydate, payday_serial, emp_list, \
+    from payday_data import paydate, emp_list, \
         chequenum_start, period_start, period_end
     from payroll_configuration import \
         paystub_line_config, paystub_accounting_line_config, \
         print_paystub_line_config
 
     add_new_payroll(book, payroll_module, display_paystubs, paydate,
-                    payday_serial, emp_list, chequenum_start,
+                    emp_list, chequenum_start,
                     period_start, period_end, paystub_line_config,
                     paystub_accounting_line_config,
                     print_paystub_line_config, '', overwrite_existing)
 
 def setup_paystubs_for_payday_from_dicts(
-    payroll_module, payday_serial, payday_trans_id, payday,
+    payroll_module, payday,
     emp_list, chequenum_start, paystub_line_config,
     paystub_accounting_line_config, add_missing_employees=False):
 
     paydate = payday.paydate
-
-    if payroll_module.has_payday(paydate, payday_serial):
-        payroll_module.remove_payday(paydate, payday_serial)
-        payday.paystubs = [] # surely we can do better than this?
-
-        assert( not payroll_module.has_payday(paydate, payday_serial) )
-    payroll_module.add_payday(paydate, payday_serial,
-                              payday_trans_id, payday)
+    payroll_module.purge_all_paystubs(payday)
 
     for emp in emp_list:
         employee_name = emp['name']
         if not payroll_module.has_employee(employee_name):
             if not add_missing_employees:
-                payroll_module.remove_payday(paydate, payday_serial)
-                payday.paystubs = [] # surely we can do better than this?
-                
+                payroll_module.purge_all_paystubs(payday)
                 return PAYROLL_DATABASE_MISSING_EMPLOYEE, employee_name
 
             employee = Employee(employee_name)
@@ -327,15 +318,13 @@ def setup_paystubs_for_payday_from_dicts(
             employee = payroll_module.get_employee(employee_name)
         paystub = employee.create_and_add_new_paystub(payday)
         paystub.add_paystub_line( PaystubNetPaySummaryLine(paystub))
-
+        
         try:
             for key, function in paystub_line_config:
                 if key in emp:
                     function( employee, emp, paystub, emp[key] )
         except VacationPayoutTooMuchException:
-            payroll_module.remove_payday(paydate, payday_serial)
-            payday.paystubs = [] # surely we can do better than this?
-
+            payroll_module.purge_all_paystubs(payday)
             return PAYROLL_VACPAY_DRAW_TOO_MUCH, employee_name 
     
         if emp.has_key('cheque_override'):
@@ -345,9 +334,7 @@ def setup_paystubs_for_payday_from_dicts(
         if not (1 ==
                 len(list(paystub.get_paystub_lines_of_class(
                         PaystubNetPaySummaryLine)))):
-            payroll_module.remove_payday(paydate, payday_serial)
-            payday.paystubs = [] # surely we can do better than this?
-            
+            payroll_module.purge_all_paystubs(payday)
             return PAYROLL_MISSING_NET_PAY, employee_name
 
         #net pay must be zero or greater than zero, cannot have negative net pay
@@ -360,10 +347,7 @@ def setup_paystubs_for_payday_from_dicts(
                 sum_ded += deduct.get_value()
 
             gross_pay = paystub.gross_income()
-
-            payroll_module.remove_payday(paydate, payday_serial)
-            payday.paystubs = [] # surely we can do better than this?
-            
+            payroll_module.purge_all_paystubs(payday)
             return (PAYROLL_TOO_MANY_DEDUCTIONS,
                     [employee_name, gross_pay, sum_ded] )
    
@@ -468,43 +452,46 @@ def setup_paystubs_for_payday_from_dicts(
     return RUN_PAYROLL_SUCCEEDED, None
 
 def add_new_payroll(book, payroll_module, display_paystubs, paydate,
-                    payday_serial, emp_list, chequenum_start, period_start,
+                    emp_list, chequenum_start, period_start,
                     period_end, paystub_line_config,
                     paystub_accounting_line_config,
                     print_paystub_line_config, file_path,
                     overwrite_existing=False, add_missing_employees=False):
     
-    # if a payroll has already been run with the same date and serial number
-    # ask to remove it
-    if payroll_module.has_payday(paydate, payday_serial):
+    # if a payroll has already been run with the same date, either error out
+    # or use it
+    payday_trans_id, payday = payroll_module.get_payday(paydate)
+    if payday != None:
         if not (overwrite_existing):
             return PAYROLL_ALREADY_EXISTS, None
-        else:
-            (payday_trans_id, payday) = payroll_module.get_payday(
-                paydate, payday_serial)
+    # else create the payday
     else: 
         payday = Payday(payroll_module)
         payday.set_paydate(paydate, period_start, period_end)
         payday_trans_id = book.insert_transaction(payday)
-        payroll_module.add_payday(paydate, payday_serial,
-                                  payday_trans_id, payday)
+        payroll_module.register_transaction(payday_trans_id, payday)
         # no harm in committing the above two steps early when the payday is
         # empty, if there was termination right after this, we would be able
         # to go strait to the the retrival step above
         transaction.get().commit()
 
     result, msg = setup_paystubs_for_payday_from_dicts(
-        payroll_module, payday_serial, payday_trans_id, payday,
+        payroll_module, payday_trans_id, payday,
         emp_list, chequenum_start, paystub_line_config,
         paystub_accounting_line_config, add_missing_employees=False)   
 
+
+    backend_module = book.get_backend_module()
+
     if result != RUN_PAYROLL_SUCCEEDED:
+        success = payroll_remove_payday(book, paydate)
+        if not success:
+            msg = msg + ", and removal failed"
         return result, msg
 
     print_paystubs(payday, print_paystub_line_config, file_path)
         
     if payday_accounting_lines_balance(payday):
-        backend_module = book.get_backend_module()
         backend_module.error_log_file = "bo_keep_backend_error_log"
         backend_module.mark_transaction_dirty(payday_trans_id,
                                               payday)
@@ -512,8 +499,11 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         transaction.get().commit()
 
         if not backend_module.transaction_is_clean(payday_trans_id):
-            return (PAYROLL_BACKEND_COMPLAINT, 
-                    backend_module.reason_transaction_is_dirty() )
+            success = payroll_remove_payday(book, paydate)
+            msg = backend_module.reason_transaction_is_dirty()
+            if not succcess:
+                msg = msg + ", and removal failed"
+            return (PAYROLL_BACKEND_COMPLAINT, msg)
 
         if (display_paystubs):
             print 'spawning oowriter'
@@ -569,24 +559,36 @@ def payroll_get_paydays(bookname, bookset=None, start_date=None, end_date=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     return payroll_module.get_paydays(start_date, end_date)
 
-def payroll_get_payday(bookname, date, serial, bookset=None):
+def payroll_get_payday(bookname, paydate, bookset=None):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
-    if payroll_module.has_payday(date, serial):
-        return payroll_module.get_payday(date, serial)
-    else:
-        return None
+    # return value of None, None is possible if there is no payday with
+    # that date
+    return payroll_module.get_payday(paydate)
 
 @ends_with_commit
-def payroll_remove_payday(bookname, date, serial, bookset=None):
-    bookset, book, payroll_module = payroll_init(bookname, bookset)
-    if payroll_module.has_payday(date, serial):
-        (payday_trans_id, payday) = payroll_module.get_payday(date, serial)
-        payroll_module.remove_payday(date, serial)
-        book.remove_transaction(payday_trans_id)
-        transaction.get().commit()
-        return True
-    else:
+def payroll_remove_payday(book, paydate):
+    payday_trans_id, payday = payroll_module.get_payday(paydate)
+
+    # either both None or none None
+    assert( (payday_trans_id == None and payday==None) or
+            (payday_trans_id != None and payday!=None) )
+
+    if payday == None:
         return False
+
+    
+    payroll_module.remove_transaction(payday_trans_id)
+
+    # do we need to call mark_dirty before calling remove_transaction if
+    # the backend has never even heard of it?
+    #
+    #backend_module.mark_transaction_dirty(payday_trans_id,
+    #                                      payday)
+    book.remove_transaction(payday_trans_id) # calls remove in backend
+    backend_module.flush_backend()
+    # it would be good to check on the backend to see if the remove
+    # worked or not
+    return True
     
 def payroll_runtime(bookname,
                     ask_user_reprocess=True, display_paystubs=False,
@@ -598,12 +600,11 @@ def payroll_runtime(bookname,
 
     bookset.close()
 
-def payroll_has_payday_serial(bookname, paydate, payday_serial):
+def payroll_has_payday(bookname, paydate):
     bookset, book, payroll_module = payroll_init(bookname)
-
-    return payroll_module.has_payday(paydate, payday_serial)
-    
+    return_value = payroll_module.has_payday(paydate)
     bookset.close()
+    return return_value
     
 
 @ends_with_commit
@@ -713,7 +714,7 @@ def payroll_payday_command(bookname, bookset, command_type, args):
 #                print 'you are trying to get payday for ' + str(datetime.strptime(args[0], "%B %d, %Y"))
                 dt = datetime.strptime(args[0], "%B %d, %Y")
                 d = date(dt.year, dt.month, dt.day)
-                payday = payroll_get_payday(bookname, d, int(args[1]), bookset)    
+                trans_id, payday = payroll_get_payday(bookname, d, bookset)    
             except ValueError:
                 print "I didn't understand your date format.  Please use " \
                     "Month Day, Year (for example 'March 29, 2009'  The " \
@@ -723,7 +724,7 @@ def payroll_payday_command(bookname, bookset, command_type, args):
             if payday == None:
                 print "sorry, I couldn't find that payday"
             else:
-                print str(payday[1])
+                print str(payday)
     elif command_type == 'drop':
         removed = False
         try:
@@ -731,7 +732,7 @@ def payroll_payday_command(bookname, bookset, command_type, args):
             #like something way too easy to do accidentally
             dt = datetime.strptime(args[0], "%B %d, %Y")
             d = date(dt.year, dt.month, dt.day)
-            #removed = payroll_remove_payday(bookname, d, int(args[1]), bookset)
+            removed = payroll_remove_payday(bookname, d, bookset)
         except ValueError:
             print "I didn't understand your date format.  Please use Month " \
                 "Day, Year (for example 'March 29, 2009'  The spaces are " \
@@ -739,7 +740,7 @@ def payroll_payday_command(bookname, bookset, command_type, args):
                 "'March 29,2009')"
 
         if removed == True:
-            print 'payday(' + str(dt) + ',' + args[1] + ') dropped.'
+            print 'payday(' + str(dt) + ',' + ') dropped.'
         else:
             print "sorry, I couldn't find that payday"
       

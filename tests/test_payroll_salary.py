@@ -28,7 +28,7 @@ from bokeep.plugins.payroll.plain_text_payroll import \
     amount_from_paystub_line_of_class_reversed, \
     calculated_value_of_class, \
     lines_of_class_function, \
-    payroll_runtime, payroll_has_payday_serial, handle_backend_command
+    payroll_runtime, payroll_has_payday, handle_backend_command
 
 from test_bokeep_book import create_filestorage_backed_bookset_from_file
 from test_payroll_employee import TESTBOOK

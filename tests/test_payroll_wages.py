@@ -148,18 +148,18 @@ class PayrollPaydayTestCaseSetup(PayrollTestCaseSetup):
         self.payday = Payday(self.payroll_plugin)
         self.payday.set_paydate(date(2009, 04, 22), date(2009, 04, 06),
                                 date(2009, 04, 19) )
-        self.payday_serial = 1
         self.payroll_mod = self.books.get_book(TESTBOOK).get_module(
             PAYROLL_PLUGIN)
         self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
             self.payday)
+        self.payroll_mod.register_transaction(self.bokeep_trans_id, self.payday)
         self.emp_list = emp_list
         self.paystub_line_config = paystub_line_config
         self.paystub_accounting_line_config = paystub_accounting_line_config
 
     def perform_single_run(self):
         result, msg = setup_paystubs_for_payday_from_dicts(
-            self.payroll_mod, self.payday_serial, self.bokeep_trans_id,
+            self.payroll_mod,
             self.payday, self.emp_list, 1, self.paystub_line_config,
             self.paystub_accounting_line_config, add_missing_employees=False )
         

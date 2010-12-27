@@ -16,20 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 from persistent import Persistent
 from bokeep.prototype_plugin import PrototypePlugin
 
 class PayrollModule(PrototypePlugin):
     def __init__(self):
         self.employee_database = {}
-        self.init_payday_database()
-    
-    def init_payday_database(self):
         self.payday_database = {}
 
-    def ensure_payday_database(self):
-        if not hasattr(self, 'payday_database'):
-            self.init_payday_database()
 
     def add_employee(self, employee_ident, employee):
         self.employee_database[employee_ident] = employee
@@ -83,36 +78,36 @@ class PayrollModule(PrototypePlugin):
     def get_employees(self):
         return self.employee_database
 
-    def add_payday(self, payday_date, payday_serial, payday_trans_id, payday):
-        self.ensure_payday_database()
-        assert( (payday_date, payday_serial) not in self.payday_database )
-        self.payday_database[ (payday_date, payday_serial) ] = \
-            (payday_trans_id, payday)
+    def register_transaction(self, trans_id, payday_trans):
+        assert( not self.has_transaction(trans_id) )
+        self.payday_database[trans_id] = payday_trans
         self._p_changed = True
 
-    def remove_payday(self, payday_date, payday_serial):
-        key = (payday_date, payday_serial) 
-        id, payday_to_remove = \
-        self.payday_database[key]
-        del self.payday_database[key]
+    def purge_all_paystubs(self, payday_to_remove):
         # remove paystubs from this payday if associated with an employee
-        # this was originally missed, which was a pretty severre bug
-        # as paystubs would be left in the employee while removed
-        # from the payday
         #
-        # that this was missed illustrates that it having both employee and
-        # payday reference paystubs was a bad idea.
-        #
-        # referencing the same thing in many places means one hand can
-        # forget what the other was doing...
+        # perhaps a good argument for being rid of employees referencing
+        # thier own paystubs seeing how this was once absent...
         for name, employee in self.get_employees().iteritems():
             new_paystubs = [
                 paystub
                 for paystub in employee.paystubs
                 if paystub not in payday_to_remove.paystubs
                 ]
-            employee.paystubs = new_paystubs
+            employee.paystubs = new_paystubs        
+
+        # implicit set of payday_to_remove._p_changed = True
+        payday_to_remove.paystubs = []
+
+    def remove_transaction(self, trans_id):
+        assert( self.has_transaction(trans_id) )
+        payday_to_remove = self.payday_database[trans_id]
+        del self.payday_database[trans_id]
         self._p_changed = True
+        self.purge_all_paystubs(payday_to_remove)
+
+    def has_transaction(self, trans_id):
+        return trans_id in self.payday_database
 
     #note that there may be information included before start date and after end 
     #date, it is the PERIODS that contain these dates that serve as the bounding
@@ -123,20 +118,34 @@ class PayrollModule(PrototypePlugin):
         else:
             #return bounded info
             bounded_entries = {}
-            for entry in self.payday_database:
-                pstart = self.payday_database[entry][1].period_start
-                pend = self.payday_database[entry][1].period_end
-                if end_date < pstart or start_date > pend:
+            # kind of shocked this isn't returned sorted...
+            for trans_id, payday in self.payday_database:
+                if end_date < payday.period_start or \
+                        start_date > payday.period_end:
                     continue
-                else:                
-                    bounded_entries[entry] = self.payday_database[entry]
+                else:
+                    assert( not trans_id in bounded_entries )
+                    bounded_entries[trans_id] = payday
             return bounded_entries
     
-    def has_payday(self, payday_date, payday_serial):
-        self.ensure_payday_database()
-        return (payday_date, payday_serial) in self.payday_database
+    def has_payday(self, payday_date):
+        """Search for a (only 1!) payday with a particular date
 
-    def get_payday(self, payday_date, payday_serial):
-        self.ensure_payday_database()
-        return self.payday_database[(payday_date, payday_serial)]
+        You're much better off caling get_payday if you're indending to do
+        a check and a fetch, cause you can just check the return value of that
+        """
+        trans_id, payday = self.get_payday(payday_date)
+        return payday != None
+
+    def get_payday(self, payday_date):
+        """Fetch a payday by paydate
+
+        Return None if no payday with that payday is found
+        """
+        # linear search.., if this grows to big we'll need a index of paydays
+        # by date...
+        for trans_id, payday in self.payday_database.iteritems():
+            if payday.paydate == payday_date:
+                return trans_id, payday
+        return None, None
 
