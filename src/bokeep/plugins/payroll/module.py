@@ -19,6 +19,12 @@
 
 from persistent import Persistent
 from bokeep.prototype_plugin import PrototypePlugin
+from bokeep.plugins.payroll.payroll import Payday
+from bokeep.gui.gladesupport.glade_util import \
+    load_glade_file_get_widgets_and_connect_signals
+from bokeep.util import get_file_in_same_dir_as_module
+
+CDN_PAYROLL_CODE = 0
 
 class PayrollModule(PrototypePlugin):
     def __init__(self):
@@ -149,3 +155,45 @@ class PayrollModule(PrototypePlugin):
                 return trans_id, payday
         return None, None
 
+    @staticmethod
+    def get_transaction_type_codes():
+        return (CDN_PAYROLL_CODE,)
+
+    @staticmethod
+    def get_transaction_type_from_code(code):
+        assert( code == CDN_PAYROLL_CODE )
+        return Payday
+
+    @staticmethod
+    def get_transaction_type_pulldown_string_from_code(code):
+        assert( code == CDN_PAYROLL_CODE )
+        return "Canadian payroll"
+
+    @staticmethod
+    def get_transaction_edit_interface_hook_from_code(code):
+        assert( code == CDN_PAYROLL_CODE )
+        return CanadianPayrollEditor
+
+class CanadianPayrollEditor(object):
+    def __init__(self, *args):
+        for i, key in enumerate(
+            ('trans', 'transid', 'plugin', 'gui_parent',
+             'change_register_function') ):
+            setattr(self, key, args[i] )
+        import module as this_module
+        load_glade_file_get_widgets_and_connect_signals(
+            get_file_in_same_dir_as_module(this_module, 'payroll.glade'),
+            'window1', self, self)
+        self.payrollvbox.reparent(self.gui_parent)
+        self.window1.hide()
+        
+    def detach(self):
+        self.payrollvbox.reparent(self.window1)
+
+    def on_select_data_clicked(self, *args):
+        pass
+
+    def on_select_config_clicked(self, *args):
+        pass
+
+        

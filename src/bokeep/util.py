@@ -16,8 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 # python standard library
 from threading import Thread, Condition, Event
+from os.path import abspath, dirname, join
 
 # ZODB
 import transaction
@@ -491,3 +493,6 @@ class PluginSet(Persistent):
             self.has_plugin_enabled(plugin_name) or \
             self.has_plugin_disabled(plugin_name)
 
+def get_file_in_same_dir_as_module(module, filename): 
+    return join( dirname( abspath( module.__file__ ) ),
+                 filename )
