@@ -17,8 +17,9 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 from persistent import Persistent
+from bokeep.prototype_plugin import PrototypePlugin
 
-class PayrollModule(Persistent):
+class PayrollModule(PrototypePlugin):
     def __init__(self):
         self.employee_database = {}
         self.init_payday_database()
