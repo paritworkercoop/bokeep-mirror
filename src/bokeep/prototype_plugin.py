@@ -25,12 +25,12 @@ class PrototypePlugin(Persistent):
         """
         pass
 
-    def register_transaction(self, trans_id, trust_trans):
+    def register_transaction(self, trans_id, trans):
         """Inform a plugin that a new bokeep transaction, which can be
         edited or viewed by the plugin has become available.
 
         trans_id - integer identifier for bokeep transaction
-        trust_trans - a bokeep.bokeep_transaction.Transaction instance
+        trans - a bokeep.bokeep_transaction.Transaction instance
         """
         pass
 
