@@ -48,17 +48,17 @@ MONTHS_PER_YEAR = Decimal(12)
 WEEKS_PER_YEAR = Decimal(52)
 
 tax_credits = {
-    BASIC_PERSONAL_AMOUNT: '10382.00',
-    'child amount': '2101.00',
-    'age amount': '6446.00',
+    BASIC_PERSONAL_AMOUNT: '10527.00',
+    'child amount': '2131.00',
+    'age amount': '6537.00',
     'pension income amount': '2000.00',
     'amount for a month of full-time education' : '465.00',
     'amount for a month of part-time education' : '140.00',
-    'disability amount': '7239.00',
-    'spouse or common-law partner amount': '10382.00',
-    'amount for an eligible dependant': '10382.00',
-    'caregiver amount': '4223.00',
-    'amount for an infirm dependant age 18 or older': '4223.00'
+    'disability amount': '7341.00',
+    'spouse or common-law partner amount': '10527.00',
+    'amount for an eligible dependant': '10527.00',
+    'caregiver amount': '4282.00',
+    'amount for an infirm dependant age 18 or older': '4282.00'
     }
 # convient to use strings instead of Decimal('xxxx.xx') above
 convert_dict_of_string_to_dict_of_decimals_in_place(tax_credits)

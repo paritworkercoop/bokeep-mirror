@@ -40,7 +40,7 @@ CPP_CONTRIBUTION_RATE_TABLE = { JUL_2006: '0.0495', # 4.95%
                                 JAN_2009: '0.0495', # 4.95%
                                 APR_2009: '0.0495', # 4.95%
                                 JAN_2010: '0.0495', # 4.95%
-                                JAN_2010: '0.0495', # 4.95%
+                                JAN_2011: '0.0495', # 4.95%
                                 }
 convert_dict_of_string_to_dict_of_decimals_in_place(CPP_CONTRIBUTION_RATE_TABLE)
 
