@@ -20,6 +20,8 @@
 from persistent import Persistent
 from bokeep.prototype_plugin import PrototypePlugin
 from bokeep.plugins.payroll.payroll import Payday
+from bokeep.plugins.payroll.plain_text_payroll import \
+    make_print_paystubs_str, setup_paystubs_for_payday_from_dicts
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.util import get_file_in_same_dir_as_module
@@ -167,7 +169,7 @@ class PayrollModule(PrototypePlugin):
     @staticmethod
     def get_transaction_type_pulldown_string_from_code(code):
         assert( code == CDN_PAYROLL_CODE )
-        return "Canadian payroll"
+        return "Manitoba/Canadian payroll"
 
     @staticmethod
     def get_transaction_edit_interface_hook_from_code(code):
@@ -187,13 +189,41 @@ class CanadianPayrollEditor(object):
         self.payrollvbox.reparent(self.gui_parent)
         self.window1.hide()
         
+        self.has_config = False
+        self.has_data = False
+        self.update_paystub_listing()
+
     def detach(self):
         self.payrollvbox.reparent(self.window1)
 
+    def update_paystub_listing(self):
+        buffer_text = ""
+        if self.trans.has_accounting_lines_attr():
+            if None == self.has_config:
+                buffer_text = str(self.trans.get_payday_accounting_lines())
+            else:
+                buffer_text = make_print_paystubs_str(
+                    self.trans, self.print_paystub_line_config)
+                
+        self.paystubs_text_view.get_buffer().set_text(buffer_text)
+    
+    def payroll_data_and_config_changed(self):
+        if self.has_config and self.has_data:
+            setup_paystubs_for_payday_from_dicts(
+                self, self.trans, self.emp_list, self.chequenum_start,
+                self.paystub_line_config, self.paystub_accounting_line_config,
+                add_missing_employees=True)
+        self.update_paystub_listing()
+
     def on_select_data_clicked(self, *args):
         pass
+        #self.emp_list
+        #self.chequenum_start
 
     def on_select_config_clicked(self, *args):
         pass
-
+        #self.paystub_line_config
+        #self.paystub_accounting_line_config
+        #self.print_paystub_line_config
+        
         

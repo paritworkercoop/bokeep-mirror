@@ -250,11 +250,8 @@ def payroll_accounting_lines_imbalance(code):
     return code == PAYROLL_ACCOUNTING_LINES_IMBALANCE
 
 def print_paystub(paystub, print_paystub_line_config, paystub_file):
-    paystub_file.write(paystub.employee.name + '\n')
-    for (line_name, function) in print_paystub_line_config:
-	outstr = line_name + ': ' + str( function(paystub) )
-        paystub_file.write(outstr + '\n')
-    paystub_file.write('\f\n')
+    paystub_file.write( make_print_paystub_str(
+            paystub, print_paystub_line_config) )
 
 def print_paystubs(payday, print_paystub_line_config, filepath):
     #nuke paystub data from any prior runs
@@ -265,6 +262,16 @@ def print_paystubs(payday, print_paystub_line_config, filepath):
     for paystub in payday.paystubs:
         print_paystub(paystub, print_paystub_line_config, newfile)
     newfile.close()
+
+def make_print_paystub_str(paystub, print_paystub_line_config):
+    return paystub.employee.name + '\n' + "\n".join(
+        line_name + ': ' + str( function(paystub) )
+        for (line_name, function) in print_paystub_line_config ) + "\f\n"
+
+def make_print_paystubs_str(payday, print_paystub_line_config):
+    return "".join(
+        make_print_paystub_str(paystub, print_paystub_line_config)
+        for paystub in payday.paystubs )
 
 def payday_accounting_lines_balance(transactions):
     # this should be removed, there shouldn't be an imbalance at all

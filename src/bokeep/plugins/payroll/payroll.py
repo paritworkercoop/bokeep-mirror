@@ -84,6 +84,13 @@ class Payday(BookTransaction):
         self.payday_accounting_lines = payday_accounting_lines
         self._p_changed = True
 
+    def has_accounting_lines_attr(self):
+        return hasattr(self, 'payday_accounting_lines')
+
+    def get_payday_accounting_lines(self):
+        # nobody shoould ever call this without having made this check
+        assert( self.has_accounting_lines_attr() )
+        return self.payday_accounting_lines
 
     #this allows some employees to not get a typically numbered cheque.  Use 
     #cases include stuff like direct deposit.
@@ -98,7 +105,7 @@ class Payday(BookTransaction):
         If that attribute isn't set, this function is unable to generate a
         transaction
         """
-        if not hasattr(self, 'payday_accounting_lines'):
+        if not has_accounting_lines_attr():
             raise BoKeepTransactionNotMappableToFinancialTransaction()
         
         # Per employee lines, payroll transaction 
