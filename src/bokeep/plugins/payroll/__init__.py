@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
-from module import PayrollModule
+from plugin import PayrollPlugin
 
 def get_plugin_class():
-    return PayrollModule
+    return PayrollPlugin

@@ -28,7 +28,7 @@ from bokeep.util import get_file_in_same_dir_as_module
 
 CDN_PAYROLL_CODE = 0
 
-class PayrollModule(PrototypePlugin):
+class PayrollPlugin(PrototypePlugin):
     def __init__(self):
         self.employee_database = {}
         self.payday_database = {}
@@ -182,7 +182,7 @@ class CanadianPayrollEditor(object):
             ('trans', 'transid', 'plugin', 'gui_parent',
              'change_register_function') ):
             setattr(self, key, args[i] )
-        import module as this_module
+        import plugin as this_module
         load_glade_file_get_widgets_and_connect_signals(
             get_file_in_same_dir_as_module(this_module, 'payroll.glade'),
             'window1', self, self)
