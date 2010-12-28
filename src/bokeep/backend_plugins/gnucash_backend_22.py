@@ -25,10 +25,10 @@ from os import remove
 from time import sleep
 
 # bokeep imports
-from module import BoKeepBackendException, \
+from plugin import BoKeepBackendException, \
     BoKeepBackendResetException
-from session_based_robust_backend_module import \
-    SessionBasedRobustBackendModule
+from session_based_robust_backend_plugin import \
+    SessionBasedRobustBackendPlugin
 from bokeep.util import attribute_or_blank
 
 # gtk imports
@@ -183,18 +183,18 @@ def call_catch_qofbackend_exception_reraise_important(call_me):
         else:
             break # break while
 
-class GnuCash22(SessionBasedRobustBackendModule):
+class GnuCash22(SessionBasedRobustBackendPlugin):
     # not changed from GnuCash (24) backend plugin, too bad the import
     # kludge prevents us from using inheritance or something common
     def __init__(self):
-        SessionBasedRobustBackendModule.__init__(self)
+        SessionBasedRobustBackendPlugin.__init__(self)
         self.gnucash_file = None
         self.current_session_error = None
 
     # not changed from GnuCash (24) backend plugin, too bad the import
     # kludge prevents us from using inheritance or something common
     def can_write(self):
-        return SessionBasedRobustBackendModule.can_write(self) and \
+        return SessionBasedRobustBackendPlugin.can_write(self) and \
             self.current_session_error == None
 
     def remove_backend_transaction(self, backend_ident):
@@ -325,7 +325,7 @@ class GnuCash22(SessionBasedRobustBackendModule):
         if self.current_session_error != None:
             close_reason = "close() called because gnucash session failed " + \
                 self.current_session_error 
-        SessionBasedRobustBackendModule.close(self, close_reason)
+        SessionBasedRobustBackendPlugin.close(self, close_reason)
 
     def configure_backend(self, parent_window=None):
         fcd = FileChooserDialog(
@@ -357,5 +357,5 @@ class GnuCash22(SessionBasedRobustBackendModule):
         else:
             return None, ''
 
-def get_module_class():
+def get_plugin_class():
     return GnuCash22

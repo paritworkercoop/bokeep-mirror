@@ -18,9 +18,9 @@
 # Author: Mark Jenkins <mark@parit.ca>
 
 # bokeep imports
-from module import \
+from plugin import \
     BoKeepBackendException, BoKeepBackendResetException
-from session_based_robust_backend_module import SessionBasedRobustBackendModule
+from session_based_robust_backend_plugin import SessionBasedRobustBackendPlugin
 from bokeep.util import attribute_or_blank
 from decimal import Decimal 
 from sys import stderr
@@ -33,9 +33,9 @@ from gtk import \
 
 ZERO = Decimal(0)
 
-class SerialFileModule(SessionBasedRobustBackendModule):
+class SerialFilePlugin(SessionBasedRobustBackendPlugin):
     def __init__(self):
-        SessionBasedRobustBackendModule.__init__(self)
+        SessionBasedRobustBackendPlugin.__init__(self)
         self.count = 0
         self.accounting_file = "AccountingFile.txt"
 
@@ -46,7 +46,7 @@ class SerialFileModule(SessionBasedRobustBackendModule):
             stderr.write("trouble opening %s %s" %
                          (self.accounting_file, str(e) ) )
             # its sufficient to return None here,
-            # SessionBasedRobustBackendModule is expecting that, no exception
+            # SessionBasedRobustBackendPlugin is expecting that, no exception
             # neede
             return None
 
@@ -114,7 +114,7 @@ credits
             # self._v_session_active, callers of close are expecting
             # us to silently catch exceptions
             pass
-        SessionBasedRobustBackendModule.close(self)
+        SessionBasedRobustBackendPlugin.close(self)
 
     def save(self):
         try:
@@ -138,5 +138,5 @@ credits
         if result == RESPONSE_OK and serialfile_path != None:
             self.setattr('accounting_file', serialfile_path)
 
-def get_module_class():
-    return SerialFileModule
+def get_plugin_class():
+    return SerialFilePlugin

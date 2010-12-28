@@ -16,11 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
-from module import BackendModule
 
-class NullBackendModule(BackendModule):
+from plugin import BackendPlugin
+
+class NullBackendPlugin(BackendPlugin):
     def __init__(self):
-        BackendModule.__init__(self)
+        BackendPlugin.__init__(self)
         self.count = 0
 
     def can_write(self):
@@ -43,5 +44,5 @@ class NullBackendModule(BackendModule):
         # this is nullness incarnate
         pass
 
-def get_module_class():
-    return NullBackendModule
+def get_plugin_class():
+    return NullBackendPlugin

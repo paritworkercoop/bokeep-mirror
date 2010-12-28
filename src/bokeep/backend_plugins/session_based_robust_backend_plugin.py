@@ -16,14 +16,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
-from robust_backend_module import RobustBackendModule
 
-#from module import \
-#@    BackendModule, BoKeepBackendException, BoKeepBackendResetException
+from robust_backend_plugin import RobustBackendPlugin
+
+#from plugin import \
+#@    BackendPlugin, BoKeepBackendException, BoKeepBackendResetException
 
 import transaction
 
-class SessionBasedRobustBackendModule(RobustBackendModule):
+class SessionBasedRobustBackendPlugin(RobustBackendPlugin):
     def open_session_and_retain(self):
         if not self.__has_active_session_attr():
             self._v_session_active = self.open_session()
@@ -33,10 +34,10 @@ class SessionBasedRobustBackendModule(RobustBackendModule):
         if not self.can_write():
             self.close()
         else:
-            RobustBackendModule.flush_backend(self)
+            RobustBackendPlugin.flush_backend(self)
 
     def close(self, close_reason='reset because close() was called'):
-        RobustBackendModule.close(self, close_reason)
+        RobustBackendPlugin.close(self, close_reason)
         if self.__has_active_session_attr():
             del self._v_session_active
 
@@ -44,7 +45,7 @@ class SessionBasedRobustBackendModule(RobustBackendModule):
         return hasattr(self, '_v_session_active')
     
     def open_session(self):
-        raise Exception("robust session based backend modules must implement "
+        raise Exception("robust session based backend plugins must implement "
                         "open_session")
 
     def can_write(self):

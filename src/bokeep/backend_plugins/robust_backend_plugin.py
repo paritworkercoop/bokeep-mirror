@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 from persistent import Persistent
 
 from bokeep.book_transaction import \
@@ -29,8 +30,8 @@ from bokeep.util import \
 
 import transaction
 
-from module import \
-    BackendModule, BoKeepBackendException, BoKeepBackendResetException
+from plugin import \
+    BackendPlugin, BoKeepBackendException, BoKeepBackendResetException
 
 def error_in_state_machine_data_is(error_code=None):
     if error_code == None:
@@ -45,17 +46,17 @@ def error_in_state_machine_data_is(error_code=None):
 
 def particular_input_state_machine(input):
     def command_check(state_machine, next_state):
-        return state_machine.backend_module.dirty_transaction_set[
+        return state_machine.backend_plugin.dirty_transaction_set[
             state_machine.data.get_value('front_end_id')] == input
     return command_check
 
 class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
-    def __init__(self, init_data, backend_module):
+    def __init__(self, init_data, backend_plugin):
         FunctionAndDataDrivenStateMachine.__init__(
             self,
             initial_state=BackendDataStateMachine.NO_BACKEND_EXIST,
             data=init_data)
-        self.backend_module = backend_module
+        self.backend_plugin = backend_plugin
 
     def get_table(self):
         if hasattr(self, 'override_rule_table'):
@@ -99,7 +100,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         assert(len(state_machine.data.get_value(
                     'backend_ids_to_fin_trans')) == 0)
 
-        state_machine.backend_module.front_end_to_back_del(
+        state_machine.backend_plugin.front_end_to_back_del(
             state_machine.data.get_value('front_end_id') )
 
         return state_machine.data # no changes
@@ -126,7 +127,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         else:
             try:
                 for fin_trans in fin_trans_list:
-                    new_backend_id = state_machine.backend_module.\
+                    new_backend_id = state_machine.backend_plugin.\
                         create_backend_transaction(fin_trans)
                     backend_ids_to_fin_trans[new_backend_id] = fin_trans
                     
@@ -150,7 +151,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
 
     def __in_dirty_set_state_machine(state_machine, next_state):
         return state_machine.data.get_value('front_end_id') in \
-            state_machine.backend_module.dirty_transaction_set
+            state_machine.backend_plugin.dirty_transaction_set
 
     def __backend_data_verify_state_machine(state_machine, next_state):
         # should not be errors
@@ -161,7 +162,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
             state_machine.data.get_value('backend_ids_to_fin_trans')
         for backend_id, fin_trans in backend_ids_to_fin_trans.iteritems():
             try:
-                if not state_machine.backend_module.verify_backend_transaction(
+                if not state_machine.backend_plugin.verify_backend_transaction(
                     backend_id, fin_trans):
                     error_code = BackendDataStateMachine.ERROR_VERIFY_FAILED
                     break # for loop
@@ -195,7 +196,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         old_backend_ids_to_fin_trans = backend_ids_to_fin_trans.copy()
         try:
             for backend_id in backend_ids_to_fin_trans.iterkeys():
-                state_machine.backend_module.remove_backend_transaction(
+                state_machine.backend_plugin.remove_backend_transaction(
                     backend_id)
                 removed_backend_ids.add(backend_id)
         except BoKeepBackendResetException, reset_e:
@@ -443,11 +444,11 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         ) # end state list
         
 
-class RobustBackendModule(BackendModule):
-    """Illustrates the Bo-Keep backend module API
+class RobustBackendPlugin(BackendPlugin):
+    """Illustrates the Bo-Keep backend plugin API
 
-    A Bo-Keep backend module does not need to be a subclass of
-    bokeep.backend_modules.module.BackendModule, but it must implement the
+    A Bo-Keep backend plugin does not need to be a subclass of
+    bokeep.backend_plugins.plugin.BackendPlugin, but it must implement the
     following functions shown here:
     mark_transaction_dirty, mark_transaction_for_removal,
     mark_transaction_for_verification, mark_transaction_for_hold,
@@ -457,8 +458,8 @@ class RobustBackendModule(BackendModule):
     remove_trans_flush_check_and_close,
     verify_trans_and_close, setattr
     
-    Many backend modules are easier to implement if you do choose to
-    subclass RobustBackendModule, and just implemnt functions such as 
+    Many backend plugins are easier to implement if you do choose to
+    subclass RobustBackendPlugin, and just implemnt functions such as 
     create_backend_transaction, remove_backend_transaction, can_write, save,
     close, and setattr.
 
@@ -469,12 +470,12 @@ class RobustBackendModule(BackendModule):
     and close, functions you have to implement anyway, so that alone makes
     inheriting worthwhile.
 
-    All backend modules should subclass persistent.Persistent (from zopedb),
+    All backend plugins should subclass persistent.Persistent (from zopedb),
     and dilegenly set self._p_changed where appropriate. 
 
-    Bo-Keep backend modules are not expected to be thread-safe.
+    Bo-Keep backend plugins are not expected to be thread-safe.
 
-    A Bo-Keep backend module translates a Bo-Keep transaction (frontend) into
+    A Bo-Keep backend plugin translates a Bo-Keep transaction (frontend) into
     some other form of data storage, a backend. This raises many of the
     clasical syncrhonization problems of trying to keep data in two places --
     there are potential issues such as changes being made directly to the
@@ -531,7 +532,7 @@ class RobustBackendModule(BackendModule):
 
     You should expect close to be called anytime. Also, the other functions
     should still operate after a call to close, they are expected to
-    re-aquire any resources required. close should be the last backend module
+    re-aquire any resources required. close should be the last backend plugin
     function to be called.
     """
 
@@ -560,7 +561,7 @@ class RobustBackendModule(BackendModule):
         # self.__transaction_invarient(trans_id) allows this last part
         # to be checked
 
-    # START MANDATORY BO-KEEP BACKEND MODULE API
+    # START MANDATORY BO-KEEP BACKEND PLUGIN API
         
     @ends_with_commit
     def mark_transaction_dirty(self, trans_id, transaction):
@@ -799,10 +800,10 @@ class RobustBackendModule(BackendModule):
 
     @ends_with_commit
     def close(self, close_reason='reset because close() was called'):
-        """Instructs the module to release any resources being used to
+        """Instructs the plugin to release any resources being used to
         access the backend.
 
-        This should be called when done with a backend module.
+        This should be called when done with a backend plugin.
 
         Any other calls made since the last call to flush_backend may be lost()
         """
@@ -855,7 +856,7 @@ class RobustBackendModule(BackendModule):
         setattr(self, attr, value)
         self.flush_backend()
 
-    # END MANDATORY BO-KEEP BACKEND MODULE API
+    # END MANDATORY BO-KEEP BACKEND PLUGIN API
 
     def front_end_to_back_del(self, key):
         del self.__front_end_to_back[key]
@@ -983,13 +984,13 @@ class RobustBackendModule(BackendModule):
                 "(mark_transaction_for_forced_remove)" )
     
     def can_write(self):
-       # The superclass for all BackendModule s can never write, 
+       # The superclass for all BackendPlugin s can never write, 
        # because it is a just a base class, you should subclass and
        # return True here when appropriate
        return False
 
     def remove_backend_transaction(self, backend_ident):
-        raise Exception("backend modules must implement "
+        raise Exception("backend plugins must implement "
                         "remove_backend_transaction")
 
     def verify_backend_transaction(self, backend_ident, fin_trans):
@@ -998,7 +999,7 @@ class RobustBackendModule(BackendModule):
     def create_backend_transaction(self, fin_trans):
         """Create a transaction inside the actual backend based on fin_trans
         """
-        raise Exception("backend modules must implement "
+        raise Exception("backend plugins must implement "
                         "create_backend_transaction")
     def save(self):
-        raise Exception("backend modules must implement save()")
+        raise Exception("backend plugins must implement save()")

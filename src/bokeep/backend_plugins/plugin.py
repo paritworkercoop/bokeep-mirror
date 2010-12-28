@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 from persistent import Persistent
 
 from bokeep.book_transaction import \
@@ -62,13 +63,13 @@ class BackendChangeThread(ChangeMessageRecievingThread):
         # change_message.entity_identifier, and old backend id
         # to backend, receie returned backenend id and store
         #
-        # send count_down back to the backend module dirty db, or nothing
+        # send count_down back to the backend plugin dirty db, or nothing
 
-class BackendModule(Persistent):
-    """Illustrates the Bo-Keep backend module API
+class BackendPlugin(Persistent):
+    """Illustrates the Bo-Keep backend plugin API
 
-    A Bo-Keep backend module does not need to be a subclass of
-    bokeep.backend_modules.module.BackendModule, but it must implement the
+    A Bo-Keep backend plugin does not need to be a subclass of
+    bokeep.backend_plugins.plugin.BackendPlugin, but it must implement the
     following functions shown here:
     mark_transaction_dirty, mark_transaction_for_removal,
     mark_transaction_for_verification, mark_transaction_for_hold,
@@ -78,8 +79,8 @@ class BackendModule(Persistent):
     remove_trans_flush_check_and_close,
     verify_trans_and_close, setattr
     
-    Many backend modules are easier to implement if you do choose to
-    subclass BackendModule, and just implemnt functions such as 
+    Many backend plugins are easier to implement if you do choose to
+    subclass BackendPlugin, and just implemnt functions such as 
     create_backend_transaction, remove_backend_transaction, can_write, save,
     close, and setattr.
 
@@ -90,12 +91,12 @@ class BackendModule(Persistent):
     and close, functions you have to implement anyway, so that alone makes
     inheriting worthwhile.
 
-    All backend modules should subclass persistent.Persistent (from zopedb),
+    All backend plugins should subclass persistent.Persistent (from zopedb),
     and dilegenly set self._p_changed where appropriate. 
 
-    Bo-Keep backend modules are not expected to be thread-safe.
+    Bo-Keep backend plugins are not expected to be thread-safe.
 
-    A Bo-Keep backend module translates a Bo-Keep transaction (frontend) into
+    A Bo-Keep backend plugin translates a Bo-Keep transaction (frontend) into
     some other form of data storage, a backend. This raises many of the
     clasical syncrhonization problems of trying to keep data in two places --
     there are potential issues such as changes being made directly to the
@@ -152,7 +153,7 @@ class BackendModule(Persistent):
 
     You should expect close to be called anytime. Also, the other functions
     should still operate after a call to close, they are expected to
-    re-aquire any resources required. close should be the last backend module
+    re-aquire any resources required. close should be the last backend plugin
     function to be called.
     """
 
@@ -230,10 +231,10 @@ class BackendModule(Persistent):
         pass
 
     def close(self, close_reason='reset because close() was called'):
-        """Instructs the module to release any resources being used to
+        """Instructs the plugin to release any resources being used to
         access the backend.
 
-        This should be called when done with a backend module.
+        This should be called when done with a backend plugin.
 
         Any other calls made since the last call to flush_backend may be lost()
         """
@@ -301,11 +302,11 @@ class BoKeepBackendException(Exception):
     pass
 
 class BoKeepBackendResetException(Exception):
-    """Subclasses of BackendModule can raise this to indicate that
+    """Subclasses of BackendPlugin can raise this to indicate that
     changes via create_backend_transaction() and remove_backend_changes()
     made since the last successful save have been lost.
 
-    A BackendModule should raise this immediatly when it becomes true, and not
+    A BackendPlugin should raise this immediatly when it becomes true, and not
     write new changes (that aren't lost) to the backend prior to raising this.
     """
     pass

@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 # python imports
 from itertools import chain
 
@@ -24,7 +25,7 @@ from persistent import Persistent
 import transaction
 from BTrees.IOBTree import IOBTree
 
-from backend_plugins.module import BackendModule
+from backend_plugins.plugin import BackendPlugin
 
 DEFAULT_BACKEND_MODULE = "bokeep.backend_plugins.null"
 
@@ -186,8 +187,8 @@ class BoKeepBook(Persistent):
         self.__backend_module_name = backend_module_name
         self.__backend_module = __import__(
             backend_module_name, globals(), locals(), [""] ).\
-            get_module_class()()
-        assert( isinstance(self.__backend_module, BackendModule) )
+            get_plugin_class()()
+        assert( isinstance(self.__backend_module, BackendPlugin) )
         # because we have changed the backend module, all transactions
         # are now dirty and must be re-written to the new backend module
         for trans_ident, trans in self.trans_tree.iteritems():
