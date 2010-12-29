@@ -105,7 +105,7 @@ class Payday(BookTransaction):
         If that attribute isn't set, this function is unable to generate a
         transaction
         """
-        if not has_accounting_lines_attr():
+        if not self.has_accounting_lines_attr():
             raise BoKeepTransactionNotMappableToFinancialTransaction()
         
         # Per employee lines, payroll transaction 
