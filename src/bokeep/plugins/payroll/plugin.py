@@ -209,20 +209,21 @@ class CanadianPayrollEditor(object):
     def update_paystub_listing(self):
         buffer_text = ""
         if self.trans.has_accounting_lines_attr():
-            if None == self.has_config:
-                buffer_text = str(self.trans.get_payday_accounting_lines())
-            else:
+            if self.has_config:
                 buffer_text = make_print_paystubs_str(
                     self.trans, self.print_paystub_line_config)
+            else:
+                buffer_text = str(self.trans.get_payday_accounting_lines())
                 
         self.paystubs_text_view.get_buffer().set_text(buffer_text)
     
     def payroll_data_and_config_changed(self):
         if self.has_config and self.has_data:
             setup_paystubs_for_payday_from_dicts(
-                self, self.trans, self.emp_list, self.chequenum_start,
+                self.plugin, self.trans, self.emp_list, self.chequenum_start,
                 self.paystub_line_config, self.paystub_accounting_line_config,
                 add_missing_employees=True)
+            self.change_register_function()
         self.update_paystub_listing()
 
     def file_selection_module_contents(self, msg="choose file"):
@@ -250,6 +251,9 @@ class CanadianPayrollEditor(object):
         if self.has_data:
             self.emp_list = load_module.emp_list
             self.chequenum_start = load_module.chequenum_start
+            self.trans.set_paydate(load_module.paydate,
+                                   load_module.period_start,
+                                   load_module.period_end )
             self.payroll_data_and_config_changed()
         
     def on_select_config_clicked(self, *args):
