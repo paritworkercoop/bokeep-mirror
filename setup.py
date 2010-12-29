@@ -68,12 +68,12 @@ setup(name='Bo-Keep',
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
       package_data={PACKAGE_NAME: [
-            'gui/glade/bokeep_main_window.glade',
-            'gui/glade/bokeep.ico',
+            'gui/bokeep_main_window.glade',
             'gui/bo-keep.svg',
             'plugins/trust/GUIs/management/data/trustor_transactions.glade',
             'plugins/trust/GUIs/management/data/trustor_management.glade',
             'plugins/trust/GUIs/entry/data/trustor_entry.glade',
+            'plugins/payroll/payroll.glade',
             'plugins/mileage.glade'] },
       data_files=[('share/applications',
                    ['bo-keep.desktop' ])
