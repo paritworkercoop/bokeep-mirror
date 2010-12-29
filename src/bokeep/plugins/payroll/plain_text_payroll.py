@@ -491,7 +491,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
     backend_module = book.get_backend_module()
 
     if result != RUN_PAYROLL_SUCCEEDED:
-        success = payroll_remove_payday(book, paydate)
+        success = payroll_remove_payday(
+            book, payroll_module, backend_module, paydate)
         if not success:
             msg = msg + ", and removal failed"
         return result, msg
@@ -506,7 +507,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         transaction.get().commit()
 
         if not backend_module.transaction_is_clean(payday_trans_id):
-            success = payroll_remove_payday(book, paydate)
+            success = payroll_remove_payday(
+                book, payroll_module, backend_module, paydate)
             msg = backend_module.reason_transaction_is_dirty()
             if not succcess:
                 msg = msg + ", and removal failed"
@@ -572,8 +574,13 @@ def payroll_get_payday(bookname, paydate, bookset=None):
     # that date
     return payroll_module.get_payday(paydate)
 
+def payroll_remove_payday_cmd(bookname, paydate, bookset):
+    bookset, book, payroll_module = payroll_init(bookname, bookset)
+    return payroll_remove_payday(
+        book, payroll_module, book.get_backend_module(), paydate)
+
 @ends_with_commit
-def payroll_remove_payday(book, paydate):
+def payroll_remove_payday(book, payroll_module, backend_module, paydate):
     payday_trans_id, payday = payroll_module.get_payday(paydate)
 
     # either both None or none None
@@ -739,7 +746,8 @@ def payroll_payday_command(bookname, bookset, command_type, args):
             #like something way too easy to do accidentally
             dt = datetime.strptime(args[0], "%B %d, %Y")
             d = date(dt.year, dt.month, dt.day)
-            removed = payroll_remove_payday(bookname, d, bookset)
+            # we should probably check return value?
+            removed = payroll_remove_payday_cmd(bookname, d, bookset)
         except ValueError:
             print "I didn't understand your date format.  Please use Month " \
                 "Day, Year (for example 'March 29, 2009'  The spaces are " \

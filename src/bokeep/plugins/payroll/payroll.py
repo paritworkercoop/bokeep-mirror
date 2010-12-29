@@ -69,6 +69,9 @@ class Payday(BookTransaction):
         self.cheque_overrides = {}
         self._p_changed = True
 
+    def __cmp__(self, other_payday):
+        return cmp(self.paydate, other_payday.paydate)
+
     def add_paystub(self, paystub):
         self.paystubs.append( paystub )
         self._p_changed = True
