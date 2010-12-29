@@ -17,7 +17,16 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# zodb imports
 from persistent import Persistent
+
+# gtk imports
+from gtk import \
+    RESPONSE_OK, RESPONSE_CANCEL, \
+    FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, \
+    STOCK_CANCEL, STOCK_OPEN
+
+# bokeep imports
 from bokeep.prototype_plugin import PrototypePlugin
 from bokeep.plugins.payroll.payroll import Payday
 from bokeep.plugins.payroll.plain_text_payroll import \
@@ -215,15 +224,49 @@ class CanadianPayrollEditor(object):
                 add_missing_employees=True)
         self.update_paystub_listing()
 
-    def on_select_data_clicked(self, *args):
-        pass
-        #self.emp_list
-        #self.chequenum_start
+    def file_selection_module_contents(self, msg="choose file"):
+        fcd = FileChooserDialog(
+            msg,
+            None,
+            FILE_CHOOSER_ACTION_OPEN,
+            (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_OPEN, RESPONSE_OK) )
+        fcd.set_modal(True)
+        result = fcd.run()
+        file_path = fcd.get_filename()
+        fcd.destroy()
+        if result == RESPONSE_OK and file_path != None:
+            pass
+        return None
 
+    def on_select_data_clicked(self, *args):
+        load_module = self.file_selection_module_contents(
+            "select a payday data file")
+        self.has_data = (
+            load_module != None and 
+            hasattr(load_module, 'emp_list') and 
+            hasattr(load_module, 'chequenum_start') )
+
+        if self.has_data:
+            self.emp_list = load_module.emp_list
+            self.chequenum_start = load_module.chequenum_start
+            self.payroll_data_and_config_changed()
+        
     def on_select_config_clicked(self, *args):
-        pass
-        #self.paystub_line_config
-        #self.paystub_accounting_line_config
-        #self.print_paystub_line_config
+        load_module = self.file_selection_module_contents(
+            "select a payroll config file")
+        self.has_config = (
+            load_module != None and 
+            hasattr(load_module, 'paystub_line_config') and
+            hasattr(load_module, 'paystub_accounting_line_config') and 
+            hasattr(load_module, 'print_paystub_line_config') )
+
+        if self.has_config:
+            self.paystub_line_config = load_module.paystub_line_config
+            self.paystub_accounting_line_config = \
+                load_module.paystub_accounting_line_config
+            self.print_paystub_line_config = \
+                load_module.print_paystub_line_config
+            self.payroll_data_and_config_changed()
+
         
         
