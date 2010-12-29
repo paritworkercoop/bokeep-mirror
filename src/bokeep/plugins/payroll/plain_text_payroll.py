@@ -276,17 +276,13 @@ def make_print_paystubs_str(payday, print_paystub_line_config):
 def payday_accounting_lines_balance(transactions):
     # this should be removed, there shouldn't be an imbalance at all
 
+    ZERO = Decimal(0)
     for trans in transactions.get_financial_transactions():
-        #after all lines are processed, balance amount must be back to zero 
-        #again otherwise we're imbalanced
-        balance_amount = Decimal(0)
-        for line in trans.lines:
-            balance_amount += line.amount
- 
-        if not (abs(balance_amount) < Decimal('0.10')):
-            print 'imbalance amount of ' + str(balance_amount)
+        #after all lines are processed, balance amount must be back to zero
+        balance_amount = sum( (line.amount
+                               for line in trans.lines), ZERO )
+        if ZERO != balance_amount:
             return False
-
     return True
 
 def add_new_payroll_from_import(
