@@ -2,7 +2,7 @@ Every plugin should have a get_plugin_class function. If your plugin is a single
 
 This function should return a class that represents your plugin. When a user adds your plugin, BoKeep will instantiate the class returned by get_plugin_class . 
 
-Your plugin should implement the methods documented in bokeep.
+Your plugin should implement the methods documented in bokeep.prototype_plugin
 
 >>> import bokeep.prototype_plugin
 >>> help(bokeep.prototype_plugin)
