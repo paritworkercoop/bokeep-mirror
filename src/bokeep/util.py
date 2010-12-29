@@ -19,7 +19,7 @@
 
 # python standard library
 from threading import Thread, Condition, Event
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists, basename
 
 # ZODB
 import transaction
@@ -450,6 +450,25 @@ class StateMachineMinChangeDataStore(object):
     def get_value(self, key):
         return self.__values[key]
 
+def get_module_for_file_path(path):
+    # The're got to be a nicer way to load code from a file...
+    import sys
+    PYTHON_EXTENSION = ".py"
+    if not path.endswith(PYTHON_EXTENSION) or not exists(path):
+        return None
+    directory = dirname(abspath(path))
+    filename = basename(path)
+    assert( filename.endswith(PYTHON_EXTENSION) )
+    modulename = filename[:-3] # everything but last three characterrs
+    PATH_MOD_POSITION = 0
+    sys.path.insert(PATH_MOD_POSITION, directory)
+    try:
+        return_value = __import__(modulename,  globals(), locals(), [""])
+    except ImportError:
+        return_value = None
+    finally:
+        sys.path.pop(PATH_MOD_POSITION) # cleanup
+    return return_value
 
 class PluginSet(Persistent):
     def __init__(self):

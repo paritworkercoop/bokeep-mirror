@@ -33,7 +33,8 @@ from bokeep.plugins.payroll.plain_text_payroll import \
     make_print_paystubs_str, setup_paystubs_for_payday_from_dicts
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
-from bokeep.util import get_file_in_same_dir_as_module
+from bokeep.util import \
+    get_file_in_same_dir_as_module, get_module_for_file_path
 
 CDN_PAYROLL_CODE = 0
 
@@ -235,7 +236,7 @@ class CanadianPayrollEditor(object):
         file_path = fcd.get_filename()
         fcd.destroy()
         if result == RESPONSE_OK and file_path != None:
-            pass
+            return get_module_for_file_path(file_path)
         return None
 
     def on_select_data_clicked(self, *args):
@@ -267,6 +268,3 @@ class CanadianPayrollEditor(object):
             self.print_paystub_line_config = \
                 load_module.print_paystub_line_config
             self.payroll_data_and_config_changed()
-
-        
-        
