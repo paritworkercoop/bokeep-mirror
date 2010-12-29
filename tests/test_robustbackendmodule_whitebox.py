@@ -2,7 +2,7 @@ from unittest import TestCase, main
 from decimal import Decimal
 from itertools import chain
 
-from bokeep.backend_plugins.module import \
+from bokeep.backend_plugins.plugin import \
     BoKeepBackendException, BoKeepBackendResetException
 from bokeep.backend_plugins.robust_backend_plugin import \
     RobustBackendPlugin, BackendDataStateMachine

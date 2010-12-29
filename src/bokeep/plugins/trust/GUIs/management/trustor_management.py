@@ -26,7 +26,6 @@ import transaction
 # bo-keep imports
 from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
-from bokeep.backend_plugins.module import BoKeepBackendException
 
 from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 
