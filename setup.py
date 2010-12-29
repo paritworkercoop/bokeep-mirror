@@ -50,7 +50,7 @@ class TestCommand(Command):
 setup(name='Bo-Keep',
       version='1.0.0',
       cmdclass = { 'test': TestCommand },
-      scripts=['bo-keep', 'bo-keep.sh'
+      scripts=['bo-keep', 
                ],
       packages=[PACKAGE_NAME,
                 PACKAGE_NAME + '.backend_plugins',
@@ -76,6 +76,6 @@ setup(name='Bo-Keep',
             'plugins/trust/GUIs/entry/data/trustor_entry.glade',
             'plugins/mileage.glade'] },
       data_files=[('share/applications',
-                   ['desktop_files/bo-keep.sh.desktop' ])
+                   ['bo-keep.desktop' ])
                   ]
       )
