@@ -479,7 +479,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         transaction.get().commit()
 
     result, msg = setup_paystubs_for_payday_from_dicts(
-        payroll_module, payday_trans_id, payday,
+        payroll_module, payday,
         emp_list, chequenum_start, paystub_line_config,
         paystub_accounting_line_config, add_missing_employees=False)   
 
