@@ -76,7 +76,7 @@ class Payday(BookTransaction):
             return cmp(self.paydate, other_payday.paydate)
         else:
             # this is the default comparison algorithm
-            return cmp(id(self), id(other_payday)
+            return cmp(id(self), id(other_payday))
 
     def add_paystub(self, paystub):
         self.paystubs.append( paystub )
