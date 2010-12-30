@@ -507,7 +507,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
                 book, payroll_module, backend_module, paydate)
             msg = backend_module.reason_transaction_is_dirty(
                 payday_trans_id)
-            if not succcess:
+            if not success:
                 msg = msg + ", and removal failed"
             return (PAYROLL_BACKEND_COMPLAINT, msg)
 
