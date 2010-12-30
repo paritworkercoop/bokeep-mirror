@@ -70,7 +70,12 @@ class Payday(BookTransaction):
         self._p_changed = True
 
     def __cmp__(self, other_payday):
-        return cmp(self.paydate, other_payday.paydate)
+        if isinstance(other_payday, Payday) and \
+                hasattr(self, 'paydate') and \
+                hasattr(other_payday, 'paydate'):
+            return cmp(self.paydate, other_payday.paydate)
+        else:
+            return cmp(self, other_payday)
 
     def add_paystub(self, paystub):
         self.paystubs.append( paystub )
