@@ -75,7 +75,7 @@ class Payday(BookTransaction):
                 hasattr(other_payday, 'paydate'):
             return cmp(self.paydate, other_payday.paydate)
         else:
-            return cmp(self, other_payday)
+            return BookTransaction.__cmp__(self, other_payday)
 
     def add_paystub(self, paystub):
         self.paystubs.append( paystub )
