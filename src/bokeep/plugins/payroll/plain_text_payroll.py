@@ -460,6 +460,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
                     paystub_accounting_line_config,
                     print_paystub_line_config, file_path,
                     overwrite_existing=False, add_missing_employees=False):
+    backend_module = book.get_backend_module()
     
     # if a payroll has already been run with the same date, either error out
     # or use it
@@ -472,6 +473,8 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         payday = Payday(payroll_module)
         payday.set_paydate(paydate, period_start, period_end)
         payday_trans_id = book.insert_transaction(payday)
+        backend_module.mark_transaction_dirty(payday_trans_id,
+                                              payday)
         payroll_module.register_transaction(payday_trans_id, payday)
         # no harm in committing the above two steps early when the payday is
         # empty, if there was termination right after this, we would be able
@@ -482,9 +485,6 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         payroll_module, payday,
         emp_list, chequenum_start, paystub_line_config,
         paystub_accounting_line_config, add_missing_employees=False)   
-
-
-    backend_module = book.get_backend_module()
 
     if result != RUN_PAYROLL_SUCCEEDED:
         success = payroll_remove_payday(
