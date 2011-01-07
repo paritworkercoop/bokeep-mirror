@@ -484,7 +484,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
     result, msg = setup_paystubs_for_payday_from_dicts(
         payroll_module, payday,
         emp_list, chequenum_start, paystub_line_config,
-        paystub_accounting_line_config, add_missing_employees=False)   
+        paystub_accounting_line_config, add_missing_employees=False)
 
     if result != RUN_PAYROLL_SUCCEEDED:
         success = payroll_remove_payday(
