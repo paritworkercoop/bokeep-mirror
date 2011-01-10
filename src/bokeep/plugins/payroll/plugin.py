@@ -137,7 +137,7 @@ class PayrollPlugin(PrototypePlugin):
             #return bounded info
             bounded_entries = {}
             # kind of shocked this isn't returned sorted...
-            for trans_id, payday in self.payday_database:
+            for trans_id, payday in self.payday_database.iteritems():
                 if end_date < payday.period_start or \
                         start_date > payday.period_end:
                     continue
