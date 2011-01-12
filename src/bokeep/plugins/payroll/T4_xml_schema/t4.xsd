@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-	<!-- @@@@ Definition of T4 ComplexTypes @@@@  2009/may/14  Version# 2.9 -->
+	<!-- @@@@ Definition of T4 ComplexTypes @@@@  2010/sept/15  Version# 2.10 -->
 	<xsd:complexType name="T4SlipType">
 		<xsd:all>
 			<xsd:element name="EMPE_NM" type="NameType"/>
@@ -16,7 +16,6 @@
 			<xsd:element name="rpt_tcd" type="slipDataType"/>
 			<xsd:element name="empt_prov_cd" type="provinceType"/>
 			<xsd:element name="T4_AMT" type="T4AmtType" minOccurs="0"/>
-			<!--xsd:element name="OTH_INFO" type="OtherInformationType" minOccurs="0"/-->
 			<xsd:element name="OTH_INFO" type="OtherInformationType" minOccurs="0">
 				<xsd:unique name="Other_T4_Info_Fields">
 					<xsd:selector xpath="."/>
@@ -37,6 +36,11 @@
 					<xsd:field xpath="sod_d1_a00_feb_amt"/>
 					<xsd:field xpath="empt_cmsn_amt"/>
 					<xsd:field xpath="dfr_sob_amt"/>
+					<xsd:field xpath="elg_rtir_amt"/>
+					<xsd:field xpath="nelg_rtir_amt"/>
+					<xsd:field xpath="indn_elg_rtir_amt"/>
+					<xsd:field xpath="indn_nelg_rtir_amt"/>
+					<xsd:field xpath="cfppa_amt"/>
 					<xsd:field xpath="mun_ofcr_examt"/>
 					<xsd:field xpath="indn_empe_amt"/>
 					<xsd:field xpath="oc_incamt"/>
@@ -47,9 +51,15 @@
 					<xsd:field xpath="fish_gro_ern_amt"/>
 					<xsd:field xpath="fish_net_ptnr_amt"/>
 					<xsd:field xpath="fish_shr_prsn_amt"/>
-					<xsd:field xpath="cfppa_amt"/>
+					<xsd:field xpath="plcmt_emp_agcy_amt"/>
+					<xsd:field xpath="drvr_taxis_oth_amt"/>
+					<xsd:field xpath="brbr_hrdrssr_amt"/>
+					<xsd:field xpath="pub_trnst_pass_amt"/>
+					<xsd:field xpath="epaid_hlth_pln_amt"/>
+					<xsd:field xpath="stok_opt_csh_out_eamt"/>
 				</xsd:unique>
 			</xsd:element>
+			<!--xsd:element name="OTH_INFO" type="OtherInformationType" minOccurs="0"/-->
 		</xsd:all>
 	</xsd:complexType>
 	<xsd:complexType name="T4AmtType">
@@ -94,6 +104,10 @@
 			<xsd:element name="empt_cmsn_amt" type="decimal9Type"/>
 			<xsd:element name="cfppa_amt" type="decimal9Type"/>
 			<xsd:element name="dfr_sob_amt" type="decimal9Type"/>
+			<xsd:element name="elg_rtir_amt" type="decimal9Type"/>
+			<xsd:element name="nelg_rtir_amt" type="decimal9Type"/>
+			<xsd:element name="indn_elg_rtir_amt" type="decimal9Type"/>
+			<xsd:element name="indn_nelg_rtir_amt" type="decimal9Type"/>
 			<xsd:element name="mun_ofcr_examt" type="decimal9Type"/>
 			<xsd:element name="indn_empe_amt" type="decimal9Type"/>
 			<xsd:element name="oc_incamt" type="decimal9Type"/>
@@ -109,6 +123,7 @@
 			<xsd:element name="brbr_hrdrssr_amt" type="decimal9Type"/>
 			<xsd:element name="pub_trnst_pass_amt" type="decimal9Type"/>
 			<xsd:element name="epaid_hlth_pln_amt" type="decimal9Type"/>
+			<xsd:element name="stok_opt_csh_out_eamt" type="decimal9Type"/>
 		</xsd:choice>
 	</xsd:group>
 	<xsd:complexType name="T4SummaryType">

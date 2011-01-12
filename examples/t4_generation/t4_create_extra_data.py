@@ -7,14 +7,14 @@ extra_attributes_per_employee = {
         snm="Jenkins",
         gvn_nm="Mark",
         sin="000000000",
-        addr_l1_txt='571 Alfred ave',
+        addr_l1_txt='12 Nobody Strat',
         pstl_cd='R2W1Y5',
         ),
     'Joe Hill': dict(
         snm="Hill",
         gvn_nm="Joe",        
         sin="000000000",
-        addr_l1_txt='571 Alfred ave',
+        addr_l1_txt='35 Go Away ave',
         pstl_cd='R2W1Y5',
         )
     }
@@ -38,7 +38,7 @@ for emp in extra_attributes_per_employee.itervalues():
 summary_attributes = dict(
     bn="000000000RP0001",
     l1_nm="PARIT WORKER CO-OPERATIVE, LTD",
-    addr_l1_txt="571 Alfred Ave",
+    addr_l1_txt="57 Al Lane",
     cty_nm="Winnipeg",
     prov_cd=PROVINCE_MANITOBA,
     cntry_cd=COUNTRY_CANADA,
@@ -54,10 +54,10 @@ submission_attributes = dict(
     sbmt_ref_id="abcdefgh", # you make it up...
     rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
     trnmtr_tcd=TRANS_CODE_SELF_SUBMIT,
-    trnmtr_nbr="mm000000",
+    trnmtr_nbr="MM555555",
     lang_cd=LANG_CODE_ENGLISH,
     l1_nm="PARIT WORKER CO-OPERATIVE, LTD",
-    addr_l1_txt="571 Alfred Ave",
+    addr_l1_txt="85 Blah Pl",
     cty_nm="Winnipeg", prov_cd=PROVINCE_MANITOBA,
     cntry_cd=COUNTRY_CANADA, pstl_cd="R2W1Y5",
     cntc_nm="Mark Jenkins", cntc_area_cd="204",

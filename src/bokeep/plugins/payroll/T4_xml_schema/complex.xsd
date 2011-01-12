@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-	<!--  @@@@     COMPLEX TYPE DEFINITIONS    @@@@  2009/may/14  Version# 2.9 -->
+	<!--  @@@@     COMPLEX TYPE DEFINITIONS    @@@@  2010/sept/15  Version# 2.10 -->
 	<xsd:complexType name="CanadaAddressType">
 		<xsd:all>
 			<xsd:element name="addr_l1_txt" type="char30Type" minOccurs="0"/>
@@ -36,7 +36,7 @@
 			<xsd:element name="addr_l1_txt" type="char30Type" minOccurs="0"/>
 			<xsd:element name="addr_l2_txt" type="char30Type" minOccurs="0"/>
 			<xsd:element name="cty_nm" type="char28Type" minOccurs="0"/>
-			<xsd:element name="ste_cd" type="provinceStateType" minOccurs="0"/>
+			<xsd:element name="ste_cd" type="forcesProvinceStateType" minOccurs="0"/>
 			<xsd:element name="cntry_cd" type="nr4CountryType" minOccurs="0"/>
 			<xsd:element name="fgn_pstl_cd" type="pcType" minOccurs="0"/>
 		</xsd:all>
@@ -47,6 +47,26 @@
 			<xsd:element name="addr_l2_txt" type="char30Type" minOccurs="0"/>
 			<xsd:element name="cty_nm" type="char28Type" minOccurs="0"/>
 			<xsd:element name="ste_cd" type="provinceStateType" minOccurs="0"/>
+			<xsd:element name="cntry_cd" type="countryType" minOccurs="0"/>
+			<xsd:element name="fgn_pstl_cd" type="pcType" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:complexType name="T5SlipAddressType">
+		<xsd:all>
+			<xsd:element name="addr_l1_txt" type="char30Type" minOccurs="0"/>
+			<xsd:element name="addr_l2_txt" type="char30Type" minOccurs="0"/>
+			<xsd:element name="cty_nm" type="char28Type" minOccurs="0"/>
+			<xsd:element name="prov_cd" type="forcesProvinceStateType" minOccurs="0"/>
+			<xsd:element name="cntry_cd" type="countryType" minOccurs="0"/>
+			<xsd:element name="pstl_cd" type="pcType" minOccurs="0"/>
+		</xsd:all>
+	</xsd:complexType>
+	<xsd:complexType name="NR4SlipForeignAddressType">
+		<xsd:all>
+			<xsd:element name="addr_l1_txt" type="char30Type" minOccurs="0"/>
+			<xsd:element name="addr_l2_txt" type="char30Type" minOccurs="0"/>
+			<xsd:element name="cty_nm" type="char28Type" minOccurs="0"/>
+			<xsd:element name="ste_cd" type="forcesProvinceStateType" minOccurs="0"/>
 			<xsd:element name="cntry_cd" type="countryType" minOccurs="0"/>
 			<xsd:element name="fgn_pstl_cd" type="pcType" minOccurs="0"/>
 		</xsd:all>

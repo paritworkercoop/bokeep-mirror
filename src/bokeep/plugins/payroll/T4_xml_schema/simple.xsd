@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-	<!-- @@@@@ Definition of SimpleTypes @@@@@@@@  2009/may/14  Version# 2.9 -->
+	<!-- @@@@@ Definition of SimpleTypes @@@@@@@@  2010/Oct/13  Version# 2.10 -->
 	<!--                                                                                  -->
 	<!--                    String definitions                                    -->
 	<!--                                                                                   -->
@@ -236,6 +236,19 @@
 	</xsd:simpleType>
 	<xsd:simpleType name="provinceStateType">
 		<xsd:union memberTypes="provinceType stateType"/>
+	</xsd:simpleType>
+	<xsd:simpleType name="forcesProvType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="AA"/>
+			<xsd:enumeration value="aa"/>
+			<xsd:enumeration value="AE"/>
+			<xsd:enumeration value="ae"/>
+			<xsd:enumeration value="AP"/>
+			<xsd:enumeration value="ap"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="forcesProvinceStateType">
+		<xsd:union memberTypes="forcesProvType provinceType stateType"/>
 	</xsd:simpleType>
 	<xsd:simpleType name="pcType">
 		<xsd:restriction base="xsd:string">

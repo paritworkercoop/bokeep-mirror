@@ -22,7 +22,7 @@ def main():
     summary_attributes = dict(
         bn="000000000RP0001", # *FIXME*
         l1_nm="PARIT WORKER CO-OPERATIVE, LTD", # *FIXME*
-        addr_l1_txt="571 Alfred Ave", # *FIXME*
+        addr_l1_txt="71 Fred Drive", # *FIXME*
         cty_nm="Winnipeg",
         prov_cd=PROVINCE_MANITOBA, 
         cntry_cd=COUNTRY_CANADA,
@@ -39,10 +39,10 @@ def main():
         rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
         trnmtr_tcd=TRANS_CODE_SELF_SUBMIT,
         # this is fine, only some have a transmitter number
-        trnmtr_nbr="mm000000",
+        trnmtr_nbr="MM555555",
         lang_cd=LANG_CODE_ENGLISH,
         l1_nm="PARIT WORKER CO-OPERATIVE, LTD", # *FIXME*
-        addr_l1_txt="571 Alfred Ave", # *FIXME*
+        addr_l1_txt="5 Tusk Ave", # *FIXME*
         cty_nm="Winnipeg", prov_cd=PROVINCE_MANITOBA,
         cntry_cd=COUNTRY_CANADA,
         pstl_cd="R2W1Y5", # *FIXME*

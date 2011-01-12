@@ -16,7 +16,7 @@ LANG_CODE_ENGLISH = 'E'
 LANG_CODE_FRENCH  = 'F'
 
 PROVINCE_MANITOBA = "MB"
-COUNTRY_CANADA = "CAD"
+COUNTRY_CANADA = "CAN"
 COUNTRY_USA = "USA"
 
 generate_XML_element_classes_from_shorthand(
@@ -62,10 +62,10 @@ def main():
         (),
         sbmt_ref_id="blah", rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
         trnmtr_nbr="gablah",
-        trnmtr_tcd=TRANS_CODE_SELF_SUBMIT, summ_cnt="tablah",
+        trnmtr_tcd=TRANS_CODE_SELF_SUBMIT, summ_cnt="1",
         lang_cd=LANG_CODE_ENGLISH,
         l1_nm="ParIT Worker Co-operative, Ltd",
-        addr_l1_txt="571 Alfred Ave",
+        addr_l1_txt="34 Woot Ave",
         cty_nm="Winnipeg", prov_cd=PROVINCE_MANITOBA,
         cntry_cd=COUNTRY_CANADA, pstl_cd="R2W1Y5",
         cntc_nm="Mark Jenkins", cntc_area_cd="204",
