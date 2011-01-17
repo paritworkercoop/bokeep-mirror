@@ -34,7 +34,7 @@ from gtk.gdk import pixbuf_new_from_file_at_size
 # Bo-Keep
 from state import \
     BoKeepGuiState, \
-    NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE
+    NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE, RESET
 from bokeep.book_transaction import \
      Transaction
 from bokeep.gui.gladesupport.glade_util import \
@@ -131,11 +131,6 @@ class MainWindow(object):
                 self.application_shutdown()
                 return
 
-        self.guistate = (
-            self.bookset.get_dbhandle().get_sub_database_do_cls_init(
-                GUI_STATE_SUB_DB, BoKeepGuiState) )
-        transaction.get().commit()
-
         self.after_background_load()
         assert(self.gui_built)
 
@@ -154,13 +149,37 @@ class MainWindow(object):
         self.set_sensitivities()
         
     def after_background_load(self):
+        self.guistate = (
+            self.bookset.get_dbhandle().get_sub_database_do_cls_init(
+                GUI_STATE_SUB_DB, BoKeepGuiState) )
+        
         # we should do some checking that self.guistate is still reasonable
         # it is possible at this point that the current book or
         # current transaction could be gone due to someone playing with
         # the config or database in some way
+        
+        bookname_and_book_list = list(self.bookset.iterbooks())
+        # if there actually is a book when we think there isn't
+        if self.guistate.get_book() == None and len(bookname_and_book_list) > 0:
+            self.guistate.do_action(BOOK_CHANGE, bookname_and_book_list[0][1] )
+        # if the current book doesn't actually exist anymore
+        # this includes the case self.guistate.get_book() == None
+        else:
+            for book_name, book in bookname_and_book_list:
+                # there is a matching book, but it is possible that there
+                # is a transaction (when we think none), or the supposedly 
+                # current one is gone
+                if book == self.guistate.get_book():
+                    self.guistate.do_action(RESET)
+                    break # else clause below is skipped
+            else: # else the current book is no longer in the official list
+                self.guistate.do_action(BOOK_CHANGE, None)
 
+        # save the (possibly updated) guistate
+        transaction.get().commit()
+        
         cur_book_index = None
-        for i, (book_name, book) in enumerate(self.bookset.iterbooks()):
+        for i, (book_name, book) in enumerate(bookname_and_book_list):
             self.books_combobox_model.append((book_name, book_name, book))
             if self.guistate.get_book() != None and \
                     self.guistate.get_book() == book:
@@ -390,11 +409,6 @@ class MainWindow(object):
 
         if self.bookset == None:
             sys.exit()
-
-        self.guistate = (
-            self.bookset.get_dbhandle().get_sub_database_do_cls_init(
-                GUI_STATE_SUB_DB, BoKeepGuiState) )
-        transaction.get().commit()
 
         self.after_background_load()
         assert( self.gui_built )

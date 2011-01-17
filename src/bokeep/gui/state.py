@@ -25,14 +25,14 @@ from bokeep.util import \
     state_machine_do_nothing, state_machine_always_true
 
 # possible actions
-(NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE) = \
-    range(7)
+(NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE, RESET) = \
+    range(8)
 
 # tuple indexes for data stored in BoKeepGuiState
 (BOOK, TRANS) = range(2)
 
 class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
-    NUM_STATES = 5
+    NUM_STATES = 6
     (
         # There is no book selected
         NO_BOOK,
@@ -45,6 +45,7 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
         NEW_TRANSACTION,
         # we're looking at an existing transaction
         BROWSING,
+        RESET_TMP,
         ) = range(NUM_STATES)
 
     def __init__(self):
@@ -63,6 +64,7 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
         # change type
         # change book
         # close
+        # reset
         
         if hasattr(self, '_v_table_cache'):
             return self._v_table_cache
@@ -128,6 +130,11 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
               # transition to being in the state of editting it
               # for the first time
               STANDARD_NEW_TRANSACTION_CLAUSE,
+              # if the RESET command is given, we should check if a transaction
+              # is now available via TMP_GOTO_NO_TRANS_OR_BROWSE
+              (BoKeepGuiState.__make_action_check_function(RESET),
+               state_machine_do_nothing,
+               BoKeepGuiState.TMP_GOTO_NO_TRANS_OR_BROWSE),
               ), # NO_TRANSACTIONS
         
             # NEW_TRANSACTION
@@ -158,6 +165,11 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
               # browsing the same transaction
               (BoKeepGuiState.__make_action_check_function(CLOSE),
                state_machine_do_nothing, BoKeepGuiState.BROWSING),
+              # If the state machine has just been opened, this transaction
+              # can't be new, so we better check it exists via RESET_TMP
+              (BoKeepGuiState.__make_action_check_function(RESET),
+               state_machine_do_nothing,
+               BoKeepGuiState.RESET_TMP),
               ),  # NEW_TRANSACTION
      
             # BROWSING
@@ -168,12 +180,28 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
               STANDARD_NEW_TRANSACTION_CLAUSE,
               STANDARD_DELETE_TRANSACTION_CLAUSE,
               STANDARD_BOOK_CHANGE_CLAUSE,
+              # If the state machine has just been opened, this transaction
+              # may be missing, so we better check it exists via RESET_TMP
+              (BoKeepGuiState.__make_action_check_function(RESET),
+               state_machine_do_nothing,
+               BoKeepGuiState.RESET_TMP)
               # change type not meaningful when browsing, transactions
               # must stay the same.
               # nothing needs to happen if close action in BROWSING,
               # cause we'll resuming browsing the same thing when reopened
               # again
-              ) # BROWSING
+              ), # BROWSING
+
+            # RESET_TMP
+            # the current transaction exists, browse to it
+            ( (BoKeepGuiState.__current_trans_exists,
+               state_machine_do_nothing, BoKeepGuiState.BROWSING),
+              # else we clear the non-existent transaction and
+              # take advantage of the logic in TMP_GOTO_NO_TRANS_OR_BROWSE
+              (state_machine_always_true,
+               BoKeepGuiState.__set_transaction_id_to_none,
+               BoKeepGuiState.TMP_GOTO_NO_TRANS_OR_BROWSE)
+              ), # RESET_TMP
             ) # end table
         
         return self._v_table_cache
@@ -184,6 +212,9 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
 
     def __no_book(self, next_state):
         return self.data[BOOK] == None
+
+    def __current_trans_exists(self, next_state):
+        return self.data[BOOK].has_transaction(self.data[TRANS])
 
     @staticmethod
     def __make_action_check_function(action):
@@ -311,6 +342,7 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
                 # give the user illusions...
                 BOOK_CHANGE: lambda: True,
                 CLOSE: lambda: True,
+                RESET: lambda: True,
                 }
         if action in self._v_action_allowed_table:
             return self._v_action_allowed_table[action]()

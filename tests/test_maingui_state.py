@@ -2,7 +2,7 @@ from unittest import TestCase, main
 
 from bokeep.gui.state import \
     BoKeepGuiState, \
-    NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE
+    NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE, RESET
 from bokeep.book import BoKeepBook
 
 class GuiTestBasicSetup(TestCase):
@@ -101,6 +101,30 @@ class GuiTestWithFirstNewTrans(GuiTestWithFirstNewTransSetup):
     def test_bad_type_change(self):
         self.assertRaises(AssertionError, self.state.do_action,
                           TYPE_CHANGE)
+
+    def test_reset_after_remove(self):
+        self.assertEquals(self.state.get_transaction_id(), FIRST_TRANS_ID)
+        self.book.remove_transaction(FIRST_TRANS_ID)
+        self.state.do_action(RESET)
+        self.assertEquals(self.state.get_transaction_id(), None)
+
+    def test_reset_while_new(self):
+        self.state.do_action(RESET)
+        self.assertFalse(self.state.action_allowed(TYPE_CHANGE))
+
+class GuiTestWithFirstNewTransInBrowseSetup(GuiTestWithFirstNewTransSetup):
+    def setUp(self):
+        super(GuiTestWithFirstNewTransInBrowseSetup, self).setUp()
+        self.state.do_action(CLOSE)
+
+class GuiTestWithFirstNewTransInBrowse(
+    GuiTestWithFirstNewTransInBrowseSetup):
+
+    def test_reset_after_background_remove(self):
+        self.assertEquals(self.state.get_transaction_id(), FIRST_TRANS_ID)
+        self.book.remove_transaction(FIRST_TRANS_ID)
+        self.state.do_action(RESET)
+        self.assertEquals(self.state.get_transaction_id(), None)
 
 if __name__ == "__main__":
     main()
