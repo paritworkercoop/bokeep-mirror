@@ -55,7 +55,7 @@ class GuiTestWithBook(GuiTestWithBookSetup):
 
     test_transid_none = make_state_transid_tester()
 
-TEST_MODULE='test_transaction_and_module'
+TEST_MODULE='tests.test_transaction_and_module'
 class GuiTestWithBookAndAvailableTypesSetup(GuiTestWithBookSetup):
     def setUp(self):
         super(GuiTestWithBookAndAvailableTypesSetup, self).setUp()
