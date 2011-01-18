@@ -220,12 +220,13 @@ class CanadianPayrollEditor(object):
     
     def payroll_data_and_config_changed(self):
         if self.has_config and self.has_data:
-            result = setup_paystubs_for_payday_from_dicts(
+            result, msg = setup_paystubs_for_payday_from_dicts(
                 self.plugin, self.trans, self.emp_list, self.chequenum_start,
                 self.paystub_line_config, self.paystub_accounting_line_config,
                 add_missing_employees=True)
             if result != RUN_PAYROLL_SUCCEEDED:
-                self.error_dialog("payroll failed with code %s" % str(result) )
+                self.error_dialog("payroll failed with code %s and msg %s"
+                                  % (str(result), msg) )
             self.change_register_function()
         self.update_paystub_listing()
 
