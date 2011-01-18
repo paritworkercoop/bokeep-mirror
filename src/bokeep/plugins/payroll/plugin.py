@@ -24,13 +24,14 @@ from persistent import Persistent
 from gtk import \
     RESPONSE_OK, RESPONSE_CANCEL, \
     FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, \
-    STOCK_CANCEL, STOCK_OPEN
+    STOCK_CANCEL, STOCK_OPEN, MessageDialog, BUTTONS_OK
 
 # bokeep imports
 from bokeep.prototype_plugin import PrototypePlugin
 from bokeep.plugins.payroll.payroll import Payday
 from bokeep.plugins.payroll.plain_text_payroll import \
-    make_print_paystubs_str, setup_paystubs_for_payday_from_dicts
+    make_print_paystubs_str, setup_paystubs_for_payday_from_dicts, \
+    RUN_PAYROLL_SUCCEEDED
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.util import \
@@ -219,10 +220,12 @@ class CanadianPayrollEditor(object):
     
     def payroll_data_and_config_changed(self):
         if self.has_config and self.has_data:
-            setup_paystubs_for_payday_from_dicts(
+            result = setup_paystubs_for_payday_from_dicts(
                 self.plugin, self.trans, self.emp_list, self.chequenum_start,
                 self.paystub_line_config, self.paystub_accounting_line_config,
                 add_missing_employees=True)
+            if result != RUN_PAYROLL_SUCCEEDED:
+                self.error_dialog("payroll failed with code %s" % str(result) )
             self.change_register_function()
         self.update_paystub_listing()
 
@@ -240,6 +243,13 @@ class CanadianPayrollEditor(object):
             return get_module_for_file_path(file_path)
         return None
 
+    def error_dialog(self, msg):
+        dia = MessageDialog(buttons=BUTTONS_OK,
+                            message_format=msg)
+        dia.set_modal(True)
+        dia.run()
+        dia.destroy()
+
     def on_select_data_clicked(self, *args):
         load_module = self.file_selection_module_contents(
             "select a payday data file")
@@ -255,7 +265,9 @@ class CanadianPayrollEditor(object):
                                    load_module.period_start,
                                    load_module.period_end )
             self.payroll_data_and_config_changed()
-        
+        else:
+            self.error_dialog("Problem with data file")
+            
     def on_select_config_clicked(self, *args):
         load_module = self.file_selection_module_contents(
             "select a payroll config file")
@@ -272,3 +284,6 @@ class CanadianPayrollEditor(object):
             self.print_paystub_line_config = \
                 load_module.print_paystub_line_config
             self.payroll_data_and_config_changed()
+        else:
+            self.error_dialog("Problem with config file")
+            
