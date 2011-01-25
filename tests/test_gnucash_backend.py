@@ -47,6 +47,9 @@ class TestTransaction(Transaction):
         line2.account_spec = account2
         self.fin_trans = FinancialTransaction( (line1, line2) )
     
+    def set_currency(self, currency):
+        self.fin_trans.currency = currency
+
     def get_financial_transactions(self):
        return [self.fin_trans]
 
@@ -69,14 +72,14 @@ class GnuCashBasicSetup(TestCase):
         # early saves; think this only applies to new book, wonder if
         # backend module itself should ever create a new book?
         s.save()
-        CAD = book.get_table().lookup('CURRENCY', 'CAD')
+        currency = book.get_table().lookup('CURRENCY', self.get_currency())
 
         def create_new_account(name, parent):
             return_value = Account(book)
             parent.append_child(return_value)
             return_value.SetName(name)
             return_value.SetType(ACCT_TYPE_ASSET)
-            return_value.SetCommodity(CAD)
+            return_value.SetCommodity(currency)
             return return_value
         
         assets = create_new_account(ASSETS_ACCOUNT, root)
@@ -104,6 +107,12 @@ class GnuCashBasicSetup(TestCase):
         self.assertFalse(self.backend_module.can_write())
         for file_name in glob(self.gnucash_file_name + '*'):
             remove(file_name)
+
+    def get_currency(self):
+        return "CAD"
+
+    def get_wrong_currency(self):
+        return "USD"
 
     def get_gnucash_file_name_with_protocol(self):
         return self.get_protocol_full() + self.gnucash_file_name
@@ -169,6 +178,13 @@ class GetProtocolXML(object):
     def get_protocol(self):
         return XML
 
+class GetCurrencyUSD(object):
+    def get_currency(self):
+        return "USD"
+
+    def get_wrong_currency(self):
+        return "CAD"
+
 class GnuCashBasicTest(GnuCashBasicSetup):
     test_account_tree_is_present = \
         GnuCashBasicSetup.check_account_tree_is_present
@@ -187,11 +203,14 @@ class GnuCashBasicTest(GnuCashBasicSetup):
 
 class GnuCashBasicTestXML(GetProtocolXML, GnuCashBasicTest): pass
 
+class GnuCashBasicTestUSD(GetCurrencyUSD, GnuCashBasicTest): pass
+
 class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
     def setUp(self):
         GnuCashBasicSetup.setUp(self)
         self.test_trans = TestTransaction(Decimal(1), BANK_FULL_SPEC,
                                           Decimal(-1), PETTY_CASH_FULL_SPEC )
+        self.test_trans.set_currency(self.get_currency())
         self.front_end_id = 1
         self.backend_module.mark_transaction_dirty(
             self.front_end_id, self.test_trans)
@@ -259,8 +278,8 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3] 
         commod_table = book.get_table()
-        USD = commod_table.lookup("ISO4217","USD")
-        bank.SetCommodity(USD)
+        wrong = commod_table.lookup("ISO4217", self.get_wrong_currency() )
+        bank.SetCommodity(wrong)
         self.gnucash_session_termination(s, True)
 
         # perhaps doing a flush first,
@@ -337,6 +356,10 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
 
 class GnuCashStartsWithMarkTestsXML(
     GetProtocolXML, GnuCashStartsWithMarkTests):
+    pass
+
+class GnuCashStartsWithMarkTestsUSD(
+    GetCurrencyUSD, GnuCashStartsWithMarkTests):
     pass
 
 if __name__ == "__main__":

@@ -198,7 +198,10 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         trans.BeginEdit()
         
         commod_table = self._v_session_active.book.get_table()
-        CAD = commod_table.lookup("ISO4217","CAD")
+        if hasattr(fin_trans, "currency"):
+            currency = commod_table.lookup("ISO4217", fin_trans.currency)
+        else:
+            currency = commod_table.lookup("ISO4217","CAD")
 
         # create a list of GnuCash splits, set the amount, account,
         # and parent them with the Transaction
@@ -212,14 +215,14 @@ class GnuCash(SessionBasedRobustBackendPlugin):
                             self._v_session_active.book.get_root_account(),
                             trans_line ),
                         trans,
-                        CAD ) )
+                        currency ) )
             # catch problems fetching the account, currency mismatch
             # with the account, or currency precisions mismatching
             except BoKeepBackendException, e:
                 trans.Destroy() # undo what we have done
                 raise e # and re-raise the exception
 
-        trans.SetCurrency(CAD)
+        trans.SetCurrency(currency)
 
         if trans.GetImbalanceValue().num() != 0:
             trans.Destroy() # undo what we have done

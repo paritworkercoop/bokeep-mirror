@@ -69,6 +69,9 @@ class FinancialTransaction(object):
     chequenum -- a number (integer) to assign if the transaction is a cheque,
     or other numberic transaction identifier. Will be supported by GnuCash
     and SerialFile backends.
+
+    currency -- an all caps three letter ISO code for a currency
+                e.g USD and CAD
     """
     def __init__(self, lines):
         self.lines = lines
