@@ -150,6 +150,8 @@ class Payday(BookTransaction):
         fin_trans = FinancialTransaction(fin_lines)
         fin_trans.trans_date = self.paydate
         fin_trans.description = "payroll"
+        # this is a Canadian Payroll only right now
+        fin_trans.currency = "CAD"
         yield fin_trans
 
         # Per employee transactions
