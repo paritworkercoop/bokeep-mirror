@@ -28,7 +28,7 @@ from ZODB import DB
 from bokeep.book import BoKeepBookSet
 from bokeep.util import ends_with_commit
 
-from test_transaction_and_module import Type1Transaction
+from tests.test_transaction_and_module import Type1Transaction
 from test_bokeep_book import BoKeepWithBookSetup, TESTBOOK
 
 class BoKeepBasicTest(BoKeepWithBookSetup):
