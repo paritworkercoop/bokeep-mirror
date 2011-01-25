@@ -106,7 +106,11 @@ class TrustModule(Persistent):
     def init_transaction_tracker(self):
         self.transaction_track_database = {}
 
+    def init_currency(self):
+        self.currency = "CAD"
+
     def init_trust_database(self):
+        self.init_currency()
         self.init_trustors_database()
         self.init_transaction_tracker()
         
@@ -115,6 +119,12 @@ class TrustModule(Persistent):
             self.init_trustors_database()
         if not hasattr(self, 'transaction_track_database'):
             self.init_transaction_tracker()
+        if not hasattr(self, "currency"):
+            self.init_currency()
+
+    def get_currency(self):
+        self.ensure_trust_database()
+        return self.currency
 
     def has_trustor(self, trustor):
         self.ensure_trust_database()

@@ -71,6 +71,7 @@ class MileageTransaction(Transaction):
                 )
             return_value.description = 'mileage'
             return_value.trans_date = self.trans_date
+            return_value.currency = self.associated_plugin.get_currency()
             return (return_value,)
         else:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
@@ -98,7 +99,11 @@ class MileagePlugin(Persistent):
         self.debit_account = self.credit_account = None
         self.debit_account_str =  self.credit_account_str = ""
         self.distance_multiplier = ONE
+        self.currency = self.get_default_curreny()
         self.trans_registry = {}
+
+    def get_default_currency(self):
+        return "CAD"
 
     def get_debit_account(self):
         return self.debit_account
@@ -121,6 +126,13 @@ class MileagePlugin(Persistent):
 
     def has_transaction(self, trans_id):
         return trans_id in self.trans_registry
+
+    def get_currency(self):
+        # the currency attribute was added at one point, so we have to
+        # check if its there and set based on default if not
+        if not hasattr("currency"):
+            self.currency = self.get_default_curreny()
+        return self.currency
         
     @staticmethod
     def get_transaction_type_codes():
@@ -196,6 +208,7 @@ class MileageConfigDialog(object):
         self.backend_account_fetch = backend_account_fetch
         self.plugin = plugin
         
+        self.set_currency(self.plugin.get_currency())
         self.set_debit_account(self.plugin.get_debit_account(),
                                self.plugin.debit_account_str )
         self.set_credit_account(self.plugin.get_credit_account(),
@@ -215,12 +228,20 @@ class MileageConfigDialog(object):
             self.plugin.credit_account = self.credit_account
             self.plugin.debit_account_str = self.debit_account_str
             self.plugin.credit_account_str = self.credit_account_str
+            self.plugin.currency = self.get_currency()
             try:
                 self.plugin.distance_multiplier = \
                     Decimal(self.distance_multiple_entry.get_text())
             except InvalidOperation: pass
         self.dialog1.destroy()
     
+    def set_currency(self, currency):
+        #self.currency_entry.set_text(currency)
+        pass
+
+    def get_currency(self):
+        return self.plugin.get_currency()
+
     def handle_account_fetch(self, setter):
         account_spec, account_str = self.backend_account_fetch(
             self.dialog1)
@@ -242,3 +263,4 @@ class MileageConfigDialog(object):
 
     def on_select_credit_account(self, *args):
         self.handle_account_fetch(self.set_credit_account)
+

@@ -51,6 +51,7 @@ class TrustTransaction(Transaction):
             else:
                 fin_trans.description = self.trustor.name
         fin_trans.trans_date = self.trans_date
+        fin_trans.currency = self.trust_module.get_currency()
         # should add chequenum at some point, legal aid requested this
         # for ordering
         return ( fin_trans, )

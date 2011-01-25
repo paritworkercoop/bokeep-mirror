@@ -216,7 +216,9 @@ class trustor_management(GladeWindow):
             self.widgets['cash_account_label'],
             self.trust_module.set_cash_account )
         
-
+    def currency_text_entry_changed(self, *args):
+        pass
+        # self.trust_module.currency = self.currency_text_entry.get_text()
 
 
     
