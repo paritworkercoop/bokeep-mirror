@@ -32,7 +32,6 @@ class TestCommand(Command):
             for t in glob(os.path.join(self._dir, TESTS_DIR, '*.py'))
             # don't run tests for the gnucash2.2 backend
             if not t.endswith('__init__.py') and \
-                not t.endswith('test_gnucash_backend22.py') and \
                 not t.endswith('test_transaction.py')
             )
     
