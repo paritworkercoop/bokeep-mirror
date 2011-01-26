@@ -3,8 +3,6 @@
   <!-- interface-requires gtk+ 2.6 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="TrustManagement">
-    <property name="width_request">800</property>
-    <property name="height_request">335</property>
     <property name="visible">True</property>
     <property name="title" translatable="yes">Trust Management</property>
     <child>
@@ -12,12 +10,10 @@
         <property name="visible">True</property>
         <child>
           <widget class="GtkHBox" id="hbox1">
-            <property name="height_request">10</property>
             <property name="visible">True</property>
             <child>
               <widget class="GtkButton" id="add_button">
                 <property name="label">gtk-add</property>
-                <property name="height_request">10</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -25,13 +21,13 @@
                 <signal name="clicked" handler="on_add_button_clicked"/>
               </widget>
               <packing>
+                <property name="expand">False</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
               <widget class="GtkButton" id="delete_button">
                 <property name="label">gtk-delete</property>
-                <property name="height_request">10</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -39,6 +35,7 @@
                 <signal name="clicked" handler="on_delete_button_clicked"/>
               </widget>
               <packing>
+                <property name="expand">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
@@ -162,27 +159,35 @@
               </widget>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>
           </widget>
           <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkButton" id="report_button">
-            <property name="label" translatable="yes">Export Balance Report</property>
+          <widget class="GtkHBox" id="hbox6">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="use_underline">True</property>
-            <signal name="clicked" handler="on_report_button_clicked"/>
+            <child>
+              <widget class="GtkButton" id="report_button">
+                <property name="label" translatable="yes">Export Balance Report</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="on_report_button_clicked"/>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
           </widget>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
             <property name="position">2</property>
           </packing>
         </child>
@@ -260,7 +265,7 @@
                 <child>
                   <widget class="GtkLabel" id="currency">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">trust</property>
+                    <property name="label" translatable="yes">currency</property>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
@@ -286,7 +291,6 @@
             </child>
           </widget>
           <packing>
-            <property name="expand">False</property>
             <property name="position">3</property>
           </packing>
         </child>

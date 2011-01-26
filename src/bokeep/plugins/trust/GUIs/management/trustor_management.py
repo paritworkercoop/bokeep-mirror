@@ -57,7 +57,9 @@ class trustor_management(GladeWindow):
         if hasattr(self.trust_module, 'cash_account_str'):
             self.widgets['cash_account_label'].set_text(
                 self.trust_module.cash_account_str )
-
+        self.widgets['currency_text_entry'].set_text(
+            self.trust_module.get_currency() )
+            
     def construct_filename(self, filename):
         import trustor_management as trust_module
         return join( dirname( abspath( trust_module.__file__ ) ),
