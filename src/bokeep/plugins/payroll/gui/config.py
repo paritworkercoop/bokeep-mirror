@@ -31,6 +31,7 @@ from bokeep.util import \
     get_file_in_same_dir_as_module, get_module_for_file_path
 from bokeep.plugins.payroll.csv_dump import do_csv_dump
 from bokeep.plugins.payroll.make_T4 import generate_t4s
+from bokeep.plugins.payroll.period_analyse import period_analyse
 
 def get_payroll_glade_file():
     import config as this_module
@@ -107,11 +108,28 @@ class PayrollConfigDialog(object):
                      t4infomod.submission_attributes )
 
     def on_dump_period_analysis_clicked(self, *args):
-        # select period params
-        
-        file_path = self.save_dialog(
-        "where should the analysis csv file be saved?")
-        if file_path == None:
-            return
+        analysis_dia = {}
+        load_glade_file_get_widgets_and_connect_signals(        
+            get_payroll_glade_file(),
+            'dialog2', analysis_dia, None)
+        analysis_dia['dialog2'].set_transient_for(self.dialog1)
+        analysis_dia['dialog2'].set_modal(True)
+        analysis_dia['period_type_pulldown'].set_active(0)
+        dia_result = analysis_dia['dialog2'].run()
+        if dia_result == RESPONSE_OK:
+            output_file_path = self.save_dialog(
+                "where should the analysis csv file be saved?")
+            if output_file_path != None:
+                (start_year, start_month, day) = \
+                    analysis_dia['start_date_calendar'].get_date()
+                # adjust gtk month convention (0-11) to python 
+                # convention (1-12)
+                start_month+=1
+                
+                period_analyse(
+                    self.plugin, start_year, start_month,
+                    analysis_dia['num_period_spin'].get_value_as_int(),
+                    analysis_dia['period_type_pulldown'].get_active_text(),
+                    output_file_path)
 
-        #magic(self.plugin, period_params, file_path)
+        analysis_dia['dialog2'].destroy()

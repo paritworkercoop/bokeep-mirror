@@ -1,18 +1,28 @@
-#!/usr/bin/env python
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+#
+# This file is part of Bo-Keep.
+#
+# Bo-Keep is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Author: Mark Jenkins <mark@parit.ca>
 
 # python imports
-from sys import argv, stdout
+from sys import stdout
 from decimal import Decimal
 from datetime import date, timedelta
 from bisect import bisect_right
 import csv
-
-
-# bo-keep imports
-from bokeep.config import get_database_cfg_file
-from bokeep.book import BoKeepBookSet
-
-PAYROLL_MODULE = 'bokeep.plugins.payroll'
 
 # a dictionary with a period name as key, and number of months in that
 # kind of period as the value
@@ -61,23 +71,19 @@ def period_end(start_year, start_month, period_type):
     return date(end_year, end_month, 1) - ONE_DAY
     
 
-def generate_period_boundaries(start_year, start_month, period_type, periods):
+def generate_period_boundaries(
+    start_year, start_month, period_type, periods):
     for i in xrange(periods):
         yield ( date(start_year, start_month, 1),
                 period_end(start_year, start_month, period_type) )
-        start_year, start_month = next_period_start(start_year, start_month,
-                                                    period_type)
+        start_year, start_month = next_period_start(
+            start_year, start_month, period_type)
 
-def main():
-    book, start_year, start_month, periods, period_type = argv[1:]
-
-    start_year, start_month, periods = (int(blah)
-                                        for blah in (start_year, start_month,
-                                                     periods) )
-
-    bookset = BoKeepBookSet( get_database_cfg_file() )
-    book = bookset.get_book(book)
-    payroll_mod = book.get_module(PAYROLL_MODULE)
+def period_analyse(payroll_mod, start_year, start_month,
+                   periods, period_type, output_file_path):
+    start_year, start_month, periods = (
+        int(blah)
+        for blah in (start_year, start_month, periods) )
 
     # a list of all the periods of interest, for each period
     # keep the start date, end date, and ei, cpp, and income tax sums
@@ -95,7 +101,7 @@ def main():
     # a copy of the above list with just the period start dates
     period_starts = [e[0] for e in period_list ]
     
-    for trans_id, payday in payroll_mod.get_paydays().itervalues():
+    for payday in payroll_mod.get_paydays().itervalues():
         paydate = payday.paydate
 
         # use binary search to find the period that starts before or on
@@ -131,7 +137,8 @@ def main():
 
                     period[2+i] += Decimal("%.2f" % deduction_or_contribution )
 
-    csv_writer = csv.writer(stdout)
+    output_file = file(output_file_path, 'w')
+    csv_writer = csv.writer(output_file)
     csv_writer.writerow(
         ('period start', 'period end',
          'employee ei deductions', 'employer ei contributions', 'total ei',
@@ -148,7 +155,5 @@ def main():
         for start_date, end_date, employee_ei, employer_ei, \
             employee_cpp, employer_cpp, employee_income_tax in period_list
         )
+    output_file.close()
 
-    bookset.close()
-
-if __name__ == "__main__": main()
