@@ -150,7 +150,17 @@ class PayrollPlugin(PrototypePlugin):
             if payday.paydate == payday_date:
                 return trans_id, payday
         return None, None
-
+    
+    def run_configuration_interface(
+        self, parent_window, backend_account_fetch):
+        # imported here to avoid importing graphics code at top
+        # makes tests without a display avoid calling gtk and
+        # no graphics error
+        from gui.config import PayrollConfigDialog
+        dia = PayrollConfigDialog(parent_window, backend_account_fetch,
+                                  self)
+        dia.run()
+        
     @staticmethod
     def get_transaction_type_codes():
         return (CDN_PAYROLL_CODE,)

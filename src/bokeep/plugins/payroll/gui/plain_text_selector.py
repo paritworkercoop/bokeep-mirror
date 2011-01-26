@@ -27,10 +27,12 @@ from gtk import \
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.util import \
-    get_file_in_same_dir_as_module, get_module_for_file_path
+    get_module_for_file_path
 from bokeep.plugins.payroll.plain_text_payroll import \
     make_print_paystubs_str, setup_paystubs_for_payday_from_dicts, \
     RUN_PAYROLL_SUCCEEDED
+
+from config import get_payroll_glade_file
 
 class CanadianPayrollEditor(object):
     def __init__(self, *args):
@@ -38,9 +40,9 @@ class CanadianPayrollEditor(object):
             ('trans', 'transid', 'plugin', 'gui_parent',
              'change_register_function') ):
             setattr(self, key, args[i] )
-        import plain_text_selector as this_module
+    
         load_glade_file_get_widgets_and_connect_signals(
-            get_file_in_same_dir_as_module(this_module, 'payroll.glade'),
+            get_payroll_glade_file(),
             'window1', self, self)
         self.payrollvbox.reparent(self.gui_parent)
         self.window1.hide()
