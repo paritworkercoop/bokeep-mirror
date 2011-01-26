@@ -14,6 +14,7 @@ emp_list = [
     dict( name="Joe Hill",
           hours=90.0,
           rate=14.0,
+          additional_amount_in_net_pay=666,
           vacation_payout=None, # set to None to auto calculate
                                 # set to a 0 or comment out to avoid payout
                                 # set to a specific value if that's what you

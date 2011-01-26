@@ -32,7 +32,7 @@ from bokeep.plugins.payroll.canada.paystub_line import sum_paystub_lines
 from bokeep.plugins.payroll.canada.vacation_pay import VacationPayoutTooMuchException
 
 # Bo-Keep (keeper of the Bo) imports
-from bokeep.plugins.payroll.payroll import PaystubWageLine
+from bokeep.plugins.payroll.payroll import PaystubWageLine, PaystubLine
 
 from bokeep.config import get_bokeep_bookset
 from bokeep.book import BoKeepBookSet
@@ -205,6 +205,25 @@ def create_and_tag_paystub_line(paystub_line_class, tag):
         setattr(new_paystub_line, tag, None)
         paystub.add_paystub_line(new_paystub_line)
     return return_function
+
+# Allow for the creation of tagged lines that give extra amounts
+# to an employee on net pay but are not treated as income. This is good for
+# giving out advances (not to be confused with the process of deducting them
+# later) payout out of deffered wages equity draws, and employers
+# reimbusring for expenses
+def create_and_tag_additional_amount_line(tag):
+    def returnfunc(employee, employee_info_dict, paystub, value):
+        additional_amount_line = PaystubLine(paystub,
+                                             decimal_from_whatever(value))
+        
+        # this shouldn't matter, as the places that use the taxable
+        # attribute don't look at plain old PaystubLines that aren't
+        # Income or Deductions, but hey, just in case we set this
+        additional_amount_line.taxable = False
+        setattr(additional_amount_line, tag, None)
+        paystub.add_paystub_line(additional_amount_line)
+    return returnfunc
+
 
 def paystub_get_lines_of_class_with_tag(
     paystub, paystub_line_class, tag):

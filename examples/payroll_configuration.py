@@ -9,7 +9,8 @@ from bokeep.plugins.payroll.payroll import \
     PaystubDeductionMultipleOfIncomeLine, \
     PaystubVacpayLine, \
     PaystubDeductionLine, \
-    PaystubVacpayPayoutLine
+    PaystubVacpayPayoutLine, \
+    PaystubLine
 
 from bokeep.plugins.payroll.plain_text_payroll import \
     create_paystub_line, \
@@ -23,6 +24,7 @@ from bokeep.plugins.payroll.plain_text_payroll import \
     lines_of_class_function, \
     value_of_class, \
     create_and_tag_paystub_line, \
+    create_and_tag_additional_amount_line, \
     paystub_get_lines_of_class_with_tag, \
     get_lines_of_class_with_tag, \
     sum_line_of_class_with_tag, \
@@ -33,6 +35,8 @@ paystub_line_config = (
     ('hours', create_paystub_wage_line ),
     ('extra_deduction', create_and_tag_paystub_line(PaystubDeductionLine,
                                               "extra_deduction")),
+    ('additional_amount_in_net_pay',
+     create_and_tag_additional_amount_line("additional_net_pay_amount") ),
     ('vacation_payout', create_paystub_line(PaystubVacpayPayoutLine)),
 )
 
@@ -71,10 +75,14 @@ paystub_accounting_line_config = [
             ( ("Liabilities", "Vacation Pay"),
               "vacation pay",
               lines_of_class_function(PaystubVacpayPayoutLine) ),
+            ( ("Liabilities", "Payroll additions clearing"),
+              "additional amounts added",
+              get_lines_of_class_with_tag(PaystubLine,
+                                          "additional_net_pay_amount") ),
             ),
         # Credits
         (
-            ( ("Liabilities", "Payroll extra deductions clearing"),
+            ( ("Assets", "Payroll extra deductions clearing"),
               "extra_deduction",
               get_lines_of_class_with_tag(PaystubDeductionLine, 
                                           "extra_deduction") ),
