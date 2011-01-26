@@ -321,9 +321,13 @@ class MainWindow(object):
         trans_id = self.guistate.get_transaction_id()
         assert( trans_id != None )
         assert( isinstance(trans_id, int) )
-        self.set_transcombo_index(
-            book.get_index_and_code_class_module_tripplet_for_transaction(
-                trans_id )[0] )
+        (i, (a, b, c)) = \
+            book.get_index_and_code_class_module_tripplet_for_transaction(                trans_id )
+        # What the hell, why is i None sometimes,
+        # (trans id not found in any module) --
+        # this is a bug that has come up
+        assert( i != None)
+        self.set_transcombo_index(i)
         self.reset_trans_view()
      
     # Event handlers
