@@ -18,7 +18,8 @@
 # Author: Mark Jenkins <mark@parit.ca>
 #!/usr/bin/env python
 
-from bokeep.gui.gladesupport.GladeWindow import GladeWindow
+from bokeep.gui.gladesupport.glade_util import \
+    do_OldGladeWindowStyleConnect
 
 # ZOPEDB imports
 import transaction
@@ -32,7 +33,7 @@ from os.path import abspath, dirname, join, exists
 from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 
-class trustor_entry(GladeWindow):
+class trustor_entry(object):
     def __init__(self, trust_trans, trans_id, trust_module, gui_parent,
                  editable, change_register_function):
         self.change_register_function = change_register_function
@@ -56,7 +57,6 @@ class trustor_entry(GladeWindow):
         self.widgets['vbox1'].reparent(self.top_window)
 
     def extended_init(self):
-        self.add_widgets('trustor_combo', 'vbox1')
         self.trustor_combo = self.widgets['trustor_combo']
         self.trustor_list = ListStore( str )
         self.trustor_combo.set_model(self.trustor_list)
@@ -86,20 +86,9 @@ class trustor_entry(GladeWindow):
     def init(self):
 
         filename = 'data/trustor_entry.glade'
-
-        widget_list = [
-            'window1',
-            'amount_entry',
-            ]
-
-        handlers = [
-            'on_window_destroy',
-            'on_trustor_combo_changed',
-            'on_amount_entry_changed',
-            ]
-
         top_window = 'window1'
-        GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
+        do_OldGladeWindowStyleConnect(
+            self, self.construct_filename(filename), top_window)
 
 
     def update_trans(self):
@@ -120,7 +109,7 @@ class trustor_entry(GladeWindow):
     def on_window_destroy(self, *args):
         if self.editable:
             self.update_trans()
-        GladeWindow.on_window_destroy(self, *args)
+        gtk.main_quit()
 
     def on_trustor_combo_changed(self, *args):
         if self.gui_built:

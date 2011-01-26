@@ -27,7 +27,8 @@ import transaction
 from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
 
-from bokeep.gui.gladesupport.GladeWindow import GladeWindow
+from bokeep.gui.gladesupport.glade_util import \
+    do_OldGladeWindowStyleConnect
 
 from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
 import gtk
@@ -38,7 +39,7 @@ from bokeep.plugins.trust.GUIs.management.trustor_transactions import trustor_tr
 
 from os.path import abspath, dirname, join, exists
 
-class trustor_management(GladeWindow):
+class trustor_management(object):
     def __init__(self, trust_module, parent_window, backend_account_fetch):
         self.backend_account_fetch = backend_account_fetch
         self.trust_module = trust_module
@@ -87,45 +88,16 @@ class trustor_management(GladeWindow):
             self.trustor_list.append([trustor, str(self.trustors[trustor].get_balance())])
 
     def extended_init(self):
-        self.add_widgets('trustor_view', 'dyn_balance')
-
         
         self.trustor_view = self.widgets['trustor_view']
 
         self.refresh_trustor_list()
 
     def init(self):
-
         filename = 'data/trustor_management.glade'
-
-        widget_list = [
-            'TrustManagement',
-            'add_button',
-            'delete_button',
-            'zoom_button',
-            'name_entry',
-            'save_button',
-            'report_button',
-            'trust_liability_account_label',
-            'cash_account_label',
-            'currency_text_entry',
-            ]
-
-        handlers = [
-            'on_window_destroy',
-            'on_add_button_clicked',
-            'on_delete_button_clicked',
-            'on_trustor_view_cursor_changed',
-            'on_zoom_button_clicked',
-            'on_save_button_clicked',
-            'on_report_button_clicked',
-            'on_select_trust_liability_clicked',
-            'on_select_cash_account_clicked',
-            'currency_text_entry_changed'
-            ]
-
         top_window = 'TrustManagement'
-        GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
+        do_OldGladeWindowStyleConnect(
+            self, self.construct_filename(filename), top_window)
 
     def on_add_button_clicked(self, *args):
         self.current_name = None

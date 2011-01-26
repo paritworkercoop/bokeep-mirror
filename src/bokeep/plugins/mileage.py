@@ -26,12 +26,12 @@ from os.path import abspath, dirname, join, exists
 
 from gtk import RESPONSE_OK
 
-from bokeep.gui.gladesupport.GladeWindow import GladeWindow
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine, \
     BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gui.gladesupport.glade_util import \
-    load_glade_file_get_widgets_and_connect_signals
+    load_glade_file_get_widgets_and_connect_signals, \
+    do_OldGladeWindowStyleConnect
 
 
 ZERO = Decimal(0)
@@ -153,16 +153,12 @@ class MileagePlugin(Persistent):
     def get_transaction_edit_interface_hook_from_code(code):
         return mileage_editable_editor
 
-class mileage_entry(GladeWindow):
+class mileage_entry(object):
     def __init__(self, trans, transid, plugin, gui_parent,
                  change_register_function):
         self.gui_built = False
-        GladeWindow.__init__(
-            self, get_mileage_glade_file(),
-            'window1', ('window1', 'amount_entry', 'vbox1', 'calendar1'),
-            ('on_window_destroy', 'on_amount_entry_changed',
-             'on_cal_date_changed') )
-
+        do_OldGladeWindowStyleConnect(self, get_mileage_glade_file(),
+                                      'window1')
         self.trans = trans
         self.widgets['calendar1'].select_month(
             self.trans.trans_date.month-1, self.trans.trans_date.year)

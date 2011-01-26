@@ -20,7 +20,8 @@
 
 import sys
 
-from bokeep.gui.gladesupport.GladeWindow import GladeWindow
+from bokeep.gui.gladesupport.glade_util import \
+    do_OldGladeWindowStyleConnect
 
 from gtk import ListStore, TreeViewColumn, CellRendererText
 from bokeep.plugins.trust import \
@@ -30,7 +31,7 @@ from datetime import datetime
 
 from os.path import abspath, dirname, join, exists
 
-class trustor_transactions(GladeWindow):
+class trustor_transactions(object):
     def __init__(self, trustor):
 
         self.trustor = trustor
@@ -52,8 +53,6 @@ class trustor_transactions(GladeWindow):
             return 'unknown'
 
     def extended_init(self):
-        self.add_widgets('transactions_view', 'dyn_name', 'dyn_balance')
- 
         self.widgets['dyn_name'].set_text(self.trustor.name)
         self.widgets['dyn_balance'].set_text(str(self.trustor.get_balance()))
         
@@ -75,18 +74,9 @@ class trustor_transactions(GladeWindow):
     def init(self):
 
         filename = 'data/trustor_transactions.glade'
-
-        widget_list = [
-            'window1',
-            'report_button',
-            ]
-
-        handlers = [
-            'on_report_button_clicked',
-            ]
-
         top_window = 'window1'
-        GladeWindow.__init__(self, self.construct_filename(filename), top_window, widget_list, handlers)
+        do_OldGladeWindowStyleConnect(
+            self, self.construct_filename(filename), top_window)
 
     def generate_transaction_report(self, filename):
         report_file = open(filename, 'w')

@@ -26,5 +26,14 @@ def load_glade_file_get_widgets_and_connect_signals(
         glade_xml.signal_autoconnect( signal_recipiant )
 
     for widget in glade_xml.get_widget_prefix(""):
-        setattr( widget_holder, get_widget_name(widget), widget )
+        if isinstance(widget_holder, dict):
+            widget_holder[get_widget_name(widget)] = widget
+        else:
+            setattr( widget_holder, get_widget_name(widget), widget )
 
+def do_OldGladeWindowStyleConnect(
+    self, filename, top_window):
+    self.widgets = {}
+    load_glade_file_get_widgets_and_connect_signals(
+        filename, top_window, self.widgets, self)
+    self.top_window = self.widgets[top_window]
