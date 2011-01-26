@@ -268,13 +268,20 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
                 cls, module))
     
     def __purge_current_transaction(self, next_state):
-        (i, (code, cls, module)) = \
-            self.data[BOOK].\
+        assert(self.data[TRANS] != None)
+        (i, (code, cls, module)) = self.data[BOOK].\
             get_index_and_code_class_module_tripplet_for_transaction(
             self.data[TRANS])
-        module.remove_transaction(self.data[TRANS])
-        # the below calls backend.mark_transaction_for_removal so we don't
-        # need to take care of that like we did in
+    
+        # normally we'd expect this to be True, the above search
+        # should actually find the damn transaction
+        #
+        # but, bugs have occasionally resulted in the transaction
+        # no longer being found in any module so we have to check
+        if (None, None, None, None) != (i, code, cls, module):
+            module.remove_transaction(self.data[TRANS])
+        # the below calls backend.mark_transaction_for_removal so we 
+        # don't need to take care of that like we did in
         # __new_transaction_using_current_type and __type_change
         # where state.py ended up responsible for calling 
         # backend.mark_transaction_dirty
