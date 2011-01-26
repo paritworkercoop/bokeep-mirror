@@ -18,6 +18,7 @@
 # Author: Mark Jenkins <mark@parit.ca>
 
 from persistent import Persistent
+import transaction
 
 from decimal import Decimal, InvalidOperation
 from datetime import datetime, date
@@ -99,7 +100,7 @@ class MileagePlugin(Persistent):
         self.debit_account = self.credit_account = None
         self.debit_account_str =  self.credit_account_str = ""
         self.distance_multiplier = ONE
-        self.currency = self.get_default_curreny()
+        self.currency = self.get_default_currency()
         self.trans_registry = {}
 
     def get_default_currency(self):
@@ -130,7 +131,7 @@ class MileagePlugin(Persistent):
     def get_currency(self):
         # the currency attribute was added at one point, so we have to
         # check if its there and set based on default if not
-        if not hasattr("currency"):
+        if not hasattr(self, "currency"):
             self.currency = self.get_default_curreny()
         return self.currency
         
@@ -233,14 +234,14 @@ class MileageConfigDialog(object):
                 self.plugin.distance_multiplier = \
                     Decimal(self.distance_multiple_entry.get_text())
             except InvalidOperation: pass
+            transaction.get().commit()
         self.dialog1.destroy()
     
     def set_currency(self, currency):
-        #self.currency_entry.set_text(currency)
-        pass
+        self.currency_entry.set_text(currency)
 
     def get_currency(self):
-        return self.plugin.get_currency()
+        return self.currency_entry.get_text()
 
     def handle_account_fetch(self, setter):
         account_spec, account_str = self.backend_account_fetch(
