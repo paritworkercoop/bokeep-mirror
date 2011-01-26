@@ -106,6 +106,7 @@ class trustor_management(GladeWindow):
             'report_button',
             'trust_liability_account_label',
             'cash_account_label',
+            'currency_text_entry',
             ]
 
         handlers = [
@@ -118,6 +119,7 @@ class trustor_management(GladeWindow):
             'on_report_button_clicked',
             'on_select_trust_liability_clicked',
             'on_select_cash_account_clicked',
+            'currency_text_entry_changed'
             ]
 
         top_window = 'TrustManagement'
@@ -217,8 +219,8 @@ class trustor_management(GladeWindow):
             self.trust_module.set_cash_account )
         
     def currency_text_entry_changed(self, *args):
-        pass
-        # self.trust_module.currency = self.currency_text_entry.get_text()
-
+        self.trust_module.currency = \
+            self.widgets['currency_text_entry'].get_text()
+        transaction.get().commit()
 
     
