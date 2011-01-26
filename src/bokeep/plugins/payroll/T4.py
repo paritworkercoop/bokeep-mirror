@@ -1,4 +1,21 @@
-#!/usr/bin/env python
+# Copyright (C)  2008 ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+#
+# This file is part of Bo-Keep.
+#
+# Bo-Keep is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Author: Mark Jenkins <mark@parit.ca>
 
 from pyspec_xml import \
      generate_xml, XMLElement, NEW_VISIBLE_CLASS, \
@@ -69,70 +86,3 @@ T4.setup_element_class_specs(
     T4, element_parents=(Return,),
     optional_sub_element_classes=(T4Slip, T4Summary) )
 
-def main():
-    from sys import stdout
-
-    generate_xml( stdout, Submission((
-        Return( (
-        T4( (
-        T4Slip(
-        (),
-        snm="Jenkins",
-        gvn_nm="Mark",
-        addr_l1_txt="571 Alfred Ave",
-        city_nm="Winnipeg",
-        prov_cd=PROVINCE_MANITOBA,
-        cntry_cd=COUNTRY_CANADA,
-        pstl_cd="R2W1Y5",
-        sin="000000000",
-        bn="851050526RP0001",
-        ei_xmpt_cd="0",
-        cpp_qpp_xmpt_cd="0",
-        rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
-        empt_prov_cd=PROVINCE_MANITOBA,
-        empt_incamt="43",
-        cpp_cntrb_amt="2",
-        empe_eip_amt="3",
-        itx_ddct_amt="5"
-        ),
-
-        T4Summary(
-        (),
-        bn="851050526RP0001",
-        l1_nm="PARIT WORKER CO-OPERATIVE, LTD",
-        addr_l1_txt="571 Alfred Ave",
-        cty_nm="Winnipeg",
-        prov_cd=PROVINCE_MANITOBA,
-        cntry_cd=COUNTRY_CANADA,
-        pstl_cd="R2W1Y5",
-        cntc_nm="Mark Jenkins",
-        cntc_area_cd="204",
-        cntc_phn_nbr="772-5158",
-        tx_yr="2007",
-        slp_cnt="6",
-        pprtr_1_sin="0000000",
-        rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
-        tot_empt_incamt="34",
-        tot_empe_cpp_amt="3",
-        tot_empe_eip_amt="2",
-        tot_itx_ddct_amt="0",
-        tot_empr_cpp_amt="3",
-        tot_empr_eip_amt="3"
-        ), # end T4Summary
-        ) ), # end T4
-        ) ), # end Return
-        ),
-        sbmt_ref_id="blah", rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
-        trnmtr_nbr="MM555555",
-        trnmtr_tcd=TRANS_CODE_SELF_SUBMIT, summ_cnt="1",
-        lang_cd=LANG_CODE_ENGLISH,
-        l1_nm="PARIT WORKER CO-OPERATIVE, LTD",
-        addr_l1_txt="71 Parker Rd.",
-        cty_nm="Winnipeg", prov_cd=PROVINCE_MANITOBA,
-        cntry_cd=COUNTRY_CANADA, pstl_cd="R2W1Y5",
-        cntc_nm="Mark Jenkins", cntc_area_cd="204",
-        cntc_phn_nbr="772-5158", cntc_email_area="mark@parit.ca"
-        ))
-
-if __name__ == "__main__":
-    main()

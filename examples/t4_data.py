@@ -63,3 +63,5 @@ submission_attributes = dict(
     cntc_nm="Mark Jenkins", cntc_area_cd="204",
     cntc_phn_nbr="772-5158", cntc_email_area="transparency@parit.ca"
 )
+
+year = 2009

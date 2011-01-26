@@ -1,16 +1,33 @@
-#!/usr/bin/env python
+# Copyright (C)  2008-2011 ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+#
+# This file is part of Bo-Keep.
+#
+# Bo-Keep is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Author: Mark Jenkins <mark@parit.ca>
 
 from datetime import date
+from decimal import Decimal
 
 from T4 import \
      Submission, generate_xml, T4, Return, T4Slip, T4Summary
 
-from cdnpayroll.paystub_line import PaystubIncomeLine
-from cdnpayroll.cpp import \
-    PaystubCPPDeductionLine, PaystubCPPEmployerContributionLine
-from cdnpayroll.ei import \
-    PaystubEIDeductionLine, PaystubEIEmployerContributionLine
-from cdnpayroll.income_tax import PaystubIncomeTaxDeductionLine
+from bokeep.plugins.payroll.payroll import \
+    PaystubIncomeLine, PaystubCPPDeductionLine, \
+    PaystubCPPEmployerContributionLine, \
+    PaystubEIDeductionLine, PaystubEIEmployerContributionLine, \
+    PaystubIncomeTaxDeductionLine
 
 def DerivedT4Summary(t4s, **kargs):
     NUM_TOTS = 4
@@ -64,12 +81,17 @@ def generate_t4_for_employee(employee, year, extra_attributes):
             employee, PaystubIncomeLine),
         **extra_attributes )
 
+def zero_income(t4):
+    if Decimal(t4.init_args['empt_incamt']) == Decimal(0):
+        assert( 'itx_ddct_amt' not in t4.init_args )
+        assert( 'cpp_cntrb_amt' not in t4.init_args )
+        assert( 'empe_eip_amt' not in t4.init_args )
+        return True
+    return False
+
 def generate_t4s(
-    t4_file_name, year, book, extra_attributes_per_employee,
+    t4_file_name, year, payroll_module, extra_attributes_per_employee,
     summary_attributes, submission_attributes ):
-
-    payroll_module = book.get_module('bokeep.plugins.payroll')
-
 
     xml_output_file = file(t4_file_name, 'w')
 
@@ -79,6 +101,10 @@ def generate_t4s(
         for employee_name, employee in
         payroll_module.get_employees().iteritems()
         ]
+
+    t4parts = [ t4
+                for t4 in t4parts
+                if not zero_income(t4) ]
 
     start_of_year, end_of_year = get_year_boundaries(year)
 
@@ -91,7 +117,7 @@ def generate_t4s(
     t4summary = DerivedT4Summary(
         t4parts,
         tx_yr=str(year),
-        slp_cnt=str(len(extra_attributes_per_employee)),
+        slp_cnt=str(len(t4parts)),
         tot_empr_eip_amt=total_up_employer_contributions(
             PaystubEIEmployerContributionLine),
         tot_empr_cpp_amt=total_up_employer_contributions(
