@@ -121,10 +121,9 @@ class trustor_management(object):
             self.refresh_trustor_list()
 
     def on_zoom_button_clicked(self, *args):
-        trustor = self.trust_module.get_trustor(self.current_name)
-        trans = trustor_transactions(trustor)
-        trans.show()
-#        print 'zoom button clicked'
+        if self.current_name != None:
+            trustor = self.trust_module.get_trustor(self.current_name)
+            trans = trustor_transactions(trustor, self.top_window)
 
     def on_save_button_clicked(self, *args):
         if self.current_name == None:
@@ -168,12 +167,18 @@ class trustor_management(object):
         report_file.close()
 
     def on_report_button_clicked(self, *args):
-        filesel = gtk.FileSelection(title="Choose report file and location")
-        filesel.run()        
-        filename = filesel.get_filename()
-        filesel.hide()
-        self.generate_balance_report(filename)
-
+        fcd = gtk.FileChooserDialog(
+            "Choose report file and location",
+            None,
+            gtk.FILE_CHOOSER_ACTION_SAVE,
+            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+             gtk.STOCK_SAVE, gtk.RESPONSE_OK) )
+        fcd.set_modal(True)
+        result = fcd.run()
+        file_path = fcd.get_filename()
+        fcd.destroy()
+        if result == gtk.RESPONSE_OK and file_path != None:
+            self.generate_balance_report(file_path)
 
     def handle_account_fetch(self, label, setter):
         account_spec, account_str = self.backend_account_fetch(

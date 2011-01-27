@@ -75,7 +75,6 @@
                   <widget class="GtkButton" id="zoom_button">
                     <property name="label">gtk-zoom-in</property>
                     <property name="visible">True</property>
-                    <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
                     <property name="use_stock">True</property>
@@ -177,7 +176,6 @@
               <widget class="GtkButton" id="report_button">
                 <property name="label" translatable="yes">Export Balance Report</property>
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_underline">True</property>

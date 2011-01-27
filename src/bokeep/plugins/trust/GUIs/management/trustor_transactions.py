@@ -24,6 +24,7 @@ from bokeep.gui.gladesupport.glade_util import \
     do_OldGladeWindowStyleConnect
 
 from gtk import ListStore, TreeViewColumn, CellRendererText
+import gtk
 from bokeep.plugins.trust import \
     TrustMoneyInTransaction, TrustMoneyOutTransaction
 
@@ -32,12 +33,15 @@ from datetime import datetime
 from os.path import abspath, dirname, join, exists
 
 class trustor_transactions(object):
-    def __init__(self, trustor):
+    def __init__(self, trustor, parent_window):
 
         self.trustor = trustor
 
         self.init()
         self.extended_init()
+        if parent_window != None:
+            self.top_window.set_transient_for(parent_window)
+            self.top_window.set_modal(True)
 
     def construct_filename(self, filename):
         import trustor_management as trust_module
@@ -91,20 +95,18 @@ class trustor_transactions(object):
         report_file.close()
 
     def on_report_button_clicked(self, *args):
-        filesel = gtk.FileSelection(title="Choose report file and location")
-        filesel.run()        
-        filename = filesel.get_filename()
-        filesel.hide()
-        self.generate_transaction_report(filename)
+        fcd = gtk.FileChooserDialog(
+            "Choose report file and location",
+            None,
+            gtk.FILE_CHOOSER_ACTION_SAVE,
+            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+             gtk.STOCK_SAVE, gtk.RESPONSE_OK) )
+        fcd.set_modal(True)
+        result = fcd.run()
+        file_path = fcd.get_filename()
+        fcd.destroy()
+        if result == gtk.RESPONSE_OK and file_path != None:
+            self.generate_transaction_report(file_path)
+            
 
 
-    
-def main(argv):
-
-    w = trustor_transactions()
-    w.show()
-    gtk.main()
-
-
-if __name__ == '__main__':
-    main(sys.argv)
