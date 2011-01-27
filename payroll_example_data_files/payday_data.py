@@ -1,3 +1,10 @@
+# Technically this file has python "code", but the intent is to just be
+# payday data you can load and use with the payroll plugin
+#
+# Unlimited redistribution and modification of this file is permitted
+# Original author: ParIT Worker Co-operative <paritinfo@parit.ca>
+# You may remove this notice from this file.
+
 from datetime import date
 
 paydate = date(2009, 01, 20)

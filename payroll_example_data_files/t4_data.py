@@ -1,3 +1,10 @@
+# Technically this file has python "code", but the intent is to just be
+# data for end of year T4s you can load and use with the payroll plugin
+#
+# Unlimited redistribution and modification of this file is permitted
+# Original author: ParIT Worker Co-operative <paritinfo@parit.ca>
+# You may remove this notice from this file.
+
 from bokeep.plugins.payroll.T619 import PROVINCE_MANITOBA, COUNTRY_CANADA
 from bokeep.plugins.payroll.T4 import \
      REPORT_TYPE_CODE_ORIGINAL, TRANS_CODE_SELF_SUBMIT, LANG_CODE_ENGLISH
@@ -9,31 +16,32 @@ extra_attributes_per_employee = {
         sin="000000000",
         addr_l1_txt='12 Nobody Strat',
         pstl_cd='R2W1Y5',
+        cty_nm="Winnipeg",
+        prov_cd=PROVINCE_MANITOBA,
+        cntry_cd=COUNTRY_CANADA,
+        bn="000000000RP0001",
+        ei_xmpt_cd="0",
+        cpp_qpp_xmpt_cd="0",
+        rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
+        empt_prov_cd=PROVINCE_MANITOBA
         ),
+    
     'Joe Hill': dict(
         snm="Hill",
         gvn_nm="Joe",        
         sin="000000000",
         addr_l1_txt='35 Go Away ave',
         pstl_cd='R2W1Y5',
+        cty_nm="Winnipeg",
+        prov_cd=PROVINCE_MANITOBA,
+        cntry_cd=COUNTRY_CANADA,
+        bn="000000000RP0001",
+        ei_xmpt_cd="0",
+        cpp_qpp_xmpt_cd="0",
+        rpt_tcd=REPORT_TYPE_CODE_ORIGINAL,
+        empt_prov_cd=PROVINCE_MANITOBA
         )
     }
-
-# I'm lazy, these attributes are common between these employess..
-automatics =  (
-    ("cty_nm", "Winnipeg"),
-    ("prov_cd", PROVINCE_MANITOBA),
-    ("cntry_cd", COUNTRY_CANADA),
-    ("bn", "000000000RP0001"),
-    ("ei_xmpt_cd", "0"),
-    ("cpp_qpp_xmpt_cd", "0"),
-    ("rpt_tcd", REPORT_TYPE_CODE_ORIGINAL),
-    ("empt_prov_cd", PROVINCE_MANITOBA)
-    )
-for emp in extra_attributes_per_employee.itervalues():
-    for (key, value) in automatics:
-        emp[key] = value
-    
 
 summary_attributes = dict(
     bn="000000000RP0001",

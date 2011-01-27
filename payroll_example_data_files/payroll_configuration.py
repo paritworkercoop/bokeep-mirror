@@ -1,3 +1,10 @@
+# Technically this file has python "code", but the intent is to just be
+# configuration data you can load and use with the payroll plugin
+#
+# Unlimited redistribution and modification of this file is permitted
+# Original author: ParIT Worker Co-operative <paritinfo@parit.ca>
+# You may remove this notice from this file.
+
 from bokeep.plugins.payroll.payroll import \
     Paystub, PaystubIncomeLine, PaystubCPPDeductionLine, \
     PaystubEIDeductionLine, PaystubCPPDeductionLine, \
