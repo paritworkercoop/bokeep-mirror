@@ -1,4 +1,4 @@
-# vacation_pay.py CPP deductions calculations for Canada
+# vacation_pay.py
 # Copyright (C) 2006-2010 ParIT Worker Co-operative <paritinfo@parit.ca>
 # 
 # This program is free software; you can redistribute it and/or modify
