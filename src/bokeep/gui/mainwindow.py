@@ -453,10 +453,28 @@ class MainWindow(object):
         ab.set_modal(True)
         ab.set_name("Bo-Keep")
         ab.set_version("1.0")
-        ab.set_copyright("ParIT Worker Co-operative, Ltd. 2010")
+        ab.set_copyright("ParIT Worker Co-operative, Ltd. 2006-2011")
         ab.set_comments(
-            "Bo-Keep helps you keep your books so you don't get lost")
-        ab.set_license("GNU General Public License Version 3")
+            """Bo-Keep helps you keep your books so you don't get lost.
+
+Developed with grant funding from:
+ - Assiniboine Credit Union <http://assiniboine.mb.ca>
+ - Legal Aid Manitoba <http://www.legalaid.mb.ca>
+""")
+        ab.set_license(
+"""Bo-Keep is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+""")
         ab.set_authors(("Mark Jenkins <mark@parit.ca>",
                         "Jamie Campbell <jamie@parit.ca>"))
         ab.set_artists(("David Henry <david@parit.ca>",))
