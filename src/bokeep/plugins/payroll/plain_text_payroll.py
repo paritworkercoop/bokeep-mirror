@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+# Author: Jamie Campbell <jamie@parit.ca>
 
 # Python library
 from sys import argv

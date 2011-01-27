@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+# Author: Jamie Campbell <jamie@parit.ca>
 # Author: Mark Jenkins <mark@parit.ca>
-#!/usr/bin/env python
+
 
 import sys
 
