@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 from bokeep.book_transaction import Transaction
 from bokeep.prototype_plugin import PrototypePlugin
 

@@ -17,6 +17,7 @@
 #
 # Author: Jamie Campbell <jamie@parit.ca>
 # Author: Mark Jenkins <mark@parit.ca>
+
 from decimal import Decimal
 from datetime import datetime
 from bokeep.book_transaction import \

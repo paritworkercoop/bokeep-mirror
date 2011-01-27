@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+
 from gtk.glade import XML, get_widget_name
 
 def load_glade_file_get_widgets_and_connect_signals(

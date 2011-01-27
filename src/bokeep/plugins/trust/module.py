@@ -17,6 +17,7 @@
 #
 # Author: Jamie Campbell <jamie@parit.ca>
 # Author: Mark Jenkins <mark@parit.ca>
+
 from persistent import Persistent
 from decimal import Decimal
 
