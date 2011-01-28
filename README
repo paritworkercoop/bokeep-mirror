@@ -2,19 +2,15 @@ Bo-Keep helps you keep your books so you don't get lost.
 
 It provides to users simple custom entry interfaces for an accounting system to speed up data entry and reduce errors.
 
-Particular custom interfaces are provided by Bo-Keep plugins. Support for working with different accounting programs is provided by backend plugins. You can learn more about developing Bo-Keep plugins and backend plugins by reading README_plugin_api.txt .
+Particular custom interfaces are provided by Bo-Keep plugins. Support for working with different accounting programs is provided by backend plugins. You can learn more about developing Bo-Keep plugins by reading README_plugin_api.txt .
 
-Bo-Keep is written in python and has been developed and tested on GNU/Linux systems. Reasonable attempts have been made at portability, so it will probably work elsewhere with minimal effort.
+Bo-Keep is written in python and has been developed and tested on GNU/Linux systems. Reasonable attempts have been made at portability, so it will probably work in other places where the dependencies are available with minimal effort.
 
-Bo-Keep depends on PyGTK (http://pygtk.org/) with Glade support for its user-interface and ZODB (http://www.zodb.org/) for its data storage.
+Bo-Keep depends on and requires PyGTK (http://pygtk.org/) with Glade support for its user-interface and ZODB (http://www.zodb.org/) for its data storage.
 
 Bo-Keep is most useful with a backend plugin to connect it to a real accounting program, currently only a GnuCash (http://gnucash.org) backend plugin exists, so installation of GnuCash is recommended as well. (other paragraphs in this README will assume it is installed) You'll need GnuCash 2.4.0 or later with python bindings enabled.
 
-Please note that versions of GnuCash currently available at http://gnucash.org are licensed under GNU General Public License version 2 (with allowable upgrade to 3 only) for some files and 2 or later for other files. To redistribute a copy of GnuCash and BoKeep together you need to update GnuCash files to version 3. All other BoKeep dependencies are GPL v3 compatible.
-
 Installation instructions for PyGTK, ZODB, Bo-Keep, and GnuCash under GNU/Linux are provided in README_install_GNU_slash_Linux.txt . (an installed python interpreter is assumed)
-
-Bo-Keep is licensed under the GNU General Public License version 3, see COPYING.
 
 Here's a post-installation run-through for GNU/Linux:
 
@@ -49,7 +45,7 @@ Bo-keep plugins and backend plugins are installed on a per book basis. Select on
 
  bokeep.plugins.trust    - Track amounts held in trust for others
  bokeep.plugins.mileage  - Establish a $/km or $/mile rate and enter in your distances traveled
- bokeep.plugins.payroll  - Support for running Manitoba, Canada payroll through a specicial configuration and data file format
+ bokeep.plugins.payroll  - Support for running a Manitoba, Canada payroll through a special configuration and data file format
 
 You can learn more about these plugins in thier respective READMEs:
  README_trust_plugin.txt
@@ -59,9 +55,41 @@ You can learn more about these plugins in thier respective READMEs:
 There is only one backend plugin per book. You can just edit python package name at the bottom of the configuration dialog. BoKeep ships with
  bokeep.backend_plugins.serialfile  - Appends text descriptions of actions linearly to a text file
  bokeep.backend_plugins.null  - Does nothing
- bokeep.backend_plugins.gnucash  - Works with GnuCash version 2.4.0 or later via with the python-bindings feature installed.
+ bokeep.backend_plugins.gnucash_backend  - Works with GnuCash version 2.4.0 or later via with the python-bindings feature installed.
 
+You can choose which book you're editting with the Books pulldown menu.
 
+If you chose a backend other than the default null, you can configure it via Book->Configure Backend . In the case of gnucash_backend and serialfile, the configuration consists of a file->open dialog. If you already have Bo-Keep transactions in your book they will be copied into the backend when you pick a file with this dialog. Please note that the GnuCash backend has only be tested with and works only with XML GnuCash files.
+
+You can create a new Bo-Keep transaction with the New button. A transaction type can be selected from the type pulldown menu. These come from the Bo-Keep plugins you have installed, the more plugins installed the more types you'll have to choose from. It may be worthwile to install all three plugins shipped with Bo-Keep to see how the user-interface changes at the bottom of your bo-keep window changes in place -- this might be the coolest thing about Bo-Keep's design right now.
+
+Many plugins will only be useful if themselved configured. Choose the Plugin->Configure plugin menu item. The plugin configuration dialog you'll get from this will be derrived from the current transaction type.
+
+You don't need to worry about saving, changes you make to Bo-Keep transactions are saved nearly instantly.
+
+The backend plugins used by Bo-Keep update thier respective backends when you close Bo-Keep or when you select the Book->Flush Backend menu item. With some backends this can be a slow operation, be patient.
+
+Between your transaction editor and the type pull-down menu you may see a red alert light and status information regarding the current transaction and the backend being out of sync (dirty). Except for new transactions for which there hasn't been a flush attempt yet, this is an indication of a problem. You probably need to configure either the backend plugin and/or the plugin to address the problem. You can check to see if this has worked by using the Book->Flush Backend menu item.
+
+Check out the appearance of your Bo-Keep transactions in your accounting backend. The trust and mileage plugins don't really provide much of a wow factor for this, as they only result in single line transactions. Even if you're not in Manitoba, Canada, the payroll plugin is worth giving a try just for the wow factor, data entry can be as simple as putting in worker's hours, and you instantly get a full out payroll transaction with the three types of deductions (cpp, ei, income tax), the two employer contributions (ei, cpp), and vacation pay.
+
+See README_payroll_plugin.txt for more.
+
+BoKeep was developed by ParIT Worker Co-operative (http://parit.ca/) with grant funding from Assiniboine Credit Union (http://assiniboine.mb.ca) and Legal Aid Manitoba (http://www.legalaid.mb.ca) .
+
+It is used in-production by ParIT for its payroll and by a ParIT customer, so you know we're eating our own dog food. Some of this code (and our work on the GnuCash python bindings) goes all the way back to late 2006.
+
+It has been free software from the begining, with our 1.0 release are endevoring to build a global development and user community around it. Participation, including patches, feature requests, and bug reports are welcome on our Bo-Keep development mailing list.
+http://parit.ca/mailman/listinfo/bokeep-devel
+
+Our subversion repository is available with read-only access at
+http://svn.parit.ca/bo-keep/
+
+We are applying to host our project on Savannah http://savannah.nongnu.org/ where we will eventually host our repository, mailing list, bug tracker, and a Bo-Keep website. Once there, we will be generous with commit access.
+
+Professional support, plugin development, and customization services are available from ParIT, direct from the experienced original developers at competitive prices. All paid Bo-Keep work we do will be contributed back to the original codebase. We will gladly list any other providers of support services in this file that are in ethical good standing with thier community and workers.
+
+To learn more about our intended relationship between copyright and contributions, please read COPYRIGHT_AND_CONTRIBUTIONS.
 
 Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 This file is part of Bo-Keep.

@@ -1,0 +1,32 @@
+Bo-Keep is licensed under the GNU General Public License version 3, see COPYING.
+
+Please note that versions of GnuCash currently available at http://gnucash.org are licensed under GNU General Public License version 2 and at your option version 3 (only) for some files and version 2 or at your option any later version for other files. To be able to legally redistribute a copy of GnuCash and BoKeep together you need to update GnuCash files to version 3. All other BoKeep dependencies are GPL v3 compatible.
+
+ParIT will be preparing a patch to GnuCash shortly to provide convienient access under GPL v3.
+
+ParIT's members are commited free software activists who would be hacking on free software even if we didn't have jobs doing so. Our articles of incorporation forbid our company from doing proprietary work, so you can trust that we won't be releasing proprietary versions and can feel comfortable assigning copyright on contributions to us should you wish to.
+
+You may also opt to assign copyright on contributions to help us be better positioned to enforce the license and to ensure your code is included under any enforcement action.
+
+That being said, we do not require copyright assignments on contributions. All contributions must be licensed under terms compatible with GPL v3. All contributions to the BoKeep core or to plugins that we deem strategically important to our business must be made under GPLv3 or at your option any later version or under a non-copyleft license unlikely to conflict with future versions of the GNU GPL.
+
+Should our engagement with the community be successful and we consider the effort worth our time, we will consider assigning our copyright on Bo-Keep to a foundation / non-profit such as the Free Software Foundation or Software Freedom Conservency.
+
+Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+This file is part of Bo-Keep.
+
+Bo-Keep is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ Author: Mark Jenkins <mark@parit.ca>
+
