@@ -14,7 +14,7 @@ Installation instructions for PyGTK, ZODB, Bo-Keep, and GnuCash under GNU/Linux 
 
 Here's a post-installation run-through for GNU/Linux:
 
-After installation, it is assumed that pygtk, zodb, bokeep, and the gnucash python bindings are either installed in locations where the python interpreter will find them or specificied via PYTHONPATH . To test this is all right with the python interpreter
+After installation, it is assumed that pygtk, zodb, bokeep, and the gnucash python bindings are either installed in locations where the python interpreter will find them or specify via PYTHONPATH . To test this is all right with the python interpreter
 $ python
 >>> import gtk
 >>> import persistent
@@ -41,13 +41,13 @@ At the top you'll see the location where the bo-keep database will be kept. Note
 
 In the middle is an area for adding (accounting) books to your bokeep database. (you can use BoKeep to manage multiple books at once). Fill in the text field and click add for all of the books you'd like to keep.
 
-Bo-keep plugins and backend plugins are installed on a per book basis. Select one of your books from the "Books" list. You can add plugins by typing in the name of the python package or module (with package.package notation) that coresponds to the plugin and clicking add. Right now Bo-Keep ships with:
+Bo-keep plugins and backend plugins are installed on a per book basis. Select one of your books from the "Books" list. You can add plugins by typing in the name of the python package or module (with package.package notation) that corresponds to the plugin and clicking add. Right now Bo-Keep ships with:
 
  bokeep.plugins.trust    - Track amounts held in trust for others
  bokeep.plugins.mileage  - Establish a $/km or $/mile rate and enter in your distances traveled
  bokeep.plugins.payroll  - Support for running a Manitoba, Canada payroll through a special configuration and data file format
 
-You can learn more about these plugins in thier respective READMEs:
+You can learn more about these plugins in their respective READMEs:
  README_trust_plugin.txt
  README_mileage_plugin.txt
  README_payroll_plugin.txt
@@ -57,17 +57,17 @@ There is only one backend plugin per book. You can just edit python package name
  bokeep.backend_plugins.null  - Does nothing
  bokeep.backend_plugins.gnucash_backend  - Works with GnuCash version 2.4.0 or later via with the python-bindings feature installed.
 
-You can choose which book you're editting with the Books pulldown menu.
+You can choose which book you're editing with the Books pull-down menu.
 
 If you chose a backend other than the default null, you can configure it via Book->Configure Backend . In the case of gnucash_backend and serialfile, the configuration consists of a file->open dialog. If you already have Bo-Keep transactions in your book they will be copied into the backend when you pick a file with this dialog. Please note that the GnuCash backend has only be tested with and works only with XML GnuCash files.
 
-You can create a new Bo-Keep transaction with the New button. A transaction type can be selected from the type pulldown menu. These come from the Bo-Keep plugins you have installed, the more plugins installed the more types you'll have to choose from. It may be worthwile to install all three plugins shipped with Bo-Keep to see how the user-interface changes at the bottom of your bo-keep window changes in place -- this might be the coolest thing about Bo-Keep's design right now.
+You can create a new Bo-Keep transaction with the New button. A transaction type can be selected from the type pull-down menu. These come from the Bo-Keep plugins you have installed, the more plugins installed the more types you'll have to choose from. It may be worthwhile to install all three plugins shipped with Bo-Keep to see how the user-interface changes at the bottom of your bo-keep window changes in place -- this might be the coolest thing about Bo-Keep's design right now.
 
-Many plugins will only be useful if themselved configured. Choose the Plugin->Configure plugin menu item. The plugin configuration dialog you'll get from this will be derrived from the current transaction type.
+Many plugins will only be useful if themselves configured. Choose the Plugin->Configure plugin menu item. The plugin configuration dialog you'll get from this will be derived from the current transaction type.
 
 You don't need to worry about saving, changes you make to Bo-Keep transactions are saved nearly instantly.
 
-The backend plugins used by Bo-Keep update thier respective backends when you close Bo-Keep or when you select the Book->Flush Backend menu item. With some backends this can be a slow operation, be patient.
+The backend plugins used by Bo-Keep update their respective backends when you close Bo-Keep or when you select the Book->Flush Backend menu item. With some backends this can be a slow operation, be patient.
 
 Between your transaction editor and the type pull-down menu you may see a red alert light and status information regarding the current transaction and the backend being out of sync (dirty). Except for new transactions for which there hasn't been a flush attempt yet, this is an indication of a problem. You probably need to configure either the backend plugin and/or the plugin to address the problem. You can check to see if this has worked by using the Book->Flush Backend menu item.
 
@@ -79,7 +79,7 @@ BoKeep was developed by ParIT Worker Co-operative (http://parit.ca/) with grant 
 
 It is used in-production by ParIT for its payroll and by a ParIT customer, so you know we're eating our own dog food. Some of this code (and our work on the GnuCash python bindings) goes all the way back to late 2006.
 
-It has been free software from the begining, with our 1.0 release are endevoring to build a global development and user community around it. Participation, including patches, feature requests, and bug reports are welcome on our Bo-Keep development mailing list.
+It has been free software from the beginning, with our 1.0 release are endeavoring to build a global development and user community around it. Participation, including patches, feature requests, and bug reports are welcome on our Bo-Keep development mailing list.
 http://parit.ca/mailman/listinfo/bokeep-devel
 
 Our subversion repository is available with read-only access at
@@ -87,7 +87,7 @@ http://svn.parit.ca/bo-keep/
 
 We are applying to host our project on Savannah http://savannah.nongnu.org/ where we will eventually host our repository, mailing list, bug tracker, and a Bo-Keep website. Once there, we will be generous with commit access.
 
-Professional support, plugin development, and customization services are available from ParIT, direct from the experienced original developers at competitive prices. All paid Bo-Keep work we do will be contributed back to the original codebase. We will gladly list any other providers of support services in this file that are in ethical good standing with thier community and workers.
+Professional support, plugin development, and customization services are available from ParIT, direct from the experienced original developers at competitive prices. All paid Bo-Keep work we do will be contributed back to the original codebase. We will gladly list any other providers of support services in this file that are in ethical good standing with their community and workers.
 
 To learn more about our intended relationship between copyright and contributions, please read COPYRIGHT_AND_CONTRIBUTIONS.
 

@@ -8,7 +8,7 @@ Speaking of pesos (MXN), you'll need to enter a three letter ISO 4217 (http://en
 
 The current default, CAD is Canadian Dollar (because the original developers are loonie!). For anyone too lazy to lookup the code for US Dollar or Euro, the codes are USD and EUR. (I want a toonie for every end-user who claims to have read this doc and still asks by email or chat about one of those two codes)
 
-Any accounting backend will probably need you to select an expense (debit) and credit account as well. The GnuCash backend brings up a dialog where you have to enter in the account tree path with the parts colon separated like so Expenses:Car . The resulting accounting entry is two lines, a debit on the expense (debit) account [it can actually be any account type] equal to the distance times the multiplier, and a credit (same amount) on the credit acccount.
+Any accounting backend will probably need you to select an expense (debit) and credit account as well. The GnuCash backend brings up a dialog where you have to enter in the account tree path with the parts colon separated like so Expenses:Car . The resulting accounting entry is two lines, a debit on the expense (debit) account [it can actually be any account type] equal to the distance times the multiplier, and a credit (same amount) on the credit account.
 
 With the GnuCash backend, the currency selected must match the currency of the two accounts.
 
