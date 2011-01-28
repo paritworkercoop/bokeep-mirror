@@ -21,6 +21,12 @@ Debian based distributions also tend to have a package for ZODB 3
 # aptitude install python-zodb
 
 If not, it is easily installable via PyPi with easy_install
+http://pypi.python.org/pypi/setuptools
+
+Debian based distros will have
+# aptitude install python-setuptools
+
+
 # easy_install ZODB3
 (ends up in /usr/)
 or
