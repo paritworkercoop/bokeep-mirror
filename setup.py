@@ -63,14 +63,14 @@ class TestCommand(Command):
         t = TextTestRunner(verbosity = 1)
         t.run(tests)
 
-# if you're thinking of changing name='Bo-Keep' to name=PACKAGE_NAME, think
-# twice, what's going to happen when you do a setup.py install on top of
-# an old installation?
-setup(name='Bo-Keep',
+setup(name=PACKAGE_NAME,
       version='1.0.0',
       cmdclass = { 'test': TestCommand },
       scripts=['bo-keep', 
                ],
+      url="http://parit.ca/",
+      maintainer="Mark Jenkins",
+      maintainer_email="mark@parit.ca",
       packages=[PACKAGE_NAME,
                 PACKAGE_NAME + '.backend_plugins',
                 PACKAGE_NAME + '.gui',
