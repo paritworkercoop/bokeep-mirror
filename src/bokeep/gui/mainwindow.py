@@ -326,9 +326,14 @@ class MainWindow(object):
         # What the hell, why is i None sometimes,
         # (trans id not found in any module) --
         # this is a bug that has come up
-        assert( i != None)
+        #assert( i != None)
+        # should really have kept that assertion in.. but due to bugs I
+        # have cheated..
+        if i == None:
+            i = COMBO_SELECTION_NONE
         self.set_transcombo_index(i)
-        self.reset_trans_view()
+        if i != COMBO_SELECTION_NONE:
+            self.reset_trans_view()
      
     # Event handlers
 

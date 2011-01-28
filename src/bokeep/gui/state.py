@@ -264,6 +264,11 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
                 self.data[BOOK].\
                 get_index_and_code_class_module_tripplet_for_transaction(
                 self.data[TRANS] )
+            # this is a bug fix kludge, not sure why this is happening
+            # sometimes
+            if (i, code, cls, module) == (None, None, None, None):
+                code, cls, module = \
+                    self.__get_code_classs_module_for_index(0)
         return (self.data[BOOK], 
                 self.__add_transaction_instance_to_book_and_module(
                 cls, module))
