@@ -1,0 +1,82 @@
+Bo-Keep helps you keep your books so you don't get lost.
+
+It provides to users simple custom entry interfaces for an accounting system to speed up data entry and reduce errors.
+
+Particular custom interfaces are provided by Bo-Keep plugins. Support for working with different accounting programs is provided by backend plugins. You can learn more about developing Bo-Keep plugins and backend plugins by reading README_plugin_api.txt .
+
+Bo-Keep is written in python and has been developed and tested on GNU/Linux systems. Reasonable attempts have been made at portability, so it will probably work elsewhere with minimal effort.
+
+Bo-Keep depends on PyGTK (http://pygtk.org/) with Glade support for its user-interface and ZODB (http://www.zodb.org/) for its data storage.
+
+Bo-Keep is most useful with a backend plugin to connect it to a real accounting program, currently only a GnuCash (http://gnucash.org) backend plugin exists, so installation of GnuCash is recommended as well. (other paragraphs in this README will assume it is installed) You'll need GnuCash 2.4.0 or later with python bindings enabled.
+
+Please note that versions of GnuCash currently available at http://gnucash.org are licensed under GNU General Public License version 2 (with allowable upgrade to 3 only) for some files and 2 or later for other files. To redistribute a copy of GnuCash and BoKeep together you need to update GnuCash files to version 3. All other BoKeep dependencies are GPL v3 compatible.
+
+Installation instructions for PyGTK, ZODB, Bo-Keep, and GnuCash under GNU/Linux are provided in README_install_GNU_slash_Linux.txt . (an installed python interpreter is assumed)
+
+Bo-Keep is licensed under the GNU General Public License version 3, see COPYING.
+
+Here's a post-installation run-through for GNU/Linux:
+
+After installation, it is assumed that pygtk, zodb, bokeep, and the gnucash python bindings are either installed in locations where the python interpreter will find them or specificied via PYTHONPATH . To test this is all right with the python interpreter
+$ python
+>>> import gtk
+>>> import persistent
+>>> import transaction
+>>> import gnucash
+>>> import bokeep
+
+The main executable bo-keep should either be available via the PATH environmental variable or the full path to it known.
+(test availability via PATH by running $ which bo-keep )
+
+So, we run 
+
+$ bo-keep
+or
+$ /the/path/to/bo-keep
+
+You might also be able to run bo-keep via your desktop environment application launching menu, as bo-keep installs a bo-keep.desktop in /prefix/share/applications.
+
+If you haven't run it before, bo-keep will inform you that it would like to create a .bo-keep.cfg file in your home directory. You can also provide your own bo-keep configuration file by using the -c flag or by having a .bo-keep.cfg file in your current working directory.
+
+After you say yes, bo-keep will launch its configuration dialog. You can return to this dialog at anytime via the BoKeep menu in the application.
+
+At the top you'll see the location where the bo-keep database will be kept. Note this for backup purposes.
+
+In the middle is an area for adding (accounting) books to your bokeep database. (you can use BoKeep to manage multiple books at once). Fill in the text field and click add for all of the books you'd like to keep.
+
+Bo-keep plugins and backend plugins are installed on a per book basis. Select one of your books from the "Books" list. You can add plugins by typing in the name of the python package or module (with package.package notation) that coresponds to the plugin and clicking add. Right now Bo-Keep ships with:
+
+ bokeep.plugins.trust    - Track amounts held in trust for others
+ bokeep.plugins.mileage  - Establish a $/km or $/mile rate and enter in your distances traveled
+ bokeep.plugins.payroll  - Support for running Manitoba, Canada payroll through a specicial configuration and data file format
+
+You can learn more about these plugins in thier respective READMEs:
+ README_trust_plugin.txt
+ README_mileage_plugin.txt
+ README_payroll_plugin.txt
+
+There is only one backend plugin per book. You can just edit python package name at the bottom of the configuration dialog. BoKeep ships with
+ bokeep.backend_plugins.serialfile  - Appends text descriptions of actions linearly to a text file
+ bokeep.backend_plugins.null  - Does nothing
+ bokeep.backend_plugins.gnucash  - Works with GnuCash version 2.4.0 or later via with the python-bindings feature installed.
+
+
+
+Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+This file is part of Bo-Keep.
+
+Bo-Keep is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ Author: Mark Jenkins <mark@parit.ca>
