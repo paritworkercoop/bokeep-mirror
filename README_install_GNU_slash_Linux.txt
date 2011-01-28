@@ -68,6 +68,10 @@ We're make a python egg available in PyPi and provide a debian package to make t
 If you haven't installed it to /usr/ or /usr/local, python will need to find it via $PYTHONPATH
 $ export PYTHONPATH=/path/to/where/you/want/bokeep/lib/python2.x/site-packages/:$PYTHONPATH
 
+Test as follows
+$ python
+>>> import bokeep
+
 The executable binary (bo-keep) will be available in /path/to/where/you/want/bokeep/bin/
 
 Our setup.py can also run the entire 194 tests (and counting) in our test suite. (GnuCash with python bindings required)
