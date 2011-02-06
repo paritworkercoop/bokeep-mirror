@@ -71,7 +71,9 @@ And on to building the damn thing
 # tar xjf gnucash-2.4.0.tar.bz2
 # cd gnucash-2.4.0
 # ./configure \
---prefix=/opt/gnucash-2.4.0/ --enable-python-bindings
+--prefix=/opt/gnucash-2.4.0/ \
+--enable-python-bindings \
+--with-html-engine=webkit
 # make && make install
 
 To use the python bindings, you need to either install GnuCash in a
