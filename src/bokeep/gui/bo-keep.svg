@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
+
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="1320"
    height="1260"
    id="svg2"
    sodipodi:version="0.32"
-   inkscape:version="0.43"
+   inkscape:version="0.47 r22583"
    version="1.0"
-   sodipodi:docbase="/media/hdb5/parGFX/sheep"
-   sodipodi:docname="080807Bo-Keep01.svg">
+   sodipodi:docname="bo-keep.svg">
+  <title
+     id="title2815">Bo-Keep Logo</title>
   <defs
-     id="defs4" />
+     id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 630 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="1320 : 630 : 1"
+       inkscape:persp3d-origin="660 : 420 : 1"
+       id="perspective9" />
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -26,14 +36,16 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.39920635"
-     inkscape:cx="660"
+     inkscape:cx="88.8668"
      inkscape:cy="650.94998"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      inkscape:window-width="1014"
      inkscape:window-height="689"
      inkscape:window-x="0"
-     inkscape:window-y="25" />
+     inkscape:window-y="25"
+     showgrid="false"
+     inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -42,6 +54,31 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Bo-Keep Logo</dc:title>
+        <cc:license
+           rdf:resource="http://www.gnu.org/licenses/gpl.html" />
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>This logo is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:publisher>
+          <cc:Agent>
+            <dc:title>ParIT Worker Co-operative</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>ParIT Worker Co-operative</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>David Henry &lt;work@davidhenry.ca&gt;</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+        <dc:identifier>http://parit.ca</dc:identifier>
       </cc:Work>
     </rdf:RDF>
   </metadata>
