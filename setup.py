@@ -64,7 +64,7 @@ class TestCommand(Command):
         t.run(tests)
 
 setup(name=PACKAGE_NAME,
-      version='1.0.0',
+      version='1.0.1',
       cmdclass = { 'test': TestCommand },
       scripts=['bo-keep', 
                ],
