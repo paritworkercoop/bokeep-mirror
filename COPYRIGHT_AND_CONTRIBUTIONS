@@ -1,3 +1,12 @@
+Bo-Keep is being developed as a public project on GNU Savannah.
+https://savannah.nongnu.org/projects/bokeep/
+
+Development mailing list
+http://lists.nongnu.org/mailman/listinfo/bokeep-devel
+
+Mercurial repository
+http://savannah.nongnu.org/hg/?group=bokeep
+
 All Bo-Keep code (right now) is licensed under the GNU General Public
 License version 3 (or at your option any later version), see
 COPYING. All contributions must be licensed under terms that are GPL3

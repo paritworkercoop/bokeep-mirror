@@ -162,29 +162,26 @@ customer, so you know we're eating our own dog food. Some of this code
 (and our work on the GnuCash python bindings) goes all the way back to
 late 2006.
 
-It has been free software from the beginning, with our 1.0 release are
-endeavoring to build a global development and user community around
-it. Participation, including patches, feature requests, and bug
-reports are welcome on our Bo-Keep development mailing list.
-http://parit.ca/mailman/listinfo/bokeep-devel
+It has been free software from the beginning, with the 1.0 release ParIT
+is endeavoring to build a global development and user community around
+it. Participation is welcome on the Bo-Keep development mailing list,
+http://lists.nongnu.org/mailman/listinfo/bokeep-devel
+and via support and patches features on the project's Savannah page:
+http://savannah.nongnu.org/projects/bokeep/
 
-Our subversion repository is available with read-only access at
-http://svn.parit.ca/bo-keep/
-
-We are applying to host our project on Savannah
-http://savannah.nongnu.org/ where we will eventually host our
-repository, mailing list, bug tracker, and a Bo-Keep website. Once
-there, we will be generous with commit access.
+Mercurial has been adopted for version control.
+http://savannah.nongnu.org/hg/?group=bokeep
 
 Professional support, plugin development, and customization services
 are available from ParIT, direct from the experienced original
-developers at competitive prices. All paid Bo-Keep work we do will be
-contributed back to the original codebase. We will gladly list any
+developers at competitive prices. All paid Bo-Keep work by ParIT will be
+contributed back to the original codebase. ParIT will gladly list any
 other providers of support services in this file that are in ethical
 good standing with their community and workers.
+Contract: paritinfo@parit.ca .
 
-To learn more about our intended relationship between copyright and
-contributions, please read COPYRIGHT_AND_CONTRIBUTIONS.
+To learn more about copyright and contributions, please read
+COPYRIGHT_AND_CONTRIBUTIONS.
 
 Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 This file is part of Bo-Keep.
