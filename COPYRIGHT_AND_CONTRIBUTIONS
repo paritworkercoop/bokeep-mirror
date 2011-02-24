@@ -1,53 +1,49 @@
-Bo-Keep is licensed under the GNU General Public License version 3,
-see COPYING.
+All Bo-Keep code (right now) is licensed under the GNU General Public
+License version 3 (or at your option any later version), see
+COPYING. All contributions must be licensed under terms that are GPL3
+compatible.
 
-Please note that versions of GnuCash currently available at
-http://gnucash.org are licensed under GNU General Public License
-version 2 and at your option version 3 (only) for some files and
-version 2 or at your option any later version for other files. To be
-able to legally redistribute a copy of GnuCash and BoKeep together you
-need to update GnuCash files to version 3. All other BoKeep
-dependencies are GPL v3 compatible.
+The primary contributor to Bo-Keep so far has been ParIT Worker
+Co-operative.
 
-ParIT will be preparing a patch to GnuCash shortly to provide
-convenient access under GPL v3.
+You may opt to assign copyright on contributions to ParIT, to help
+them be better positioned to enforce the license and to ensure your
+code is included under any enforcement action.
 
 ParIT's members are committed free software activists who would be
-hacking on free software even if we didn't have jobs doing so. Our
-articles of incorporation forbid our company from doing proprietary
-work, so you can trust that we won't be releasing proprietary versions
-and can feel comfortable assigning copyright on contributions to us
-should you wish to.
+hacking on free software even if they didn't have jobs doing so. Thier
+articles of incorporation forbid the company from doing proprietary
+work, so you can trust that they won't be releasing proprietary
+versions and can feel comfortable assigning copyright on contributions
+to ParIT  should you wish to.
 
-You may also opt to assign copyright on contributions to us, to help us be
-better positioned to enforce the license and to ensure your code is
-included under any enforcement action.
+That being said, copyright assignments are not required for
+contributions; but there are additional guidelines if not assigning
+copyright to ParIT.
 
-That being said, we do not require copyright assignments on
-contributions. All contributions must be licensed under terms
-compatible with GPL v3. All contributions to the BoKeep core or to
-plugins that we deem strategically important to our business must be
-made under "GPLv3 or at your option any later version" or under a
-non-copyleft license consistent with GPLv3 and unlikely to conflict with future versions of the
-GNU GPL.
+All contributions made to the Bo-Keep core (where copyright is not
+assigned) or to plugins that are deemed strategically important to the
+future of the project must be made under "GPLv3 or at your option any
+later version" or under a simple non-copyleft license consistent with
+GPLv3 and unlikely to conflict with future versions of the GNU GPL.
 
-Should our engagement with the community be successful and we consider
-the effort worth our time, we will consider assigning our copyright on
-Bo-Keep to a foundation / non-profit such as the Free Software
+Should ParIT's engagement with the community be successful and the
+effort considered worthwhile, ParIT will consider assigning copyright
+on Bo-Keep to a foundation / non-profit such as the Free Software
 Foundation or Software Freedom Conservancy.
 
-Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
-This file is part of Bo-Keep.
+Copyright (C) 2011  ParIT Worker Co-operative, Ltd
+<paritinfo@parit.ca> This file is part of Bo-Keep.
 
-Bo-Keep is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Bo-Keep is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
