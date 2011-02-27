@@ -21,30 +21,14 @@
 def get_plugin_class():
     return MemberFeePlugin
 
+from persistent.mapping import PersistentMapping
 from bokeep.prototype_plugin import PrototypePlugin 
 from persistent import Persistent
 from bokeep.book_transaction import Transaction
 
 class MemberFeePlugin(PrototypePlugin):
-    def run_configuration_interface(self, parent_window, backend_account_fetch):
-        """Instructs a plugin to run a configuration dialog
-        
-        parent_window is a gtk.Window which the configuration dialog should
-        mark as its parent to do the whole modal dialog thing right
-        
-        backend_account_fetch is a function that can be called to get an
-        account selection dialog from the active backend plugin on the current
-        book. It takes a gtk.Window as an argument so there can be adequet modal
-        window stacking, and returns of two item tuple, 
-        account_spec and account_str .
-        - account_spec is an object (of type suited to the backend) that the
-        bokeep backend will find to be
-        a suitable value for the account_spec attribute of
-        bokeep.bokeep_transaction.FinancialTransactionLine
-        - account_str is a string that can be used to represent the selected
-        account to the user
-        """
-        pass
+    def __init__(self):
+        self.transindex = PersistentMapping()
 
     def register_transaction(self, trans_id, trans):
         """Inform a plugin that a new bokeep transaction, which can be
@@ -53,7 +37,7 @@ class MemberFeePlugin(PrototypePlugin):
         trans_id - integer identifier for bokeep transaction
         trans - a bokeep.bokeep_transaction.Transaction instance
         """
-        pass
+        self.transindex[trans_id] = trans
 
     def remove_transaction(self, trans_id):
         """Inform a plugin that a bokeep transaction previously registered
@@ -61,13 +45,13 @@ class MemberFeePlugin(PrototypePlugin):
 
         trans_id - integer identifier for bokeep transaction
         """
-        pass
+        del self.transindex[trans_id]
 
     def has_transaction(self, trans_id):
         """BoKeep asks the plugin if it is taking responsibility for the
         transaction identified by trans_id
         """
-        return False
+        return trans_id in self.transindex
 
     @staticmethod
     def get_transaction_type_codes():
