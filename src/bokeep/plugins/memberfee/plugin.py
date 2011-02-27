@@ -21,13 +21,20 @@
 def get_plugin_class():
     return MemberFeePlugin
 
+from persistent.list import PersistentList
 from persistent.mapping import PersistentMapping
 from bokeep.prototype_plugin import PrototypePlugin 
 from persistent import Persistent
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
+from decimal import Decimal
 
 class FeeCollection(Transaction):
+    def __init__(self, plugin):
+        Transaction.__init__(self, plugin)
+        self.collected = Decimal(0)
+        self.periods_applied_to = PersistentList()
+
     def get_financial_transactions(self):
         """Return a generator that will provide FinancialTransaction instances
         associated with this bo-keep Transaction to be stored by a
