@@ -28,12 +28,44 @@ from persistent import Persistent
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 from decimal import Decimal
+from datetime import date
+
+def month_delta(current_date, months=1):
+    if not ( 1 <= months <= 12 ):
+        raise Exception("months must be between 1 and 12 (for now)")
+    new_month = current_date.month + months
+    new_year = current_date.year
+    if new_month > 12:
+        # should really find out how many years and get rid of assert
+        # at top
+        new_year+=1
+        new_month = ((new_month-1) % 12) + 1
+    return date(new_year, new_month, current_date.day)
 
 class FeeCollection(Transaction):
     def __init__(self, plugin):
         Transaction.__init__(self, plugin)
         self.collected = Decimal(0)
         self.periods_applied_to = PersistentList()
+
+    @staticmethod
+    def gen_spread_collected(amount, current_date,
+                             period_delta, perperiod):
+        while amount > 0:
+            value_this_period = perperiod
+            if value_this_period > amount:
+                value_this_period = amount
+            yield (current_date, value_this_period)
+            current_date  = month_delta(current_date, period_delta)
+            amount-=value_this_period
+        
+    def spread_collected(self, current_date,
+                         period_delta, perperiod, amount=None):
+        if amount == None:
+            amount = self.collected
+        self.periods_applied_to = PersistentList(
+            FeeCollection.gen_spread_collected(
+                amount, current_date, period_delta, perperiod) )
 
     def get_financial_transactions(self):
         """Return a generator that will provide FinancialTransaction instances

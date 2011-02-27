@@ -29,7 +29,8 @@ from bokeep.plugins.memberfee.plugin \
     import FeeCollection
 
 from test_bokeep_book import BoKeepWithBookSetup, TESTBOOK
-
+from decimal import Decimal
+from datetime import date
 
 MEMBERFEE_PLUGIN = 'bokeep.plugins.memberfee'
 
@@ -49,7 +50,15 @@ class MemberFeeTestCaseSetup(BoKeepWithBookSetup):
 class memberTestCase(MemberFeeTestCaseSetup):
     def testMemberAddAndGet(self):
         self.assert_( self.books.has_book(TESTBOOK) )
-        
+
+    def testSpreadAmount(self):
+        self.feetrans.collected = Decimal(40)
+        self.feetrans.spread_collected(date(2011, 1, 1), 1, Decimal(10))
+        for i,(test_date, test_value) in enumerate(
+            self.feetrans.periods_applied_to):
+            self.assertEquals(date(2011,i+1,1), test_date)
+            self.assertEquals(Decimal(10), test_value)
+                    
 if __name__ == "__main__":
     unittest.main()
 
