@@ -24,7 +24,17 @@ def get_plugin_class():
 from persistent.mapping import PersistentMapping
 from bokeep.prototype_plugin import PrototypePlugin 
 from persistent import Persistent
-from bokeep.book_transaction import Transaction
+from bokeep.book_transaction import \
+    Transaction, BoKeepTransactionNotMappableToFinancialTransaction
+
+class FeeCollection(Transaction):
+    def get_financial_transactions(self):
+        """Return a generator that will provide FinancialTransaction instances
+        associated with this bo-keep Transaction to be stored by a
+        BackendModule
+        """
+        
+        raise BoKeepTransactionNotMappableToFinancialTransaction()
 
 class MemberFeePlugin(PrototypePlugin):
     def __init__(self):

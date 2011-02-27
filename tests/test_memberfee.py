@@ -25,11 +25,11 @@ import filecmp
 
 #from bokeep.config import get_database_cfg_file
 from bokeep.book import BoKeepBookSet
-#from bokeep.plugins.memberfee.plugin \
-#    import p
-
+from bokeep.plugins.memberfee.plugin \
+    import FeeCollection
 
 from test_bokeep_book import BoKeepWithBookSetup, TESTBOOK
+
 
 MEMBERFEE_PLUGIN = 'bokeep.plugins.memberfee'
 
@@ -40,6 +40,11 @@ class MemberFeeTestCaseSetup(BoKeepWithBookSetup):
         self.books.get_book(TESTBOOK).enable_module(MEMBERFEE_PLUGIN)
         self.memberfee_plugin = self.books.get_book(TESTBOOK).get_module(
             MEMBERFEE_PLUGIN)
+        self.feetrans = FeeCollection(self.memberfee_plugin)
+        self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
+            self.feetrans)
+        self.memberfee_plugin.register_transaction(
+            self.bokeep_trans_id, self.feetrans)
 
 class memberTestCase(MemberFeeTestCaseSetup):
     def testMemberAddAndGet(self):
