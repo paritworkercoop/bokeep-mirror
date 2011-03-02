@@ -198,6 +198,9 @@ class BoKeepConfigDialog(object):
 
     def on_book_add_entry_clicked(self, *args):
         self.books_tv.get_selection().unselect_all()
+        self.selection_change_lock = True
+        self.state.do_action(BOOK_CHANGE, None)
+        self.selection_change_lock = False
         self.set_sensitivities()
 
     def on_book_add_clicked(self, *args):
