@@ -144,7 +144,7 @@ class BoKeepConfigDialog(object):
             (self.plugins_tv, BACKEND_PLUGIN_CHANGE),
             (self.plugin_add_entry, BACKEND_PLUGIN_CHANGE),
             (self.button3, BACKEND_PLUGIN_CHANGE),
-            (self.backend_pugin_entry, BACKEND_PLUGIN_CHANGE),
+            (self.backend_plugin_entry, BACKEND_PLUGIN_CHANGE),
             ):
             obj.set_sensitive( self.state.action_allowed(action) )
 
@@ -210,10 +210,10 @@ class BoKeepConfigDialog(object):
             (self.plugin_add_entry.get_text(), True))
         self.plugin_add_entry.set_text("")
 
-    def on_backend_pugin_entry_changed(self, *args):
+    def on_backend_plugin_entry_changed(self, *args):
         if not self.backend_entry_lock:
             self.state.do_action(
-                BACKEND_PLUGIN_CHANGE, self.backend_pugin_entry.get_text())
+                BACKEND_PLUGIN_CHANGE, self.backend_plugin_entry.get_text())
 
     def on_book_selection_change(self, *args):
         if not self.selection_change_lock:
@@ -221,12 +221,12 @@ class BoKeepConfigDialog(object):
             if sel_book == None:
                 self.state.do_action(BOOK_CHANGE, None)
                 self.backend_entry_lock = True
-                self.backend_pugin_entry.set_text("")
+                self.backend_plugin_entry.set_text("")
                 self.backend_entry_lock = False
             else:
                 self.state.do_action(BOOK_CHANGE, sel_book)
                 self.backend_entry_lock = True
-                self.backend_pugin_entry.set_text(
+                self.backend_plugin_entry.set_text(
                     self.state.data[BOOK].get_backend_module_name() )
                 self.backend_entry_lock = False
             self.set_sensitivities()
