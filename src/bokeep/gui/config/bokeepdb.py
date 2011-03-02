@@ -95,7 +95,7 @@ class BoKeepConfigDialog(object):
                 TreeViewColumn("Book", CellRendererText(), text=0 ) )
         self.books_tv.get_selection().connect(
             "changed", self.on_book_selection_change)
-        self.booksvbox.pack_start(self.books_tv)
+        self.books_window.add(self.books_tv)
         self.books_tv.show()
         self.plugins_tv = TreeView(self.state.plugin_liststore)
         self.plugins_tv.append_column(
@@ -104,7 +104,7 @@ class BoKeepConfigDialog(object):
         crt.set_radio(False)
         self.plugins_tv.append_column(
             TreeViewColumn("Enabled", crt, active=1) )
-        self.pluginsvbox.pack_start(self.plugins_tv)
+        self.plugins_window.add(self.plugins_tv)
         self.plugins_tv.show()
         if filestorage_path != None:
             self.state.do_action(DB_ENTRY_CHANGE, filestorage_path)
@@ -140,10 +140,10 @@ class BoKeepConfigDialog(object):
             (self.apply_db_change_button, DB_PATH_CHANGE),
             (self.books_tv, BOOK_CHANGE),
             (self.book_add_entry, BOOK_CHANGE),
-            (self.button2, BOOK_CHANGE),
+            (self.book_add_button, BOOK_CHANGE),
             (self.plugins_tv, BACKEND_PLUGIN_CHANGE),
             (self.plugin_add_entry, BACKEND_PLUGIN_CHANGE),
-            (self.button3, BACKEND_PLUGIN_CHANGE),
+            (self.plugin_add_button, BACKEND_PLUGIN_CHANGE),
             (self.backend_plugin_entry, BACKEND_PLUGIN_CHANGE),
             ):
             obj.set_sensitive( self.state.action_allowed(action) )
@@ -196,7 +196,11 @@ class BoKeepConfigDialog(object):
             self.selection_change_lock = False
             self.set_sensitivities()
 
-    def on_bookadd_clicked(self, *args):
+    def on_book_add_entry_clicked(self, *args):
+        self.books_tv.get_selection().unselect_all()
+        self.set_sensitivities()
+
+    def on_book_add_clicked(self, *args):
         new_book = self.book_add_entry.get_text()
         self.state.book_liststore.append( (new_book,))
         self.book_add_entry.set_text("")
