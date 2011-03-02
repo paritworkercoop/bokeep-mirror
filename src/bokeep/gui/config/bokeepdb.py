@@ -148,7 +148,7 @@ class BoKeepConfigDialog(object):
             ):
             obj.set_sensitive( self.state.action_allowed(action) )
 
-    def get_currentely_selected_book(self, *args):
+    def get_currently_selected_book(self, *args):
         sel = self.books_tv.get_selection()
         sel_iter = sel.get_selected()[1]
         if sel_iter == None:
@@ -200,7 +200,7 @@ class BoKeepConfigDialog(object):
         new_book = self.book_add_entry.get_text()
         self.state.book_liststore.append( (new_book,))
         self.book_add_entry.set_text("")
-        cur_book = self.get_currentely_selected_book()
+        cur_book = self.get_currently_selected_book()
         # this ensures the book get added
         self.state.do_action(BOOK_CHANGE, new_book)
         self.state.do_action(BOOK_CHANGE, cur_book)
@@ -217,7 +217,7 @@ class BoKeepConfigDialog(object):
 
     def on_book_selection_change(self, *args):
         if not self.selection_change_lock:
-            sel_book = self.get_currentely_selected_book()
+            sel_book = self.get_currently_selected_book()
             if sel_book == None:
                 self.state.do_action(BOOK_CHANGE, None)
                 self.backend_entry_lock = True
