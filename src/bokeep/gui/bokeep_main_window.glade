@@ -401,6 +401,7 @@
             <child>
               <widget class="GtkHBox" id="hbox1">
                 <property name="visible">True</property>
+                <property name="spacing">10</property>
                 <child>
                   <widget class="GtkVBox" id="booksvbox">
                     <property name="visible">True</property>
