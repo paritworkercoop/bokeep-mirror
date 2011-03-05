@@ -467,10 +467,8 @@
                           <widget class="GtkHBox" id="hbox4">
                             <property name="visible">True</property>
                             <child>
-                              <widget class="GtkEntry" id="plugin_add_entry">
+                              <widget class="GtkComboBoxEntry" id="plugin_add_entry_combo">
                                 <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="invisible_char">&#x25CF;</property>
                               </widget>
                               <packing>
                                 <property name="position">0</property>

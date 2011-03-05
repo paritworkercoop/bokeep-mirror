@@ -143,7 +143,7 @@ class BoKeepConfigDialog(object):
             (self.book_add_entry, BOOK_CHANGE),
             (self.book_add_button, BOOK_CHANGE),
             (self.plugins_tv, BACKEND_PLUGIN_CHANGE),
-            (self.plugin_add_entry, BACKEND_PLUGIN_CHANGE),
+            (self.plugin_add_entry_combo, BACKEND_PLUGIN_CHANGE),
             (self.plugin_add_button, BACKEND_PLUGIN_CHANGE),
             (self.backend_plugin_entry, BACKEND_PLUGIN_CHANGE),
             ):
@@ -214,9 +214,9 @@ class BoKeepConfigDialog(object):
         self.state.do_action(BOOK_CHANGE, cur_book)
 
     def on_plugin_add_clicked(self, *args):
-        self.state.plugin_liststore.append(
-            (self.plugin_add_entry.get_text(), True))
-        self.plugin_add_entry.set_text("")
+        entry = self.plugin_add_entry_combo.child
+        self.state.plugin_liststore.append((entry.get_text(), True))
+        entry.set_text("")
 
     def on_backend_plugin_entry_changed(self, *args):
         if not self.backend_entry_lock:
