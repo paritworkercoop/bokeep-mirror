@@ -202,17 +202,13 @@ class BoKeepConfigDialog(object):
         self.backend_entry_lock = False
 
     def run(self):
-        return_value = self.bokeep_config_dialog.run()
+        self.bokeep_config_dialog.run()
         if self.state.action_allowed(BOOK_CHANGE):
             self.state.do_action(BOOK_CHANGE, None)
-        if return_value == RESPONSE_OK:
-            transaction.get().commit()
-        else:
-            transaction.get().abort()
         self.state.close()
         self.bokeep_config_dialog.destroy()
 
-        return return_value, self.last_commit_db_path 
+        return RESPONSE_OK, self.last_commit_db_path 
 
     def set_sensitivities(self):
         for obj, action in (
