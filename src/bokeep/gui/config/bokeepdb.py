@@ -172,11 +172,19 @@ class BoKeepConfigDialog(object):
             TreeViewColumn("Enabled", crt, active=1) )
         self.plugins_window.add(self.plugins_tv)
         self.plugins_tv.show()
+
         available_plugin_liststore = ListStore(str)
         for plugin_name in available_plugins():
             available_plugin_liststore.append([plugin_name])
         self.plugin_add_entry_combo.set_model(available_plugin_liststore)
         self.plugin_add_entry_combo.set_text_column(0)
+
+        available_backend_plugin_liststore = ListStore(str)
+        for backend_plugin_name in available_backend_plugins():
+            available_backend_plugin_liststore.append([backend_plugin_name])
+        self.backend_plugin_entry_combo.set_model(available_backend_plugin_liststore)
+        self.backend_plugin_entry_combo.set_text_column(0)
+
         if filestorage_path != None:
             self.state.do_action(DB_ENTRY_CHANGE, filestorage_path)
             self.state.do_action(DB_PATH_CHANGE)
@@ -215,7 +223,7 @@ class BoKeepConfigDialog(object):
             (self.plugins_tv, BACKEND_PLUGIN_CHANGE),
             (self.plugin_add_entry_combo, BACKEND_PLUGIN_CHANGE),
             (self.plugin_add_button, BACKEND_PLUGIN_CHANGE),
-            (self.backend_plugin_entry, BACKEND_PLUGIN_CHANGE),
+            (self.backend_plugin_entry_combo, BACKEND_PLUGIN_CHANGE),
             ):
             obj.set_sensitive( self.state.action_allowed(action) )
 
@@ -288,10 +296,11 @@ class BoKeepConfigDialog(object):
         self.state.plugin_liststore.append((entry.get_text(), True))
         entry.set_text("")
 
-    def on_backend_plugin_entry_changed(self, *args):
+    def on_backend_plugin_entry_combo_changed(self, *args):
         if not self.backend_entry_lock:
+            entry = self.backend_plugin_entry_combo.child
             self.state.do_action(
-                BACKEND_PLUGIN_CHANGE, self.backend_plugin_entry.get_text())
+                BACKEND_PLUGIN_CHANGE, entry.get_text())
 
     def on_book_selection_change(self, *args):
         if not self.selection_change_lock:
@@ -299,12 +308,12 @@ class BoKeepConfigDialog(object):
             if sel_book == None:
                 self.state.do_action(BOOK_CHANGE, None)
                 self.backend_entry_lock = True
-                self.backend_plugin_entry.set_text("")
+                self.backend_plugin_entry_combo.child.set_text("")
                 self.backend_entry_lock = False
             else:
                 self.state.do_action(BOOK_CHANGE, sel_book)
                 self.backend_entry_lock = True
-                self.backend_plugin_entry.set_text(
+                self.backend_plugin_entry_combo.child.set_text(
                     self.state.data[BOOK].get_backend_module_name() )
                 self.backend_entry_lock = False
             self.set_sensitivities()

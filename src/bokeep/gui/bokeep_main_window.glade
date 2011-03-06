@@ -509,11 +509,9 @@
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkEntry" id="backend_plugin_entry">
+                          <widget class="GtkComboBoxEntry" id="backend_plugin_entry_combo">
                             <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="invisible_char">&#x25CF;</property>
-                            <signal name="changed" handler="on_backend_plugin_entry_changed"/>
+                            <signal name="changed" handler="on_backend_plugin_entry_combo_changed"/>
                           </widget>
                           <packing>
                             <property name="position">1</property>

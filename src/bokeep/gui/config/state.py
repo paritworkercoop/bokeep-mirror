@@ -232,9 +232,13 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                     self.data[BOOK].add_module(plugin_name)        
 
         if self.data[BOOK] != None and hasattr(self, '_v_backend_plugin'):
-            self.data[BOOK].set_backend_module(self._v_backend_plugin)
-            del self._v_backend_plugin
-        
+            try:
+                old_backend_module_name = self.data[BOOK].get_backend_module_name()
+                self.data[BOOK].set_backend_module(self._v_backend_plugin)
+            except ImportError:
+                self.data[BOOK].backend_module = old_backend_module_name
+            finally:
+                del self._v_backend_plugin
 
     def close(self):
         if self.data[BOOKSET] != None:
