@@ -26,9 +26,11 @@ from persistent.mapping import PersistentMapping
 from bokeep.prototype_plugin import PrototypePlugin 
 from persistent import Persistent
 from bokeep.book_transaction import \
-    Transaction, BoKeepTransactionNotMappableToFinancialTransaction
+    Transaction, BoKeepTransactionNotMappableToFinancialTransaction, \
+    make_common_fin_trans, make_fin_line
 from decimal import Decimal
 from datetime import date
+from itertools import chain # gang
 
 def month_delta(current_date, months=1):
     if not ( 1 <= months <= 12 ):
@@ -47,6 +49,7 @@ class FeeCollection(Transaction):
         Transaction.__init__(self, plugin)
         self.collected = Decimal(0)
         self.periods_applied_to = PersistentList()
+        self.collection_date = date.today()
 
     @staticmethod
     def gen_spread_collected(amount, current_date,
@@ -72,14 +75,31 @@ class FeeCollection(Transaction):
         associated with this bo-keep Transaction to be stored by a
         BackendModule
         """
-        
-        raise BoKeepTransactionNotMappableToFinancialTransaction()
-    
+        if not self.periods_and_collected_match():
+            raise BoKeepTransactionNotMappableToFinancialTransaction()
+
+        return chain(
+            ( make_common_fin_trans(
+                    self.make_collection_lines(), self.collection_date,
+                    'collected member fee', currency ), # make_common_fin_trans
+              ), # tuple
+
+            self.make_earnings_tranxen()
+            ) # chain
+
+    def make_collection_lines(self):
+        pass
+
+    def make_earnings_tranxen(self):
+        pass
+
     def sum_of_periods(self):
-        return sum(value for date, value in self.periods_applied_to)
+        return sum( value for date, value in self.periods_applied_to )
 
     def periods_and_collected_match(self):
         return self.collected == self.sum_of_periods()
+
+
 
 class MemberFeePlugin(PrototypePlugin):
     def __init__(self):
