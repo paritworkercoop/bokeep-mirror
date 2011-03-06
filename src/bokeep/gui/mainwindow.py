@@ -481,7 +481,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """)
         ab.set_authors(("Mark Jenkins <mark@parit.ca>",
-                        "Jamie Campbell <jamie@parit.ca>"))
+                        "Jamie Campbell <jamie@parit.ca>",
+                        "Andrew Orr <andrew@andreworr.ca>",
+                        "Sara Arenson <sara_arenson@yahoo.ca>",))
         ab.set_artists(("David Henry <work@davidhenry.ca>",))
         ab.set_program_name("Bo-Keep")
         ab.set_logo( pixbuf_new_from_file_at_size(
