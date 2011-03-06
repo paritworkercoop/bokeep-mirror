@@ -42,6 +42,7 @@ class MemberFeeTestCaseSetup(BoKeepWithBookSetup):
         self.memberfee_plugin = self.books.get_book(TESTBOOK).get_module(
             MEMBERFEE_PLUGIN)
         self.feetrans = FeeCollection(self.memberfee_plugin)
+        self.feetrans.collection_date = date(2011, 1, 1)
         self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
             self.feetrans)
         self.memberfee_plugin.register_transaction(
@@ -66,6 +67,18 @@ class memberAfterSpreadSetup(MemberFeeTestCaseSetup):
 
     def testPeriodsAndCollectedMatch(self):
         self.assert_(self.feetrans.periods_and_collected_match())
+
+    def testCollectionBackendFinTrans(self):
+        fin_trans_list = list(self.feetrans.get_financial_transactions())
+        for i,(trans_date, value) in enumerate(
+            ( (self.feetrans.collection_date, 40),
+              (date(2011, 1, 1), 10 ),
+              (date(2011, 2, 1), 10 ),
+              (date(2011, 3, 1), 10 ), 
+              (date(2011, 4, 1), 10 ) ) ):
+            lines = fin_trans_list[i].lines
+            self.assertEquals( trans_date, fin_trans_list[i].trans_date )
+            self.assertEquals( lines[0].amount, value )
                     
 if __name__ == "__main__":
     unittest.main()

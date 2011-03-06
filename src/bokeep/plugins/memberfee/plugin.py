@@ -82,25 +82,30 @@ class FeeCollection(Transaction):
             ( make_common_fin_trans(
                     self.make_collection_lines(), self.collection_date,
                     'collected member fee',
-                    self.get_currency() ), # make_common_fin_trans
+                    # make_common_fin_trans
+                    self.associated_plugin.get_currency() ), 
               ), # tuple
 
             self.make_earnings_tranxen()
             ) # chain
 
     def make_collection_lines(self):
-        return make_trans_line_pair(self.collected, self.get_cash_account(),
-                                    self.get_unearned_account())
+        return make_trans_line_pair(
+            self.collected,
+            self.associated_plugin.get_cash_account(),
+            self.associated_plugin.get_unearned_account(), )
 
     def make_earnings_tranxen(self):
         return [ make_common_fin_trans(self.make_fee_earned_lines(value),
                                        date, 'earned member fee',
-                                       self.get_currency())
+                                       self.associated_plugin.get_currency())
                  for date, value in self.periods_applied_to ]
 
     def make_fee_earned_lines(self, value):
-        return make_trans_line_pair(value, self.get_unearned_account(),
-                                    self.get_income_account())
+        return make_trans_line_pair(
+            value,
+            self.associated_plugin.get_unearned_account(),
+            self.associated_plugin.get_income_account())
 
     def sum_of_periods(self):
         return sum( value for date, value in self.periods_applied_to )
