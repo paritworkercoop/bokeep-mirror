@@ -1,3 +1,5 @@
+INTRODUCTION
+
 Bo-Keep helps you keep your books so you don't get lost.
 
 It provides to users simple custom entry interfaces for an accounting
@@ -23,8 +25,10 @@ backend plugin exists, so installation of GnuCash is recommended as
 well. (other paragraphs in this README will assume it is installed)
 You'll need GnuCash 2.4.0 or later with python bindings enabled.
 
+CHECKING INSTALLATION
+
 Installation instructions for PyGTK, ZODB, Bo-Keep, and GnuCash under
-GNU/Linux are provided in README_install_GNU_slash_Linux.txt . (an
+GNU/Linux are provided in README_install_GNU_slash_Linux.txt. (an
 installed python interpreter is assumed)
 
 Here's a post-installation run-through for GNU/Linux:
@@ -55,35 +59,49 @@ You might also be able to run bo-keep via your desktop environment
 application launching menu, as bo-keep installs a bo-keep.desktop in
 /prefix/share/applications.
 
+CREATING A CONFIGURATION FILE
+
 If you haven't run it before, bo-keep will inform you that it would
 like to create a .bo-keep.cfg file in your home directory. You can
 also provide your own bo-keep configuration file by using the -c flag
 or by having a .bo-keep.cfg file in your current working directory.
 
+CONFIGURATION DIALOG
+
 After you say yes, bo-keep will launch its configuration dialog. You
 can return to this dialog at anytime via the BoKeep menu in the
 application.
 
-At the top you'll see the location where the bo-keep database will be
-kept. Note this for backup purposes.
+At the top you'll see the location where the bo-keep database will be kept. 
+Note this for backup purposes.
 
-In the middle is an area for adding (accounting) books to your bokeep
-database. (you can use BoKeep to manage multiple books at once). Fill
-in the text field and click add for all of the books you'd like to
-keep.
+ADDING AND CONFIGURING BOOKS
 
-Bo-keep plugins and backend plugins are installed on a per book
-basis. Select one of your books from the "Books" list. You can add
-plugins by typing in the name of the python package or module (with
-package.package notation) that corresponds to the plugin and clicking
-add. Right now Bo-Keep ships with:
+You can use BoKeep to manage multiple books at once.  Bo-keep plugins and 
+backend plugins are installed on a per book basis, so you must first add a
+book, and then set up its plugins.  
+
+In the middle of the configuration dialog box is an area for viewing your 
+existing (accounting) books.
+
+Below that is an entry field for the name of a new book.  To create a 
+new book, fill in this text field and click the New Book button.  Once you 
+have added a book to the system, you can click on it in the list, and install 
+its plugins as described below.
+
+For adding a front-end plugin: 
+
+You can have multiple front-end plugins (corresponding to transaction types)
+in a book. To add a new front-end plugin to the selected book, use the pull-down
+menu beside the Add button to select a plugin, or type in the name of the python 
+package or module (with package.package notation) that corresponds to the plugin, 
+then click Add.  Right now Bo-Keep ships with:
 
  bokeep.plugins.trust    - Track amounts held in trust for others
  bokeep.plugins.mileage  - Establish a $/km or $/mile rate and enter in
                            your distances traveled
  bokeep.plugins.payroll  - Support for running a Manitoba, Canada payroll
-                           through a special configuration and data
-			   file format
+                           through a special configuration and data file format
 
 You can learn more about these plugins in their respective READMEs:
  README_trust_plugin.txt
@@ -100,30 +118,38 @@ package name at the bottom of the configuration dialog. BoKeep ships with
     - Works with GnuCash version 2.4.0 or later via with the
       python-bindings feature installed.
 
-You can choose which book you're editing with the Books pull-down
-menu.
+To finish adding or changing books, click OK.  This will take you back to the
+main BoKeep data entry interface.
+
+CONFIGURING PLUGINS
+
+You can configure a plugin from within the BoKeep data entry interface, not 
+the configuration dialog.
+
+Choose which book you're editing with the Books pull-down menu.
 
 If you chose a backend other than the default null, you can configure
-it via Book->Configure Backend . In the case of gnucash_backend and
+it via Book->Configure Backend. In the case of gnucash_backend and
 serialfile, the configuration consists of a file->open dialog. If you
 already have Bo-Keep transactions in your book they will be copied
-into the backend when you pick a file with this dialog. Please note
+into the backend when you pick a file with this dialog.  Please note
 that the GnuCash backend has only be tested with and works only with
 XML GnuCash files.
 
+Many front-end plugins will only be useful if themselves configured. 
+Use Plugin->Configure to configure the plugin for the currently selected
+transaction type in the currently selected book.
+
+ENTERING TRANSACTIONS
+
 You can create a new Bo-Keep transaction with the New button. A
 transaction type can be selected from the type pull-down menu. These
-come from the Bo-Keep plugins you have installed, the more plugins
+come from the Bo-Keep plugins you have installed, so the more plugins
 installed the more types you'll have to choose from. It may be
 worthwhile to install all three plugins shipped with Bo-Keep to see
 how the user-interface changes at the bottom of your bo-keep window
 changes in place -- this might be the coolest thing about Bo-Keep's
-design right now.
-
-Many plugins will only be useful if themselves configured. Choose the
-Plugin->Configure plugin menu item. The plugin configuration dialog
-you'll get from this will be derived from the current transaction
-type.
+design right now.  
 
 You don't need to worry about saving, changes you make to Bo-Keep
 transactions are saved nearly instantly.

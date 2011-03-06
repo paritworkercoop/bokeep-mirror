@@ -20,7 +20,8 @@
 
 # python imports
 from os.path import \
-    exists, basename, split as path_split, join as path_join, abspath
+    exists, isdir, isfile, basename, split as path_split, join as path_join, abspath
+import os
 from os import makedirs
 import sys
 
@@ -31,6 +32,7 @@ import transaction
 
 # gtk imports
 from gtk import \
+    ListStore, \
     TreeView, TreeViewColumn, CellRendererText, CellRendererToggle, \
     RESPONSE_OK, RESPONSE_CANCEL, RESPONSE_DELETE_EVENT, \
     FILE_CHOOSER_ACTION_SAVE, FileChooserDialog, \
@@ -83,6 +85,57 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
     fs = FileStorage(filestorage_path, create=False )
     return BoKeepBookSet( DB(fs) )    
 
+def available_plugins(plugin_file_name):
+    """Returns a list of plugins, automatically detected.
+
+Searches all directories in python path, plus /bokeep/plugins in each of these 
+directories.
+
+A module [name].py is a plugin if there's a corresponding file called [name]_[plugin_file_name] in the same directory, e.g. [name]_BOKEEP_PLUGIN if plugin_file_name=BOKEEP_PLUGIN.
+
+A package is a plugin if there's a [plugin_file_name] file in its base directory.  e.g.
+package name payroll has directory payroll/, plugin_file_name=BOKEEP_PLUGIN, and file payroll/BOKEEP_PLUGIN exists.
+
+The [plugin_file_name] files are empty - created with touch.
+    """
+    dir_list = [ directory 
+                 for directory in sys.path
+                 if exists(directory) ]
+    dir_list.extend([ path_join(directory, "bokeep", "plugins") 
+                      for directory in dir_list
+                      if exists(path_join(directory, "bokeep", "plugins")) ])
+
+    bokeep_packages = []
+    bokeep_modules = []
+
+    for directory in dir_list:
+        items = set(os.listdir(directory))
+        sub_directories = set([ item
+                                for item in items 
+                                if isdir(path_join(directory, item)) ])
+
+        new_packages = [ sub_dir
+                         for sub_dir in sub_directories
+                         if exists( 
+                             path_join(directory, sub_dir, plugin_file_name)) ]     
+        
+        module_names = [ item[0:item.index("_"+plugin_file_name)]
+                         for item in items.difference(sub_directories)
+                         if item.endswith("_"+plugin_file_name) ]
+
+        new_modules = [ module_name 
+                        for module_name in module_names
+                        if exists( path_join(directory, module_name+".py") ) ]
+
+        if directory.endswith(path_join("bokeep", "plugins")):
+            new_packages = [ "bokeep.plugins." + name for name in new_packages]
+            new_modules = [ "bokeep.plugins." + name for name in new_modules]
+
+        bokeep_packages.extend(new_packages)
+        bokeep_modules.extend(new_modules)
+
+    return bokeep_packages + bokeep_modules
+
 class BoKeepConfigDialog(object):
     def __init__(self, filestorage_path, error_msg=None):
         load_glade_file_get_widgets_and_connect_signals(
@@ -107,6 +160,11 @@ class BoKeepConfigDialog(object):
             TreeViewColumn("Enabled", crt, active=1) )
         self.plugins_window.add(self.plugins_tv)
         self.plugins_tv.show()
+        available_plugin_liststore = ListStore(str)
+        for plugin_name in available_plugins("BOKEEP_PLUGIN"):
+            available_plugin_liststore.append([plugin_name])
+        self.plugin_add_entry_combo.set_model(available_plugin_liststore)
+        self.plugin_add_entry_combo.set_text_column(0)
         if filestorage_path != None:
             self.state.do_action(DB_ENTRY_CHANGE, filestorage_path)
             self.state.do_action(DB_PATH_CHANGE)
