@@ -42,6 +42,7 @@ class MemberFeeTestCaseSetup(BoKeepWithBookSetup):
         self.memberfee_plugin = self.books.get_book(TESTBOOK).get_module(
             MEMBERFEE_PLUGIN)
         self.feetrans = FeeCollection(self.memberfee_plugin)
+        self.feetrans.collection_date = date(2011, 1, 1)
         self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
             self.feetrans)
         self.memberfee_plugin.register_transaction(
@@ -51,13 +52,33 @@ class memberTestCase(MemberFeeTestCaseSetup):
     def testMemberAddAndGet(self):
         self.assert_( self.books.has_book(TESTBOOK) )
 
-    def testSpreadAmount(self):
+    
+class memberAfterSpreadSetup(MemberFeeTestCaseSetup):
+    def setUp(self):
+        super(memberAfterSpreadSetup, self).setUp()
         self.feetrans.collected = Decimal(40)
         self.feetrans.spread_collected(date(2011, 1, 1), 1, Decimal(10))
+
+    def testSpreadAmount(self):
         for i,(test_date, test_value) in enumerate(
             self.feetrans.periods_applied_to):
             self.assertEquals(date(2011,i+1,1), test_date)
             self.assertEquals(Decimal(10), test_value)
+
+    def testPeriodsAndCollectedMatch(self):
+        self.assert_(self.feetrans.periods_and_collected_match())
+
+    def testCollectionBackendFinTrans(self):
+        fin_trans_list = list(self.feetrans.get_financial_transactions())
+        for i,(trans_date, value) in enumerate(
+            ( (self.feetrans.collection_date, 40),
+              (date(2011, 1, 1), 10 ),
+              (date(2011, 2, 1), 10 ),
+              (date(2011, 3, 1), 10 ), 
+              (date(2011, 4, 1), 10 ) ) ):
+            lines = fin_trans_list[i].lines
+            self.assertEquals( trans_date, fin_trans_list[i].trans_date )
+            self.assertEquals( lines[0].amount, value )
                     
 if __name__ == "__main__":
     unittest.main()
