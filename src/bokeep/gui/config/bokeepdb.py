@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Sara Arenson <sara_arenson@yahoo.ca>
 
 # python imports
 from os.path import \
@@ -95,7 +96,7 @@ class BoKeepConfigDialog(object):
                 TreeViewColumn("Book", CellRendererText(), text=0 ) )
         self.books_tv.get_selection().connect(
             "changed", self.on_book_selection_change)
-        self.booksvbox.pack_start(self.books_tv)
+        self.books_window.add(self.books_tv)
         self.books_tv.show()
         self.plugins_tv = TreeView(self.state.plugin_liststore)
         self.plugins_tv.append_column(
@@ -104,7 +105,7 @@ class BoKeepConfigDialog(object):
         crt.set_radio(False)
         self.plugins_tv.append_column(
             TreeViewColumn("Enabled", crt, active=1) )
-        self.pluginsvbox.pack_start(self.plugins_tv)
+        self.plugins_window.add(self.plugins_tv)
         self.plugins_tv.show()
         if filestorage_path != None:
             self.state.do_action(DB_ENTRY_CHANGE, filestorage_path)
@@ -140,15 +141,15 @@ class BoKeepConfigDialog(object):
             (self.apply_db_change_button, DB_PATH_CHANGE),
             (self.books_tv, BOOK_CHANGE),
             (self.book_add_entry, BOOK_CHANGE),
-            (self.button2, BOOK_CHANGE),
+            (self.book_add_button, BOOK_CHANGE),
             (self.plugins_tv, BACKEND_PLUGIN_CHANGE),
             (self.plugin_add_entry, BACKEND_PLUGIN_CHANGE),
-            (self.button3, BACKEND_PLUGIN_CHANGE),
-            (self.backend_pugin_entry, BACKEND_PLUGIN_CHANGE),
+            (self.plugin_add_button, BACKEND_PLUGIN_CHANGE),
+            (self.backend_plugin_entry, BACKEND_PLUGIN_CHANGE),
             ):
             obj.set_sensitive( self.state.action_allowed(action) )
 
-    def get_currentely_selected_book(self, *args):
+    def get_currently_selected_book(self, *args):
         sel = self.books_tv.get_selection()
         sel_iter = sel.get_selected()[1]
         if sel_iter == None:
@@ -196,11 +197,18 @@ class BoKeepConfigDialog(object):
             self.selection_change_lock = False
             self.set_sensitivities()
 
-    def on_bookadd_clicked(self, *args):
+    def on_book_add_entry_clicked(self, *args):
+        self.books_tv.get_selection().unselect_all()
+        self.selection_change_lock = True
+        self.state.do_action(BOOK_CHANGE, None)
+        self.selection_change_lock = False
+        self.set_sensitivities()
+
+    def on_book_add_clicked(self, *args):
         new_book = self.book_add_entry.get_text()
         self.state.book_liststore.append( (new_book,))
         self.book_add_entry.set_text("")
-        cur_book = self.get_currentely_selected_book()
+        cur_book = self.get_currently_selected_book()
         # this ensures the book get added
         self.state.do_action(BOOK_CHANGE, new_book)
         self.state.do_action(BOOK_CHANGE, cur_book)
@@ -210,23 +218,23 @@ class BoKeepConfigDialog(object):
             (self.plugin_add_entry.get_text(), True))
         self.plugin_add_entry.set_text("")
 
-    def on_backend_pugin_entry_changed(self, *args):
+    def on_backend_plugin_entry_changed(self, *args):
         if not self.backend_entry_lock:
             self.state.do_action(
-                BACKEND_PLUGIN_CHANGE, self.backend_pugin_entry.get_text())
+                BACKEND_PLUGIN_CHANGE, self.backend_plugin_entry.get_text())
 
     def on_book_selection_change(self, *args):
         if not self.selection_change_lock:
-            sel_book = self.get_currentely_selected_book()
+            sel_book = self.get_currently_selected_book()
             if sel_book == None:
                 self.state.do_action(BOOK_CHANGE, None)
                 self.backend_entry_lock = True
-                self.backend_pugin_entry.set_text("")
+                self.backend_plugin_entry.set_text("")
                 self.backend_entry_lock = False
             else:
                 self.state.do_action(BOOK_CHANGE, sel_book)
                 self.backend_entry_lock = True
-                self.backend_pugin_entry.set_text(
+                self.backend_plugin_entry.set_text(
                     self.state.data[BOOK].get_backend_module_name() )
                 self.backend_entry_lock = False
             self.set_sensitivities()

@@ -25,7 +25,7 @@ from os.path import abspath, dirname, join, exists, basename
 import transaction
 from persistent import Persistent
 
-# simplifies common ussage of transaction.get().commit()
+# simplifies common usage of transaction.get().commit()
 def ends_with_commit(dec_function):
     def ret_func(*args, **kargs):
         return_value = dec_function(*args, **kargs)
