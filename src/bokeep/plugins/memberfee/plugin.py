@@ -27,7 +27,7 @@ from bokeep.prototype_plugin import PrototypePlugin
 from persistent import Persistent
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction, \
-    make_common_fin_trans, make_fin_line
+    make_common_fin_trans, make_trans_line_pair
 from decimal import Decimal
 from datetime import date
 from itertools import chain # gang
@@ -81,17 +81,26 @@ class FeeCollection(Transaction):
         return chain(
             ( make_common_fin_trans(
                     self.make_collection_lines(), self.collection_date,
-                    'collected member fee', currency ), # make_common_fin_trans
+                    'collected member fee',
+                    self.get_currency() ), # make_common_fin_trans
               ), # tuple
 
             self.make_earnings_tranxen()
             ) # chain
 
     def make_collection_lines(self):
-        pass
+        return make_trans_line_pair(self.collected, self.get_cash_account(),
+                                    self.get_unearned_account())
 
     def make_earnings_tranxen(self):
-        pass
+        return [ make_common_fin_trans(self.make_fee_earned_lines(value),
+                                       date, 'earned member fee',
+                                       self.get_currency())
+                 for date, value in self.periods_applied_to ]
+
+    def make_fee_earned_lines(self, value):
+        return make_trans_line_pair(value, self.get_unearned_account(),
+                                    self.get_income_account())
 
     def sum_of_periods(self):
         return sum( value for date, value in self.periods_applied_to )
@@ -226,4 +235,16 @@ class MemberFeePlugin(PrototypePlugin):
         """
         
         return self.get_transaction_edit_interface_hook_from_code(code)
+
+    def get_cash_account(self):
+        return 'cash'
+
+    def get_unearned_account(self):
+        return 'unearned'
+
+    def get_income_account(self):
+        return 'income'
+
+    def get_currency(self):
+        return 'CAD'
 
