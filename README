@@ -108,8 +108,9 @@ You can learn more about these plugins in their respective READMEs:
  README_mileage_plugin.txt
  README_payroll_plugin.txt
 
-There is only one backend plugin per book. You can just edit python
-package name at the bottom of the configuration dialog. BoKeep ships with
+There is only one backend plugin per book. You can just edit the python
+package name at the bottom of the configuration dialog or use the drop-down 
+menu.  BoKeep ships with
  bokeep.backend_plugins.serialfile
     - Appends text descriptions of actions linearly to a text file
  bokeep.backend_plugins.null
