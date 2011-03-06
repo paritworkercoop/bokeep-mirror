@@ -88,15 +88,18 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
 def available_plugins(plugin_file_name):
     """Returns a list of plugins, automatically detected.
 
-Searches all directories in python path, plus /bokeep/plugins in each of these 
-directories.
+    Searches all directories in python path, plus /bokeep/plugins in each of these 
+    directories.
 
-A module [name].py is a plugin if there's a corresponding file called [name]_[plugin_file_name] in the same directory, e.g. [name]_BOKEEP_PLUGIN if plugin_file_name=BOKEEP_PLUGIN.
+    A module [name].py is a plugin if there's a corresponding file called 
+    [name]_[plugin_file_name] in the same directory, e.g. [name]_BOKEEP_PLUGIN if
+    plugin_file_name=BOKEEP_PLUGIN.
 
-A package is a plugin if there's a [plugin_file_name] file in its base directory.  e.g.
-package name payroll has directory payroll/, plugin_file_name=BOKEEP_PLUGIN, and file payroll/BOKEEP_PLUGIN exists.
+    A package is a plugin if there's a [plugin_file_name] file in its base directory. 
+    e.g. package name payroll has directory payroll/, plugin_file_name=BOKEEP_PLUGIN,
+    and file payroll/BOKEEP_PLUGIN exists.
 
-The [plugin_file_name] files are empty - created with touch.
+    The [plugin_file_name] files are empty.
     """
     dir_list = [ directory 
                  for directory in sys.path
