@@ -84,6 +84,7 @@ setup(name=PACKAGE_NAME,
                 PACKAGE_NAME + '.plugins.trust.GUIs',
                 PACKAGE_NAME + '.plugins.trust.GUIs.entry',
                 PACKAGE_NAME + '.plugins.trust.GUIs.management',
+                PACKAGE_NAME + '.plugins.memberfee',
                 ],
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
