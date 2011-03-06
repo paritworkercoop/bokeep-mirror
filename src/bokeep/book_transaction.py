@@ -77,6 +77,13 @@ class FinancialTransaction(object):
     def __init__(self, lines):
         self.lines = lines
 
+def make_trans_line_pair(self, amount, debit_account, credit_account,
+                         debit_memo='', credit_memo=''):
+        return [ make_fin_line(amount,
+                               debit_account, debit_memo),
+                 make_fin_line(-amount,
+                                credit_account, credit_memo) ]
+
 def make_common_fin_trans(self, lines, trans_date, description,
                           currency, chequenum=None):
     trans = FinancialTransaction(lines)
