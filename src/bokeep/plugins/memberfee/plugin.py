@@ -74,6 +74,12 @@ class FeeCollection(Transaction):
         """
         
         raise BoKeepTransactionNotMappableToFinancialTransaction()
+    
+    def sum_of_periods(self):
+        return sum(value for date, value in self.periods_applied_to)
+
+    def periods_and_collected_match(self):
+        return self.collected == self.sum_of_periods()
 
 class MemberFeePlugin(PrototypePlugin):
     def __init__(self):
