@@ -85,7 +85,14 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
     fs = FileStorage(filestorage_path, create=False )
     return BoKeepBookSet( DB(fs) )    
 
-def available_plugins(plugin_file_name):
+def available_plugins():
+    return available_plugins_search("BOKEEP_PLUGIN", "plugins")
+
+def available_backend_plugins():
+    return available_plugins_search("BOKEEP_BACKEND_PLUGIN", "backend_plugins")
+
+def available_plugins_search(plugin_file_name, plugin_subdir):
+
     """Returns a list of plugins, automatically detected.
 
     Searches all directories in python path, plus /bokeep/plugins in each of these 
@@ -104,9 +111,9 @@ def available_plugins(plugin_file_name):
     dir_list = [ directory 
                  for directory in sys.path
                  if exists(directory) ]
-    dir_list.extend([ path_join(directory, "bokeep", "plugins") 
+    dir_list.extend([ path_join(directory, "bokeep", plugin_subdir) 
                       for directory in dir_list
-                      if exists(path_join(directory, "bokeep", "plugins")) ])
+                      if exists(path_join(directory, "bokeep", plugin_subdir)) ])
 
     bokeep_packages = []
     bokeep_modules = []
@@ -130,9 +137,11 @@ def available_plugins(plugin_file_name):
                         for module_name in module_names
                         if exists( path_join(directory, module_name+".py") ) ]
 
-        if directory.endswith(path_join("bokeep", "plugins")):
-            new_packages = [ "bokeep.plugins." + name for name in new_packages]
-            new_modules = [ "bokeep.plugins." + name for name in new_modules]
+        if directory.endswith(path_join("bokeep", plugin_subdir)):
+            new_packages = [ "bokeep." + plugin_subdir + "." + name 
+                              for name in new_packages]
+            new_modules = [ "bokeep."  + plugin_subdir + "." + name 
+                              for name in new_modules]
 
         bokeep_packages.extend(new_packages)
         bokeep_modules.extend(new_modules)
@@ -164,7 +173,7 @@ class BoKeepConfigDialog(object):
         self.plugins_window.add(self.plugins_tv)
         self.plugins_tv.show()
         available_plugin_liststore = ListStore(str)
-        for plugin_name in available_plugins("BOKEEP_PLUGIN"):
+        for plugin_name in available_plugins():
             available_plugin_liststore.append([plugin_name])
         self.plugin_add_entry_combo.set_model(available_plugin_liststore)
         self.plugin_add_entry_combo.set_text_column(0)
