@@ -34,7 +34,7 @@ from bokeep.util import \
     ends_with_commit, FunctionAndDataDrivenStateMachine, \
     state_machine_do_nothing, state_machine_always_true
 from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE
-from bokeep.book import BoKeepBookSet, BackendPluginNotFoundError, PluginNotFoundError
+from bokeep.book import BoKeepBookSet, BackendPluginImportError, PluginImportError
 
 # possible actions
 (DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE) = \
@@ -202,14 +202,14 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
             self.__clear_plugin_list()
             return self.__clear_book_list(next_state)
         else:
-            raise PluginNotFoundError(modules_not_found)
+            raise PluginImportError(modules_not_found)
 
     def __apply_plugin_changes_and_reset_plugin_list(self, next_state):
         modules_not_found = self.__apply_plugin_changes()
         if modules_not_found == []:
             return self.__handle_book_change_load_plugin_list(next_state)
         else:
-            raise PluginNotFoundError(modules_not_found)
+            raise PluginImportError(modules_not_found)
 
     def __record_backend_plugin(self, next_state):
         self._v_backend_plugin = self._v_action_arg
@@ -229,7 +229,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                         self.data[BOOK].add_module(plugin_name)
                     # now we can enable it
                     self.data[BOOK].enable_module(plugin_name)
-                except PluginNotFoundError:
+                except PluginImportError:
                     not_found_modules.append(plugin_name)
             # fix any plugins that are marked disabled, but aren't
             elif not plugin_enabled and \
@@ -241,13 +241,13 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                 else:
                     try:
                         self.data[BOOK].add_module(plugin_name)        
-                    except PluginNotFoundError:
+                    except PluginImportError:
                         not_found_modules.append(plugin_name)
 
         if self.data[BOOK] != None and hasattr(self, '_v_backend_plugin'):
             try:
                 self.data[BOOK].set_backend_module(self._v_backend_plugin)
-            except BackendPluginNotFoundError:
+            except BackendPluginImportError:
                 not_found_modules.append(self._v_backend_plugin)
             finally:
                 del self._v_backend_plugin

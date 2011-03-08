@@ -45,7 +45,7 @@ from bokeep.config import \
     DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
     ZODB_CONFIG_FILESTORAGE
 from bokeep.book import BoKeepBookSet, \
-    PluginNotFoundError, BackendPluginNotFoundError
+    PluginImportError, BackendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
@@ -206,7 +206,7 @@ class BoKeepConfigDialog(object):
     def do_action(self, action, arg=None):
         try:
             self.state.do_action(action, arg)
-        except PluginNotFoundError, err:
+        except PluginImportError, err:
             backend_plugin_entry = self.backend_plugin_entry_combo.child
             backend_plugin_name = backend_plugin_entry.get_text()
             if backend_plugin_name in err.plugin_names:
@@ -340,7 +340,7 @@ class BoKeepConfigDialog(object):
             if sel_book == None:
                 try:
                     self.do_action(BOOK_CHANGE, None)
-                except PluginNotFoundError:
+                except PluginImportError:
                     self.select_book(self.state.data[BOOK])
                 else:
                     self.backend_entry_lock = True
@@ -349,7 +349,7 @@ class BoKeepConfigDialog(object):
             else:
                 try:
                     self.do_action(BOOK_CHANGE, sel_book)
-                except PluginNotFoundError:
+                except PluginImportError:
                     self.select_book(self.state.data[BOOK])
                 else:
                     self.backend_entry_lock = True

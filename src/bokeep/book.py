@@ -130,7 +130,7 @@ class BoKeepBook(Persistent):
                 module_name, globals(), locals(), [""]).get_plugin_class()()
             self._p_changed = True
         except ImportError:
-            raise PluginNotFoundError(module_name)
+            raise PluginImportError(module_name)
 
     def enable_module(self, module_name):
         assert( module_name in self.disabled_modules )
@@ -204,7 +204,7 @@ class BoKeepBook(Persistent):
         except ImportError:
             self.__backend_module_name = old_backend_module_name
             self.__backend_module = old_backend_module  
-            raise BackendPluginNotFoundError(backend_module_name)
+            raise BackendPluginImportError(backend_module_name)
 
     def get_backend_module(self):
         return self.__backend_module
@@ -274,15 +274,15 @@ class BoKeepBook(Persistent):
         del self.trans_tree[trans_id]
         self.backend_module.mark_transaction_for_removal(trans_id)
 
-class PluginNotFoundError(Exception):
+class PluginImportError(Exception):
     def __init__(self, plugin_name):
         if type(plugin_name) == str:
-            Exception.__init__(self, "%s: no such plugin." % plugin_name)
+            Exception.__init__(self, "%s: missing or broken" % plugin_name)
             self.plugin_names = [plugin_name]
         elif type(plugin_name) == list:
-            Exception.__init__(self, "%s: no such plugin(s)." % ', '.join(plugin_name))
+            Exception.__init__(self, "%s: missing or broken" % ', '.join(plugin_name))
             self.plugin_names = plugin_name
 
-class BackendPluginNotFoundError(Exception):
+class BackendPluginImportError(Exception):
     def __init__(self, plugin_name):
-        Exception.__init__(self, "%s: backend plugin doesn't exist." % plugin_name)
+        Exception.__init__(self, "%s: missing or broken" % plugin_name)
