@@ -125,9 +125,12 @@ class BoKeepBook(Persistent):
         assert( module_name not in self.enabled_modules and 
                 module_name not in self.disabled_modules )
         # get the module class and instantiate as a new disabled module
-        self.disabled_modules[module_name] =  __import__(
-            module_name, globals(), locals(), [""]).get_plugin_class()()
-        self._p_changed = True
+        try:
+            self.disabled_modules[module_name] =  __import__(
+                module_name, globals(), locals(), [""]).get_plugin_class()()
+            self._p_changed = True
+        except ImportError:
+            raise PluginNotFoundError(module_name)
 
     def enable_module(self, module_name):
         assert( module_name in self.disabled_modules )
@@ -184,17 +187,24 @@ class BoKeepBook(Persistent):
         return None, (None, None, None)
 
     def set_backend_module(self, backend_module_name):
-        self.__backend_module_name = backend_module_name
-        self.__backend_module = __import__(
-            backend_module_name, globals(), locals(), [""] ).\
-            get_plugin_class()()
-        assert( isinstance(self.__backend_module, BackendPlugin) )
-        # because we have changed the backend module, all transactions
-        # are now dirty and must be re-written to the new backend module
-        for trans_ident, trans in self.trans_tree.iteritems():
-            self.__backend_module.mark_transaction_dirty(
-                trans_ident, trans)
-        self.__backend_module.flush_backend()
+        old_backend_module_name = self.get_backend_module_name()
+        old_backend_module = self.get_backend_module()
+        try:
+            self.__backend_module_name = backend_module_name
+            self.__backend_module = __import__(
+              backend_module_name, globals(), locals(), [""] ).\
+    	      get_plugin_class()()
+            assert( isinstance(self.__backend_module, BackendPlugin) )
+            # because we have changed the backend module, all transactions
+            # are now dirty and must be re-written to the new backend module
+            for trans_ident, trans in self.trans_tree.iteritems():
+                self.__backend_module.mark_transaction_dirty(
+                    trans_ident, trans)
+            self.__backend_module.flush_backend()
+        except ImportError:
+            self.__backend_module_name = old_backend_module_name
+            self.__backend_module = old_backend_module  
+            raise BackendPluginNotFoundError(backend_module_name)
 
     def get_backend_module(self):
         return self.__backend_module
@@ -263,3 +273,16 @@ class BoKeepBook(Persistent):
     def remove_transaction(self, trans_id):
         del self.trans_tree[trans_id]
         self.backend_module.mark_transaction_for_removal(trans_id)
+
+class PluginNotFoundError(Exception):
+    def __init__(self, plugin_name):
+        if type(plugin_name) == str:
+            Exception.__init__(self, "%s: no such plugin." % plugin_name)
+            self.plugin_names = [plugin_name]
+        elif type(plugin_name) == list:
+            Exception.__init__(self, "%s: no such plugin(s)." % ', '.join(plugin_name))
+            self.plugin_names = plugin_name
+
+class BackendPluginNotFoundError(Exception):
+    def __init__(self, plugin_name):
+        Exception.__init__(self, "%s: backend plugin doesn't exist." % plugin_name)

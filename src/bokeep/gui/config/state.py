@@ -34,7 +34,7 @@ from bokeep.util import \
     ends_with_commit, FunctionAndDataDrivenStateMachine, \
     state_machine_do_nothing, state_machine_always_true
 from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE
-from bokeep.book import BoKeepBookSet
+from bokeep.book import BoKeepBookSet, BackendPluginNotFoundError, PluginNotFoundError
 
 # possible actions
 (DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE) = \
@@ -197,13 +197,19 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         return self.data
 
     def __apply_plugin_changes_and_clear(self, next_state):
-        self.__apply_plugin_changes()
-        self.__clear_plugin_list()
-        return self.__clear_book_list(next_state)
+        modules_not_found = self.__apply_plugin_changes()
+        if modules_not_found == []:
+            self.__clear_plugin_list()
+            return self.__clear_book_list(next_state)
+        else:
+            raise PluginNotFoundError(modules_not_found)
 
     def __apply_plugin_changes_and_reset_plugin_list(self, next_state):
-        self.__apply_plugin_changes()
-        return self.__handle_book_change_load_plugin_list(next_state)
+        modules_not_found = self.__apply_plugin_changes()
+        if modules_not_found == []:
+            return self.__handle_book_change_load_plugin_list(next_state)
+        else:
+            raise PluginNotFoundError(modules_not_found)
 
     def __record_backend_plugin(self, next_state):
         self._v_backend_plugin = self._v_action_arg
@@ -212,15 +218,19 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     # helper functions that aren't transition functions
 
     def __apply_plugin_changes(self):
+        not_found_modules = []
         for plugin_name, plugin_enabled in self.plugin_liststore:
             # fix any plugins that are marked enabled, but not
             if plugin_enabled and \
                     not self.data[BOOK].has_module_enabled(plugin_name):
                 # if such a plugin isn't disabled, it has to be added
-                if not self.data[BOOK].has_module_disabled(plugin_name):
-                    self.data[BOOK].add_module(plugin_name)
-                # now we can enable it
-                self.data[BOOK].enable_module(plugin_name)
+                try:
+                    if not self.data[BOOK].has_module_disabled(plugin_name):
+                        self.data[BOOK].add_module(plugin_name)
+                    # now we can enable it
+                    self.data[BOOK].enable_module(plugin_name)
+                except PluginNotFoundError:
+                    not_found_modules.append(plugin_name)
             # fix any plugins that are marked disabled, but aren't
             elif not plugin_enabled and \
                     not self.data[BOOK].has_module_disabled(plugin_name):
@@ -229,16 +239,20 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                     self.data[BOOK].disable_module(plugin_name)
                 # or it may have never been added
                 else:
-                    self.data[BOOK].add_module(plugin_name)        
+                    try:
+                        self.data[BOOK].add_module(plugin_name)        
+                    except PluginNotFoundError:
+                        not_found_modules.append(plugin_name)
 
         if self.data[BOOK] != None and hasattr(self, '_v_backend_plugin'):
             try:
-                old_backend_module_name = self.data[BOOK].get_backend_module_name()
                 self.data[BOOK].set_backend_module(self._v_backend_plugin)
-            except ImportError:
-                self.data[BOOK].backend_module = old_backend_module_name
+            except BackendPluginNotFoundError:
+                not_found_modules.append(self._v_backend_plugin)
             finally:
                 del self._v_backend_plugin
+
+        return not_found_modules
 
     def close(self):
         if self.data[BOOKSET] != None:
