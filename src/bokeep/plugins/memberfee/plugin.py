@@ -31,6 +31,19 @@ from bokeep.book_transaction import \
 from decimal import Decimal
 from datetime import date
 from itertools import chain # gang
+from bokeep.gui.gladesupport.glade_util import \
+    load_glade_file_get_widgets_and_connect_signals
+from bokeep.util import get_file_in_same_dir_as_module
+
+from gtk import ListStore, TreeViewColumn, CellRendererText
+
+def first_of(a_date):
+    return date(a_date.year, a_date.month, 1)
+
+def gen_n_months_starting_from(a_date, n):
+    for i in xrange(n):
+        yield a_date
+        a_date = month_delta(a_date, 1)
 
 def month_delta(current_date, months=1):
     if not ( 1 <= months <= 12 ):
@@ -114,10 +127,14 @@ class FeeCollection(Transaction):
         return self.collected == self.sum_of_periods()
 
 
+FEE_COLLECTION = 0
 
 class MemberFeePlugin(PrototypePlugin):
     def __init__(self):
         self.transindex = PersistentMapping()
+        self.cash_account = None
+        self.income_account = None
+        self.unearned_revenue_account = None 
 
     def register_transaction(self, trans_id, trans):
         """Inform a plugin that a new bokeep transaction, which can be
@@ -148,7 +165,7 @@ class MemberFeePlugin(PrototypePlugin):
         integers, where each will stand in as a code for transaction types
         that the plugin supports
         """
-        return ()
+        return (FEE_COLLECTION,)
 
     @staticmethod
     def get_transaction_type_from_code(code):
@@ -158,11 +175,8 @@ class MemberFeePlugin(PrototypePlugin):
         It is essential to implement this function and have it return an
         actuall class if there are codes returned by get_transaction_type_codes
         """
-        #return None
-        # None is not an allowable return value, but this code should never
-        # be reached due to the empty tuple returned from
-        # get_transaction_type_codes
-        assert(False)
+        assert(FEE_COLLECTION == code)
+        return FeeCollection
     
     @staticmethod
     def get_transaction_type_pulldown_string_from_code(code):
@@ -170,8 +184,8 @@ class MemberFeePlugin(PrototypePlugin):
         a suitable string for representing that transaction type in pull down
         menu in the bo-keep interface
         """
-        assert(False)
-        return "prototype plugin trans"
+        assert(FEE_COLLECTION == code)
+        return "member fee collection"
 
     @staticmethod
     def get_transaction_edit_interface_hook_from_code(code):
@@ -212,12 +226,7 @@ class MemberFeePlugin(PrototypePlugin):
         a detach() method which removes the gtk elements added
         with gui_parent.pack_end()
         """
-        def blah(trans, transid, plugin, gui_parent, change_register_function):
-            class blah_cls(object):
-                def detach(self):
-                    pass
-            return blah_cls()
-        return blah
+        return MemberFeeCollectionEditor
 
     def get_transaction_view_interface_hook_from_code(self, code):
         """Takes one of the integer codes for transaction types and
@@ -242,14 +251,72 @@ class MemberFeePlugin(PrototypePlugin):
         return self.get_transaction_edit_interface_hook_from_code(code)
 
     def get_cash_account(self):
-        return 'cash'
+        return self.cash_account
+
+    def set_cash_account(self, account):
+        self.cash_account = account
 
     def get_unearned_account(self):
-        return 'unearned'
+        return self.unearned_revenue_account
+    
+    def set_unearned_account(self, account):
+        self.unearned_revenue_account = account
 
     def get_income_account(self):
-        return 'income'
+        return self.income_account
+
+    def set_income_account(self, account):
+        self.income_account = account
 
     def get_currency(self):
         return 'CAD'
+
+def get_memberfee_glade_file():
+    import plugin as plugin_mod
+    return get_file_in_same_dir_as_module(plugin_mod, 'memberfee.glade')
+
+class MemberFeeCollectionEditor(object):
+    def __init__(self, trans, transid, plugin, gui_parent,
+                 change_register_function):
+        self.fee_trans = trans
+        self.transid = transid
+        self.memberfee_plugin = plugin
+        self.change_register_function = change_register_function
+
+        load_glade_file_get_widgets_and_connect_signals(
+            get_memberfee_glade_file(),
+            'window1', self, self)
+
+        self.vbox1.reparent(gui_parent)
+        self.window1.hide()
+
+        self.fee_spread_liststore = ListStore(str, str)
+        self.fee_spread_list.set_model(self.fee_spread_liststore)
+        column_one = TreeViewColumn('Date')
+        column_two = TreeViewColumn('Amount')
+        self.fee_spread_list.append_column(column_one)
+        self.fee_spread_list.append_column(column_two)
+        for i, column in enumerate((column_one, column_two)):
+            cell = CellRendererText()
+            column.pack_start(cell, False)
+            column.add_attribute(cell, 'text', i)
+        self.populate_fee_spread_liststore()
+
+        
+    def populate_fee_spread_liststore(self):
+        self.fee_spread_liststore.clear()
+        for month in gen_n_months_starting_from(first_of(date.today()), 4):
+            self.fee_spread_liststore.append((month, '10'))
+
+    def detach(self):
+        self.vbox1.reparent(self.window1)
+
+    def day_changed(self, *args):
+        print('day_changed')
+
+    def amount_collected_changed(self, *args):
+        print('amount_collected_changed')
+
+    def member_changed(self, *args):
+        print('member_changed')
 

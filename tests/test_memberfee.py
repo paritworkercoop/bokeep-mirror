@@ -37,13 +37,14 @@ MEMBERFEE_PLUGIN = 'bokeep.plugins.memberfee'
 class MemberFeeTestCaseSetup(BoKeepWithBookSetup):
     def setUp(self):
         BoKeepWithBookSetup.setUp(self)
-        self.books.get_book(TESTBOOK).add_module(MEMBERFEE_PLUGIN)
-        self.books.get_book(TESTBOOK).enable_module(MEMBERFEE_PLUGIN)
-        self.memberfee_plugin = self.books.get_book(TESTBOOK).get_module(
+        self.test_book_1 = self.books.get_book(TESTBOOK)
+        self.test_book_1.add_module(MEMBERFEE_PLUGIN)
+        self.test_book_1.enable_module(MEMBERFEE_PLUGIN)
+        self.memberfee_plugin = self.test_book_1.get_module(
             MEMBERFEE_PLUGIN)
         self.feetrans = FeeCollection(self.memberfee_plugin)
         self.feetrans.collection_date = date(2011, 1, 1)
-        self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
+        self.bokeep_trans_id = self.test_book_1.insert_transaction(
             self.feetrans)
         self.memberfee_plugin.register_transaction(
             self.bokeep_trans_id, self.feetrans)
@@ -59,6 +60,7 @@ class memberAfterSpreadSetup(MemberFeeTestCaseSetup):
         self.feetrans.collected = Decimal(40)
         self.feetrans.spread_collected(date(2011, 1, 1), 1, Decimal(10))
 
+class memberAfterSpreadTestCase(memberAfterSpreadSetup):
     def testSpreadAmount(self):
         for i,(test_date, test_value) in enumerate(
             self.feetrans.periods_applied_to):

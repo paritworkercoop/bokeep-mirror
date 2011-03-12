@@ -53,10 +53,16 @@ SQLITE3 = XML
 ASSETS_ACCOUNT = 'Assets'
 BANK_ACCOUNT = 'Bank'
 PETTY_CASH_ACCOUNT = 'Petty Cash'
+INCOME_ACCOUNT = 'Income'
+LIABILITIES_ACCOUNT = 'Liabilities'
+UNEARNED_REVENUE_ACCOUNT = 'Unearned Revenue'
 
-ASSETS_FULL_SPEC = (ASSETS_ACCOUNT)
+ASSETS_FULL_SPEC = (ASSETS_ACCOUNT,)
 BANK_FULL_SPEC = (ASSETS_ACCOUNT, BANK_ACCOUNT)
 PETTY_CASH_FULL_SPEC = (ASSETS_ACCOUNT, PETTY_CASH_ACCOUNT)
+INCOME_FULL_SPEC = (INCOME_ACCOUNT,)
+LIABILITIES_FULL_SPEC = (LIABILITIES_ACCOUNT,)
+UNEARNED_REVENUE_FULL_SPEC = (LIABILITIES_ACCOUNT, UNEARNED_REVENUE_ACCOUNT)
 
 class TestTransaction(Transaction):
     def __init__(self, value1, account1, value2, account2):
@@ -102,6 +108,10 @@ class GnuCashBasicSetup(TestCase):
             return return_value
         
         assets = create_new_account(ASSETS_ACCOUNT, root)
+        liabilities = create_new_account(LIABILITIES_ACCOUNT, root)
+        income = create_new_account(INCOME_ACCOUNT, root)
+        unearned_revenue = create_new_account(UNEARNED_REVENUE_ACCOUNT,
+                                              liabilities)
         bank = create_new_account(BANK_ACCOUNT, assets)
         petty_cash = create_new_account(PETTY_CASH_ACCOUNT, assets)
         try:
