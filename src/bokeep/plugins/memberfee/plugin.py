@@ -31,6 +31,9 @@ from bokeep.book_transaction import \
 from decimal import Decimal
 from datetime import date
 from itertools import chain # gang
+from bokeep.gui.gladesupport.glade_util import \
+    load_glade_file_get_widgets_and_connect_signals
+from bokeep.util import get_file_in_same_dir_as_module
 
 def month_delta(current_date, months=1):
     if not ( 1 <= months <= 12 ):
@@ -114,6 +117,7 @@ class FeeCollection(Transaction):
         return self.collected == self.sum_of_periods()
 
 
+FEE_COLLECTION = 0
 
 class MemberFeePlugin(PrototypePlugin):
     def __init__(self):
@@ -151,7 +155,7 @@ class MemberFeePlugin(PrototypePlugin):
         integers, where each will stand in as a code for transaction types
         that the plugin supports
         """
-        return ()
+        return (FEE_COLLECTION,)
 
     @staticmethod
     def get_transaction_type_from_code(code):
@@ -161,11 +165,8 @@ class MemberFeePlugin(PrototypePlugin):
         It is essential to implement this function and have it return an
         actuall class if there are codes returned by get_transaction_type_codes
         """
-        #return None
-        # None is not an allowable return value, but this code should never
-        # be reached due to the empty tuple returned from
-        # get_transaction_type_codes
-        assert(False)
+        assert(FEE_COLLECTION == code)
+        return FeeCollection
     
     @staticmethod
     def get_transaction_type_pulldown_string_from_code(code):
@@ -173,8 +174,8 @@ class MemberFeePlugin(PrototypePlugin):
         a suitable string for representing that transaction type in pull down
         menu in the bo-keep interface
         """
-        assert(False)
-        return "prototype plugin trans"
+        assert(FEE_COLLECTION == code)
+        return "member fee collection"
 
     @staticmethod
     def get_transaction_edit_interface_hook_from_code(code):
@@ -215,12 +216,7 @@ class MemberFeePlugin(PrototypePlugin):
         a detach() method which removes the gtk elements added
         with gui_parent.pack_end()
         """
-        def blah(trans, transid, plugin, gui_parent, change_register_function):
-            class blah_cls(object):
-                def detach(self):
-                    pass
-            return blah_cls()
-        return blah
+        return MemberFeeCollectionEditor
 
     def get_transaction_view_interface_hook_from_code(self, code):
         """Takes one of the integer codes for transaction types and
@@ -264,4 +260,35 @@ class MemberFeePlugin(PrototypePlugin):
 
     def get_currency(self):
         return 'CAD'
+
+def get_memberfee_glade_file():
+    import plugin as plugin_mod
+    return get_file_in_same_dir_as_module(plugin_mod, 'memberfee.glade')
+
+class MemberFeeCollectionEditor(object):
+    def __init__(self, trans, transid, plugin, gui_parent,
+                 change_register_function):
+        self.fee_trans = trans
+        self.transid = transid
+        self.memberfee_plugin = plugin
+        self.change_register_function = change_register_function
+
+        load_glade_file_get_widgets_and_connect_signals(
+            get_memberfee_glade_file(),
+            'window1', self, self)
+
+        self.vbox1.reparent(gui_parent)
+        self.window1.hide()
+
+    def detach(self):
+        self.vbox1.reparent(self.window1)
+
+    def day_changed(self, *args):
+        print('day_changed')
+
+    def amount_collected_changed(self, *args):
+        print('amount_collected_changed')
+
+    def member_changed(self, *args):
+        print('member_changed')
 
