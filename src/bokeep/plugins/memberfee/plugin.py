@@ -118,6 +118,9 @@ class FeeCollection(Transaction):
 class MemberFeePlugin(PrototypePlugin):
     def __init__(self):
         self.transindex = PersistentMapping()
+        self.cash_account = None
+        self.income_account = None
+        self.unearned_revenue_account = None 
 
     def register_transaction(self, trans_id, trans):
         """Inform a plugin that a new bokeep transaction, which can be
@@ -242,13 +245,22 @@ class MemberFeePlugin(PrototypePlugin):
         return self.get_transaction_edit_interface_hook_from_code(code)
 
     def get_cash_account(self):
-        return 'cash'
+        return self.cash_account
+
+    def set_cash_account(self, account):
+        self.cash_account = account
 
     def get_unearned_account(self):
-        return 'unearned'
+        return self.unearned_revenue_account
+    
+    def set_unearned_account(self, account):
+        self.unearned_revenue_account = account
 
     def get_income_account(self):
-        return 'income'
+        return self.income_account
+
+    def set_income_account(self, account):
+        self.income_account = account
 
     def get_currency(self):
         return 'CAD'
