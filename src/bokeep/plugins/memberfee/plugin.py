@@ -35,6 +35,16 @@ from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.util import get_file_in_same_dir_as_module
 
+from gtk import ListStore, TreeViewColumn, CellRendererText
+
+def first_of(a_date):
+    return date(a_date.year, a_date.month, 1)
+
+def gen_n_months_starting_from(a_date, n):
+    for i in xrange(n):
+        yield a_date
+        a_date = month_delta(a_date, 1)
+
 def month_delta(current_date, months=1):
     if not ( 1 <= months <= 12 ):
         raise Exception("months must be between 1 and 12 (for now)")
@@ -279,6 +289,24 @@ class MemberFeeCollectionEditor(object):
 
         self.vbox1.reparent(gui_parent)
         self.window1.hide()
+
+        self.fee_spread_liststore = ListStore(str, str)
+        self.fee_spread_list.set_model(self.fee_spread_liststore)
+        column_one = TreeViewColumn('Date')
+        column_two = TreeViewColumn('Amount')
+        self.fee_spread_list.append_column(column_one)
+        self.fee_spread_list.append_column(column_two)
+        for i, column in enumerate((column_one, column_two)):
+            cell = CellRendererText()
+            column.pack_start(cell, False)
+            column.add_attribute(cell, 'text', i)
+        self.populate_fee_spread_liststore()
+
+        
+    def populate_fee_spread_liststore(self):
+        self.fee_spread_liststore.clear()
+        for month in gen_n_months_starting_from(first_of(date.today()), 4):
+            self.fee_spread_liststore.append((month, '10'))
 
     def detach(self):
         self.vbox1.reparent(self.window1)
