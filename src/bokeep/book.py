@@ -187,8 +187,9 @@ class BoKeepBook(Persistent):
         return None, (None, None, None)
 
     def set_backend_module(self, backend_module_name):
-        old_backend_module_name = self.get_backend_module_name()
-        old_backend_module = self.get_backend_module()
+        if hasattr(self, '__BoKeepBook__backend_module_name'):
+            old_backend_module_name = self.get_backend_module_name()
+            old_backend_module = self.get_backend_module()
         try:
             self.__backend_module_name = backend_module_name
             self.__backend_module = __import__(
@@ -202,6 +203,8 @@ class BoKeepBook(Persistent):
                     trans_ident, trans)
             self.__backend_module.flush_backend()
         except ImportError:
+            # this is in big trouble if old_backend_module_name isn't set
+            # but that should only happen on book instantiation
             self.__backend_module_name = old_backend_module_name
             self.__backend_module = old_backend_module  
             raise BackendPluginNotFoundError(backend_module_name)
