@@ -187,7 +187,7 @@ class BoKeepBook(Persistent):
         return None, (None, None, None)
 
     def set_backend_module(self, backend_module_name):
-        if hasattr(self, '__BoKeepBook__backend_module_name'):
+        if hasattr(self, '_BoKeepBook__backend_module_name'):
             old_backend_module_name = self.get_backend_module_name()
             old_backend_module = self.get_backend_module()
         try:
