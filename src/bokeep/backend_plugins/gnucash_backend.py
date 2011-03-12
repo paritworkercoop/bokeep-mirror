@@ -255,7 +255,7 @@ class GnuCash(SessionBasedRobustBackendPlugin):
             self.current_session_error = None
         except GnuCashBackendException, e:
             session = None
-            self.current_session_error = e.message
+            self.current_session_error = str(e)
         return session
 
     def save(self):
@@ -266,12 +266,12 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         # dead... or had end() not be callable, we already ignore the
         # couldn't make a backup exception
         except GnuCashBackendException, e:
-            self.current_session_error = e.message
+            self.current_session_error = str(e)
             if hasattr(self, '_v_session_active'):
                 self._v_session_active.destroy()
                 del self._v_session_active
             raise BoKeepBackendResetException(
-                "gnucash save failed " + e.message)
+                "gnucash save failed " + str(e))
         return None
 
     def close(self, close_reason='reset because close() was called'):

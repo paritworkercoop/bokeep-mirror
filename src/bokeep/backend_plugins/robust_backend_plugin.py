@@ -123,7 +123,7 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
             fin_trans_list = list(bo_keep_trans.get_financial_transactions())
         except BoKeepTransactionNotMappableToFinancialTransaction, e:
             error_code = BackendDataStateMachine.ERROR_OTHER
-            error_string = e.message
+            error_string = str(e)
         else:
             try:
                 for fin_trans in fin_trans_list:
@@ -133,10 +133,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                     
             except BoKeepBackendResetException, reset_e:
                 error_code = BackendDataStateMachine.ERROR_RESET
-                error_string = reset_e.message
+                error_string = str(reset_e)
             except BoKeepBackendException, e:
                 error_code = BackendDataStateMachine.ERROR_OTHER
-                error_string = e.message
+                error_string = str(e)
 
         return state_machine.data.duplicate_and_change(
             backend_ids_to_fin_trans=backend_ids_to_fin_trans,
@@ -168,10 +168,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                     break # for loop
             except BoKeepBackendResetException, reset_e:
                 error_code = BackendDataStateMachine.ERROR_RESET
-                error_string = reset_e.message
+                error_string = str(reset_e)
             except BoKeepBackendException, e:
                 error_code = BackendDataStateMachine.ERROR_OTHER
-                error_string = e.message
+                error_string = str(e)
                 break # for loop
 
         return state_machine.data.duplicate_and_change(
@@ -201,10 +201,10 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                 removed_backend_ids.add(backend_id)
         except BoKeepBackendResetException, reset_e:
             error_code = BackendDataStateMachine.ERROR_RESET
-            error_string = reset_e.message
+            error_string = str(reset_e)
         except BoKeepBackendException, e:
             error_code = BackendDataStateMachine.ERROR_CAN_NOT_REMOVE
-            error_string = e.message
+            error_string = str(e)
             for backend_id in removed_backend_ids:
                 del backend_ids_to_fin_trans[backend_id]
         else:
@@ -770,7 +770,7 @@ class RobustBackendPlugin(BackendPlugin):
                     # call close, which also triggers
                     # __set_all_transactions_to_reset_and_advance()
                     self.close('called close() because save failed ' + \
-                                   e.message) 
+                                   str(e)) 
                 else:
                     for dirty_trans_id in self.dirty_transaction_set.iterkeys():
                         self.dirty_transaction_set[dirty_trans_id] = \
@@ -780,9 +780,9 @@ class RobustBackendPlugin(BackendPlugin):
                     self.__advance_all_dirty_transaction_state_machine()
 
             except BoKeepBackendResetException, reset_except:
-                if reset_except.message != '':
+                if str(reset_except) != '':
                     self.__set_all_transactions_to_reset_and_advance(
-                        reset_except.message)
+                        str(reset_except))
                 else:
                     self.__set_all_transactions_to_reset_and_advance()
 
