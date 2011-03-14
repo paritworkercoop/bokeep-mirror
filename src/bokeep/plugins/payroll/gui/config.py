@@ -37,7 +37,7 @@ def get_payroll_glade_file():
     import config as this_module
     return get_file_in_same_dir_as_module(this_module, 'payroll.glade')
 
-def file_selection_module_contents(msg="choose file"):
+def file_selection_path(msg="choose file"):   
     fcd = FileChooserDialog(
         msg,
         None,
@@ -47,7 +47,13 @@ def file_selection_module_contents(msg="choose file"):
     result = fcd.run()
     file_path = fcd.get_filename()
     fcd.destroy()
-    if result == RESPONSE_OK and file_path != None:
+    if result == RESPONSE_OK:
+        return file_path
+    return None
+
+def file_selection_module_contents(msg="choose file"):
+    file_path = file_selection_path(msg)
+    if file_path != None:
         return get_module_for_file_path(file_path)
     return None
 
@@ -133,3 +139,9 @@ class PayrollConfigDialog(object):
                     output_file_path)
 
         analysis_dia['dialog2'].destroy()
+
+    def set_config_file_clicked(self, *args):
+        file_path = file_selection_path()
+        if file_path != None:
+            self.plugin.set_config_file(file_path)
+        

@@ -24,9 +24,11 @@ from bokeep.plugins.payroll.payroll import Payday
 CDN_PAYROLL_CODE = 0
 
 class PayrollPlugin(PrototypePlugin):
+    # configuration_file is a new attribute added during 1.0.3 development
     def __init__(self):
         self.employee_database = {}
         self.payday_database = {}
+        self.set_config_file(self.get_config_file())
 
     def add_employee(self, employee_ident, employee):
         self.employee_database[employee_ident] = employee
@@ -150,7 +152,13 @@ class PayrollPlugin(PrototypePlugin):
             if payday.paydate == payday_date:
                 return trans_id, payday
         return None, None
+
+    def get_config_file(self):
+        return getattr(self, 'configuration_file', None)
     
+    def set_config_file(self, config_file):
+        self.configuration_file = config_file
+
     def run_configuration_interface(
         self, parent_window, backend_account_fetch):
         # imported here to avoid importing graphics code at top

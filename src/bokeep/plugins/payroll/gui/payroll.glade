@@ -203,6 +203,18 @@
                     <property name="position">2</property>
                   </packing>
                 </child>
+                <child>
+                  <widget class="GtkButton" id="Set Config File">
+                    <property name="label" translatable="yes">Set Config File</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <signal name="clicked" handler="set_config_file_clicked"/>
+                  </widget>
+                  <packing>
+                    <property name="position">3</property>
+                  </packing>
+                </child>
               </widget>
               <packing>
                 <property name="expand">False</property>
