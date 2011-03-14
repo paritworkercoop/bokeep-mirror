@@ -70,6 +70,11 @@ print_paystub_line_config = [
       value_of_class(PaystubVacpayPayoutLine)),
 ]
 
+CHEQUING_ACCOUNT = ("Assets", "Current Assets", "Checking Account")
+
+payroll_deductions_payment_account = CHEQUING_ACCOUNT
+payroll_deductions_liability_account = \
+    ("Liabilities", "Payroll Deductions Payable")
 
 paystub_accounting_line_config = [
     # Per employee lines, payroll transaction
@@ -107,14 +112,14 @@ paystub_accounting_line_config = [
         ),
         # Credits
         (
-            ( 1, ("Liabilities", "Payroll Deductions Payable"), "employee cpp",
+            ( 1, payroll_deductions_liability_account, "employee cpp",
               lines_of_class_function(PaystubCPPDeductionLine) ),
-            ( 2, ("Liabilities", "Payroll Deductions Payable"), "employee ei",
+            ( 2, payroll_deductions_liability_account, "employee ei",
               lines_of_class_function(PaystubEIDeductionLine) ),
-            ( 3, ("Liabilities", "Payroll Deductions Payable"),
+            ( 3, payroll_deductions_liability_account,
               "employer cpp and ei",
               lines_of_class_function(PaystubEmployerContributionLine) ),
-            ( 4, ("Liabilities", "Payroll Deductions Payable"), "income tax",
+            ( 4, payroll_deductions_liability_account, "income tax",
               lines_of_class_function(PaystubCalculatedIncomeTaxDeductionLine)),
             ( 5, ("Liabilities", "Vacation Pay"),
               "vacation pay",
@@ -133,7 +138,7 @@ paystub_accounting_line_config = [
           ),
 
         # Credits
-        ( ( ("Assets", "Current Assets", "Checking Account"), "payment",
+        ( ( CHEQUING_ACCOUNT, "payment",
             lines_of_class_function(PaystubNetPaySummaryLine) ),
           
           ),
