@@ -1,4 +1,5 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2011 SkullSpace Winnipeg Inc. <andrew@andreworr.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -16,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
+# Author: Andrew Orr <andrew@andreworr.ca>
 
 # python standard library
 from threading import Thread, Condition, Event
