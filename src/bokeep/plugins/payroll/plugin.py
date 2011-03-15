@@ -138,7 +138,7 @@ class PayrollPlugin(PrototypePlugin):
         return (
             payday
             for payday in self.payday_database.itervalues()
-            if start_date <= payday.start_date
+            if start_date <= payday.paydate
             if end_date >= payday.paydate )
 
     def has_payday(self, payday_date):
