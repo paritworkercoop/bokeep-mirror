@@ -213,7 +213,7 @@ class Remittance(BookTransaction):
         return month_delta(first_of(self.remitt_date), -1)
     
     def new_period_end(self):
-        return last_of_month(month_delta(self.remitt_date, -1) )
+        return last_of_month(month_delta(first_of(self.remitt_date), -1) )
 
     def get_financial_transactions(self):
         remitt = self.get_remitt()
