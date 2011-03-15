@@ -19,9 +19,9 @@
 
 # bokeep imports
 from bokeep.prototype_plugin import PrototypePlugin
-from bokeep.plugins.payroll.payroll import Payday
+from bokeep.plugins.payroll.payroll import Payday, Remittance
 
-CDN_PAYROLL_CODE = 0
+CDN_PAYROLL_CODE, REMIT_CODE = tuple(range(2))
 
 class PayrollPlugin(PrototypePlugin):
     # configuration_file is a new attribute added during 1.0.3 development
@@ -180,17 +180,25 @@ class PayrollPlugin(PrototypePlugin):
         
     @staticmethod
     def get_transaction_type_codes():
-        return (CDN_PAYROLL_CODE,)
+        return (CDN_PAYROLL_CODE, REMIT_CODE)
 
     @staticmethod
     def get_transaction_type_from_code(code):
-        assert( code == CDN_PAYROLL_CODE )
-        return Payday
+        if code == CDN_PAYROLL_CODE:
+            return Payday
+        elif code == REMIT_CODE:
+            return Remittance
+        else:
+            assert( code == CDN_PAYROLL_CODE or code == REMIT_CODE )
 
     @staticmethod
     def get_transaction_type_pulldown_string_from_code(code):
-        assert( code == CDN_PAYROLL_CODE )
-        return "Manitoba/Canadian payroll"
+        if code == CDN_PAYROLL_CODE:
+            return "Manitoba/Canadian payroll"
+        elif code == REMIT_CODE:
+            return "Manitoba/Canadian payroll remmitance"
+        else:
+            assert( code == CDN_PAYROLL_CODE or code == REMIT_CODE )
 
     @staticmethod
     def get_transaction_edit_interface_hook_from_code(code):
@@ -198,8 +206,15 @@ class PayrollPlugin(PrototypePlugin):
         # on gtk at the top). This makes running the tests
         # without a gtk compatible display possible without a warning msg
         from gui.plain_text_selector import CanadianPayrollEditor
-        assert( code == CDN_PAYROLL_CODE )
-        return CanadianPayrollEditor
+        from gui.remitt_editor import CanadianPayrollRemittEditor
+
+        if code == CDN_PAYROLL_CODE:
+            return CanadianPayrollEditor
+        elif code == REMIT_CODE:
+            return CanadianPayrollRemittEditor
+        else:
+            assert( code == CDN_PAYROLL_CODE or code == REMIT_CODE )
+            
 
 
             
