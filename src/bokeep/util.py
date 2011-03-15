@@ -522,9 +522,13 @@ def first_of(a_date):
     return date(a_date.year, a_date.month, 1)
 
 def last_of_month(a_date):
-    return first_of(month_delta(a_date, 1)) - timedelta(days=1)
+    return month_delta(first_of(a_date), 1) - timedelta(days=1)
 
 def month_delta(current_date, months=1):
+    """Always call with a day that is between 1 and 28, other dates can
+    be invalid for shifting by month
+    """
+    assert( 1<= current_date.day <=28 )
     new_month = current_date.month + months
     new_year = current_date.year
     if new_month > 12 or new_month >= 0:
