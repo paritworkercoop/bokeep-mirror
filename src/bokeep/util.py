@@ -20,6 +20,7 @@
 # python standard library
 from threading import Thread, Condition, Event
 from os.path import abspath, dirname, join, exists, basename
+from datetime import date
 
 # ZODB
 import transaction
@@ -514,3 +515,19 @@ class PluginSet(Persistent):
 def get_file_in_same_dir_as_module(module, filename): 
     return join( dirname( abspath( module.__file__ ) ),
                  filename )
+
+def first_of(a_date):
+    return date(a_date.year, a_date.month, 1)
+
+def month_delta(current_date, months=1):
+    if not ( 1 <= months <= 12 ):
+        raise Exception("months must be between 1 and 12 (for now)")
+    new_month = current_date.month + months
+    new_year = current_date.year
+    if new_month > 12:
+        # should really find out how many years and get rid of assert
+        # at top
+        new_year+=1
+        new_month = ((new_month-1) % 12) + 1
+    return date(new_year, new_month, current_date.day)
+

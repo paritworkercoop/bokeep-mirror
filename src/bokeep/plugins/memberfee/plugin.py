@@ -33,29 +33,16 @@ from datetime import date
 from itertools import chain # gang
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
-from bokeep.util import get_file_in_same_dir_as_module
+from bokeep.util import \
+    get_file_in_same_dir_as_module, first_of, \
+    month_delta
 
 from gtk import ListStore, TreeViewColumn, CellRendererText
-
-def first_of(a_date):
-    return date(a_date.year, a_date.month, 1)
 
 def gen_n_months_starting_from(a_date, n):
     for i in xrange(n):
         yield a_date
         a_date = month_delta(a_date, 1)
-
-def month_delta(current_date, months=1):
-    if not ( 1 <= months <= 12 ):
-        raise Exception("months must be between 1 and 12 (for now)")
-    new_month = current_date.month + months
-    new_year = current_date.year
-    if new_month > 12:
-        # should really find out how many years and get rid of assert
-        # at top
-        new_year+=1
-        new_month = ((new_month-1) % 12) + 1
-    return date(new_year, new_month, current_date.day)
 
 class FeeCollection(Transaction):
     def __init__(self, plugin):
