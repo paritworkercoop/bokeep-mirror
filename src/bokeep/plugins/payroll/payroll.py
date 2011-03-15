@@ -197,7 +197,7 @@ class Payday(BookTransaction):
             retstr += str(paystub)
         return retstr
 
-class Remitance(BookTransaction):
+class Remittance(BookTransaction):
     # FIXME, NEED TO FREEZE the info here
 
     def __init__(self, payroll_plugin):

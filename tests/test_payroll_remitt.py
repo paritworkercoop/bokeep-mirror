@@ -24,7 +24,7 @@ import unittest
 
 
 # bo-keep imports
-from bokeep.plugins.payroll.payroll import Remitance
+from bokeep.plugins.payroll.payroll import Remittance
 
 # bo-keep test imports
 from tests.test_payroll_wages import PayrollPaydayTestCaseSetup
@@ -32,7 +32,7 @@ from tests.test_payroll_wages import PayrollPaydayTestCaseSetup
 class remittTestCase(PayrollPaydayTestCaseSetup):
     def setUp(self):
         PayrollPaydayTestCaseSetup.setUp(self)
-        self.remitt = Remitance(self.payroll_plugin)
+        self.remitt = Remittance(self.payroll_plugin)
         self.remitt.remitt_date = date(2009, 5, 15)
         self.remitt.set_period_start_and_end_from_remmit_date()
         self.perform_single_run()
