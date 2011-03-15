@@ -1011,7 +1011,7 @@ yearly</property>
 			  </child>
 
 			  <child>
-			    <widget class="GtkLabel" id="label5">
+			    <widget class="GtkLabel" id="remittance_label">
 			      <property name="visible">True</property>
 			      <property name="label" translatable="yes">$300.00</property>
 			      <property name="use_underline">False</property>

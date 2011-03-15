@@ -97,7 +97,15 @@ class CanadianPayrollRemittEditor(object):
         self.gui_lock = False
         
     def update_statistics(self):
-        pass
+        for label, val in (
+            (self.num_employ_label, self.trans.num_employees()),
+            (self.gross_pay_label, "$%s" % self.trans.get_gross_pay()),
+            (self.num_periods_label, self.trans.num_paydays()),
+            (self.remittance_label, "$%s" % self.trans.get_remitt()),
+            ):
+            label.set_text(str(val))
+        
+        
 
 
             

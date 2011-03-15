@@ -138,8 +138,10 @@ class PayrollPlugin(PrototypePlugin):
         return (
             payday
             for payday in self.payday_database.itervalues()
+            if isinstance(payday, Payday) 
             if start_date <= payday.paydate
-            if end_date >= payday.paydate )
+            if end_date >= payday.paydate
+            )
 
     def has_payday(self, payday_date):
         """Search for a (only 1!) payday with a particular date
