@@ -146,7 +146,7 @@ class MainWindow(object):
         self.books_combobox.pack_start(cell, True)
         self.books_combobox.add_attribute(cell, 'text', 0)
         self.trans_type_model = ListStore(str, int, object)
-        self.set_sensitivities_and_status()
+        self.set_sensitivities()
         
     def after_background_load(self):
         self.guistate = (
@@ -198,7 +198,7 @@ class MainWindow(object):
         
         self.gui_built = True
 
-        self.refresh_trans_types_and_set_sensitivities_and_status()
+        self.refresh_trans_types_and_set_sensitivities()
 
     def closedown_for_config(self):
         self.gui_built = False
@@ -223,9 +223,9 @@ class MainWindow(object):
                 self.books_combobox.get_active()][2]
             )
 
-    def refresh_trans_types_and_set_sensitivities_and_status(self):
+    def refresh_trans_types_and_set_sensitivities(self):
         self.refresh_trans_types()
-        self.set_sensitivities_and_status()
+        self.set_sensitivities()
 
     def refresh_trans_types(self):
         book = self.guistate.get_book()
@@ -279,7 +279,7 @@ class MainWindow(object):
         if self.current_editor != None: 
             self.current_editor.detach()
 
-    def set_sensitivities_and_status(self):
+    def set_sensitivities(self):
         for (sensitive_widget, action_code) in \
                 ( (self.back_button, BACKWARD),
                   (self.forward_button, FORWARD),
@@ -343,12 +343,12 @@ class MainWindow(object):
             return
 
         self.set_book_from_combo()
-        self.refresh_trans_types_and_set_sensitivities_and_status()
+        self.refresh_trans_types_and_set_sensitivities()
         
     def new_button_clicked(self, *args):
         self.guistate.do_action(NEW)
         self.set_trans_type_combo_to_current_and_reset_view()
-        self.set_sensitivities_and_status()
+        self.set_sensitivities()
 
     def delete_button_clicked(self, *args):
         self.guistate.do_action(DELETE)
@@ -358,7 +358,7 @@ class MainWindow(object):
             self.clear_trans_view()
         else:
             self.set_trans_type_combo_to_current_and_reset_view()
-        self.set_sensitivities_and_status()
+        self.set_sensitivities()
         
     def trans_type_changed(self, *args):
         """Event handler for when the transaction type on a new transaction
@@ -378,17 +378,17 @@ class MainWindow(object):
             self.guistate.do_action(TYPE_CHANGE,
                                     self.trans_type_combo.get_active())
             self.reset_trans_view()
-            self.set_sensitivities_and_status()
+            self.set_sensitivities()
 
     def forward_button_clicked(self, *args):
         self.guistate.do_action(FORWARD)
         self.set_trans_type_combo_to_current_and_reset_view()
-        self.set_sensitivities_and_status()
+        self.set_sensitivities()
     
     def back_button_clicked(self, *args):
         self.guistate.do_action(BACKWARD)
         self.set_trans_type_combo_to_current_and_reset_view()
-        self.set_sensitivities_and_status()
+        self.set_sensitivities()
 
     def on_remove(self, window, event):
         self.application_shutdown()
