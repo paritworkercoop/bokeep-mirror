@@ -74,6 +74,12 @@ class trustor_entry(object):
         else:
             self.trustor_combo.set_active(0)
 
+        trans_date = self.trust_trans.trans_date
+        self.widgets['entry_date_label'].set_text(
+                "%s-%s-%s" %
+                (trans_date.year, trans_date.month, trans_date.day) )
+
+
         if not self.editable:
             self.widgets['amount_entry'].set_sensitive(False)
 
