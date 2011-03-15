@@ -523,14 +523,12 @@ def last_of_month(a_date):
     return first_of(month_delta(a_date, 1)) - timedelta(days=1)
 
 def month_delta(current_date, months=1):
-    if not ( 1 <= months <= 12 ):
-        raise Exception("months must be between 1 and 12 (for now)")
     new_month = current_date.month + months
     new_year = current_date.year
-    if new_month > 12:
-        # should really find out how many years and get rid of assert
-        # at top
-        new_year+=1
+    if new_month > 12 or new_month >= 0:
+        # FIXME
+        # this could use some heavy testing...
+        new_year+= (new_month-1) / 12
         new_month = ((new_month-1) % 12) + 1
     return date(new_year, new_month, current_date.day)
 
