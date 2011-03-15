@@ -19,8 +19,8 @@
 
 # python
 from decimal import Decimal
-
 import sys
+from datetime import date
 
 # cndpayroll
 from bokeep.plugins.payroll.canada.paystub import Paystub
@@ -50,7 +50,10 @@ from bokeep.plugins.payroll.canada.functions import \
 from bokeep.book_transaction import \
     Transaction as BookTransaction, \
     BoKeepTransactionNotMappableToFinancialTransaction, \
-    FinancialTransactionLine, FinancialTransaction, make_fin_line
+    FinancialTransactionLine, FinancialTransaction, make_fin_line, \
+    make_common_fin_trans, make_trans_line_pair
+from bokeep.util import \
+    first_of, month_delta, last_of_month, get_module_for_file_path
 
 # subclass and override functions from cdnpayroll classes to be persistable
 # via zopedb, and to use each other instead of original cdnpayroll classes
@@ -193,3 +196,93 @@ class Payday(BookTransaction):
         for paystub in self.paystubs:
             retstr += str(paystub)
         return retstr
+
+class Remitance(BookTransaction):
+    # FIXME, NEED TO FREEZE the info here
+
+    def __init__(self, payroll_plugin):
+        BookTransaction.__init__(self, payroll_plugin)
+        self.remitt_date = date.today()
+        self.set_period_start_and_end_from_remmit_date()
+
+    def set_period_start_and_end_from_remmit_date(self):
+        self.period_start = self.new_period_start()
+        self.period_end = self.new_period_end()        
+
+    def new_period_start(self):
+        return month_delta(first_of(self.remitt_date), -1)
+    
+    def new_period_end(self):
+        return last_of_month(month_delta(self.remitt_date, -1) )
+
+    def get_financial_transactions(self):
+        remitt = self.get_remitt()
+        debit_account, credit_account = self.get_account_pair()
+        if remitt == ZERO:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                "no amount to remitt" )
+        elif debit_account == None or credit_account == None:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                "missing account for remitt" )
+            
+        return make_common_fin_trans(
+            make_trans_line_pair(
+                remitt, debit_account, credit_account),
+            self.remitt_date, self.get_remitt_description(),
+            self.get_currency() )
+    
+    def get_account_pair(self):
+        config_file_path = self.associated_plugin.get_config_file()
+        if config_file_path == None:
+            return None, None
+
+        config_file = get_module_for_file_path(config_file_path)
+        if config_file == None:
+            return None, None
+        
+        return ( getattr(config_file,
+                         'payroll_deductions_payment_account', None),
+                 getattr(config_file,
+                         'payroll_deductions_liability_account', None) )       
+
+    def get_remitt_description(self):
+        return "Reciever General"
+
+    def get_currency(self):
+        # this is a Canadian Payroll only right now
+        return "CAD"
+
+    def gen_paystubs_in_period(self):
+        return ( paystub
+                 for payday in 
+                 self.associated_plugin.gen_paydays_with_paydate_bounds(
+                self.period_start, self.period_end)
+                 for paystub in payday.paystubs
+                 )
+
+    def get_remitt(self):
+        return sum(
+            ( (paystub.income_tax_deductions() + paystub.cpp_deductions() +
+               paystub.ei_deductions() + paystub.employer_ei_contributions() +
+               paystub.employer_cpp_contributions() )
+              for paystub in self.gen_paystubs_in_period()
+              ), # gen_paystubs_in_period
+            ZERO ) # sum
+
+    def get_gross_pay(self):
+        return sum(
+            ( paystub.gross_income()
+              for paystub in self.gen_paystubs_in_period() ),
+            ZERO ) # sum
+
+    def num_employees(self):
+        return len( set( paystub.employee
+                         for paystub in self.gen_paystubs_in_period()
+                         ) )
+
+    def num_paydays(self):
+        # there must be a way to iterate through a generator and get the
+        # count and not have to build a tuple in memory...
+        return len( tuple(
+                self.associated_plugin.gen_paydays_with_paydate_bounds(
+                    self.period_start, self.period_end) ) )
