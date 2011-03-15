@@ -20,7 +20,7 @@
 # python standard library
 from threading import Thread, Condition, Event
 from os.path import abspath, dirname, join, exists, basename
-from datetime import date
+from datetime import date, timedelta
 
 # ZODB
 import transaction
@@ -518,6 +518,9 @@ def get_file_in_same_dir_as_module(module, filename):
 
 def first_of(a_date):
     return date(a_date.year, a_date.month, 1)
+
+def last_of_month(a_date):
+    return first_of(month_delta(a_date, 1)) - timedelta(days=1)
 
 def month_delta(current_date, months=1):
     if not ( 1 <= months <= 12 ):
