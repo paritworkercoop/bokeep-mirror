@@ -132,6 +132,15 @@ class PayrollPlugin(PrototypePlugin):
                     bounded_entries[trans_id] = payday
             return bounded_entries
     
+    def gen_paydays_with_paydate_bounds(self, start_date, end_date):
+        # too bad this can't take advantage of some kind of sort or
+        # index to run faster
+        return (
+            payday
+            for payday in self.payday_database.itervalues()
+            if start_date <= payday.start_date
+            if end_date >= payday.paydate )
+
     def has_payday(self, payday_date):
         """Search for a (only 1!) payday with a particular date
 
