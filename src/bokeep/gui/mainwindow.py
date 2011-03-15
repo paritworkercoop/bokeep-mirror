@@ -296,6 +296,17 @@ class MainWindow(object):
                     sensitive_widget.set_sensitive(False)
 
         self.set_backend_error_indicator()
+        self.set_transid_label()
+
+    def set_transid_label(self):
+        if self.gui_built:
+            last_trans_id = self.guistate.get_book().get_latest_transaction_id()
+            if last_trans_id != None:
+                self.transid_label.set_text(
+                "%s / %s" %
+                (self.guistate.get_transaction_id(), last_trans_id ))
+                return # avoid set_text("") below
+        self.transid_label.set_text("")
 
     def set_backend_error_indicator(self):
         # don't bother if the gui isn't built yet
