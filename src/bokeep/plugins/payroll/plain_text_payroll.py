@@ -777,3 +777,11 @@ def payroll_payday_command(bookname, bookset, command_type, args):
             print "sorry, I couldn't find that payday"
       
     bookset.close()
+
+def year_to_date_sum_of_class( paystub_line_class ):
+    def retrieval_function(paystub):
+        return paystub.employee.get_YTD_sum_of_paystub_line_class(
+            paystub_line_class,
+            paystub,
+            include_final_paystub=True)
+    return retrieval_function
