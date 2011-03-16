@@ -5,13 +5,15 @@
 # Original author: ParIT Worker Co-operative <paritinfo@parit.ca>
 # You may remove this notice from this file.
 
+from bokeep.util import start_of_year
+
 from bokeep.plugins.payroll.payroll import \
     Paystub, PaystubIncomeLine, PaystubCPPDeductionLine, \
     PaystubEIDeductionLine, PaystubCPPDeductionLine, \
     PaystubEmployerContributionLine, PaystubCalculatedIncomeTaxDeductionLine, \
     PaystubCalculatedEmployerContributionLine, \
     PaystubEIEmployerContributionLine, \
-    PaystubIncomeLine, \
+    PaystubIncomeLine, PaystubWageLine, \
     PaystubNetPaySummaryLine, \
     PaystubDeductionMultipleOfIncomeLine, \
     PaystubVacpayLine, \
@@ -51,6 +53,12 @@ paystub_line_config = (
 )
 
 print_paystub_line_config = [
+    ( "hours this period",
+      lambda paystub: "%.2f" % sum(
+            paystub_line.get_value_components()[0]
+            for paystub_line in
+            paystub.get_paystub_lines_of_class(PaystubWageLine) )
+      ), # tuple
     ( "income",
       amount_from_paystub_function(Paystub.gross_income) ),
     ( "CPP deduction",
@@ -83,6 +91,15 @@ print_paystub_line_config = [
       year_to_date_sum_of_class(PaystubCPPEmployerContributionLine) ),
     ( "ei (employer contribution) year to date",
       year_to_date_sum_of_class(PaystubEIEmployerContributionLine) ),
+    ( "hours this year",
+      lambda paystub: "%.2f" % sum(
+            paystub_line.get_value_components()[0]
+            for paystub_line in 
+            paystub.employee.get_bounded_paystub_lines_of_class(
+                PaystubWageLine,
+                start_of_year(paystub.payday.paydate), paystub.payday.paydate,
+                paystub, include_final_paystub=True ) )
+      ), # tuple
 
 ]
 
