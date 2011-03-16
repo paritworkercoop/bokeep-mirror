@@ -17,7 +17,9 @@ from bokeep.plugins.payroll.payroll import \
     PaystubVacpayLine, \
     PaystubDeductionLine, \
     PaystubVacpayPayoutLine, \
-    PaystubLine
+    PaystubLine, \
+    PaystubCPPEmployerContributionLine,  \
+    PaystubIncomeTaxDeductionLine
 
 from bokeep.plugins.payroll.plain_text_payroll import \
     create_paystub_line, \
@@ -35,7 +37,8 @@ from bokeep.plugins.payroll.plain_text_payroll import \
     paystub_get_lines_of_class_with_tag, \
     get_lines_of_class_with_tag, \
     sum_line_of_class_with_tag, \
-    lines_of_classes_and_not_classes_function
+    lines_of_classes_and_not_classes_function, \
+    year_to_date_sum_of_class
 
 paystub_line_config = (
     ('income', create_paystub_line(PaystubIncomeLine)),
@@ -68,6 +71,19 @@ print_paystub_line_config = [
       calculated_value_of_class(PaystubVacpayPayoutLine)),
     ( "actual vacation payout",
       value_of_class(PaystubVacpayPayoutLine)),
+    ( "income year to date",
+      year_to_date_sum_of_class(PaystubIncomeLine) ),
+    ( "cpp (employee) year to date",
+      year_to_date_sum_of_class(PaystubCPPDeductionLine) ),
+    ( "ei (employee) year to date",
+      year_to_date_sum_of_class(PaystubEIDeductionLine) ),
+    ( "income tax deducted year to date",
+      year_to_date_sum_of_class(PaystubIncomeTaxDeductionLine) ),
+    ( "cpp (employer contribution) year to date",
+      year_to_date_sum_of_class(PaystubCPPEmployerContributionLine) ),
+    ( "ei (employer contribution) year to date",
+      year_to_date_sum_of_class(PaystubEIEmployerContributionLine) ),
+
 ]
 
 CHEQUING_ACCOUNT = ("Assets", "Current Assets", "Checking Account")
