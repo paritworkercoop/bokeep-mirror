@@ -17,6 +17,9 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# zodb import
+from persistent.mapping import PersistentMapping
+
 # bokeep imports
 from bokeep.prototype_plugin import PrototypePlugin
 from bokeep.plugins.payroll.payroll import Payday, Remittance
@@ -25,9 +28,11 @@ CDN_PAYROLL_CODE, REMIT_CODE = tuple(range(2))
 
 class PayrollPlugin(PrototypePlugin):
     # configuration_file is a new attribute added during 1.0.3 development
+    # remmit_db is a new attribute added during 1.0.3 development
     def __init__(self):
         self.employee_database = {}
         self.payday_database = {}
+        self.remmit_db = PersistentMapping()
         self.set_config_file(self.get_config_file())
 
     def add_employee(self, employee_ident, employee):
@@ -82,10 +87,22 @@ class PayrollPlugin(PrototypePlugin):
     def get_employees(self):
         return self.employee_database
 
-    def register_transaction(self, trans_id, payday_trans):
-        assert( not self.has_transaction(trans_id) )
-        self.payday_database[trans_id] = payday_trans
-        self._p_changed = True
+    def register_transaction(self, trans_id, payrollish_trans):
+        if isinstance(payrollish_trans, Payday):
+            assert( not self.has_payroll_trans(trans_id) )
+            self.payday_database[trans_id] = payrollish_trans
+            self._p_changed = True
+        elif isinstance(payrollish_trans, Remittance):
+            self.remmit_db = getattr(self, 'remmit_db', PersistentMapping())
+            # very important that this check be done after the above
+            # line because remmit_db is a new attribute  (as of 1.0.3) and
+            # thus might not exsist yet
+            assert( not self.has_remmit_trans(trans_id) )
+            self.remmit_db[trans_id] = payrollish_trans
+            # look ma, no self._p_changed = True needed, because
+            # remmit_db is Persistent and so things are taken care of
+        else:
+            assert(False) # not Payday or Remittance shouldn't happen
 
     def purge_all_paystubs(self, payday_to_remove):
         # remove paystubs from this payday if associated with an employee
@@ -104,14 +121,27 @@ class PayrollPlugin(PrototypePlugin):
         payday_to_remove.paystubs = []
 
     def remove_transaction(self, trans_id):
-        assert( self.has_transaction(trans_id) )
-        payday_to_remove = self.payday_database[trans_id]
-        del self.payday_database[trans_id]
-        self._p_changed = True
-        self.purge_all_paystubs(payday_to_remove)
+        if self.has_payroll_trans(trans_id):
+            payday_to_remove = self.payday_database[trans_id]
+            del self.payday_database[trans_id]
+            self._p_changed = True
+            self.purge_all_paystubs(payday_to_remove)
+        elif self.has_remmit_trans(trans_id):
+            del self.remmit_db[trans_id] # no _p_changed needed
+        else:
+            assert(False)
+
+    def has_payroll_trans(self, trans_id):
+        return trans_id in self.payday_database
+
+    def has_remmit_trans(self, trans_id):
+        return trans_id in self.remmit_db
 
     def has_transaction(self, trans_id):
-        return trans_id in self.payday_database
+        return \
+            self.has_payroll_trans(trans_id) or \
+            self.has_remmit_trans(trans_id)
+    
 
     #note that there may be information included before start date and after end 
     #date, it is the PERIODS that contain these dates that serve as the bounding
