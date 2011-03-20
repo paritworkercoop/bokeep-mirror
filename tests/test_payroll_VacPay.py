@@ -193,7 +193,7 @@ class TestFixedVacationPayOut(BasicVacationPayTest):
         self.assertEquals(self.paystub_one_vacpayavail.get_value(),
                           Decimal(1) )
 
-class ComplexVacationPayout(BasicVacationPayout):
+class ComplexVacationPayoutSetup(BasicVacationPayout):
     def setUp(self):
         BasicVacationPayout.setUp(self)
         
@@ -228,8 +228,8 @@ class ComplexVacationPayout(BasicVacationPayout):
         self.paystub_four_vacpayout = PaystubVacpayPayoutLine(
             self.paystub_four)
         self.paystub_four.add_paystub_line( self.paystub_four_vacpayout )
-        
 
+class ComplexVacationPayout(ComplexVacationPayoutSetup):        
     def test_vacpayout_two_value(self):
         self.assertEqual(
             sum_paystub_lines( self.paystub_two.get_paystub_lines_of_class(

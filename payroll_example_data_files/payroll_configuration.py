@@ -5,19 +5,23 @@
 # Original author: ParIT Worker Co-operative <paritinfo@parit.ca>
 # You may remove this notice from this file.
 
+from bokeep.util import start_of_year
+
 from bokeep.plugins.payroll.payroll import \
     Paystub, PaystubIncomeLine, PaystubCPPDeductionLine, \
     PaystubEIDeductionLine, PaystubCPPDeductionLine, \
     PaystubEmployerContributionLine, PaystubCalculatedIncomeTaxDeductionLine, \
     PaystubCalculatedEmployerContributionLine, \
     PaystubEIEmployerContributionLine, \
-    PaystubIncomeLine, \
+    PaystubIncomeLine, PaystubWageLine, \
     PaystubNetPaySummaryLine, \
     PaystubDeductionMultipleOfIncomeLine, \
     PaystubVacpayLine, \
     PaystubDeductionLine, \
     PaystubVacpayPayoutLine, \
-    PaystubLine
+    PaystubLine, \
+    PaystubCPPEmployerContributionLine,  \
+    PaystubIncomeTaxDeductionLine
 
 from bokeep.plugins.payroll.plain_text_payroll import \
     create_paystub_line, \
@@ -35,7 +39,8 @@ from bokeep.plugins.payroll.plain_text_payroll import \
     paystub_get_lines_of_class_with_tag, \
     get_lines_of_class_with_tag, \
     sum_line_of_class_with_tag, \
-    lines_of_classes_and_not_classes_function
+    lines_of_classes_and_not_classes_function, \
+    year_to_date_sum_of_class
 
 paystub_line_config = (
     ('income', create_paystub_line(PaystubIncomeLine)),
@@ -48,6 +53,12 @@ paystub_line_config = (
 )
 
 print_paystub_line_config = [
+    ( "hours this period",
+      lambda paystub: "%.2f" % sum(
+            paystub_line.get_value_components()[0]
+            for paystub_line in
+            paystub.get_paystub_lines_of_class(PaystubWageLine) )
+      ), # tuple
     ( "income",
       amount_from_paystub_function(Paystub.gross_income) ),
     ( "CPP deduction",
@@ -68,6 +79,28 @@ print_paystub_line_config = [
       calculated_value_of_class(PaystubVacpayPayoutLine)),
     ( "actual vacation payout",
       value_of_class(PaystubVacpayPayoutLine)),
+    ( "income year to date",
+      year_to_date_sum_of_class(PaystubIncomeLine) ),
+    ( "cpp (employee) year to date",
+      year_to_date_sum_of_class(PaystubCPPDeductionLine) ),
+    ( "ei (employee) year to date",
+      year_to_date_sum_of_class(PaystubEIDeductionLine) ),
+    ( "income tax deducted year to date",
+      year_to_date_sum_of_class(PaystubIncomeTaxDeductionLine) ),
+    ( "cpp (employer contribution) year to date",
+      year_to_date_sum_of_class(PaystubCPPEmployerContributionLine) ),
+    ( "ei (employer contribution) year to date",
+      year_to_date_sum_of_class(PaystubEIEmployerContributionLine) ),
+    ( "hours this year",
+      lambda paystub: "%.2f" % sum(
+            paystub_line.get_value_components()[0]
+            for paystub_line in 
+            paystub.employee.get_bounded_paystub_lines_of_class(
+                PaystubWageLine,
+                start_of_year(paystub.payday.paydate), paystub.payday.paydate,
+                paystub, include_final_paystub=True ) )
+      ), # tuple
+
 ]
 
 CHEQUING_ACCOUNT = ("Assets", "Current Assets", "Checking Account")

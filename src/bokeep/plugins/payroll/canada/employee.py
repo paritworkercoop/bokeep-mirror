@@ -30,6 +30,7 @@ from paystub_line import PaystubWageLine, sum_paystub_lines
 from functions import iterate_until_value, ZERO, \
     convert_dict_of_string_to_dict_of_decimals_in_place, \
     decimal_round_two_place_using_third_digit
+from bokeep.util import start_of_year
 from decimal import Decimal
 from datetime import date, MINYEAR, MAXYEAR
 
@@ -356,10 +357,10 @@ class Employee(Persistent):
     def get_YTD_sum_of_paystub_line_class(self, paystub_line_class,
                                           stop_at_paystub,
                                           include_final_paystub=False):
-        start_of_year = date(stop_at_paystub.payday.paydate.year, 1, 1)
         last_date  = stop_at_paystub.payday.paydate
         return self.get_bounded_sum_of_paystub_line_class(
-            paystub_line_class, start_of_year, last_date,
+            paystub_line_class,
+            start_of_year(stop_at_paystub.payday.paydate), last_date,
             stop_at_paystub, include_final_paystub)
 
     def get_bounded_sum_of_paystub_line_class(self, paystub_line_class,
