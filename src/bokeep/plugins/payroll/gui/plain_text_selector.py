@@ -56,7 +56,11 @@ class CanadianPayrollEditor(object):
 
     def update_paystub_listing(self):
         buffer_text = ""
+        pay_period_start_text, pay_period_end_text, payday_text = "", "", ""
         if self.trans.has_accounting_lines_attr():
+            pay_period_start_text = self.trans.period_start.isoformat()
+            pay_period_end_text = self.trans.period_end.isoformat()
+            payday_text = self.trans.paydate.isoformat()
             if self.has_config:
                 buffer_text = make_print_paystubs_str(
                     self.trans, self.print_paystub_line_config)
@@ -64,7 +68,10 @@ class CanadianPayrollEditor(object):
                 buffer_text = str(self.trans.get_payday_accounting_lines())
                 
         self.paystubs_text_view.get_buffer().set_text(buffer_text)
-    
+        self.period_start_label.set_text( pay_period_start_text)
+        self.period_end_label.set_text(pay_period_end_text)
+        self.payroll_date_label.set_text(payday_text)
+
     def payroll_data_and_config_changed(self):
         if self.has_config and self.has_data:
             result, msg = setup_paystubs_for_payday_from_dicts(
