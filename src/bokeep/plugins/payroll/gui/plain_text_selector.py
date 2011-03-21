@@ -46,9 +46,17 @@ class CanadianPayrollEditor(object):
             'window1', self, self)
         self.payrollvbox.reparent(self.gui_parent)
         self.window1.hide()
-        
-        self.has_config = False
+
+        # important to set this first because use_config_module checks for this
         self.has_data = False
+
+        plugin_config_file = self.plugin.get_config_file()
+        if plugin_config_file == None:
+            self.has_config = False
+        else:
+            # this leads to self.has_config being set
+            self.use_config_module(
+                get_module_for_file_path(plugin_config_file) )
         self.update_paystub_listing()
 
     def detach(self):
