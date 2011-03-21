@@ -122,10 +122,13 @@ class CanadianPayrollEditor(object):
             self.payroll_data_and_config_changed()
         else:
             self.error_dialog("Problem with data file")
-            
+
     def on_select_config_clicked(self, *args):
         load_module = self.file_selection_module_contents(
             "select a payroll config file")
+        self.use_config_module(load_module)
+
+    def use_config_module(self, load_module):
         self.has_config = (
             load_module != None and 
             hasattr(load_module, 'paystub_line_config') and
