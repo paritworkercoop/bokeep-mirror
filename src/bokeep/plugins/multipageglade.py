@@ -17,6 +17,9 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# python imports
+from decimal import Decimal
+
 # zodb imports
 from persistent import Persistent
 from persistent.mapping import PersistentMapping
@@ -83,3 +86,29 @@ class multipage_glade_editor(object):
 
     def detach(self):
         pass
+
+def make_sum_entry_val_func(positive_funcs, negative_funcs):
+    def return_func(window_list):
+        return sum( chain( (positive_function(window_list)
+                            for positive_function in positive_funcs),
+                           (-negative_function(window_list)
+                             for negative_function in negative_funcs) ),
+                    Decimal(0) )
+    return return_func
+
+def make_get_entry_val(page, entry_name):
+    def return_func(window_dict):
+        if page not in window_dict:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                "page %s could not be found" % page)
+        if entry_name not in window_dict[page]:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                "entry %s from page %s not found" % (entry_name, page) )
+        try:
+            return Decimal( window_dict[page][entry_name].get_text() )
+        except ValueError:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                "entry %s from page %s not convertable to decimal with value "
+                "%s" % (entry_name, page,
+                        window_dict[page][entry_name].get_text() ) )
+    return return_func
