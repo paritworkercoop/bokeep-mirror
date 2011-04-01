@@ -29,6 +29,7 @@ from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.util import \
     get_file_in_same_dir_as_module, get_module_for_file_path
+from bokeep.gtkutil import file_selection_path
 from bokeep.plugins.payroll.csv_dump import do_csv_dump
 from bokeep.plugins.payroll.make_T4 import generate_t4s
 from bokeep.plugins.payroll.period_analyse import period_analyse
@@ -36,20 +37,6 @@ from bokeep.plugins.payroll.period_analyse import period_analyse
 def get_payroll_glade_file():
     import config as this_module
     return get_file_in_same_dir_as_module(this_module, 'payroll.glade')
-
-def file_selection_path(msg="choose file"):   
-    fcd = FileChooserDialog(
-        msg,
-        None,
-        FILE_CHOOSER_ACTION_OPEN,
-        (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_OPEN, RESPONSE_OK) )
-    fcd.set_modal(True)
-    result = fcd.run()
-    file_path = fcd.get_filename()
-    fcd.destroy()
-    if result == RESPONSE_OK:
-        return file_path
-    return None
 
 def file_selection_module_contents(msg="choose file"):
     file_path = file_selection_path(msg)
