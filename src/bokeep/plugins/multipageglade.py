@@ -1,0 +1,85 @@
+# Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+#
+# This file is part of Bo-Keep.
+#
+# Bo-Keep is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Author: Mark Jenkins <mark@parit.ca>
+
+# zodb imports
+from persistent import Persistent
+from persistent.mapping import PersistentMapping
+
+# bokeep imports
+from bokeep.book_transaction import \
+    Transaction, FinancialTransaction, FinancialTransactionLine, \
+    BoKeepTransactionNotMappableToFinancialTransaction
+from bokeep.gtkutil import file_selection_path
+
+def get_plugin_class():
+    return MultiPageGladePlugin
+
+MULTIPAGEGLADE_CODE = 0
+
+class MultiPageGladePlugin(Persistent):
+    def __init__(self):
+        self.trans_registry = PersistentMapping()
+        self.config_file = None
+        self.type_string = "Multi page glade"
+
+    def run_configuration_interface(
+        self, parent_window, backend_account_fetch):
+        self.config_file = file_selection_path("select config file")
+
+    def register_transaction(self, front_end_id, trust_trans):
+        assert( not self.has_transaction(front_end_id) )
+        self.trans_registry[front_end_id] = trust_trans
+
+    def remove_transaction(self, front_end_id):
+        del self.trans_registry[front_end_id]
+
+    def has_transaction(self, trans_id):
+        return trans_id in self.trans_registry
+
+    @staticmethod
+    def get_transaction_type_codes():
+        return (MULTIPAGEGLADE_CODE,)
+
+    @staticmethod
+    def get_transaction_type_from_code(code):
+        assert(code == MULTIPAGEGLADE_CODE)
+        return MultipageGladeTransaction
+
+    def get_transaction_type_pulldown_string_from_code(self, code):
+        assert(code == MULTIPAGEGLADE_CODE)
+        return self.type_string
+        
+    @staticmethod
+    def get_transaction_edit_interface_hook_from_code(code):
+        return multipage_glade_editor
+
+class MultipageGladeTransaction(Transaction):
+    def get_financial_transactions(self):
+        # you should throw BoKeepTransactionNotMappableToFinancialTransaction
+        # under some conditions
+        raise BoKeepTransactionNotMappableToFinancialTransaction(
+            "not written yet")
+
+class multipage_glade_editor(object):
+    def __init__(self,
+                 trans, transid, plugin, gui_parent, change_register_function):
+        pass
+
+    def detach(self):
+        pass
