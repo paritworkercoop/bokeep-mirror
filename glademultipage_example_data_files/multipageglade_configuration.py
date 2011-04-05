@@ -8,11 +8,18 @@
 from decimal import Decimal
 from bokeep.plugins.multipageglade import \
     make_sum_entry_val_func, make_get_entry_val_func
+from bokeep.util import get_file_in_same_dir_as_module
 
-P1 = "window1"
-P2 = "window2"
+def get_this_mod():
+    import multipageglade_configuration
+    return multipageglade_configuration
 
-PAGES = (P1, P2)
+GLADE_FILE = get_file_in_same_dir_as_module(
+    get_this_mod(), 'multipageexample.glade')
+P1 = (GLADE_FILE, "window1")
+P2 = (GLADE_FILE, "window2")
+
+pages = (P1, P2)
 A1 = ("Assets,")
 A2 = ("Liabilities,")
 
