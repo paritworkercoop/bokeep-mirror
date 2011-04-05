@@ -206,6 +206,9 @@ class multipage_glade_editor(object):
             self.current_page = new_page
             self.attach_current_page()
 
+class EntryTextToDecimalConversionFail(Exception):
+    pass
+
 def make_sum_entry_val_func(positive_funcs, negative_funcs):
     def return_func(window_list):
         return sum( chain( (positive_function(window_list)
@@ -226,7 +229,7 @@ def make_get_entry_val_func(page, entry_name):
         try:
             return Decimal( window_dict[page][entry_name].get_text() )
         except ValueError:
-            raise BoKeepTransactionNotMappableToFinancialTransaction(
+            raise EntryTextToDecimalConversionFail(
                 "entry %s from page %s not convertable to decimal with value "
                 "%s" % (entry_name, page,
                         window_dict[page][entry_name].get_text() ) )
