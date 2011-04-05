@@ -7,7 +7,7 @@
 
 from decimal import Decimal
 from bokeep.plugins.multipageglade import \
-    make_sum_entry_val_func, make_get_entry_val
+    make_sum_entry_val_func, make_get_entry_val_func
 
 P1 = "window1"
 P2 = "window2"
@@ -26,16 +26,16 @@ fin_trans_template = (
 
     # CREDITS
     ( ("this one is almost pointless", make_sum_entry_val_func(
-            ( make_get_entry_val(P1, "entry1"),
+            ( make_get_entry_val_func(P1, "entry1"),
               lambda x: Decimal(1),
               ), # end positive tuple
-            ( make_get_entry_val(P2, "entry2"), ) # end negative tuple
+            ( make_get_entry_val_func(P2, "entry2"), ) # end negative tuple
             ), # make_sum_entry_val_func
        A2), # end credit tuple
       ("and this once cancels the debits and pointless",
        make_sum_entry_val_func(
-                (make_get_entry_val(P1, "entry1"),
-                 make_get_entry_val(P2, "entry2")), # end positive tuple
+                (make_get_entry_val_func(P1, "entry1"),
+                 make_get_entry_val_func(P2, "entry2")), # end positive tuple
                 ( lambda x: Decimal(1), ),
                 ),
        A2), # end credit tuple

@@ -145,7 +145,7 @@ def make_sum_entry_val_func(positive_funcs, negative_funcs):
                     Decimal(0) )
     return return_func
 
-def make_get_entry_val(page, entry_name):
+def make_get_entry_val_func(page, entry_name):
     def return_func(window_dict):
         if page not in window_dict:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
