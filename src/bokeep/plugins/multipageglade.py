@@ -29,6 +29,7 @@ from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine, \
     BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gtkutil import file_selection_path
+from bokeep.util import get_module_for_file_path
 
 def get_plugin_class():
     return MultiPageGladePlugin
@@ -40,6 +41,17 @@ class MultiPageGladePlugin(Persistent):
         self.trans_registry = PersistentMapping()
         self.config_file = None
         self.type_string = "Multi page glade"
+
+    def get_configuration(self):
+        if hasattr(self, _v_configuration):
+            return self._v_configuration
+        else:
+            return_value = \
+                None if self.config_file == None \
+                else get_module_for_file_path(self.config_file)
+            if return_value != None:
+                self._v_configuration = return_value
+            return return_value
 
     def run_configuration_interface(
         self, parent_window, backend_account_fetch):
