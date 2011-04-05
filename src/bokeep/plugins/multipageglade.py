@@ -215,7 +215,7 @@ class EntryTextToDecimalConversionFail(Exception):
     pass
 
 def make_sum_entry_val_func(positive_funcs, negative_funcs):
-    def return_func(window_list):
+    def return_func(window_list, *args):
         return sum( chain( (positive_function(window_list)
                             for positive_function in positive_funcs),
                            (-negative_function(window_list)
@@ -224,7 +224,7 @@ def make_sum_entry_val_func(positive_funcs, negative_funcs):
     return return_func
 
 def make_get_entry_val_func(page, entry_name):
-    def return_func(window_dict):
+    def return_func(window_dict, *args):
         if page not in window_dict:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 "page %s could not be found" % page)
