@@ -192,7 +192,7 @@ class multipage_glade_editor(object):
 
     def detach(self):
         if hasattr(self, 'current_page'):
-            detach_current_page(self)
+            self.detach_current_page()
         self.mainvbox.reparent(self.hide_parent)
 
     def nav_but_clicked(self, but, *args):
