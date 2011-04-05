@@ -24,6 +24,10 @@ from decimal import Decimal
 from persistent import Persistent
 from persistent.mapping import PersistentMapping
 
+# gtk imports
+from gtk import \
+    VBox, HBox, Window, Button, STOCK_GO_FORWARD, STOCK_GO_BACK, Label
+
 # bokeep imports
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine, \
@@ -43,7 +47,7 @@ class MultiPageGladePlugin(Persistent):
         self.type_string = "Multi page glade"
 
     def get_configuration(self):
-        if hasattr(self, _v_configuration):
+        if hasattr(self, '_v_configuration'):
             return self._v_configuration
         else:
             return_value = \
@@ -91,6 +95,8 @@ class MultipageGladeTransaction(Transaction):
         raise BoKeepTransactionNotMappableToFinancialTransaction(
             "not written yet")
 
+GLADE_BACK_NAV, GLADE_FORWARD_NAV = range(2)
+
 class multipage_glade_editor(object):
     def __init__(self,
                  trans, transid, plugin, gui_parent, change_register_function):
@@ -100,8 +106,35 @@ class multipage_glade_editor(object):
         self.gui_parent = gui_parent
         self.change_register_function = change_register_function
 
+        self.hide_parent = Window()
+        self.hide_parent.hide()
+        self.mainvbox = VBox()
+        self.hide_parent.add(self.mainvbox)
+
+        config = self.plugin.get_configuration()
+        labeltext = "no configuration" if config == None else "got config"
+        self.mainvbox.add(Label(labeltext))
+
+        button_hbox = HBox()
+        self.mainvbox.add(button_hbox)
+        self.nav_buts = dict( (Button(), i)
+                              for i in range(2) )
+        for but, i in self.nav_buts.iteritems():
+            but.set_property('use-stock', True)
+            but.set_label( STOCK_GO_BACK
+                           if i == GLADE_BACK_NAV else STOCK_GO_FORWARD )
+            button_hbox.add(but)
+            but.connect("clicked", self.nav_but_clicked)
+        self.mainvbox.show_all()
+        self.mainvbox.reparent(self.gui_parent)
+
     def detach(self):
-        pass
+        self.mainvbox.reparent(self.hide_parent)
+
+    def nav_but_clicked(self, but, *args):
+        print( "%s button clicked" % 
+               "backward" if self.nav_buts[but] == GLADE_BACK_NAV
+               else "forward" )
 
 def make_sum_entry_val_func(positive_funcs, negative_funcs):
     def return_func(window_list):
