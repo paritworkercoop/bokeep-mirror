@@ -20,6 +20,7 @@
 # python imports
 from decimal import Decimal
 from operator import __and__
+from itertools import chain
 
 # zodb imports
 from persistent import Persistent
@@ -32,7 +33,7 @@ from gtk import \
 
 # bokeep imports
 from bokeep.book_transaction import \
-    Transaction, FinancialTransaction, FinancialTransactionLine, \
+    Transaction, FinancialTransaction, make_fin_line, \
     BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gtkutil import file_selection_path
 from bokeep.util import get_module_for_file_path
@@ -113,11 +114,34 @@ class MultipageGladeTransaction(Transaction):
         self.establish_widget_states()
         return name in self.widget_states
 
-    def get_financial_transactions(self):       
-        # you should throw BoKeepTransactionNotMappableToFinancialTransaction
-        # under some conditions
-        raise BoKeepTransactionNotMappableToFinancialTransaction(
-            "not written yet")
+    def get_financial_transactions(self):
+        config = self.associated_plugin.get_configuration()
+        try:
+            # for debits and credits
+            trans_lines = [
+                make_fin_line(
+                    # just call val_func if debit, else
+                    # call it an negate it, note use of
+                    # ternary operator
+                    val_func(self.widget_states) if i==0
+                    else -val_func(self.widget_states),
+                    account, memo)
+                for i in range(2)
+                for memo, val_func, account in
+                config.fin_trans_template[i]
+                ]
+            
+        except EntryTextToDecimalConversionFail, e:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                str(e))
+        fin_trans = FinancialTransaction(trans_lines)
+        for attr in (
+            'trans_date', 'currency', 'chequenum', 'description'):
+            setattr(fin_trans, attr,
+                    getattr(config, 'get_' + attr)(
+                    self.widget_states) )
+
+        return (fin_trans,)
 
 GLADE_BACK_NAV, GLADE_FORWARD_NAV = range(2)
 
@@ -266,18 +290,16 @@ def make_sum_entry_val_func(positive_funcs, negative_funcs):
     return return_func
 
 def make_get_entry_val_func(page, entry_name):
-    def return_func(window_dict, *args):
-        if page not in window_dict:
+    def return_func(widget_state_dict, *args):
+        widget_key = (page, entry_name)
+        if widget_key not in widget_state_dict:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
-                "page %s could not be found" % page)
-        if entry_name not in window_dict[page]:
-            raise BoKeepTransactionNotMappableToFinancialTransaction(
-                "entry %s from page %s not found" % (entry_name, page) )
+                "page and widget %s could not be found" % (page,) )
         try:
-            return Decimal( window_dict[page][entry_name].get_text() )
+            return Decimal( widget_state_dict[widget_key] )
         except ValueError:
             raise EntryTextToDecimalConversionFail(
-                "entry %s from page %s not convertable to decimal with value "
-                "%s" % (entry_name, page,
-                        window_dict[page][entry_name].get_text() ) )
+                "entry %s not convertable to decimal with value "
+                "%s" % (entry_name, widget_key,
+                        widget_state_dict[widget_key] ) )
     return return_func

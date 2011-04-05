@@ -5,7 +5,11 @@
 # Original author: ParIT Worker Co-operative <paritinfo@parit.ca>
 # You may remove this notice from this file.
 
+# python imports
 from decimal import Decimal
+from datetime import date
+
+# bokeep imports
 from bokeep.plugins.multipageglade import \
     make_sum_entry_val_func, make_get_entry_val_func
 from bokeep.util import get_file_in_same_dir_as_module
@@ -20,8 +24,15 @@ P1 = (GLADE_FILE, "window1")
 P2 = (GLADE_FILE, "window2")
 
 pages = (P1, P2)
-A1 = ("Assets,")
-A2 = ("Liabilities,")
+A1 = ("Assets",)
+A2 = ("Liabilities",)
+
+get_currency = lambda *args: "CAD"
+get_description = lambda *args: "example glade prog"
+
+# should replace these with fetching an example name field
+get_chequenum = lambda *args: 1
+get_trans_date = lambda *args: date.today()
 
 fin_trans_template = (
     # DEBITS
