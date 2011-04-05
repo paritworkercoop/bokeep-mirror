@@ -118,6 +118,8 @@ def config_valid(config):
                   isinstance(page[1], str) 
                   for page in config.pages ) )
 
+GLADE_FILE, TOP_WIDGET = range(2)
+
 class multipage_glade_editor(object):
     def __init__(self,
                  trans, transid, plugin, gui_parent, change_register_function):
@@ -136,38 +138,73 @@ class multipage_glade_editor(object):
         if not config_valid(config):
             # even in the case of a broken config, we should still
             # display all of the data we have available...
-            self.mainvbox.add(Label("no configuration"))
+            self.mainvbox.pack_start(Label("no configuration"))
         else:
-            glade_file, top_glade_element = config.pages[0]
-            widget_dict = {}
-            # this should come from the config, no..?
-            event_handlers_dict = {}
-            load_glade_file_get_widgets_and_connect_signals(
-                glade_file, top_glade_element,
-                widget_dict, event_handlers_dict )
-            widget_dict[top_glade_element].child.reparent(
-                self.mainvbox)
+            self.page_label = Label("")
+            self.mainvbox.pack_start(self.page_label)
 
-        button_hbox = HBox()
-        self.mainvbox.add(button_hbox)
-        self.nav_buts = dict( (Button(), i)
-                              for i in range(2) )
-        for but, i in self.nav_buts.iteritems():
-            but.set_property('use-stock', True)
-            but.set_label( STOCK_GO_BACK
-                           if i == GLADE_BACK_NAV else STOCK_GO_FORWARD )
-            button_hbox.add(but)
-            but.connect("clicked", self.nav_but_clicked)
+            self.glade_pages = [
+                self.setup_page(glade_file, top_glade_element)
+                for glade_file, top_glade_element in config.pages ]
+            self.current_page = 0
+            self.attach_current_page()
+
+            button_hbox = HBox()
+            self.mainvbox.pack_end(button_hbox)
+            self.nav_buts = dict( (Button(), i)
+                                  for i in range(2) )
+            for but, i in self.nav_buts.iteritems():
+                but.set_property('use-stock', True)
+                but.set_label( STOCK_GO_BACK
+                               if i == GLADE_BACK_NAV else STOCK_GO_FORWARD )
+                button_hbox.add(but)
+                but.connect("clicked", self.nav_but_clicked)
+
         self.mainvbox.show_all()
         self.mainvbox.reparent(self.gui_parent)
 
+    def setup_page(self, glade_file, top_glade_element):
+        widget_dict = {}
+        # this should come from the config, seeing how we're setting up
+        # our stuff manually
+        event_handlers_dict = {}
+        load_glade_file_get_widgets_and_connect_signals(
+            glade_file, top_glade_element,
+            widget_dict, event_handlers_dict )
+        widget_dict[top_glade_element].hide()
+        return widget_dict
+
+    def attach_current_page(self):
+        config = self.plugin.get_configuration()
+        self.current_widget_dict = self.glade_pages[self.current_page] 
+        self.current_window = self.current_widget_dict[
+            config.pages[self.current_page][TOP_WIDGET] ]
+        self.current_top_vbox = self.current_window.child
+        self.current_top_vbox.reparent(
+            self.mainvbox)
+        self.page_label.set_text( "page %s of %s" %( self.current_page + 1,
+                                                     len(config.pages) ) )
+
+    def detach_current_page(self):
+        # put the spawn back to wence it came
+        self.current_top_vbox.reparent(
+            self.current_window)
+
     def detach(self):
+        if hasattr(self, 'current_page'):
+            detach_current_page(self)
         self.mainvbox.reparent(self.hide_parent)
 
     def nav_but_clicked(self, but, *args):
-        print( "%s button clicked" % 
-               "backward" if self.nav_buts[but] == GLADE_BACK_NAV
-               else "forward" )
+        delta = -1 if self.nav_buts[but] == GLADE_BACK_NAV else 1
+        new_page = self.current_page + delta
+        # reject a change outside the acceptable range.. and hmm,
+        # perhaps this event handler should never even run under those
+        # conditions because we should really just grey the buttons
+        if not (new_page < 0 or new_page == len(self.glade_pages)):
+            self.detach_current_page()
+            self.current_page = new_page
+            self.attach_current_page()
 
 def make_sum_entry_val_func(positive_funcs, negative_funcs):
     def return_func(window_list):
