@@ -146,6 +146,11 @@ class multipage_glade_editor(object):
             self.glade_pages = [
                 self.setup_page(glade_file, top_glade_element)
                 for glade_file, top_glade_element in config.pages ]
+            self.glade_pages_by_ident_index = dict(
+                ( (key, self.glade_pages[key])
+                  for i, key in config.pages ) # end generator expression
+                ) # end dict
+
             self.current_page = 0
             self.attach_current_page()
 
