@@ -27,7 +27,8 @@ from persistent.mapping import PersistentMapping
 
 # gtk imports
 from gtk import \
-    VBox, HBox, Window, Button, STOCK_GO_FORWARD, STOCK_GO_BACK, Label
+    VBox, HBox, Window, Button, STOCK_GO_FORWARD, STOCK_GO_BACK, Label, \
+    Entry
 
 # bokeep imports
 from bokeep.book_transaction import \
@@ -92,7 +93,27 @@ class MultiPageGladePlugin(Persistent):
         return multipage_glade_editor
 
 class MultipageGladeTransaction(Transaction):
-    def get_financial_transactions(self):
+    def __init__(self, associated_plugin):
+        Transaction.__init__(self, associated_plugin)
+        self.establish_widget_states()
+
+    def establish_widget_states(self):
+        if not hasattr(self, 'widget_states'):
+            self.widget_states = PersistentMapping()        
+
+    def update_widget_state(self, name, value):
+        self.establish_widget_states()
+        self.widget_states[name] = value
+
+    def get_widget_state(self, name):
+        self.establish_widget_states()
+        return self.widget_states[name]
+
+    def has_widget_state(self, name):
+        self.establish_widget_states()
+        return name in self.widget_states
+
+    def get_financial_transactions(self):       
         # you should throw BoKeepTransactionNotMappableToFinancialTransaction
         # under some conditions
         raise BoKeepTransactionNotMappableToFinancialTransaction(
@@ -147,9 +168,21 @@ class multipage_glade_editor(object):
                 self.setup_page(glade_file, top_glade_element)
                 for glade_file, top_glade_element in config.pages ]
             self.glade_pages_by_ident_index = dict(
-                ( (key, self.glade_pages[key])
-                  for i, key in config.pages ) # end generator expression
+                ( (key, self.glade_pages[i])
+                  for i, key in enumerate(config.pages)
+                  ) # end generator expression
                 ) # end dict
+            
+            for key, widget_dict in self.glade_pages_by_ident_index.iteritems():
+                for widget_name, widget in widget_dict.iteritems():
+                    widget_key = (key, widget_name)
+                    if isinstance(widget, Entry):
+                        # important to do the initial set prior to setting up
+                        # the event handler for changed events
+                        if self.trans.has_widget_state( widget_key ):
+                            widget.set_text(
+                                self.trans.get_widget_state( widget_key ) )
+                        widget.connect( "changed", self.entry_changed )
 
             self.current_page = 0
             self.attach_current_page()
@@ -165,11 +198,13 @@ class multipage_glade_editor(object):
                 button_hbox.add(but)
                 but.connect("clicked", self.nav_but_clicked)
 
+
         self.mainvbox.show_all()
         self.mainvbox.reparent(self.gui_parent)
 
     def setup_page(self, glade_file, top_glade_element):
         widget_dict = {}
+        
         # this should come from the config, seeing how we're setting up
         # our stuff manually
         event_handlers_dict = {}
@@ -210,6 +245,13 @@ class multipage_glade_editor(object):
             self.detach_current_page()
             self.current_page = new_page
             self.attach_current_page()
+
+    def entry_changed(self, entry, *args):
+        config = self.plugin.get_configuration()
+        widget_key = ( (config.pages[self.current_page]), entry.get_name() )
+        self.trans.update_widget_state(
+            widget_key, entry.get_text() )
+        self.change_register_function()
 
 class EntryTextToDecimalConversionFail(Exception):
     pass
