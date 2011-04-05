@@ -94,7 +94,11 @@ class MultipageGladeTransaction(Transaction):
 class multipage_glade_editor(object):
     def __init__(self,
                  trans, transid, plugin, gui_parent, change_register_function):
-        pass
+        self.trans = trans
+        self.transid = transid
+        self.plugin = plugin
+        self.gui_parent = gui_parent
+        self.change_register_function = change_register_function
 
     def detach(self):
         pass
