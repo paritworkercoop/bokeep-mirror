@@ -140,7 +140,8 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                 # check the FinancialTransaction type
                 if not reduce(__and__, (
                         isinstance(fin_trans, FinancialTransaction) 
-                        for fin_trans in fin_trans_list) ):
+                        for fin_trans in fin_trans_list),
+                              True): # end reduce
                     error_code = BackendDataStateMachine.ERROR_OTHER
                     error_str = \
                     "get_financial_transactions() returned " \
@@ -149,7 +150,8 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                         isinstance(fin_trans_line,
                                    FinancialTransactionLine)
                         for fin_trans in fin_trans_list
-                        for fin_trans_line in fin_trans.lines ) ):
+                        for fin_trans_line in fin_trans.lines ),
+                                True): # end reduce
                     error_code = BackendDataStateMachine.ERROR_OTHER
                     error_str = \
                     "get_financial_transactions() returned " \

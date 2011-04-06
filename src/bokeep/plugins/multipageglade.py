@@ -165,7 +165,8 @@ def config_valid(config):
                 ( len(page) == 2 and
                   isinstance(page[0], str) and
                   isinstance(page[1], str) 
-                  for page in config.pages ) )
+                  for page in config.pages ),
+                True) # end reduce
 
 GLADE_FILE, TOP_WIDGET = range(2)
 
