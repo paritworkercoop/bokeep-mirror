@@ -34,23 +34,6 @@ from bokeep.book import BoKeepBookSet
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine
 
-
-class TestTransaction(Transaction):
-    def __init__(self):
-        self.fin_trans = FinancialTransaction( (
-            FinancialTransactionLine(Decimal(1)),
-            FinancialTransactionLine(Decimal(-1)),
-            ) )
-    
-    def get_financial_transactions(self):
-       return [self.fin_trans]
-
-CMDS = (REMOVE, CREATE, VERIFY, SAVE, CLOSE) = range(5)
-
-FAILURE_TYPES = \
-    (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET,
-     SAVE_FAIL, SAVE_RESET, VERIFY_FAIL, VERIFY_RESET) = range(8)
-
 def create_logging_function(func, cmd):
     def logging_function(self, *args, **kargs):
         self.actions_queue.append(tuple( chain(
@@ -87,6 +70,57 @@ def create_return_override_function(func, cmd):
         else:
             return original_return
     return return_override_function
+
+class TestHackableClass(object):
+    def __init__(self, *args, **kargs):
+        self.clear_actions_queue()
+        self.clear_programmed_fails()
+        self.clear_programmed_return()
+
+    def pop_actions_queue(self):
+        return_value = self.actions_queue
+        return_value.reverse()
+        self.clear_actions_queue()
+        return return_value
+
+    def clear_actions_queue(self):
+        self.actions_queue = []
+    
+    def clear_programmed_fails(self):
+        self.programmed_failures  = {}
+        for tag in FAILURE_TYPES:
+            self.programmed_failures[tag] = []
+
+    def program_failure(self, tag, exception_to_raise, msg, trigger_test):
+        self.programmed_failures[tag].insert(
+            0, (exception_to_raise, msg, trigger_test) )
+
+    def clear_programmed_return(self):
+        self.programmed_return = {}
+        for cmd in CMDS:
+            self.programmed_return[cmd] = []
+
+    def program_return(self, cmd, return_value):
+        self.programmed_return[cmd].insert(0, return_value)
+
+class TestTransaction(TestHackableClass, Transaction):
+    def __init__(self):
+        TestHackableClass.__init__(self)
+        self.fin_trans = FinancialTransaction( (
+            FinancialTransactionLine(Decimal(1)),
+            FinancialTransactionLine(Decimal(-1)),
+            ) )
+
+    def get_financial_transactions(self):
+        return [self.fin_trans]
+    get_financial_transactions = create_return_override_function(
+        get_financial_transactions, 0)
+
+CMDS = (REMOVE, CREATE, VERIFY, SAVE, CLOSE) = range(5)
+
+FAILURE_TYPES = \
+    (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET,
+     SAVE_FAIL, SAVE_RESET, VERIFY_FAIL, VERIFY_RESET) = range(8)
 
 class BackendModuleUnitTest(RobustBackendPlugin):
     def __init__(self):
@@ -307,6 +341,22 @@ class StartWithInsertSetup(BackendModuleBasicSetup):
         self.look_for_save(actions)
 
 class StartWithInsertTest(StartWithInsertSetup):
+    def test_fin_trans_none(self):
+        self.transaction.program_return(0, None)
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+
+    def test_fin_trans_wrong_type(self):
+        self.transaction.program_return(0, (None,) )
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+    
+    def test_fin_trans_wrong_lines_type(self):
+        self.transaction.program_return(0, (
+                FinancialTransaction( (None,) ) ) )
+        self.backend_module.flush_backend()
+        self.assertTransactionIsDirty(self.front_end_id)
+        
     def test_initial_dirtyness(self):
         self.assertTransactionIsDirty(self.front_end_id)
 
