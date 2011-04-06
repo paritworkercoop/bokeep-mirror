@@ -122,12 +122,10 @@ FAILURE_TYPES = \
     (REMOVAL_FAIL, REMOVAL_RESET, CREATION_FAIL, CREATION_RESET,
      SAVE_FAIL, SAVE_RESET, VERIFY_FAIL, VERIFY_RESET) = range(8)
 
-class BackendModuleUnitTest(RobustBackendPlugin):
+class BackendModuleUnitTest(TestHackableClass, RobustBackendPlugin):
     def __init__(self):
         RobustBackendPlugin.__init__(self)
-        self.clear_actions_queue()
-        self.clear_programmed_fails()
-        self.clear_programmed_return()
+        TestHackableClass.__init__(self)
         self.counter = 0
         
     def can_write(self):
@@ -165,32 +163,6 @@ class BackendModuleUnitTest(RobustBackendPlugin):
             SAVE_RESET),
         SAVE)
     close = create_logging_function(RobustBackendPlugin.close, CLOSE)
-
-    def pop_actions_queue(self):
-        return_value = self.actions_queue
-        return_value.reverse()
-        self.clear_actions_queue()
-        return return_value
-
-    def clear_actions_queue(self):
-        self.actions_queue = []
-    
-    def clear_programmed_fails(self):
-        self.programmed_failures  = {}
-        for tag in FAILURE_TYPES:
-            self.programmed_failures[tag] = []
-
-    def program_failure(self, tag, exception_to_raise, msg, trigger_test):
-        self.programmed_failures[tag].insert(
-            0, (exception_to_raise, msg, trigger_test) )
-
-    def clear_programmed_return(self):
-        self.programmed_return = {}
-        for cmd in CMDS:
-            self.programmed_return[cmd] = []
-
-    def program_return(self, cmd, return_value):
-        self.programmed_return[cmd].insert(0, return_value)
 
 class BackendModuleBasicSetup(TestCase):
     """This tests that RobustBackendPlugin makes calls to the subclass functions
