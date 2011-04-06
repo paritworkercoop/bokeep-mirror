@@ -36,6 +36,14 @@ get_description = lambda *args: "example glade prog"
 get_chequenum = lambda *args: 1
 get_trans_date = lambda *args: date.today()
 
+auto_update_labels = (
+    (P1, 'label1', make_get_entry_val_func(P1, "entry1") ),
+    (P2, "label2",
+     make_sum_entry_val_func( (
+                make_get_entry_val_func(P1, "entry1"),
+                make_get_entry_val_func(P2, "entry2") ), () ) ),
+    )
+
 fin_trans_template = (
     # DEBITS
     ( ("did you get my memo",

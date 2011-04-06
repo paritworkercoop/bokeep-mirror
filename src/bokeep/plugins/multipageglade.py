@@ -164,8 +164,9 @@ def config_valid(config):
                 (hasattr(config, attr)
                  for attr in ('pages', 'get_currency',
                              'get_description', 'get_chequenum',
-                             'get_trans_date', 'fin_trans_template')
-                 ) # end generator expression
+                             'get_trans_date', 'fin_trans_template',
+                             'auto_update_labels' )
+                 ), # end generator expression
                  True ) and \
         reduce( __and__,
                 ( len(page) == 2 and
@@ -237,6 +238,13 @@ class multipage_glade_editor(object):
         self.mainvbox.show_all()
         self.mainvbox.reparent(self.gui_parent)
 
+    def page_is_current(self, page):
+        # assumption is that config is fine and we're on a page
+        assert( hasattr(self, 'glade_pages_by_ident_index') and
+                True )
+        return \
+            self.glade_pages_by_ident_index[page] == self.current_widget_dict
+    
     def setup_page(self, glade_file, top_glade_element):
         widget_dict = {}
         
@@ -259,6 +267,7 @@ class multipage_glade_editor(object):
             self.mainvbox)
         self.page_label.set_text( "page %s of %s" %( self.current_page + 1,
                                                      len(config.pages) ) )
+        self.update_auto_labels()
 
     def detach_current_page(self):
         # put the spawn back to wence it came
@@ -287,6 +296,21 @@ class multipage_glade_editor(object):
         self.trans.update_widget_state(
             widget_key, entry.get_text() )
         self.change_register_function()
+        self.update_auto_labels()
+
+    def update_auto_labels(self):
+        config = self.plugin.get_configuration()
+        # this function should never be called if the config hasn't been
+        # checked out as okay
+        assert( hasattr(config, 'auto_update_labels') )
+        for page, label_name, label_source_func in config.auto_update_labels:
+            if self.page_is_current(page):
+                try:
+                    label_text = str(label_source_func(
+                            self.trans.widget_states))
+                except EntryTextToDecimalConversionFail, e:
+                    label_text = ''
+                self.current_widget_dict[label_name].set_text(label_text)
 
 class EntryTextToDecimalConversionFail(Exception):
     pass
