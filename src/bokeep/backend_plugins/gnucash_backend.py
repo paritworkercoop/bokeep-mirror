@@ -226,7 +226,7 @@ class GnuCash(SessionBasedRobustBackendPlugin):
 
         if trans.GetImbalanceValue().num() != 0:
             trans.Destroy() # undo what we have done
-            trans.xaccTransCommitEdit()
+            trans.CommitEdit()
             raise BoKeepBackendException(
                 "transaction doesn't balance")
 

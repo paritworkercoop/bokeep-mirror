@@ -230,6 +230,22 @@ class GnuCashBasicTest(GnuCashBasicSetup):
         self.assert_(self.backend_module.can_write() )
         self.do_close_and_tree_check()
 
+    def test_imbalance(self):
+        test_trans = TestTransaction(
+            Decimal(1), BANK_FULL_SPEC,
+            Decimal(-2), PETTY_CASH_FULL_SPEC )
+        test_trans.set_currency(self.get_currency())
+        front_end_id = 1
+        self.backend_module.mark_transaction_dirty(
+            front_end_id, test_trans)        
+        self.backend_module.flush_backend()
+        self.assertFalse(self.backend_module.transaction_is_clean(
+                front_end_id) )
+        self.assert_(
+            self.backend_module.reason_transaction_is_dirty(
+                front_end_id).endswith(
+                "transaction doesn't balance"))
+
 class GnuCashBasicTestXML(GetProtocolXML, GnuCashBasicTest): pass
 
 class GnuCashBasicTestUSD(GetCurrencyUSD, GnuCashBasicTest): pass
