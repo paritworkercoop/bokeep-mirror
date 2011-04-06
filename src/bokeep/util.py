@@ -23,6 +23,7 @@
 from threading import Thread, Condition, Event
 from os.path import abspath, dirname, join, exists, basename
 from datetime import date, timedelta
+from zlib import adler32
 
 # ZODB
 import transaction
@@ -541,3 +542,12 @@ def month_delta(current_date, months=1):
 
 def start_of_year(a_date):
     return date(a_date.year, 1, 1)
+
+def adler32_of_file(file_path):
+    """Very fast for file comparison, but a super poor choice if
+    used for cyrptographic uses -- and you thought md5 sucked...
+    """
+    f = file(file_path)
+    return_value = adler32(''.join(f)) & 0xffffffff
+    f.close()
+    return return_value
