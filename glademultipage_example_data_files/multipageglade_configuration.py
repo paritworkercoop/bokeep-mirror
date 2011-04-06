@@ -23,9 +23,11 @@ GLADE_FILE = get_file_in_same_dir_as_module(
 P1 = (GLADE_FILE, "window1")
 P2 = (GLADE_FILE, "window2")
 
-pages = (P1, P2)
 A1 = ("Assets",)
 A2 = ("Liabilities",)
+
+# all variables below here are the ones the plugin is going to search for
+pages = (P1, P2)
 
 get_currency = lambda *args: "CAD"
 get_description = lambda *args: "example glade prog"
