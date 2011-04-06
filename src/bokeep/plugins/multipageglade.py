@@ -160,7 +160,13 @@ def config_valid(config):
     # page
     return \
         config != None and \
-        hasattr(config, "pages") and \
+        reduce( __and__,
+                (hasattr(config, attr)
+                 for attr in ('pages', 'get_currency',
+                             'get_description', 'get_chequenum',
+                             'get_trans_date', 'fin_trans_template')
+                 ) # end generator expression
+                 True ) and \
         reduce( __and__,
                 ( len(page) == 2 and
                   isinstance(page[0], str) and
