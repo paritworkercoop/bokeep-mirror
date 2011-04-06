@@ -18,9 +18,10 @@
 # Author: Mark Jenkins <mark@parit.ca>
 
 # python imports
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from operator import __and__
 from itertools import chain
+from os.path import exists
 
 # zodb imports
 from persistent import Persistent
@@ -36,7 +37,8 @@ from bokeep.book_transaction import \
     Transaction, FinancialTransaction, make_fin_line, \
     BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gtkutil import file_selection_path
-from bokeep.util import get_module_for_file_path
+from bokeep.util import get_module_for_file_path, reload_module_at_filepath, \
+    adler32_of_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 
@@ -53,6 +55,9 @@ class MultiPageGladePlugin(Persistent):
 
     def get_configuration(self):
         if hasattr(self, '_v_configuration'):
+            assert( self.config_file != None )
+            assert( exists(self.config_file) )
+            reload_module_at_filepath(self._v_configuration, self.config_file)
             return self._v_configuration
         else:
             return_value = \
@@ -64,7 +69,16 @@ class MultiPageGladePlugin(Persistent):
 
     def run_configuration_interface(
         self, parent_window, backend_account_fetch):
-        self.config_file = file_selection_path("select config file")
+        old_config_file = self.config_file
+        new_config_file = file_selection_path("select config file")
+        # should probably make self.config_file a private variable
+        # and do this kind of thing in a setter function...
+        if old_config_file == new_config_file:
+            self.get_configuration() # forces reload if cached
+        elif hasattr(self, '_v_configuration'):
+            # get rid of cache
+            delattr(self, '_v_configuration')
+        self.config_file = new_config_file
 
     def register_transaction(self, front_end_id, trust_trans):
         assert( not self.has_transaction(front_end_id) )
@@ -114,11 +128,63 @@ class MultipageGladeTransaction(Transaction):
         self.establish_widget_states()
         return name in self.widget_states
 
+    def can_safely_proceed_with_config_and_path(self, path, config):
+        config_file_path = path
+        if not hasattr(self, 'trans_cache'):
+            return True
+        crc = adler32_of_file(config_file_path)
+        return crc == self.config_crc_cache or (
+            hasattr(config, 'backwards_config_support') and
+            config.backwards_config_support(crc) )
+
     def get_financial_transactions(self):
+        config = self.associated_plugin.get_configuration()
+        if hasattr(self, 'trans_cache'):
+            config_file_path = self.associated_plugin.config_file
+            if config_file_path == None:
+                print(
+                    "had to pull transaction from trans cache due to missing "
+                    "config, but why was a change recorded in the first place?"
+                    " possible bug elsewhere in code"
+                    )
+                return self.trans_cache
+            if self.can_safely_proceed_with_config_and_path(config_file_path,
+                                                            config):
+                return self.__get_and_cache_fin_trans()
+            else:
+                print("had to pull transaction from trans cache due to "
+                      "incompatible config, but why was a change recorded in "
+                      "the first place?"
+                      " possible bug elsewhere in code"
+                      )
+                return self.trans_cache
+        else:
+            return self.__get_and_cache_fin_trans()
+
+    def __get_and_cache_fin_trans(self):
+        """private for a good reason, read source"""
+        # assumption, you've already checked that there is either no
+        # trans in cache or this config is safe to try and your're
+        # calling this from get_financial_transactions
         config = self.associated_plugin.get_configuration()
         if not config_valid(config):
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 "inadequet config")
+
+        self.trans_cache = self.__make_new_fin_trans()
+        
+        # important to do this second, as above may exception out, in which
+        # case these two cached variables should both not be saved
+        self.config_crc_cache = adler32_of_file(
+            self.associated_plugin.config_file)
+
+        return self.trans_cache
+
+    def __make_new_fin_trans(self):
+        """private for a good reason, read source"""
+        # assumption, you've already checked the config and you're really just
+        # calling this from __get_and_cache_fin_trans
+        config = self.associated_plugin.get_configuration()
         try:
             # for debits and credits
             trans_lines = [
@@ -137,6 +203,9 @@ class MultipageGladeTransaction(Transaction):
         except EntryTextToDecimalConversionFail, e:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 str(e))
+        except EntryFindError, entry_find_e:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                str(entry_find_e))
         fin_trans = FinancialTransaction(trans_lines)
         for attr in (
             'trans_date', 'currency', 'chequenum', 'description'):
@@ -192,10 +261,35 @@ class multipage_glade_editor(object):
         self.hide_parent.add(self.mainvbox)
 
         config = self.plugin.get_configuration()
+        config_file_path = self.plugin.config_file
         if not config_valid(config):
             # even in the case of a broken config, we should still
             # display all of the data we have available...
             self.mainvbox.pack_start(Label("no configuration"))
+        elif not self.trans.can_safely_proceed_with_config_and_path(
+            config_file_path, config):
+            # should display all data that's available instead of just
+            # this label
+            #
+            # and should give
+            # user an overide option where they either pick an old config
+            # for one time use or just blow out the memory of having used
+            # a different config...
+            #
+            # should also print the checksum itself so they know
+            # what they need...
+            #
+            # perhaps eventually we even put in place some archival support
+            # for saving old glade and config files and then code into the
+            # the transaction -- hey, code you need to be editable is
+            # over here..
+            #
+            # now hopefully there is no marking of this transaction dirty
+            # in this mode and the extra safegaurds we put into
+            # MultipageGladeTransaction don't get activated
+            self.mainvbox.pack_start(
+                Label("out of date configuration. data is read only here for "
+                      "the safety of your old information"))
         else:
             self.page_label = Label("")
             self.mainvbox.pack_start(self.page_label)
@@ -218,6 +312,9 @@ class multipage_glade_editor(object):
                         if self.trans.has_widget_state( widget_key ):
                             widget.set_text(
                                 self.trans.get_widget_state( widget_key ) )
+                        else:
+                            self.trans.update_widget_state(widget_key,
+                                                           '')
                         widget.connect( "changed", self.entry_changed )
 
             self.current_page = 0
@@ -310,9 +407,14 @@ class multipage_glade_editor(object):
                             self.trans.widget_states))
                 except EntryTextToDecimalConversionFail, e:
                     label_text = ''
+                except EntryFindError, no_find_e:
+                    label_text = str(no_find_e)
                 self.current_widget_dict[label_name].set_text(label_text)
 
 class EntryTextToDecimalConversionFail(Exception):
+    pass
+
+class EntryFindError(Exception):
     pass
 
 def make_sum_entry_val_func(positive_funcs, negative_funcs):
@@ -328,13 +430,13 @@ def make_get_entry_val_func(page, entry_name):
     def return_func(widget_state_dict, *args):
         widget_key = (page, entry_name)
         if widget_key not in widget_state_dict:
-            raise BoKeepTransactionNotMappableToFinancialTransaction(
+            raise EntryFindError(
                 "page and widget %s could not be found" % (page,) )
         try:
             return Decimal( widget_state_dict[widget_key] )
-        except ValueError:
+        except InvalidOperation:
             raise EntryTextToDecimalConversionFail(
-                "entry %s not convertable to decimal with value "
-                "%s" % (entry_name, widget_key,
-                        widget_state_dict[widget_key] ) )
+                "entry %s from %s not convertable to decimal with value %s"
+                % (entry_name, widget_key,
+                   widget_state_dict[widget_key] ) )
     return return_func
