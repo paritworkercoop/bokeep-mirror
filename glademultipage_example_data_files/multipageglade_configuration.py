@@ -47,7 +47,7 @@ fin_trans_template = (
             ( make_get_entry_val_func(P1, "entry1"),
               lambda *args: Decimal(1),
               ), # end positive tuple
-            ( make_get_entry_val_func(P2, "entry2"), ) # end negative tuple
+            ( make_get_entry_val_func(P1, "entry1"), ) # end negative tuple
             ), # make_sum_entry_val_func
        A2), # end credit tuple
       ("and this once cancels the debits and pointless",
