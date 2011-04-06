@@ -453,7 +453,18 @@ class StateMachineMinChangeDataStore(object):
     def get_value(self, key):
         return self.__values[key]
 
+def enhance_syspath_for_module_load(path, position=0):
+    import sys
+    directory = dirname(abspath(path))
+    filename = basename(path)
+    sys.path.insert(position, directory)
+
+def drop_syspath_enhancement(position=0):
+    import sys
+    sys.path.pop(position) # cleanup
+
 def get_module_for_file_path(path):
+    PATH_MOD_POSITION = 0
     # The're got to be a nicer way to load code from a file...
     import sys
     PYTHON_EXTENSION = ".py"
@@ -462,16 +473,20 @@ def get_module_for_file_path(path):
     directory = dirname(abspath(path))
     filename = basename(path)
     assert( filename.endswith(PYTHON_EXTENSION) )
-    modulename = filename[:-3] # everything but last three characterrs
-    PATH_MOD_POSITION = 0
     sys.path.insert(PATH_MOD_POSITION, directory)
+    modulename = filename[:-3] # everything but last three characterrs
     try:
         return_value = __import__(modulename,  globals(), locals(), [""])
     except ImportError:
         return_value = None
     finally:
-        sys.path.pop(PATH_MOD_POSITION) # cleanup
+        drop_syspath_enhancement(PATH_MOD_POSITION)
     return return_value
+
+def reload_module_at_filepath(module, path):
+    enhance_syspath_for_module_load(path)
+    reload(module)
+    drop_syspath_enhancement()
 
 class PluginSet(Persistent):
     def __init__(self):
