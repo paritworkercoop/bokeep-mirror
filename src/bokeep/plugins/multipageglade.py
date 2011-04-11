@@ -203,7 +203,7 @@ class MultipageGladeTransaction(Transaction):
         except EntryTextToDecimalConversionFail, e:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 str(e))
-        except EntryFindError, entry_find_e:
+        except WidgetFindError, entry_find_e:
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 str(entry_find_e))
         fin_trans = FinancialTransaction(trans_lines)
@@ -445,14 +445,14 @@ class multipage_glade_editor(object):
                             self.trans.widget_states))
                 except EntryTextToDecimalConversionFail, e:
                     label_text = ''
-                except EntryFindError, no_find_e:
+                except WidgetFindError, no_find_e:
                     label_text = str(no_find_e)
                 self.current_widget_dict[label_name].set_text(label_text)
 
 class EntryTextToDecimalConversionFail(Exception):
     pass
 
-class EntryFindError(Exception):
+class WidgetFindError(Exception):
     pass
 
 def make_sum_entry_val_func(positive_funcs, negative_funcs):
@@ -468,7 +468,7 @@ def make_get_entry_val_func(page, entry_name):
     def return_func(widget_state_dict, *args):
         widget_key = (page, entry_name)
         if widget_key not in widget_state_dict:
-            raise EntryFindError(
+            raise WidgetFindError(
                 "page and widget %s could not be found" % (page,) )
         try:
             return Decimal( widget_state_dict[widget_key] )
@@ -477,4 +477,13 @@ def make_get_entry_val_func(page, entry_name):
                 "entry %s from %s not convertable to decimal with value %s"
                 % (entry_name, widget_key,
                    widget_state_dict[widget_key] ) )
+    return return_func
+
+def make_get_cal_grab_function(page, calendar_name):
+    def return_func(widget_state_dict, *args):
+        widget_key = (page, calendar_name)
+        if widget_key not in widget_state_dict:
+            raise WidgetFindError(
+                "page and widget %s could not be found" % (page,) )
+        return widget_state_dict[widget_key]
     return return_func

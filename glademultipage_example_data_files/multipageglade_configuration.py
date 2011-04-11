@@ -11,7 +11,8 @@ from datetime import date
 
 # bokeep imports
 from bokeep.plugins.multipageglade import \
-    make_sum_entry_val_func, make_get_entry_val_func
+    make_sum_entry_val_func, make_get_entry_val_func, \
+    make_get_cal_grab_function
 from bokeep.util import get_file_in_same_dir_as_module
 
 def get_this_mod():
@@ -34,7 +35,7 @@ get_description = lambda *args: "example glade prog"
 
 # should replace these with fetching an example name field
 get_chequenum = lambda *args: 1
-get_trans_date = lambda *args: date.today()
+get_trans_date = make_get_cal_grab_function(P1, "calendar1")
 
 auto_update_labels = (
     (P1, 'label1', make_get_entry_val_func(P1, "entry1") ),
