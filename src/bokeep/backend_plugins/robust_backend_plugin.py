@@ -125,53 +125,51 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
         try:
             result_of_get_fin_trans = \
                 bo_keep_trans.get_financial_transactions()
+            fin_trans_list = list(result_of_get_fin_trans)
         except BoKeepTransactionNotMappableToFinancialTransaction, e:
             error_code = BackendDataStateMachine.ERROR_OTHER
             error_string = str(e)
+        except TypeError, type_e:
+            error_code = BackendDataStateMachine.ERROR_OTHER
+            error_str = \
+                "get_financial_transactions() didn't " \
+                "return a list; stacktrace:\n%s" % (str(type_e),)
         else:
-            try:
-                fin_trans_list = list(result_of_get_fin_trans)
-            except TypeError, type_e:
+            # check the FinancialTransaction type
+            if not reduce(__and__, (
+                    isinstance(fin_trans, FinancialTransaction) 
+                    for fin_trans in fin_trans_list),
+                          True): # end reduce
                 error_code = BackendDataStateMachine.ERROR_OTHER
                 error_str = \
-                    "get_financial_transactions() didn't " \
-                    "return a list; stacktrace:\n%s" % (str(type_e),)
+                "get_financial_transactions() returned " \
+                "list/iterable of invalid types"
+            elif not reduce(__and__, (
+                    isinstance(fin_trans_line,
+                               FinancialTransactionLine)
+                    for fin_trans in fin_trans_list
+                    for fin_trans_line in fin_trans.lines ),
+                            True): # end reduce
+                error_code = BackendDataStateMachine.ERROR_OTHER
+                error_str = \
+                "get_financial_transactions() returned " \
+                "FinancialTransaction with some off type " \
+                ".lines "
             else:
-                # check the FinancialTransaction type
-                if not reduce(__and__, (
-                        isinstance(fin_trans, FinancialTransaction) 
-                        for fin_trans in fin_trans_list),
-                              True): # end reduce
+                try:
+                    for fin_trans in fin_trans_list:
+                        new_backend_id = \
+                            state_machine.backend_plugin.\
+                            create_backend_transaction(fin_trans)
+                        backend_ids_to_fin_trans[new_backend_id] = \
+                            fin_trans
+
+                except BoKeepBackendResetException, reset_e:
+                    error_code = BackendDataStateMachine.ERROR_RESET
+                    error_string = str(reset_e)
+                except BoKeepBackendException, e:
                     error_code = BackendDataStateMachine.ERROR_OTHER
-                    error_str = \
-                    "get_financial_transactions() returned " \
-                    "list/iterable of invalid types"
-                elif not reduce(__and__, (
-                        isinstance(fin_trans_line,
-                                   FinancialTransactionLine)
-                        for fin_trans in fin_trans_list
-                        for fin_trans_line in fin_trans.lines ),
-                                True): # end reduce
-                    error_code = BackendDataStateMachine.ERROR_OTHER
-                    error_str = \
-                    "get_financial_transactions() returned " \
-                    "FinancialTransaction with some off type " \
-                    ".lines "
-                else:
-                    try:
-                        for fin_trans in fin_trans_list:
-                            new_backend_id = \
-                                state_machine.backend_plugin.\
-                                create_backend_transaction(fin_trans)
-                            backend_ids_to_fin_trans[new_backend_id] = \
-                                fin_trans
-                    
-                    except BoKeepBackendResetException, reset_e:
-                        error_code = BackendDataStateMachine.ERROR_RESET
-                        error_string = str(reset_e)
-                    except BoKeepBackendException, e:
-                        error_code = BackendDataStateMachine.ERROR_OTHER
-                        error_string = str(e)
+                    error_string = str(e)
 
         return state_machine.data.duplicate_and_change(
             backend_ids_to_fin_trans=backend_ids_to_fin_trans,
