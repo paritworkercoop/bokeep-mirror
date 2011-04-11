@@ -30,13 +30,13 @@ from persistent.mapping import PersistentMapping
 # gtk imports
 from gtk import \
     VBox, HBox, Window, Button, STOCK_GO_FORWARD, STOCK_GO_BACK, Label, \
-    Entry
+    Entry, Calendar
 
 # bokeep imports
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, make_fin_line, \
     BoKeepTransactionNotMappableToFinancialTransaction
-from bokeep.gtkutil import file_selection_path
+from bokeep.gtkutil import file_selection_path, get_current_date_of_gtkcal
 from bokeep.util import get_module_for_file_path, reload_module_at_filepath, \
     adler32_of_file
 from bokeep.gui.gladesupport.glade_util import \
@@ -347,7 +347,8 @@ class multipage_glade_editor(object):
             for widget_name, widget in widget_dict.iteritems():
                 widget_key = (key, widget_name)
                 for cls, func in (
-                    (Entry, self.__setup_auto_entry), ):
+                    (Entry, self.__setup_auto_entry),
+                    (Calendar, self.__setup_auto_calendar), ):
                     if isinstance(widget, cls):
                         func(widget, widget_key)
 
@@ -361,6 +362,23 @@ class multipage_glade_editor(object):
             self.trans.update_widget_state(widget_key,
                                            '')
         widget.connect( "changed", self.entry_changed )            
+
+    def __setup_auto_calendar(self, widget, widget_key):
+        # FIXME, copy-pasted code from __setup_auto_entry, common parts
+        # should be commonized... either in __setup_auto_widgets or with
+        # a decorator
+        # 
+        # important to do the initial set prior to setting up
+        # the event handler for changed events
+        if self.trans.has_widget_state( widget_key ):
+            date_to_set = self.trans.get_widget_state( widget_key )
+            widget.select_month(date_to_set.month-1, date_to_set.year)
+            widget.select_day(date_to_set.day)
+        else:
+            self.trans.update_widget_state(widget_key,
+                                           get_current_date_of_gtkcal(widget) )
+        widget.connect( "day_selected", self.calendar_changed )            
+        
 
     def attach_current_page(self):
         config = self.plugin.get_configuration()
@@ -402,6 +420,18 @@ class multipage_glade_editor(object):
             widget_key, entry.get_text() )
         self.change_register_function()
         self.update_auto_labels()
+
+    def calendar_changed(self, calendar, *args):
+        # woah, see the commonality with entry_changed, perhaps it's time
+        # to do some decorating no?
+        print("cal changed")
+        config = self.plugin.get_configuration()
+        widget_key = ( (config.pages[self.current_page]), calendar.get_name() )
+        self.trans.update_widget_state(
+            widget_key, get_current_date_of_gtkcal(calendar) )
+        self.change_register_function()
+        self.update_auto_labels()        
+        
 
     def update_auto_labels(self):
         config = self.plugin.get_configuration()

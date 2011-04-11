@@ -17,6 +17,9 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# python imports
+from datetime import date
+
 # gtk imports
 from gtk import \
     FileChooserDialog, \
@@ -38,3 +41,6 @@ def file_selection_path(msg="choose file"):
         return file_path
     return None
 
+def get_current_date_of_gtkcal(cal):
+    (year, month, day) = cal.get_date()
+    return date(year, month+1, day)
