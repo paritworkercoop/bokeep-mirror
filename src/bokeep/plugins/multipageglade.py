@@ -295,7 +295,7 @@ class multipage_glade_editor(object):
             self.mainvbox.pack_start(self.page_label)
 
             self.glade_pages = [
-                self.setup_page(glade_file, top_glade_element)
+                self.__setup_page(glade_file, top_glade_element)
                 for glade_file, top_glade_element in config.pages ]
             self.glade_pages_by_ident_index = dict(
                 ( (key, self.glade_pages[i])
@@ -303,19 +303,7 @@ class multipage_glade_editor(object):
                   ) # end generator expression
                 ) # end dict
             
-            for key, widget_dict in self.glade_pages_by_ident_index.iteritems():
-                for widget_name, widget in widget_dict.iteritems():
-                    widget_key = (key, widget_name)
-                    if isinstance(widget, Entry):
-                        # important to do the initial set prior to setting up
-                        # the event handler for changed events
-                        if self.trans.has_widget_state( widget_key ):
-                            widget.set_text(
-                                self.trans.get_widget_state( widget_key ) )
-                        else:
-                            self.trans.update_widget_state(widget_key,
-                                                           '')
-                        widget.connect( "changed", self.entry_changed )
+            self.__setup_auto_widgets()
 
             self.current_page = 0
             self.attach_current_page()
@@ -341,8 +329,8 @@ class multipage_glade_editor(object):
                 True )
         return \
             self.glade_pages_by_ident_index[page] == self.current_widget_dict
-    
-    def setup_page(self, glade_file, top_glade_element):
+
+    def __setup_page(self, glade_file, top_glade_element):
         widget_dict = {}
         
         # this should come from the config, seeing how we're setting up
@@ -353,6 +341,26 @@ class multipage_glade_editor(object):
             widget_dict, event_handlers_dict )
         widget_dict[top_glade_element].hide()
         return widget_dict
+
+    def __setup_auto_widgets(self):
+        for key, widget_dict in self.glade_pages_by_ident_index.iteritems():
+            for widget_name, widget in widget_dict.iteritems():
+                widget_key = (key, widget_name)
+                for cls, func in (
+                    (Entry, self.__setup_auto_entry), ):
+                    if isinstance(widget, cls):
+                        func(widget, widget_key)
+
+    def __setup_auto_entry(self, widget, widget_key):
+        # important to do the initial set prior to setting up
+        # the event handler for changed events
+        if self.trans.has_widget_state( widget_key ):
+            widget.set_text(
+                self.trans.get_widget_state( widget_key ) )
+        else:
+            self.trans.update_widget_state(widget_key,
+                                           '')
+        widget.connect( "changed", self.entry_changed )            
 
     def attach_current_page(self):
         config = self.plugin.get_configuration()
