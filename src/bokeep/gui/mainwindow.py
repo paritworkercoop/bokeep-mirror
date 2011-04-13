@@ -299,7 +299,7 @@ class MainWindow(object):
         self.set_transid_label()
 
     def set_transid_label(self):
-        if self.gui_built:
+        if self.gui_built and not(self.guistate.get_book() == None):
             last_trans_id = self.guistate.get_book().get_latest_transaction_id()
             if last_trans_id != None:
                 self.transid_label.set_text(
