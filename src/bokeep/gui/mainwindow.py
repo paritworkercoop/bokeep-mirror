@@ -63,6 +63,9 @@ def get_bo_keep_logo():
 class MainWindow(object):
     # Functions for window initialization 
 
+    def on_quit_activate(self, args):
+        self.application_shutdown()
+
     def __init__(self, options, args):
         self.gui_built = False
         self.current_editor = None
