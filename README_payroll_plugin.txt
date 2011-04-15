@@ -118,6 +118,31 @@ loss take-backs, and on and on so it really does make sense to keep
 this system flexible through a code based configuration to discourage
 code forking.
 
+---
+Warnings:
+
+You should be advised that the new payroll plugin feature where config files
+are auto loaded has some downsides that need to be paid attention to.
+
+If you want to re-enter the data on an old payroll, keep in mind that if you
+have a plugin wide config file set that it will be used and you need a
+compatible data file. If you've been changing your config file, it may
+not be compatible if you're using a data file that had previously worked with
+a different, old config file.
+
+Also, when viewing old payrolls, your current new config will be used to
+generate the printable paystub, so these may not look like the paystubs
+that would of been seen before.
+
+A future version of bo-keep (after 1.0.3) will address this by allowing you
+to lock in old payrolls to always use a config file from a specific location;
+this will allow you to archive an old configuration and ensure it is continued
+to be used on future edits or views of your transactions.
+
+In addition, the safety measures for allowing checksum based checking of
+compatible configurations as being developed for the multipage glade plugin
+may also be put to use.
+
 Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 This file is part of Bo-Keep.
 
