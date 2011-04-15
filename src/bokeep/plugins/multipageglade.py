@@ -21,7 +21,6 @@
 from decimal import Decimal, InvalidOperation
 from operator import __and__
 from itertools import chain
-from os.path import exists
 
 # zodb imports
 from persistent import Persistent
@@ -41,44 +40,23 @@ from bokeep.util import get_module_for_file_path, reload_module_at_filepath, \
     adler32_of_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
+from bokeep.safe_config_based_plugin_support import \
+    SafeConfigBasedPlugin, SafeConfigBasedTransaction
 
 def get_plugin_class():
     return MultiPageGladePlugin
 
 MULTIPAGEGLADE_CODE = 0
 
-class MultiPageGladePlugin(Persistent):
+class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
     def __init__(self):
+        SafeConfigBasedPlugin.__init__(self) #  self.config_file = None
         self.trans_registry = PersistentMapping()
-        self.config_file = None
         self.type_string = "Multi page glade"
-
-    def get_configuration(self):
-        if hasattr(self, '_v_configuration'):
-            assert( self.config_file != None )
-            assert( exists(self.config_file) )
-            reload_module_at_filepath(self._v_configuration, self.config_file)
-            return self._v_configuration
-        else:
-            return_value = \
-                None if self.config_file == None \
-                else get_module_for_file_path(self.config_file)
-            if return_value != None:
-                self._v_configuration = return_value
-            return return_value
 
     def run_configuration_interface(
         self, parent_window, backend_account_fetch):
-        old_config_file = self.config_file
-        new_config_file = file_selection_path("select config file")
-        # should probably make self.config_file a private variable
-        # and do this kind of thing in a setter function...
-        if old_config_file == new_config_file:
-            self.get_configuration() # forces reload if cached
-        elif hasattr(self, '_v_configuration'):
-            # get rid of cache
-            delattr(self, '_v_configuration')
-        self.config_file = new_config_file
+        self.set_config_file( file_selection_path("select config file") )
 
     def register_transaction(self, front_end_id, trust_trans):
         assert( not self.has_transaction(front_end_id) )
@@ -107,9 +85,9 @@ class MultiPageGladePlugin(Persistent):
     def get_transaction_edit_interface_hook_from_code(code):
         return multipage_glade_editor
 
-class MultipageGladeTransaction(Transaction):
+class MultipageGladeTransaction(SafeConfigBasedTransaction):
     def __init__(self, associated_plugin):
-        Transaction.__init__(self, associated_plugin)
+        SafeConfigBasedTransaction.__init__(self, associated_plugin)
         self.establish_widget_states()
 
     def establish_widget_states(self):
@@ -128,92 +106,9 @@ class MultipageGladeTransaction(Transaction):
         self.establish_widget_states()
         return name in self.widget_states
 
-    def can_safely_proceed_with_config_and_path(self, path, config):
-        config_file_path = path
-        if not hasattr(self, 'trans_cache'):
-            return True
-        crc = adler32_of_file(config_file_path)
-        return crc == self.config_crc_cache or (
-            hasattr(config, 'backwards_config_support') and
-            config.backwards_config_support(crc) )
-
-    def get_financial_transactions(self):
-        config = self.associated_plugin.get_configuration()
-        if hasattr(self, 'trans_cache'):
-            config_file_path = self.associated_plugin.config_file
-            if config_file_path == None:
-                print(
-                    "had to pull transaction from trans cache due to missing "
-                    "config, but why was a change recorded in the first place?"
-                    " possible bug elsewhere in code"
-                    )
-                return self.trans_cache
-            if self.can_safely_proceed_with_config_and_path(config_file_path,
-                                                            config):
-                return self.__get_and_cache_fin_trans()
-            else:
-                print("had to pull transaction from trans cache due to "
-                      "incompatible config, but why was a change recorded in "
-                      "the first place?"
-                      " possible bug elsewhere in code"
-                      )
-                return self.trans_cache
-        else:
-            return self.__get_and_cache_fin_trans()
-
-    def __get_and_cache_fin_trans(self):
-        """private for a good reason, read source"""
-        # assumption, you've already checked that there is either no
-        # trans in cache or this config is safe to try and your're
-        # calling this from get_financial_transactions
-        config = self.associated_plugin.get_configuration()
-        if not config_valid(config):
-            raise BoKeepTransactionNotMappableToFinancialTransaction(
-                "inadequet config")
-
-        self.trans_cache = self.__make_new_fin_trans()
-        
-        # important to do this second, as above may exception out, in which
-        # case these two cached variables should both not be saved
-        self.config_crc_cache = adler32_of_file(
-            self.associated_plugin.config_file)
-
-        return self.trans_cache
-
-    def __make_new_fin_trans(self):
-        """private for a good reason, read source"""
-        # assumption, you've already checked the config and you're really just
-        # calling this from __get_and_cache_fin_trans
-        config = self.associated_plugin.get_configuration()
-        try:
-            # for debits and credits
-            trans_lines = [
-                make_fin_line(
-                    # just call val_func if debit, else
-                    # call it an negate it, note use of
-                    # ternary operator
-                    val_func(self.widget_states) if i==0
-                    else -val_func(self.widget_states),
-                    account, memo)
-                for i in range(2)
-                for memo, val_func, account in
-                config.fin_trans_template[i]
-                ]
-            
-        except EntryTextToDecimalConversionFail, e:
-            raise BoKeepTransactionNotMappableToFinancialTransaction(
-                str(e))
-        except WidgetFindError, entry_find_e:
-            raise BoKeepTransactionNotMappableToFinancialTransaction(
-                str(entry_find_e))
-        fin_trans = FinancialTransaction(trans_lines)
-        for attr in (
-            'trans_date', 'currency', 'chequenum', 'description'):
-            setattr(fin_trans, attr,
-                    getattr(config, 'get_' + attr)(
-                    self.widget_states) )
-
-        return (fin_trans,)
+    def config_valid(self, config):
+        # delegate to the module level function of the same name
+        return config_valid(config)
 
 GLADE_BACK_NAV, GLADE_FORWARD_NAV = range(2)
 
