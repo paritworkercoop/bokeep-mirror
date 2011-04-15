@@ -17,10 +17,14 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# python imports
+from os.path import exists
+
+# bokeep imports
 from bokeep.util import get_module_for_file_path, reload_module_at_filepath, \
     adler32_of_file
 from bokeep.book_transaction import \
-    BoKeepTransactionNotMappableToFinancialTransaction
+    Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 
 class SafeConfigBasedPlugin(object):
     def __init__(self):
@@ -49,9 +53,12 @@ class SafeConfigBasedPlugin(object):
             delattr(self, '_v_configuration')
         self.config_file = new_config_file
 
-class SafeConfigBasedTransaction(object):
+class SafeConfigBasedTransaction(Transaction):
     """Sublcasses must override config_valid and make_new_fin_trans
     """
+    # if __init__ is ever defined make sure it passes appropriate stuff
+    # up to Transaction.__init__
+
     def can_safely_proceed_with_config_and_path(self, path, config):
         config_file_path = path
         if not hasattr(self, 'trans_cache'):
