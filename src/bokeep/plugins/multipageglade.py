@@ -35,7 +35,8 @@ from gtk import \
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, make_fin_line, \
     BoKeepTransactionNotMappableToFinancialTransaction
-from bokeep.gtkutil import file_selection_path, get_current_date_of_gtkcal
+from bokeep.gtkutil import file_selection_path, get_current_date_of_gtkcal, \
+    gtk_error_message
 from bokeep.util import get_module_for_file_path, reload_module_at_filepath, \
     adler32_of_file
 from bokeep.gui.gladesupport.glade_util import \
@@ -298,6 +299,27 @@ class multipage_glade_editor(object):
         self.mainvbox.reparent(self.hide_parent)
 
     def page_change_acceptable_by_input_valid(self):
+        bad_fields = ', '.join( widget_name
+            for widget_name, widget in self.current_widget_dict.iteritems()
+            if not self.widget_valid(widget_name, widget)
+            )
+        if bad_fields == '':
+            return True
+        else:
+            # this is kind of primiative, it would be better to
+            # just highlight them by inserting red lights or something
+            gtk_error_message("The following fields are invalid %s" %
+                              bad_fields )
+            return False
+    
+    def widget_valid(self, widget_name, widget):
+        if isinstance(widget, Entry):
+            try:
+                entry_to_decimal_convert(widget.get_text(), widget_name)
+            except EntryTextToDecimalConversionFail:
+                return False
+        # this covers not only the else case on the first if, but the
+        # the case with the above try, except passes without exception
         return True
 
     def page_change_acceptable_to_config(self, old_page, new_page):
@@ -382,6 +404,15 @@ def make_sum_entry_val_func(positive_funcs, negative_funcs):
                              for negative_function in negative_funcs) ),
                     Decimal(0) )
     return return_func
+
+def entry_to_decimal_convert(txt, entry_name, source_key=''):
+    try:
+        return Decimal( txt )
+    except InvalidOperation:
+        raise EntryTextToDecimalConversionFail(
+            "entry %s from %s not convertable to decimal with value %s"
+            % (entry_name, source_key,
+               txt ) )
 
 def make_get_entry_val_func(page, entry_name):
     def return_func(widget_state_dict, *args):
