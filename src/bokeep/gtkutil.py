@@ -25,7 +25,8 @@ from gtk import \
     FileChooserDialog, \
     FILE_CHOOSER_ACTION_SAVE, FILE_CHOOSER_ACTION_OPEN, \
     STOCK_CANCEL, RESPONSE_CANCEL, \
-    STOCK_SAVE, RESPONSE_OK, STOCK_OPEN
+    STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
+    MESSAGE_ERROR, BUTTONS_OK
 
 def file_selection_path(msg="choose file"):   
     fcd = FileChooserDialog(
@@ -44,3 +45,9 @@ def file_selection_path(msg="choose file"):
 def get_current_date_of_gtkcal(cal):
     (year, month, day) = cal.get_date()
     return date(year, month+1, day)
+
+def gtk_error_message(msg, parent=None):
+    error_dialog = MessageDialog(parent, DIALOG_MODAL, 
+                                 MESSAGE_ERROR, BUTTONS_OK, msg)
+    error_dialog.run()
+    error_dialog.destroy()
