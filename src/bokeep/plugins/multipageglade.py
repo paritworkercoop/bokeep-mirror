@@ -297,16 +297,40 @@ class multipage_glade_editor(object):
             self.detach_current_page()
         self.mainvbox.reparent(self.hide_parent)
 
+    def page_change_acceptable_by_input_valid(self):
+        return True
+
+    def page_change_acceptable_to_config(self, old_page, new_page):
+        return True
+
+    def page_pre_change_config_hooks(self, old_page, new_page):
+        pass
+    
+    def page_pre_change_config_hooks(self, old_page, new_page):
+        pass
+
     def nav_but_clicked(self, but, *args):
+        old_page = self.current_page
         delta = -1 if self.nav_buts[but] == GLADE_BACK_NAV else 1
-        new_page = self.current_page + delta
+        new_page = old_page + delta
         # reject a change outside the acceptable range.. and hmm,
         # perhaps this event handler should never even run under those
         # conditions because we should really just grey the buttons
-        if not (new_page < 0 or new_page == len(self.glade_pages)):
+        if not (new_page < 0 or new_page == len(self.glade_pages)) and \
+                self.page_change_acceptable_by_input_valid() and \
+                self.page_change_acceptable_to_config(old_page, new_page):
+
+            # intentionally done before the page is actually attached,
+            # that's what we mean by pre
+            self.page_pre_change_config_hooks(old_page, new_page)
+
             self.detach_current_page()
             self.current_page = new_page
             self.attach_current_page()
+            
+            # intentionally done after the page is actually attached,
+            # that's what we mean by post
+            self.page_post_change_config_hooks(old_page, new_page)
 
     def entry_changed(self, entry, *args):
         config = self.plugin.get_configuration()
