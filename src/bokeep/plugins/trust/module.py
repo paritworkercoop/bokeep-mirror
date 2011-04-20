@@ -154,7 +154,10 @@ class TrustModule(Persistent):
 
     def get_trustor(self, trustor_name):
         self.ensure_trust_database()
-        return self.trustors_database[trustor_name]
+        if self.has_trustor(trustor_name):
+            return self.trustors_database[trustor_name]
+        else:
+            return None
 
     def rename_trustor(self, old_name, new_name):
         if not(self.has_trustor(old_name)):

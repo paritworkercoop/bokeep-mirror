@@ -80,7 +80,7 @@ class trustor_entry(object):
                 (trans_date.year, trans_date.month, trans_date.day) )
 
 
-        if not self.editable:
+        if not self.editable or self.trust_trans.get_trustor() == None :
             self.widgets['amount_entry'].set_sensitive(False)
 
 
@@ -110,7 +110,9 @@ class trustor_entry(object):
         print self.trust_trans.get_displayable_amount()
         self.change_register_function()
         trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
-        self.trust_module.associate_transaction_with_trustor(self.trans_id, self.trust_trans, trustor.name)
+
+        if not(trustor == None):
+            self.trust_module.associate_transaction_with_trustor(self.trans_id, self.trust_trans, trustor.name)
 
     def on_window_destroy(self, *args):
         if self.editable:
