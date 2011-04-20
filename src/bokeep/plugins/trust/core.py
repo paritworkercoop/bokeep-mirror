@@ -32,6 +32,7 @@ class TrustTransaction(Transaction):
         self.trust_module = trust_module
         self.transfer_amount = Decimal(0)
         self.trustor = None
+        self.memo = None
         self.trans_date = datetime.today()
 
     def get_financial_transactions(self):
@@ -40,6 +41,10 @@ class TrustTransaction(Transaction):
         cash_line = FinancialTransactionLine(self.get_transfer_amount())
         if hasattr(self.trust_module, 'cash_account'):
             cash_line.account_spec = self.trust_module.cash_account
+
+        #use the cash line's memo field for the memo
+        cash_line.line_memo = self.memo
+
         liability_line = \
             FinancialTransactionLine(self.get_transfer_amount() * NEG_1)
         if hasattr(self.trust_module, 'trust_liability_account'):
@@ -69,6 +74,9 @@ class TrustTransaction(Transaction):
 
     def get_displayable_amount(self):
         return TrustTransaction.get_transfer_amount(self)
+
+    def get_memo(self):
+        return self.memo
 
         
 class TrustMoneyInTransaction(TrustTransaction):

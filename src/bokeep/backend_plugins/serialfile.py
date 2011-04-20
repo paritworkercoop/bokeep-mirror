@@ -78,7 +78,7 @@ class SerialFilePlugin(SessionBasedRobustBackendPlugin):
             if reverse:
                 amount = -amount
             return "%s %s" % (amount,
-                              attribute_or_blank(line, 'comment') )
+                              attribute_or_blank(line, 'line_memo') )
 
         self.write_to_file( """transaction with identifier %(trans_id)s
 %(description)s

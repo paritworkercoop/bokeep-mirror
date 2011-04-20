@@ -24,7 +24,7 @@ from bokeep.gui.gladesupport.glade_util import \
 # ZOPEDB imports
 import transaction
 
-from gtk import ListStore
+from gtk import ListStore, TextBuffer
 
 from decimal import Decimal
 
@@ -50,8 +50,16 @@ class trustor_entry(object):
 
         if not gui_parent == None:
             self.widgets['vbox1'].reparent(gui_parent)
+
+        buff = self.widgets['description_textview'].get_buffer()
+        buff.connect("changed", self.description_changed, None)
+
         self.top_window.hide()
         self.gui_built = True
+
+    def description_changed(self, textbuffer, args):
+        if self.gui_built:
+            self.update_trans()
 
     def detach(self):
         self.widgets['vbox1'].reparent(self.top_window)
@@ -71,6 +79,7 @@ class trustor_entry(object):
         if use_index > -1:
             self.trustor_combo.set_active(use_index)
             self.widgets['amount_entry'].set_text(str(self.trust_trans.get_displayable_amount()))
+            self.widgets['description_textview'].get_buffer().set_text(str(self.trust_trans.get_memo()))
         else:
             self.trustor_combo.set_active(0)
 
@@ -102,10 +111,15 @@ class trustor_entry(object):
 
         if entered_amount == '':
             print 'setting amount to zero'
-            self.trust_trans.transfer_amount = Decimal('0')
+            self.trust_trans.transfer_amount = Decimal('0')          
         else:
             print 'using ' + entered_amount + ' for amount'
             self.trust_trans.transfer_amount = Decimal(entered_amount)
+
+        textbuff = self.widgets['description_textview'].get_buffer()
+        entered_description = textbuff.get_text(textbuff.get_start_iter(), textbuff.get_end_iter())
+
+        self.trust_trans.memo = entered_description
 
         print self.trust_trans.get_displayable_amount()
         self.change_register_function()
