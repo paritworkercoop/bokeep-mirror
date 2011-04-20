@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+# A fast checksum program, way faster than md5 and the like because
+# it's intended for speed, not security
+# Used by bo-keep plugins that do config file importing to check for
+# compatibility
+
+from bokeep.util import adler32_of_file
+from sys import argv
+
+print(adler32_of_file(argv[1]))

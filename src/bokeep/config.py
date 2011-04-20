@@ -94,7 +94,7 @@ def first_config_file_in_list_to_exist_and_parse(files):
 
 def get_bokeep_config_paths(provided_path=None):
     if provided_path == None:
-        return (CONFIG_HOME, CONFIG_FILE)
+        return (CONFIG_HOME,)
     else:
         return (provided_path,)    
 

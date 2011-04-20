@@ -79,12 +79,12 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
     # should save new_filestorage_path in config if different
     if new_filestorage_path != filestorage_path:
         config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
-                   filestorage_path)
+                   new_filestorage_path)
         config_fp = file(config_path, 'w')
         config.write(config_fp)
         config_fp.close()
 
-    fs = FileStorage(filestorage_path, create=False )
+    fs = FileStorage(new_filestorage_path, create=False )
     return BoKeepBookSet( DB(fs) )    
 
 def available_plugins():
