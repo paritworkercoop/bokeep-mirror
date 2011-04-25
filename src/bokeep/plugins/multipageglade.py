@@ -459,7 +459,7 @@ def entry_to_decimal_convert(txt, entry_name, page_ident, config):
     txt = txt.strip()
     if txt == '' and widget_key in \
                 config.blanks_are_fine_for_decimal_coversion_treat_as_zero:
-            txt = '0'
+        txt = '0'
     try:
         return Decimal( txt )
     except InvalidOperation:
@@ -474,18 +474,8 @@ def make_get_entry_val_func(page, entry_name):
         if widget_key not in widget_state_dict:
             raise WidgetFindError(
                 "page and widget %s could not be found" % (page,) )
-        widget_txt = widget_state_dict[widget_key]
-        widget_txt = widget_txt.strip()
-        if widget_txt == '' and widget_key in \
-                config.blanks_are_fine_for_decimal_coversion_treat_as_zero:
-            widget_txt = '0'
-        try:
-            return Decimal( widget_txt)
-        except InvalidOperation:
-            raise EntryTextToDecimalConversionFail(
-                "entry %s from %s not convertable to decimal with value %s"
-                % (entry_name, widget_key,
-                   widget_state_dict[widget_key] ) )
+        return entry_to_decimal_convert(
+            widget_state_dict[widget_key], entry_name, page, config)
     return return_func
 
 def make_get_cal_grab_function(page, calendar_name):
