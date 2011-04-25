@@ -162,16 +162,17 @@ def config_valid(config):
         config != None and \
         reduce( __and__,
                 (hasattr(config, attr)
-                 for attr in ('pages', 'get_currency',
-                              'get_description', 'get_chequenum',
-                              'get_trans_date',
-                              'page_change_acceptable',
-                              'page_pre_change_config_hooks',
-                              'page_post_change_config_hooks',
-                              'non_decimal_check_labels',
-                              'blanks_are_fine_for_decimal_coversion_treat_as_zero',
-                              'fin_trans_template',
-                              'auto_update_labels' )
+                 for attr in (
+                'pages', 'get_currency',
+                'get_description', 'get_chequenum',
+                'get_trans_date',
+                'page_change_acceptable',
+                'page_pre_change_config_hooks',
+                'page_post_change_config_hooks',
+                'non_decimal_check_labels',
+                'blanks_are_fine_for_decimal_coversion_treat_as_zero',
+                'fin_trans_template',
+                'auto_update_labels' )
                  ), # end generator expression
                  True ) and \
         reduce( __and__,
