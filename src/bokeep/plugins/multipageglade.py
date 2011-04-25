@@ -169,6 +169,7 @@ def config_valid(config):
                               'page_pre_change_config_hooks',
                               'page_post_change_config_hooks',
                               'non_decimal_check_labels',
+                              'blanks_are_fine_for_decimal_coversion_treat_as_zero',
                               'fin_trans_template',
                               'auto_update_labels' )
                  ), # end generator expression
