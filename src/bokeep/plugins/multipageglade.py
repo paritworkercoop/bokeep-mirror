@@ -123,7 +123,7 @@ class MultipageGladeTransaction(SafeConfigBasedTransaction):
                     # call it an negate it, note use of
                     # ternary operator
                     val_func(self.widget_states) if i==0
-                    else -val_func(self.widget_states),
+                    else -val_func(self.widget_states, config),
                     account, memo)
                 for i in range(2)
                 for memo, val_func, account in
@@ -362,10 +362,14 @@ class multipage_glade_editor(object):
             config.non_decimal_check_labels
 
     def widget_valid(self, widget_name, widget):
+        config = self.plugin.get_configuration()
         if isinstance(widget, Entry) and \
                 not self.__entry_widget_is_check_excempt(widget_name):
             try:
-                entry_to_decimal_convert(widget.get_text(), widget_name)
+                entry_to_decimal_convert(
+                    widget.get_text(), widget_name,
+                    self.__current_page_ident(),
+                    config)
             except EntryTextToDecimalConversionFail:
                 return False
         # this covers not only the else case on the first if, but the
@@ -426,7 +430,7 @@ class multipage_glade_editor(object):
             if self.page_is_current(page):
                 try:
                     label_text = str(label_source_func(
-                            self.trans.widget_states))
+                            self.trans.widget_states, config))
                 except EntryTextToDecimalConversionFail, e:
                     label_text = ''
                 except WidgetFindError, no_find_e:
@@ -440,31 +444,41 @@ class WidgetFindError(Exception):
     pass
 
 def make_sum_entry_val_func(positive_funcs, negative_funcs):
-    def return_func(window_list, *args):
-        return sum( chain( (positive_function(window_list)
+    def return_func(*args):
+        return sum( chain( (positive_function(*args)
                             for positive_function in positive_funcs),
-                           (-negative_function(window_list)
+                           (-negative_function(*args)
                              for negative_function in negative_funcs) ),
                     Decimal(0) )
     return return_func
 
-def entry_to_decimal_convert(txt, entry_name, source_key=''):
+def entry_to_decimal_convert(txt, entry_name, page_ident, config):
+    widget_key = (page_ident, entry_name)
+    txt = txt.strip()
+    if txt == '' and widget_key in \
+                config.blanks_are_fine_for_decimal_coversion_treat_as_zero:
+            txt = '0'
     try:
         return Decimal( txt )
     except InvalidOperation:
         raise EntryTextToDecimalConversionFail(
             "entry %s from %s not convertable to decimal with value %s"
-            % (entry_name, source_key,
+            % (entry_name, page_ident,
                txt ) )
 
 def make_get_entry_val_func(page, entry_name):
-    def return_func(widget_state_dict, *args):
+    def return_func(widget_state_dict, config, *args):
         widget_key = (page, entry_name)
         if widget_key not in widget_state_dict:
             raise WidgetFindError(
                 "page and widget %s could not be found" % (page,) )
+        widget_txt = widget_state_dict[widget_key]
+        widget_txt = widget_txt.strip()
+        if widget_txt == '' and widget_key in \
+                config.blanks_are_fine_for_decimal_coversion_treat_as_zero:
+            widget_txt = '0'
         try:
-            return Decimal( widget_state_dict[widget_key] )
+            return Decimal( widget_txt)
         except InvalidOperation:
             raise EntryTextToDecimalConversionFail(
                 "entry %s from %s not convertable to decimal with value %s"
