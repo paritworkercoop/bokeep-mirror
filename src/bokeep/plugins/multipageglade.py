@@ -122,7 +122,7 @@ class MultipageGladeTransaction(SafeConfigBasedTransaction):
                     # just call val_func if debit, else
                     # call it an negate it, note use of
                     # ternary operator
-                    val_func(self.widget_states) if i==0
+                    val_func(self.widget_states, config) if i==0
                     else -val_func(self.widget_states, config),
                     account, memo)
                 for i in range(2)
