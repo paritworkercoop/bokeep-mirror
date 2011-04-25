@@ -22,7 +22,7 @@ from datetime import date
 
 # gtk imports
 from gtk import \
-    FileChooserDialog, \
+    FileChooserDialog, MessageDialog, \
     FILE_CHOOSER_ACTION_SAVE, FILE_CHOOSER_ACTION_OPEN, \
     STOCK_CANCEL, RESPONSE_CANCEL, \
     STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
