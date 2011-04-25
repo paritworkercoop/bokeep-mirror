@@ -38,7 +38,7 @@ get_chequenum = lambda *args: 1
 get_trans_date = make_get_cal_grab_function(P1, "calendar1")
 
 def backwards_config_support(crc):
-    return crc in (2362158402, 2593818192, 3185835452, 2668236786,)
+    return crc in (2135928719, 2362158402, 2593818192, 3185835452, 2668236786,)
 
 def page_change_acceptable(old_page, new_page):
     print 'did page change acceptability check', old_page, 'to', new_page
@@ -49,6 +49,8 @@ def page_pre_change_config_hooks(old_page, new_page):
 
 def page_post_change_config_hooks(old_page, new_page):
     print 'post-change hook, went from', old_page, 'to', new_page
+
+non_decimal_check_labels = ( (P1, 'name_entry'), )
 
 auto_update_labels = (
     (P1, 'label1', make_get_entry_val_func(P1, "entry1") ),

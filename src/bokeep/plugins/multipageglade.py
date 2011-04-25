@@ -133,6 +133,7 @@ def config_valid(config):
                               'page_change_acceptable',
                               'page_pre_change_config_hooks',
                               'page_post_change_config_hooks',
+                              'non_decimal_check_labels',
                               'fin_trans_template',
                               'auto_update_labels' )
                  ), # end generator expression
@@ -316,8 +317,18 @@ class multipage_glade_editor(object):
                               bad_fields )
             return False
     
+    def __current_page_ident(self):
+        config = self.plugin.get_configuration()
+        return config.pages[self.current_page]
+
+    def __entry_widget_is_check_excempt(self, widget_name):
+        config = self.plugin.get_configuration()
+        return (self.__current_page_ident(), widget_name) in \
+            config.non_decimal_check_labels
+
     def widget_valid(self, widget_name, widget):
-        if isinstance(widget, Entry):
+        if isinstance(widget, Entry) and \
+                not self.__entry_widget_is_check_excempt(widget_name):
             try:
                 entry_to_decimal_convert(widget.get_text(), widget_name)
             except EntryTextToDecimalConversionFail:
