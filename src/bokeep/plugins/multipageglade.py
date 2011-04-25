@@ -131,6 +131,8 @@ def config_valid(config):
                               'get_description', 'get_chequenum',
                               'get_trans_date',
                               'page_change_acceptable',
+                              'page_pre_change_config_hooks',
+                              'page_post_change_config_hooks',
                               'fin_trans_template',
                               'auto_update_labels' )
                  ), # end generator expression
@@ -324,12 +326,6 @@ class multipage_glade_editor(object):
         # the case with the above try, except passes without exception
         return True
 
-    def page_pre_change_config_hooks(self, old_page, new_page):
-        pass
-    
-    def page_post_change_config_hooks(self, old_page, new_page):
-        pass
-
     def nav_but_clicked(self, but, *args):
         config = self.plugin.get_configuration()
         
@@ -345,7 +341,7 @@ class multipage_glade_editor(object):
 
             # intentionally done before the page is actually attached,
             # that's what we mean by pre
-            self.page_pre_change_config_hooks(old_page, new_page)
+            config.page_pre_change_config_hooks(old_page, new_page)
 
             self.detach_current_page()
             self.current_page = new_page
@@ -353,7 +349,7 @@ class multipage_glade_editor(object):
             
             # intentionally done after the page is actually attached,
             # that's what we mean by post
-            self.page_post_change_config_hooks(old_page, new_page)
+            config.page_post_change_config_hooks(old_page, new_page)
 
     def entry_changed(self, entry, *args):
         config = self.plugin.get_configuration()
