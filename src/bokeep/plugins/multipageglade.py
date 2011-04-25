@@ -111,6 +111,41 @@ class MultipageGladeTransaction(SafeConfigBasedTransaction):
         # delegate to the module level function of the same name
         return config_valid(config)
 
+    def make_new_fin_trans(self):
+        # assumption, you've already checked the config and you're really just
+        # calling this from __get_and_cache_fin_trans
+        config = self.associated_plugin.get_configuration()
+        try:
+            # for debits and credits
+            trans_lines = [
+                make_fin_line(
+                    # just call val_func if debit, else
+                    # call it an negate it, note use of
+                    # ternary operator
+                    val_func(self.widget_states) if i==0
+                    else -val_func(self.widget_states),
+                    account, memo)
+                for i in range(2)
+                for memo, val_func, account in
+                config.fin_trans_template[i]
+                ]
+            
+        except EntryTextToDecimalConversionFail, e:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                str(e))
+        except WidgetFindError, entry_find_e:
+            raise BoKeepTransactionNotMappableToFinancialTransaction(
+                str(entry_find_e))
+        fin_trans = FinancialTransaction(trans_lines)
+        for attr in (
+            'trans_date', 'currency', 'chequenum', 'description'):
+            setattr(fin_trans, attr,
+                    getattr(config, 'get_' + attr)(
+                    self.widget_states) )
+
+        return (fin_trans,)
+        
+
 GLADE_BACK_NAV, GLADE_FORWARD_NAV = range(2)
 
 def config_valid(config):
