@@ -128,9 +128,11 @@ def config_valid(config):
         reduce( __and__,
                 (hasattr(config, attr)
                  for attr in ('pages', 'get_currency',
-                             'get_description', 'get_chequenum',
-                             'get_trans_date', 'fin_trans_template',
-                             'auto_update_labels' )
+                              'get_description', 'get_chequenum',
+                              'get_trans_date',
+                              'page_change_acceptable',
+                              'fin_trans_template',
+                              'auto_update_labels' )
                  ), # end generator expression
                  True ) and \
         reduce( __and__,
@@ -323,7 +325,8 @@ class multipage_glade_editor(object):
         return True
 
     def page_change_acceptable_to_config(self, old_page, new_page):
-        return True
+        config = self.plugin.get_configuration()
+        return config.page_change_acceptable(old_page, new_page)
 
     def page_pre_change_config_hooks(self, old_page, new_page):
         pass
