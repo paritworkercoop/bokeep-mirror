@@ -227,7 +227,8 @@ class multipage_glade_editor(object):
             # MultipageGladeTransaction don't get activated
             self.mainvbox.pack_start(
                 Label("out of date configuration. data is read only here for "
-                      "the safety of your old information"))
+                      "the safety of your old information, last adler "
+                      "CRC was %s" % self.trans.config_crc_cache ))
         else:
             self.page_label = Label("")
             self.mainvbox.pack_start(self.page_label)
