@@ -324,10 +324,6 @@ class multipage_glade_editor(object):
         # the case with the above try, except passes without exception
         return True
 
-    def page_change_acceptable_to_config(self, old_page, new_page):
-        config = self.plugin.get_configuration()
-        return config.page_change_acceptable(old_page, new_page)
-
     def page_pre_change_config_hooks(self, old_page, new_page):
         pass
     
@@ -335,6 +331,8 @@ class multipage_glade_editor(object):
         pass
 
     def nav_but_clicked(self, but, *args):
+        config = self.plugin.get_configuration()
+        
         old_page = self.current_page
         delta = -1 if self.nav_buts[but] == GLADE_BACK_NAV else 1
         new_page = old_page + delta
@@ -343,7 +341,7 @@ class multipage_glade_editor(object):
         # conditions because we should really just grey the buttons
         if not (new_page < 0 or new_page == len(self.glade_pages)) and \
                 self.page_change_acceptable_by_input_valid() and \
-                self.page_change_acceptable_to_config(old_page, new_page):
+                config.page_change_acceptable(old_page, new_page):
 
             # intentionally done before the page is actually attached,
             # that's what we mean by pre
