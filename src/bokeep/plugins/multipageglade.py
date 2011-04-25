@@ -328,7 +328,7 @@ class multipage_glade_editor(object):
     def page_pre_change_config_hooks(self, old_page, new_page):
         pass
     
-    def page_pre_change_config_hooks(self, old_page, new_page):
+    def page_post_change_config_hooks(self, old_page, new_page):
         pass
 
     def nav_but_clicked(self, but, *args):
