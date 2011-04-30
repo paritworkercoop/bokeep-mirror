@@ -164,6 +164,7 @@ def config_valid(config):
                 (hasattr(config, attr)
                  for attr in (
                 'pages', 'get_currency',
+                'initialization_hook',
                 'get_description', 'get_chequenum',
                 'get_trans_date',
                 'page_change_acceptable',
@@ -258,6 +259,7 @@ class multipage_glade_editor(object):
                 button_hbox.add(but)
                 but.connect("clicked", self.nav_but_clicked)
 
+            config.initialization_hook(self, self.trans, self.plugin)
 
         self.mainvbox.show_all()
         self.mainvbox.reparent(self.gui_parent)
