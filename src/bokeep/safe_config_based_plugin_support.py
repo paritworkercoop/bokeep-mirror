@@ -69,7 +69,7 @@ class SafeConfigBasedTransaction(Transaction):
         crc = adler32_of_file(config_file_path)
         return crc == self.config_crc_cache or (
             hasattr(config, 'backwards_config_support') and
-            config.backwards_config_support(crc) )
+            config.backwards_config_support(self.config_crc_cache) )
 
     def get_financial_transactions(self):
         config = self.associated_plugin.get_configuration()
