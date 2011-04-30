@@ -38,7 +38,7 @@ get_chequenum = lambda *args: 1
 get_trans_date = make_get_cal_grab_function(P1, "calendar1")
 
 def backwards_config_support(crc):
-    return crc in (1642840702, 2135928719, 2362158402, 2593818192,
+    return crc in (1328275852, 1642840702, 2135928719, 2362158402, 2593818192,
                    3185835452, 2668236786,)
 
 def page_change_acceptable(old_page, new_page):
