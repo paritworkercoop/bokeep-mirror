@@ -63,11 +63,17 @@ def pack_in_stock_but_and_ret(but, box):
     box.pack_start(but, expand=False)
     return but
 
+def fieldtype_transform(fieldtype):
+    if fieldtype == date:
+        return str
+    return fieldtype
+
 def create_editable_type_defined_listview_and_model(field_list):
     vbox = VBox()
     vbox.pack_start(Label("hello"), expand=False)
     tv = TreeView()
-    model = ListStore( *tuple(fieldtype for fieldname, fieldtype in field_list)  )
+    model = ListStore( *tuple(fieldtype_transform(fieldtype)
+                              for fieldname, fieldtype in field_list)  )
     vbox.pack_start(tv)
     tv.model = model
     hbox = HBox()
