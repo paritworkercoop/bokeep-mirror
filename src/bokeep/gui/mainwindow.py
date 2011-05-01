@@ -86,6 +86,10 @@ class MainWindow(object):
         book.get_backend_module().flush_backend()
         transaction.get().commit()
 
+    def close_backend_of_book(self, book):
+        book.get_backend_module().close()
+        transaction.get().commit()
+
     def application_shutdown(self):
         if hasattr(self, 'guistate'):
             self.guistate.do_action(CLOSE)
@@ -509,4 +513,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         if self.guistate.get_book() == None:
             return
         self.flush_backend_of_book(self.guistate.get_book())
+        self.set_backend_error_indicator()
+
+    def on_backend_close_request(self, *args):
+        if self.guistate.get_book() == None:
+            return
+        self.close_backend_of_book(self.guistate.get_book())
         self.set_backend_error_indicator()
