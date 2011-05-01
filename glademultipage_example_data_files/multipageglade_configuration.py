@@ -40,10 +40,10 @@ get_chequenum = lambda *args: 1
 get_trans_date = make_get_cal_grab_function(P1, "calendar1")
 
 def backwards_config_support(crc):
-    return crc in (914482147, 1328275852, 1642840702, 2135928719, 2362158402,
+    return crc in (236918719, 914482147, 1328275852, 1642840702, 2135928719, 2362158402,
                    2593818192, 3185835452, 2668236786,)
 
-def initialization_hook(plugin_edit_instance, transaction, plugin):
+def initialization_hook(plugin_edit_instance, transaction, plugin, book):
     print 'initialization hook'
 
 def page_change_acceptable(old_page, new_page):

@@ -50,6 +50,12 @@ def get_plugin_class():
 MULTIPAGEGLADE_CODE = 0
 
 class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
+    # signals to mainwindow.py that this plugin supports the
+    # extra keyword argument book when the function
+    # returned by get_transaction_edit_interface_hook_from_code is called.
+    # To be removed in bokeep 1.1 See mainwindow.py
+    SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW = True
+
     def __init__(self):
         SafeConfigBasedPlugin.__init__(self) #  self.config_file = None
         self.trans_registry = PersistentMapping()
@@ -187,12 +193,18 @@ GLADE_FILE, TOP_WIDGET = range(2)
 
 class multipage_glade_editor(object):
     def __init__(self,
-                 trans, transid, plugin, gui_parent, change_register_function):
+                 trans, transid, plugin, gui_parent, change_register_function,
+                 **kargs):
         self.trans = trans
         self.transid = transid
         self.plugin = plugin
         self.gui_parent = gui_parent
         self.change_register_function = change_register_function
+        # this will be taken out in bokeep 1.1 where the api can be changed
+        # and replaced with an explicit argument
+        # see related commend in mainwindow.py
+        if 'book' in kargs:
+            self.book = kargs['book']
 
         self.hide_parent = Window()
         self.hide_parent.hide()
@@ -259,7 +271,7 @@ class multipage_glade_editor(object):
                 button_hbox.pack_start(but, expand=False)
                 but.connect("clicked", self.nav_but_clicked)
 
-            config.initialization_hook(self, self.trans, self.plugin)
+            config.initialization_hook(self, self.trans, self.plugin, self.book)
 
         self.mainvbox.show_all()
         self.mainvbox.reparent(self.gui_parent)
