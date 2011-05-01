@@ -9,6 +9,8 @@
 from decimal import Decimal
 from datetime import date
 
+#force_crc_backwards_config = None
+
 # bokeep imports
 from bokeep.plugins.multipageglade import \
     make_sum_entry_val_func, make_get_entry_val_func, \

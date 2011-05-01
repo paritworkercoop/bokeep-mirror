@@ -67,9 +67,10 @@ class SafeConfigBasedTransaction(Transaction):
             # would have been created if trans_cache attribute was
             assert( hasattr(self, 'config_crc_cache') )
         crc = adler32_of_file(config_file_path)
-        return crc == self.config_crc_cache or (
-            hasattr(config, 'backwards_config_support') and
-            config.backwards_config_support(self.config_crc_cache) )
+        return crc == self.config_crc_cache or \
+            hasattr(config, 'force_crc_backwards_config') or \
+            ( hasattr(config, 'backwards_config_support') and
+              config.backwards_config_support(self.config_crc_cache) )
 
     def get_financial_transactions(self):
         config = self.associated_plugin.get_configuration()
