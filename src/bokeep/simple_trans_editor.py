@@ -37,7 +37,6 @@ class SimpleTransactionEditor(object):
         # see related commend in mainwindow.py
         if 'book' in kargs:
             self.book = kargs['book']
-            print 'additional book argument provided', self.book
 
         self.hide_parent = Window()
         self.hide_parent.hide()
