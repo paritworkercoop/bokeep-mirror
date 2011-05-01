@@ -278,9 +278,24 @@ class MainWindow(object):
             get_transaction_edit_interface_hook_from_code(currcode)
         self.clear_trans_view()
         trans_id = self.guistate.get_transaction_id()
+
+        # when we call the function/class provided by
+        # get_transaction_edit_interface_hook_from_code() we would like to provide
+        # the argument book. But, this wasn't part of the original bokeep api
+        # so we don't want to break old plugins during a 0.0.x release.
+        #
+        # So we just add it as an optional keyword argument if the plugin
+        # explicitly declares that it supports them.
+        #
+        # This should be taken out for bo-keep 1.1 and just done as an extra
+        # regular argument like its comrads where an such a breaking api change is okay
+        editor_generator_extra_keywordargs = {}
+        if hasattr(currmodule, 'SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW'):
+            editor_generator_extra_keywordargs['book'] = book
         self.current_editor = editor_generator(
-            book.get_transaction(trans_id), trans_id, currmodule,
-            self.main_vbox, self.guistate.record_trans_dirty_in_backend)
+                book.get_transaction(trans_id), trans_id, currmodule,
+                self.main_vbox, self.guistate.record_trans_dirty_in_backend,
+                **editor_generator_extra_keywordargs)
 
     def clear_trans_view(self):
         if self.current_editor != None: 
