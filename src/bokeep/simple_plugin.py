@@ -24,7 +24,7 @@ from persistent.mapping import PersistentMapping
 from bokeep.prototype_plugin import PrototypePlugin
 
 class SimplePlugin(PrototypePlugin):
-    # signals to mainwindow.py that the init for this class supports the
+    # signals to mainwindow.py that this plugin supports the
     # extra keyword argument book when the function
     # returned by get_transaction_edit_interface_hook_from_code is called.
     # To be removed in bokeep 1.1 See mainwindow.py
