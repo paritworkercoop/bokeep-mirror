@@ -516,8 +516,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         self.set_backend_error_indicator()
 
     def on_backend_close_request(self, *args):
-        if self.guistate.get_book() == None:
+        book = self.guistate.get_book()
+        if book == None:
             return
-        self.flush_backend_of_book(self.guistate.get_book())
-        self.close_backend_of_book(self.guistate.get_book())
+        self.flush_backend_of_book(book)
+        self.close_backend_of_book(book)
         self.set_backend_error_indicator()
