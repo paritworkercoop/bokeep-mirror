@@ -26,7 +26,8 @@ from gtk import \
     FILE_CHOOSER_ACTION_SAVE, FILE_CHOOSER_ACTION_OPEN, \
     STOCK_CANCEL, RESPONSE_CANCEL, \
     STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
-    MESSAGE_ERROR, BUTTONS_OK
+    MESSAGE_ERROR, BUTTONS_OK, \
+    TreeView, ListStore, STOCK_ADD, STOCK_DELETE, VBox, HBox, Label, Button
 
 def file_selection_path(msg="choose file"):   
     fcd = FileChooserDialog(
@@ -51,3 +52,26 @@ def gtk_error_message(msg, parent=None):
                                  MESSAGE_ERROR, BUTTONS_OK, msg)
     error_dialog.run()
     error_dialog.destroy()
+
+def start_stock_button(stock_code):
+    but = Button()
+    but.set_property('use-stock', True)
+    but.set_label(stock_code)
+    return but
+
+def pack_in_stock_but_and_ret(but, box):
+    box.pack_start(but, expand=False)
+    return but
+
+def create_editable_type_defined_listview_and_model(field_list):
+    vbox = VBox()
+    vbox.pack_start(Label("hello"), expand=False)
+    tv = TreeView()
+    model = ListStore( *tuple(fieldtype for fieldname, fieldtype in field_list)  )
+    vbox.pack_start(tv)
+    tv.model = model
+    hbox = HBox()
+    buttons = [ pack_in_stock_but_and_ret(start_stock_button(code), hbox)
+                for code in (STOCK_ADD, STOCK_DELETE) ]
+    vbox.pack_start(hbox, expand=False)
+    return model, tv, vbox
