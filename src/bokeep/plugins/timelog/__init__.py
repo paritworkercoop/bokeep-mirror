@@ -17,6 +17,9 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# python imports
+from datetime import date
+
 # gtk imports
 from gtk import Label
 
@@ -25,11 +28,14 @@ from bokeep.simple_trans_editor import SimpleTransactionEditor
 from bokeep.simple_plugin import SimplePlugin
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
+from bokeep.gtkutil import create_editable_type_defined_listview_and_model
 
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
     def simple_init_before_show(self):
-        l = Label("hello world")
-        self.mainvbox.pack_start( l, expand=False)
+        self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
+            ( ('Employee', str), ('Day', date), ('Hours', str), ('Description', str), ),
+            )
+        self.mainvbox.pack_start( tree_box, expand=False)
 
 class MultiEmployeeTimelogEntry(Transaction):
     def get_financial_transactions(self):
