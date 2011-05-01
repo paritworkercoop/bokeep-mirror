@@ -249,14 +249,14 @@ class multipage_glade_editor(object):
             self.attach_current_page()
 
             button_hbox = HBox()
-            self.mainvbox.pack_end(button_hbox)
+            self.mainvbox.pack_end(button_hbox, expand=False)
             self.nav_buts = dict( (Button(), i)
                                   for i in range(2) )
             for but, i in self.nav_buts.iteritems():
                 but.set_property('use-stock', True)
                 but.set_label( STOCK_GO_BACK
                                if i == GLADE_BACK_NAV else STOCK_GO_FORWARD )
-                button_hbox.add(but)
+                button_hbox.pack_start(but, expand=False)
                 but.connect("clicked", self.nav_but_clicked)
 
             config.initialization_hook(self, self.trans, self.plugin)
