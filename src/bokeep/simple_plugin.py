@@ -50,3 +50,7 @@ class SimplePlugin(PrototypePlugin):
 
     def get_transaction_type_pulldown_string_from_code(self, code):
         return self.type_strings[code]
+
+    @classmethod
+    def get_transaction_edit_interface_hook_from_code(cls, code):
+        return cls.EDIT_INTERFACES[code]
