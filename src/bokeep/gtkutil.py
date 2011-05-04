@@ -71,7 +71,6 @@ def fieldtype_transform(fieldtype):
 
 def create_editable_type_defined_listview_and_model(field_list):
     vbox = VBox()
-    vbox.pack_start(Label("hello"), expand=False)
     tv = TreeView()
     for i, (fieldname, fieldtype) in enumerate(field_list):
         crt = CellRendererText()
