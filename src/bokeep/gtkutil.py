@@ -28,7 +28,7 @@ from gtk import \
     STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
     MESSAGE_ERROR, BUTTONS_OK, \
     TreeView, ListStore, STOCK_ADD, STOCK_DELETE, VBox, HBox, Label, Button, \
-    TreeViewColumn, CellRendererText
+    TreeViewColumn, CellRendererText, main as gtk_main, Window, main_quit
 
 def file_selection_path(msg="choose file"):   
     fcd = FileChooserDialog(
@@ -87,3 +87,16 @@ def create_editable_type_defined_listview_and_model(field_list):
                 for code in (STOCK_ADD, STOCK_DELETE) ]
     vbox.pack_start(hbox, expand=False)
     return model, tv, vbox
+
+def main():
+    w = Window()
+    w.resize(200, 200)
+    w.connect( "delete-event", main_quit )
+    vbox = VBox()
+    w.add(vbox)
+    vbox.pack_start( Label("hi") )
+    w.show_all()
+    gtk_main()
+
+if __name__ == "__main__":
+    main()
