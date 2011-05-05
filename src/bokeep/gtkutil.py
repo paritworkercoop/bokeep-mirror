@@ -28,7 +28,8 @@ from gtk import \
     STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
     MESSAGE_ERROR, BUTTONS_OK, \
     TreeView, ListStore, STOCK_ADD, STOCK_DELETE, VBox, HBox, Label, Button, \
-    TreeViewColumn, CellRendererText, main as gtk_main, Window, main_quit
+    TreeViewColumn, CellRendererText, main as gtk_main, Window, main_quit, \
+    CellRendererCombo
 
 def file_selection_path(msg="choose file"):   
     fcd = FileChooserDialog(
