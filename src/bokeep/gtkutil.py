@@ -20,6 +20,7 @@
 # python imports
 from datetime import date
 import datetime
+from itertools import islice
 
 # gtk imports
 from gtk import \
@@ -67,6 +68,10 @@ def start_stock_button(stock_code):
 def pack_in_stock_but_and_ret(but, box):
     box.pack_start(but, expand=False)
     return but
+
+def iterative_append_to_liststore(liststore, itersource):
+    for value in itersource:
+        liststore.append(value)
 
 # CellRendererDate code was copied and modified from the pygtk FAQ
 # by Mark Jenkins <mark@parit.ca> on May 5, 2011
@@ -171,25 +176,53 @@ class CellRendererDate(gtk.CellRendererText):
 
 gobject.type_register(CellRendererDate)
 
+COMBO_TYPE_HAS_ENTRY_FIELD, COMBO_TYPE_STORE_TYPE_FIELD, \
+    COMBO_TYPE_FIRST_VALUE = range(3)
+
 def fieldtype_transform(fieldtype):
     if fieldtype == date:
         return str
+    elif type(fieldtype) == tuple:
+        return fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
     return fieldtype
+
+def cell_combo_edited_update_original_modelhandler(
+    cellrenderer, model_row_path, new_str, original_model, original_column):
+    original_model.set_value(
+        original_model.get_iter(model_row_path), original_column,
+        new_str )
 
 def create_editable_type_defined_listview_and_model(field_list):
     vbox = VBox()
     tv = TreeView()
+    model = ListStore( *tuple(fieldtype_transform(fieldtype)
+                              for fieldname, fieldtype in field_list)  )
     for i, (fieldname, fieldtype) in enumerate(field_list):
         if fieldtype == date:
             cell_renderer = CellRendererDate()
+        elif type(fieldtype) == tuple:
+            cell_renderer = CellRendererCombo()
+            cell_renderer.set_property("has-entry",
+                                       fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD])
+            combo_liststore = ListStore(
+                str, fieldtype[COMBO_TYPE_STORE_TYPE_FIELD] )
+            iterative_append_to_liststore(
+                combo_liststore,
+                ( (str(combo_value), combo_value)
+                  for combo_value in islice(
+                        fieldtype, COMBO_TYPE_FIRST_VALUE, None) ) )
+            cell_renderer.set_property("model", combo_liststore)
+            cell_renderer.set_property("text-column", 0)
+            cell_renderer.connect(
+                "edited", 
+                cell_combo_edited_update_original_modelhandler,
+                model, i)
         else:
             cell_renderer = CellRendererText()
         cell_renderer.set_property("editable", True)
         cell_renderer.set_property("editable-set", True)
         tvc = TreeViewColumn(fieldname, cell_renderer, text=i)
         tv.append_column(tvc)
-    model = ListStore( *tuple(fieldtype_transform(fieldtype)
-                              for fieldname, fieldtype in field_list)  )
     vbox.pack_start(tv)
     tv.set_model(model)
     hbox = HBox()
@@ -206,10 +239,17 @@ def main():
     w.add(vbox)
     model, tv, tv_vbox = \
         create_editable_type_defined_listview_and_model(
-        ( ('date', date,), ) )
-    model.append(
-        (cell_renderer_date_to_string(date.today()),)
-        )
+        ( ('date', date,),
+          ('choose-me',
+           (True, str, 'yo', 'hi', 'me', 'fun')
+           ) # end choose-me tuple
+          ) # end type tuple
+        ) # create_editable_type_defined_listview_and_model
+    iterative_append_to_liststore(
+        model,
+        ( (cell_renderer_date_to_string(date.today()), 'yep'),
+          (cell_renderer_date_to_string(date.today()), 'ga')
+          ) )
     vbox.pack_start( tv_vbox )
     w.show_all()
     gtk_main()
