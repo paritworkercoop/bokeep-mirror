@@ -192,7 +192,20 @@ def cell_combo_edited_update_original_modelhandler(
         original_model.get_iter(model_row_path), original_column,
         new_str )
 
-def create_editable_type_defined_listview_and_model(field_list):
+def make_editable_listview_add_button_clicked_handler(model, new_row_func):
+    def add_clicked(button):
+        model.append( new_row_func() )
+    return add_clicked
+
+def make_editable_listview_del_button_clicked_handler(tv):
+    def del_clicked(button):
+        model, treeiter = tv.get_selection().get_selected()
+        if treeiter != None:
+            model.remove(treeiter)
+    return del_clicked
+
+def create_editable_type_defined_listview_and_model(
+    field_list, new_row_func):
     vbox = VBox()
     tv = TreeView()
     model = ListStore( *tuple(fieldtype_transform(fieldtype)
@@ -228,8 +241,18 @@ def create_editable_type_defined_listview_and_model(field_list):
     hbox = HBox()
     buttons = [ pack_in_stock_but_and_ret(start_stock_button(code), hbox)
                 for code in (STOCK_ADD, STOCK_DELETE) ]
+    buttons[0].connect(
+        "clicked",
+        make_editable_listview_add_button_clicked_handler(
+            model, new_row_func) )
+    buttons[1].connect(
+        "clicked",
+        make_editable_listview_del_button_clicked_handler(tv) )
     vbox.pack_start(hbox, expand=False)
     return model, tv, vbox
+
+def test_program_return_new_row():
+    return (cell_renderer_date_to_string(date.today()), 'yep')
 
 def main():
     w = Window()
@@ -243,13 +266,9 @@ def main():
           ('choose-me',
            (True, str, 'yo', 'hi', 'me', 'fun')
            ) # end choose-me tuple
-          ) # end type tuple
+          ), # end type tuple
+        test_program_return_new_row
         ) # create_editable_type_defined_listview_and_model
-    iterative_append_to_liststore(
-        model,
-        ( (cell_renderer_date_to_string(date.today()), 'yep'),
-          (cell_renderer_date_to_string(date.today()), 'ga')
-          ) )
     vbox.pack_start( tv_vbox )
     w.show_all()
     gtk_main()
