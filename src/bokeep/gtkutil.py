@@ -206,7 +206,7 @@ def make_editable_listview_del_button_clicked_handler(tv):
 
 def row_changed_handler(
     model, path, treeiter, parralell_list, change_register):
-    parralell_list[ path[0] ] = list(model[path[0]])
+    parralell_list[ path[0] ] = tuple(model[path[0]])
     change_register()
 
 def row_inserted_handler(
