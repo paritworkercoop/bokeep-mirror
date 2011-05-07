@@ -204,12 +204,37 @@ def make_editable_listview_del_button_clicked_handler(tv):
             model.remove(treeiter)
     return del_clicked
 
+def row_changed_handler(
+    model, path, treeiter, parralell_list, change_register):
+    parralell_list[ path[0] ] = list(model[path[0]])
+    change_register()
+
+def row_inserted_handler(
+    model, path, treeiter, new_empty_row, parralell_list, change_register):
+    parralell_list.append( new_empty_row )
+    change_register()
+    # assumption, inserted rows are always at the bottom
+    assert( (path[0]+1) == len(parralell_list) )
+
+def row_deleted_handler(
+    model, path, parralell_list, change_register):
+    del parralell_list[ path[0] ]
+    change_register()
+
 def create_editable_type_defined_listview_and_model(
-    field_list, new_row_func):
+    field_list, new_empty_row, new_row_func, parralell_list, change_register):
     vbox = VBox()
     tv = TreeView()
     model = ListStore( *tuple(fieldtype_transform(fieldtype)
                               for fieldname, fieldtype in field_list)  )
+    model.connect("row-changed",
+                  row_changed_handler,
+                  parralell_list, change_register )
+    model.connect("row-inserted",
+                  row_inserted_handler, new_empty_row,
+                  parralell_list, change_register )
+    model.connect("row-deleted",
+                  row_deleted_handler, parralell_list, change_register )
     for i, (fieldname, fieldtype) in enumerate(field_list):
         if fieldtype == date:
             cell_renderer = CellRendererDate()
@@ -254,6 +279,9 @@ def create_editable_type_defined_listview_and_model(
 def test_program_return_new_row():
     return (cell_renderer_date_to_string(date.today()), 'yep')
 
+def test_prog_list_changed(*args):
+    print 'list changed'
+
 def main():
     w = Window()
     w.resize(200, 200)
@@ -267,7 +295,8 @@ def main():
            (True, str, 'yo', 'hi', 'me', 'fun')
            ) # end choose-me tuple
           ), # end type tuple
-        test_program_return_new_row
+        ('', ''),
+        test_program_return_new_row, [], test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
     vbox.pack_start( tv_vbox )
     w.show_all()
