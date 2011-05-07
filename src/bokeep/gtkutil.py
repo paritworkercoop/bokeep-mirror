@@ -211,10 +211,8 @@ def row_changed_handler(
 
 def row_inserted_handler(
     model, path, treeiter, new_empty_row, parralell_list, change_register):
-    parralell_list.append( new_empty_row )
+    parralell_list.insert(path[0], new_empty_row )
     change_register()
-    # assumption, inserted rows are always at the bottom
-    assert( (path[0]+1) == len(parralell_list) )
 
 def row_deleted_handler(
     model, path, parralell_list, change_register):
