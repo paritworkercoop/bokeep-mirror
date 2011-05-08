@@ -31,11 +31,12 @@ from bokeep.simple_trans_editor import SimpleTransactionEditor
 from bokeep.simple_plugin import SimplePlugin
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
-from bokeep.gtkutil import create_editable_type_defined_listview_and_model
+from bokeep.gtkutil import \
+    create_editable_type_defined_listview_and_model, cell_renderer_date_to_string
 
 def create_timelog_new_row(timelog_plugin):
     def timelog_new_row():
-        return ('new employee', date.today(), '0', 'task')
+        return ('new employee', cell_renderer_date_to_string(date.today()), '0', 'task')
     return timelog_new_row
 
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
