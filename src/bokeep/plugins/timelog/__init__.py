@@ -20,6 +20,9 @@
 # python imports
 from datetime import date
 
+# zodb imports
+from persistent.list import PersistentList
+
 # gtk imports
 from gtk import Label
 
@@ -30,10 +33,18 @@ from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gtkutil import create_editable_type_defined_listview_and_model
 
+def create_timelog_new_row(timelog_plugin):
+    def timelog_new_row():
+        return ('new employee', date.today(), '0', 'task')
+    return timelog_new_row
+
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
     def simple_init_before_show(self):
         self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
             ( ('Employee', str), ('Day', date), ('Hours', str), ('Description', str), ),
+            ('', '', '', ''),
+            create_timelog_new_row(self.plugin),
+            self.trans.timelog_list, self.change_register_function,
             )
         self.mainvbox.pack_start( tree_box, expand=False)
         # before populating the liststore, you might want to read this
@@ -43,6 +54,10 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
         # rows to a Treeview?
 
 class MultiEmployeeTimelogEntry(Transaction):
+    def __init__(self, associated_plugin):
+        Transaction.__init__(self, associated_plugin)
+        self.timelog_list = PersistentList()
+
     def get_financial_transactions(self):
         raise BoKeepTransactionNotMappableToFinancialTransaction(
             """Timelog plugin doesn't put anything directly in backend yet, but """
