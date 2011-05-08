@@ -271,7 +271,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (cell_renderer_date_to_string(date.today()), 'yep')
+    return (cell_renderer_date_to_string(date.today()), 'yep', 'aha')
 
 def test_prog_list_changed(*args):
     print 'list changed'
@@ -287,9 +287,10 @@ def main():
         ( ('date', date,),
           ('choose-me',
            (True, str, 'yo', 'hi', 'me', 'fun')
-           ) # end choose-me tuple
+           ), # end choose-me tuple
+          ('description', str),
           ), # end type tuple
-        ('', ''),
+        ('', '', ''),
         test_program_return_new_row, [], test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
     vbox.pack_start( tv_vbox )
