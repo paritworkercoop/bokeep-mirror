@@ -186,7 +186,7 @@ def fieldtype_transform(fieldtype):
         return fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
     return fieldtype
 
-def cell_combo_edited_update_original_modelhandler(
+def cell_edited_update_original_modelhandler(
     cellrenderer, model_row_path, new_str, original_model, original_column):
     original_model.set_value(
         original_model.get_iter(model_row_path), original_column,
@@ -245,12 +245,11 @@ def create_editable_type_defined_listview_and_model(
                         fieldtype, COMBO_TYPE_FIRST_VALUE, None) ) )
             cell_renderer.set_property("model", combo_liststore)
             cell_renderer.set_property("text-column", 0)
-            cell_renderer.connect(
-                "edited", 
-                cell_combo_edited_update_original_modelhandler,
-                model, i)
         else:
             cell_renderer = CellRendererText()
+        cell_renderer.connect(
+            'edited',
+            cell_edited_update_original_modelhandler, model, i)
         cell_renderer.set_property("editable", True)
         cell_renderer.set_property("editable-set", True)
         tvc = TreeViewColumn(fieldname, cell_renderer, text=i)
