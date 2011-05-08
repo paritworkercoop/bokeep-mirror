@@ -192,17 +192,13 @@ def cell_combo_edited_update_original_modelhandler(
         original_model.get_iter(model_row_path), original_column,
         new_str )
 
-def make_editable_listview_add_button_clicked_handler(model, new_row_func):
-    def add_clicked(button):
-        model.append( new_row_func() )
-    return add_clicked
+def editable_listview_add_button_clicked_handler(button, model, new_row_func):
+    model.append( new_row_func() )
 
-def make_editable_listview_del_button_clicked_handler(tv):
-    def del_clicked(button):
-        model, treeiter = tv.get_selection().get_selected()
-        if treeiter != None:
-            model.remove(treeiter)
-    return del_clicked
+def editable_listview_del_button_clicked_handler(button, tv):
+    model, treeiter = tv.get_selection().get_selected()
+    if treeiter != None:
+        model.remove(treeiter)
 
 def row_changed_handler(
     model, path, treeiter, parralell_list, change_register):
@@ -266,11 +262,12 @@ def create_editable_type_defined_listview_and_model(
                 for code in (STOCK_ADD, STOCK_DELETE) ]
     buttons[0].connect(
         "clicked",
-        make_editable_listview_add_button_clicked_handler(
-            model, new_row_func) )
+        editable_listview_add_button_clicked_handler,
+        model, new_row_func )
     buttons[1].connect(
         "clicked",
-        make_editable_listview_del_button_clicked_handler(tv) )
+        editable_listview_del_button_clicked_handler,
+        tv )
     vbox.pack_start(hbox, expand=False)
     return model, tv, vbox
 
