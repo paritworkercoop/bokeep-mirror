@@ -515,6 +515,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """)
         ab.set_authors(("Mark Jenkins <mark@parit.ca>",
                         "Jamie Campbell <jamie@parit.ca>",
+                        "Samuel Pauls <samuel@parit.ca>",
                         "Andrew Orr <andrew@andreworr.ca>",
                         "Sara Arenson <sara_arenson@yahoo.ca>",))
         ab.set_artists(("David Henry <work@davidhenry.ca>",))
