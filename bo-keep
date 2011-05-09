@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+# python
+from os.path import dirname, abspath, join, exists
+from sys import path
+
+# if there is a src sub-directory, we must be running bo-keep from
+# a source tree, so add that src dir to the search path
+SRC_PATH = join(abspath(dirname(__file__)), "src")
+if exists(SRC_PATH):
+    path.append( SRC_PATH )
+
 # Gtk
 import gtk
 
