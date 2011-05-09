@@ -79,9 +79,14 @@ class TimelogPlugin(SimplePlugin):
             buttons=(STOCK_OK, RESPONSE_OK))
         hbox = HBox()
         dia.get_content_area().pack_start( hbox, expand=False )
-        hbox.pack_start( Label("Pick a payroll plugin instance"), expand=False )
-        payroll_combo = ComboBox()
-        hbox.pack_start(payroll_combo, expand=True)
+        
+        if book.has_module_enabled("bokeep.plugins.payroll"):
+            hbox.pack_start( Label("Pick a payroll plugin instance"),
+                             expand=False )
+            payroll_combo = ComboBox()
+            hbox.pack_start(payroll_combo, expand=True)
+        else:
+            hbox.pack_start(Label("no payroll plugin instance available"))
         dia.show_all()
         dia.run()
         dia.destroy()
