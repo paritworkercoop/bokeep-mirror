@@ -476,9 +476,20 @@ class MainWindow(object):
             return
         currmodule = self.trans_type_combo.get_model().get_value(
             currindex,2)
+
+        # added in bokeep version 1.0.3 to provide additional keyword
+        # arguments not provided in previous versions, but in a 
+        # backwards compatible way
+        #
+        # Will be replaced with normal arguments in bokeep 1.1
+        # when backwards compatibility can be broken
+        extra_keywordargs = {}
+        if hasattr(currmodule, 'SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW'):
+            extra_keywordargs['book'] = self.guistate.get_book()
         currmodule.run_configuration_interface(
             self.mainwindow, self.guistate.get_book().get_backend_module(
-                ).backend_account_dialog)
+                ).backend_account_dialog,
+            **extra_keywordargs)
         # hmm, this doesn't seem to be getting it done
         self.clear_trans_view()
         self.reset_trans_view()
