@@ -223,6 +223,12 @@ def create_editable_type_defined_listview_and_model(
     tv = TreeView()
     model = ListStore( *tuple(fieldtype_transform(fieldtype)
                               for fieldname, fieldtype in field_list)  )
+    # it is important to do this fill of the liststore
+    # with the existing items first prior to adding event handlers
+    # (row-changed, row-inserted, row-deleted) that
+    # look for changes and keep the two lists in sync
+    iterative_append_to_liststore(model, parralell_list)
+    
     model.connect("row-changed",
                   row_changed_handler,
                   parralell_list, change_register )
