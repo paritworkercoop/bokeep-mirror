@@ -43,7 +43,6 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
     def simple_init_before_show(self):
         self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
             ( ('Employee', str), ('Day', date), ('Hours', str), ('Description', str), ),
-            ('', '', '', ''),
             create_timelog_new_row(self.plugin),
             self.trans.timelog_list, self.change_register_function,
             )

@@ -208,8 +208,8 @@ def row_changed_handler(
     change_register()
 
 def row_inserted_handler(
-    model, path, treeiter, new_empty_row, parralell_list, change_register):
-    parralell_list.insert(path[0], new_empty_row )
+    model, path, treeiter, parralell_list, change_register):
+    parralell_list.insert(path[0], tuple(model[path[0]]) )
     change_register()
 
 def row_deleted_handler(
@@ -218,7 +218,7 @@ def row_deleted_handler(
     change_register()
 
 def create_editable_type_defined_listview_and_model(
-    field_list, new_empty_row, new_row_func, parralell_list, change_register):
+    field_list, new_row_func, parralell_list, change_register):
     vbox = VBox()
     tv = TreeView()
     model = ListStore( *tuple(fieldtype_transform(fieldtype)
@@ -233,7 +233,7 @@ def create_editable_type_defined_listview_and_model(
                   row_changed_handler,
                   parralell_list, change_register )
     model.connect("row-inserted",
-                  row_inserted_handler, new_empty_row,
+                  row_inserted_handler,
                   parralell_list, change_register )
     model.connect("row-deleted",
                   row_deleted_handler, parralell_list, change_register )
@@ -298,7 +298,6 @@ def main():
            ), # end choose-me tuple
           ('description', str),
           ), # end type tuple
-        ('', '', ''),
         test_program_return_new_row, [], test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
     vbox.pack_start( tv_vbox )
