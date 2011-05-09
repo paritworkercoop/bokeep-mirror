@@ -24,7 +24,7 @@ from datetime import date
 from persistent.list import PersistentList
 
 # gtk imports
-from gtk import Label
+from gtk import Label, Dialog, STOCK_OK, RESPONSE_OK, HBox, ComboBox
 
 # bokeep imports
 from bokeep.simple_trans_editor import SimpleTransactionEditor
@@ -69,5 +69,22 @@ class TimelogPlugin(SimplePlugin):
     DEFAULT_TYPE_STRS =("Multi employee timelog entry",)
     EDIT_INTERFACES = (MultiEmployeeTimelogEditor,)
 
+    def run_configuration_interface(
+        self, parent_window, backend_account_fetch, book=None):
+        # shell will set this keyword argument, to be replaced with
+        # a normal argument
+        assert( book != None )
+        dia = Dialog(
+            "Timelog plugin configuration", parent_window,
+            buttons=(STOCK_OK, RESPONSE_OK))
+        hbox = HBox()
+        dia.get_content_area().pack_start( hbox, expand=False )
+        hbox.pack_start( Label("Pick a payroll plugin instance"), expand=False )
+        payroll_combo = ComboBox()
+        hbox.pack_start(payroll_combo, expand=True)
+        dia.show_all()
+        dia.run()
+        dia.destroy()
+        
 def get_plugin_class():
     return TimelogPlugin
