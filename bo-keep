@@ -9,7 +9,7 @@ from sys import path
 # a source tree, so add that src dir to the search path
 SRC_PATH = join(abspath(dirname(__file__)), "src")
 if exists(SRC_PATH):
-    path.append( SRC_PATH )
+    path.insert(0, SRC_PATH )
 
 # Gtk
 import gtk
