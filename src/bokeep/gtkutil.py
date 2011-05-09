@@ -176,6 +176,8 @@ class CellRendererDate(gtk.CellRendererText):
 
 gobject.type_register(CellRendererDate)
 
+# End CellRendererDate code pulled from PyGTK FAQ
+
 COMBO_TYPE_HAS_ENTRY_FIELD, COMBO_TYPE_STORE_TYPE_FIELD, \
     COMBO_TYPE_FIRST_VALUE = range(3)
 
