@@ -20,24 +20,44 @@
 # python imports
 from datetime import date
 
+# zodb imports
+from persistent.list import PersistentList
+
 # gtk imports
-from gtk import Label
+from gtk import Label, Dialog, STOCK_OK, RESPONSE_OK, HBox, ComboBox
 
 # bokeep imports
 from bokeep.simple_trans_editor import SimpleTransactionEditor
 from bokeep.simple_plugin import SimplePlugin
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
-from bokeep.gtkutil import create_editable_type_defined_listview_and_model
+from bokeep.gtkutil import \
+    create_editable_type_defined_listview_and_model, cell_renderer_date_to_string
+
+def create_timelog_new_row(timelog_plugin):
+    def timelog_new_row():
+        return ('new employee', cell_renderer_date_to_string(date.today()), '0', 'task')
+    return timelog_new_row
 
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
     def simple_init_before_show(self):
         self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
             ( ('Employee', str), ('Day', date), ('Hours', str), ('Description', str), ),
+            create_timelog_new_row(self.plugin),
+            self.trans.timelog_list, self.change_register_function,
             )
         self.mainvbox.pack_start( tree_box, expand=False)
+        # before populating the liststore, you might want to read this
+        # pygtk FAQ:
+        # 
+        # 13.43. Are there tips for improving performance when adding many
+        # rows to a Treeview?
 
 class MultiEmployeeTimelogEntry(Transaction):
+    def __init__(self, associated_plugin):
+        Transaction.__init__(self, associated_plugin)
+        self.timelog_list = PersistentList()
+
     def get_financial_transactions(self):
         raise BoKeepTransactionNotMappableToFinancialTransaction(
             """Timelog plugin doesn't put anything directly in backend yet, but """
@@ -48,5 +68,27 @@ class TimelogPlugin(SimplePlugin):
     DEFAULT_TYPE_STRS =("Multi employee timelog entry",)
     EDIT_INTERFACES = (MultiEmployeeTimelogEditor,)
 
+    def run_configuration_interface(
+        self, parent_window, backend_account_fetch, book=None):
+        # shell will set this keyword argument, to be replaced with
+        # a normal argument
+        assert( book != None )
+        dia = Dialog(
+            "Timelog plugin configuration", parent_window,
+            buttons=(STOCK_OK, RESPONSE_OK))
+        hbox = HBox()
+        dia.get_content_area().pack_start( hbox, expand=False )
+        
+        if book.has_module_enabled("bokeep.plugins.payroll"):
+            hbox.pack_start( Label("Pick a payroll plugin instance"),
+                             expand=False )
+            payroll_combo = ComboBox()
+            hbox.pack_start(payroll_combo, expand=True)
+        else:
+            hbox.pack_start(Label("no payroll plugin instance available"))
+        dia.show_all()
+        dia.run()
+        dia.destroy()
+        
 def get_plugin_class():
     return TimelogPlugin

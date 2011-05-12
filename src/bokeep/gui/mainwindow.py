@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -476,9 +476,20 @@ class MainWindow(object):
             return
         currmodule = self.trans_type_combo.get_model().get_value(
             currindex,2)
+
+        # added in bokeep version 1.0.3 to provide additional keyword
+        # arguments not provided in previous versions, but in a 
+        # backwards compatible way
+        #
+        # Will be replaced with normal arguments in bokeep 1.1
+        # when backwards compatibility can be broken
+        extra_keywordargs = {}
+        if hasattr(currmodule, 'SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW'):
+            extra_keywordargs['book'] = self.guistate.get_book()
         currmodule.run_configuration_interface(
             self.mainwindow, self.guistate.get_book().get_backend_module(
-                ).backend_account_dialog)
+                ).backend_account_dialog,
+            **extra_keywordargs)
         # hmm, this doesn't seem to be getting it done
         self.clear_trans_view()
         self.reset_trans_view()
@@ -490,7 +501,7 @@ class MainWindow(object):
         ab.set_transient_for(self.mainwindow)
         ab.set_modal(True)
         ab.set_name("Bo-Keep")
-        ab.set_version("1.0")
+        ab.set_version("1.0.3")
         ab.set_copyright("ParIT Worker Co-operative, Ltd. 2006-2011")
         ab.set_comments(
             """Bo-Keep helps you keep your books so you don't get lost.
@@ -515,6 +526,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """)
         ab.set_authors(("Mark Jenkins <mark@parit.ca>",
                         "Jamie Campbell <jamie@parit.ca>",
+                        "Samuel Pauls <samuel@parit.ca>",
                         "Andrew Orr <andrew@andreworr.ca>",
                         "Sara Arenson <sara_arenson@yahoo.ca>",))
         ab.set_artists(("David Henry <work@davidhenry.ca>",))

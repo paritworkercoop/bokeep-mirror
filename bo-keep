@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 
+# python
+from optparse import OptionParser
+from os.path import dirname, abspath, join, exists
+from sys import path
+
+# if there is a src sub-directory, we must be running bo-keep from
+# a source tree, so add that src dir to the search path
+SRC_PATH = join(abspath(dirname(__file__)), "src")
+if exists(SRC_PATH):
+    path.insert(0, SRC_PATH )
+
 # Gtk
 import gtk
 
 # Bo-Keep
 from bokeep.gui.mainwindow import MainWindow
-
-# python
-from optparse import OptionParser
 
 def bokeep_main():
     op = OptionParser()
