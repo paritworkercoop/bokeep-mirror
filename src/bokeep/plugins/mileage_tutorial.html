@@ -8,7 +8,7 @@
 
 <p>The mileage plugin is a BoKeep front-end that simplifies reimbursement of miles travelled.  Like other BoKeep plugins, the mileage plugin provides three major features: configuration, transaction editing, and transaction storage.</p>
 
-<p>We'll start by creating an empty file at "src/bokeep/plugins/mileage.py" for the mileage plugin's source code.  Create another empty file which, unlike the first, will remain empty at "src/bokeep/plugins/mileage_BOKEEP_PLUGIN".  This second file will be used by BoKeep to automatically detect our mileage plugin.</p>
+<p>We'll start by creating an empty file at "src/bokeep/plugins/mileage.py" for the mileage plugin's source code.  Create another empty file which, unlike the first, will remain empty at "src/bokeep/plugins/mileage_BOKEEP_PLUGIN".  This second file will be used by BoKeep to automatically detect our mileage plugin.  Had we placed the mileage source in a directory such as "src/bokeep/plugins/mileage/mileage.py", our second empty file would have been at "src/bokeep/plugins/mileage/BOKEEP_PLUGIN".</p>
 
 <p>We could write our mileage plugin by extending either PrototypePlugin or SimplePlugin.  Extending PrototypePlugin involves overriding several common plugin related methods.  As this would be a bit overkill for our mileage plugin, we'll alternatively extend SimplePlugin.  SimplePlugin allows us to specify major plugin components without having to consider all the details.</p>
 
@@ -21,7 +21,7 @@ class MileagePlugin(SimplePlugin):
   </code>
 </pre>
 
-<p>Every plugin must implement the "get_plugin_class" function.  It returns the plugin's main class, which is later instantiated once.  Had we placed the mileage source in a directory such as "src/bokeep/plugins/mileage/mileage.py", our second empty file would have been at "src/bokeep/plugins/mileage/BOKEEP_PLUGIN".</p>
+<p>Every plugin must implement the "get_plugin_class" function.  It returns the plugin's main class, which is later instantiated once.</p>
 
 <pre>
   <code>
