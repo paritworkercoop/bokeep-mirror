@@ -325,6 +325,9 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         account_entry.set_width_chars(60)
         dia.vbox.pack_start(account_entry)
         
+        # An open session is required to get the list of back-end accounts.
+        self.open_session_and_retain()
+        
         # Setup auto-complete for the entry widget.
         completion = EntryCompletion()
         completion.set_minimum_key_length(0)
