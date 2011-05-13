@@ -42,9 +42,9 @@ from gnucash.gnucash_core_c import \
                        # it is probably a very bad idea to be using this
 # gtk imports
 from gtk import \
-    RESPONSE_OK, RESPONSE_CANCEL, \
+    RESPONSE_OK, RESPONSE_CANCEL, ListStore, \
     FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, Dialog, Entry, \
-    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL, combo_box_entry_new_text
+    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL, EntryCompletion
         
 SQLITE3 = 'sqlite3'
 XML = 'xml'
@@ -320,18 +320,26 @@ class GnuCash(SessionBasedRobustBackendPlugin):
                      (STOCK_OK, RESPONSE_OK,
                       STOCK_CANCEL, RESPONSE_CANCEL ) )
         
-        account_entry = combo_box_entry_new_text()
-        # account_entry.set_width_chars(60)
-        names = self.get_account_names(self._v_session_active.get_book().get_root_account())
-        for name in names:
-            # can only use append_text() with combo boxes constructed by
-            # combo_box_entry_new_text()
-            account_entry.append_text(name)
+        # Create an account entry widget.
+        account_entry = Entry()
+        account_entry.set_width_chars(60)
         dia.vbox.pack_start(account_entry)
+        
+        # Setup auto-complete for the entry widget.
+        completion = EntryCompletion()
+        completion.set_minimum_key_length(0)
+        list_store = ListStore(str)
+        names = self.get_account_names(
+                    self._v_session_active.get_book().get_root_account())
+        for name in names:
+            list_store.append([name])
+        completion.set_model(list_store)
+        completion.set_text_column(0)
+        account_entry.set_completion(completion)
         
         dia.vbox.show_all()
         result = dia.run()
-        account_text = account_entry.get_active_text()
+        account_text = account_entry.get_text()
         dia.destroy()
         if result == RESPONSE_OK:
             return tuple(account_text.split(':')), account_text
