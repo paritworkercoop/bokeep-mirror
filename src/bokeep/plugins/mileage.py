@@ -226,6 +226,7 @@ class MileagePlugin(SimplePlugin):
     currency = 'CAD'
     distance_multiplier = Decimal(1)
     
-    def run_configuration_interface(self, parent_window, backend_account_fetch):
+    def run_configuration_interface(self, parent_window, backend_account_fetch,
+                                    **extra_arguments):
         dialog = MileageConfigDialog(parent_window, backend_account_fetch, self)
         dialog.run()

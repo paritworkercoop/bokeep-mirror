@@ -179,7 +179,8 @@ class MileagePlugin(SimplePlugin):
     
     # Called when the user clicks the "Plugin" menu item and selects
     # "Configure plugin."
-    def run_configuration_interface(self, parent_window, backend_account_fetch):
+    def run_configuration_interface(self, parent_window, backend_account_fetch,
+                                    **extra_arguments):
         dialog = MileageConfigDialog(parent_window, backend_account_fetch, self)
         dialog.run()
   </code>
