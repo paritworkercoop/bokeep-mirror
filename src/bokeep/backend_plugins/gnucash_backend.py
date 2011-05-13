@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # python imports
 from decimal import Decimal 
@@ -33,7 +34,7 @@ from bokeep.util import attribute_or_blank
 
 # gnucash imports
 from gnucash import Session, Split, GncNumeric, GUID, Transaction, \
-    GnuCashBackendException
+    GnuCashBackendException, Account
 from gnucash.gnucash_core_c import \
         ERR_FILEIO_BACKUP_ERROR, \
         string_to_guid, \
@@ -43,7 +44,7 @@ from gnucash.gnucash_core_c import \
 from gtk import \
     RESPONSE_OK, RESPONSE_CANCEL, \
     FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, Dialog, Entry, \
-    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL
+    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL, combo_box_entry_new_text
         
 SQLITE3 = 'sqlite3'
 XML = 'xml'
@@ -299,18 +300,38 @@ class GnuCash(SessionBasedRobustBackendPlugin):
             # xml and sqlite
             self.setattr('gnucash_file', 'xml' + '://' + gnucashfile_path)
 
+    def get_account_names(self, account, names = [], prefix = ''):
+        # Get the name of the current account.
+        if not account.is_root():
+            if not account.GetPlaceholder():
+                names.append(prefix + account.name)
+            prefix += account.name + ':'
+        
+        # Iterate through the account's children.
+        for child in account.get_children():
+            child = Account(instance = child)
+            names = self.get_account_names(child, names, prefix)
+            
+        return names
+    
     def backend_account_dialog(self, parent_window=None):
         dia = Dialog("Please enter a gnucash account",
                      parent_window, DIALOG_MODAL,
                      (STOCK_OK, RESPONSE_OK,
                       STOCK_CANCEL, RESPONSE_CANCEL ) )
-        account_entry = Entry()
-        account_entry.set_width_chars(60)
+        
+        account_entry = combo_box_entry_new_text()
+        # account_entry.set_width_chars(60)
+        names = self.get_account_names(self._v_session_active.get_book().get_root_account())
+        for name in names:
+            # can only use append_text() with combo boxes constructed by
+            # combo_box_entry_new_text()
+            account_entry.append_text(name)
         dia.vbox.pack_start(account_entry)
-        account_entry.show()
+        
         dia.vbox.show_all()
         result = dia.run()
-        account_text = account_entry.get_text()
+        account_text = account_entry.get_active_text()
         dia.destroy()
         if result == RESPONSE_OK:
             return tuple(account_text.split(':')), account_text
