@@ -187,6 +187,12 @@ def listvalue_from_string_to_original_type(value, field_type):
     else:
         return value
 
+def listvalue_to_string_from_original_type(value, field_type):
+    if field_type == date:
+        return cell_renderer_date_to_string(value)
+    else:
+        return value
+
 def fieldtype_transform(fieldtype):
     if fieldtype == date:
         return str
