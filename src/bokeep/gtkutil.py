@@ -203,7 +203,7 @@ def editable_listview_del_button_clicked_handler(button, tv):
         model.remove(treeiter)
 
 def row_changed_handler(
-    model, path, treeiter, parralell_list, change_register):
+    model, path, treeiter, parralell_list, change_register, field_list):
     parralell_list[ path[0] ] = tuple(model[path[0]])
     change_register()
 
@@ -231,7 +231,7 @@ def create_editable_type_defined_listview_and_model(
     
     model.connect("row-changed",
                   row_changed_handler,
-                  parralell_list, change_register )
+                  parralell_list, change_register, field_list )
     model.connect("row-inserted",
                   row_inserted_handler,
                   parralell_list, change_register )
