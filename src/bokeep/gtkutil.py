@@ -181,6 +181,12 @@ gobject.type_register(CellRendererDate)
 COMBO_TYPE_HAS_ENTRY_FIELD, COMBO_TYPE_STORE_TYPE_FIELD, \
     COMBO_TYPE_FIRST_VALUE = range(3)
 
+def listvalue_from_string_to_original_type(value, field_type):
+    if field_type == date:
+        return cell_renderer_string_to_date(value)
+    else:
+        return value
+
 def fieldtype_transform(fieldtype):
     if fieldtype == date:
         return str
