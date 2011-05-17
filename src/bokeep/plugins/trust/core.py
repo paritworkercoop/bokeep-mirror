@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -17,6 +17,7 @@
 #
 # Author: Jamie Campbell <jamie@parit.ca>
 # Author: Mark Jenkins <mark@parit.ca>
+# Author: Samuel Pauls <samuel@parit.ca>
 
 from decimal import Decimal
 from datetime import datetime
@@ -31,8 +32,11 @@ class TrustTransaction(Transaction):
     def __init__(self, trust_module):
         self.trust_module = trust_module
         self.transfer_amount = Decimal(0)
-        self.trustor = None
-        self.memo = None
+        if len(trust_module.get_trustors().values()) == 0:
+            self.trustor = None
+        else:
+            self.trustor = trust_module.get_trustors().values()[0]
+        self.memo = ''
         self.trans_date = datetime.today()
 
     def get_financial_transactions(self):
