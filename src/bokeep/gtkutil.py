@@ -348,7 +348,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'aha', 2)
+    return (date.today(), 'yep', 'me', 'aha', 2)
 
 def test_prog_list_changed(*args):
     print 'list changed'
@@ -364,6 +364,9 @@ def main():
         ( ('date', date,),
           ('choose-me',
            (True, str, 'yo', 'hi', 'me', 'fun')
+           ), # end choose-me tuple
+          ('choose-me-only',
+           (False, str, 'yo', 'hi', 'me', 'fun')
            ), # end choose-me tuple
           ('description', str),
           ('count', int),
