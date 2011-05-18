@@ -186,9 +186,10 @@ FIELD_NAME, FIELD_TYPE = range(2)
 def listvalue_from_string_to_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_string_to_date(value)
-    else:
-        # possible exception here caught by caller
-        return field_type(value)
+    elif type(field_type) == tuple:
+        field_type = field_type[COMBO_TYPE_STORE_TYPE_FIELD]
+    # possible exception here caught by caller
+    return field_type(value)
 
 def listvalue_to_string_from_original_type(value, field_type):
     if field_type == date:
