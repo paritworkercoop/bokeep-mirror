@@ -17,8 +17,6 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
-# future python features import
-from __future__ import print_function
 
 # python imports
 from datetime import date
@@ -350,7 +348,7 @@ def test_program_return_new_row():
     return (date.today(), 'yep', 'aha', 2)
 
 def test_prog_list_changed(*args):
-    print('list changed')
+    print 'list changed'
 
 def main():
     w = Window()
