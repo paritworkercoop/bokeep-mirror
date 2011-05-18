@@ -20,7 +20,7 @@
 # python imports
 from datetime import date
 import datetime
-from itertools import islice
+from itertools import islice, chain
 
 # gtk imports
 from gtk import \
@@ -181,6 +181,8 @@ gobject.type_register(CellRendererDate)
 COMBO_TYPE_HAS_ENTRY_FIELD, COMBO_TYPE_STORE_TYPE_FIELD, \
     COMBO_TYPE_FIRST_VALUE = range(3)
 
+FIELD_NAME, FIELD_TYPE = range(2)
+
 def listvalue_from_string_to_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_string_to_date(value)
@@ -195,33 +197,56 @@ def listvalue_to_string_from_original_type(value, field_type):
 
 def fieldtype_transform(fieldtype):
     if fieldtype == date:
-        return str
+        return gobject.TYPE_PYOBJECT
     elif type(fieldtype) == tuple:
         return fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
     return fieldtype
 
 def cell_edited_update_original_modelhandler(
-    cellrenderer, model_row_path, new_str, original_model, original_column):
+    cellrenderer, model_row_path, new_str, original_model, original_column,
+    field_type):
     original_model.set_value(
         original_model.get_iter(model_row_path), original_column,
         new_str )
+    location_of_real_value_in_model = \
+        len(original_model[model_row_path])/2 + original_column
+    new_real_value = listvalue_from_string_to_original_type(
+            new_str, field_type )
+    original_model.set_value(
+        original_model.get_iter(model_row_path),
+        location_of_real_value_in_model,
+        new_real_value )
 
-def editable_listview_add_button_clicked_handler(button, model, new_row_func):
-    model.append( new_row_func() )
+def editable_listview_add_button_clicked_handler(button, model, new_row_func,
+                                                 field_list):
+    new_row = list(new_row_func())
+    model.append( tuple(
+            chain( (listvalue_to_string_from_original_type(
+                        item, field_list[i][FIELD_TYPE])
+                    for i, item in enumerate(new_row)),
+                   new_row ) # chain
+            ) ) # tuple and append
 
 def editable_listview_del_button_clicked_handler(button, tv):
     model, treeiter = tv.get_selection().get_selected()
     if treeiter != None:
         model.remove(treeiter)
 
+def slice_the_data_part_of_a_row(row):
+    return tuple(islice(row, len(row)/2, None) )
+        
 def row_changed_handler(
     model, path, treeiter, parralell_list, change_register, field_list):
-    parralell_list[ path[0] ] = tuple(model[path[0]])
+    new_row  = slice_the_data_part_of_a_row(model[path[0]])
+    parralell_list[ path[0] ] = new_row
     change_register()
 
 def row_inserted_handler(
     model, path, treeiter, parralell_list, change_register):
-    parralell_list.insert(path[0], tuple(model[path[0]]) )
+    new_row = slice_the_data_part_of_a_row(model[path[0]])
+    parralell_list.insert(path[0],
+                          new_row,
+                          ) # insert
     change_register()
 
 def row_deleted_handler(
@@ -229,17 +254,39 @@ def row_deleted_handler(
     del parralell_list[ path[0] ]
     change_register()
 
+def display_fieldtype_transform(fieldtype):
+    # will differ once we have support for things other than CellRendererText
+    # and derivitives of it
+    #
+    # other functions will need to change as well, such as
+    # transform_list_row_into_twice_repeated_row_for_model
+    return str
+
+def transform_list_row_into_twice_repeated_row_for_model(list_row, field_list):
+    return chain( (listvalue_to_string_from_original_type(
+                item, field_list[i][FIELD_TYPE])
+                   for i, item in enumerate(list_row)),
+                  list_row )
+
 def create_editable_type_defined_listview_and_model(
     field_list, new_row_func, parralell_list, change_register):
     vbox = VBox()
     tv = TreeView()
-    model = ListStore( *tuple(fieldtype_transform(fieldtype)
-                              for fieldname, fieldtype in field_list)  )
+    model = ListStore( * chain((display_fieldtype_transform(fieldtype)
+                                for fieldname, fieldtype in field_list),
+                               (fieldtype_transform(fieldtype)
+                                for fieldname, fieldtype in field_list)
+                               ) # chain
+                         ) # ListStore
     # it is important to do this fill of the liststore
     # with the existing items first prior to adding event handlers
     # (row-changed, row-inserted, row-deleted) that
     # look for changes and keep the two lists in sync
-    iterative_append_to_liststore(model, parralell_list)
+    iterative_append_to_liststore(
+        model,
+        ( tuple(transform_list_row_into_twice_repeated_row_for_model(
+                    list_row, field_list))
+          for list_row in parralell_list ) )
     
     model.connect("row-changed",
                   row_changed_handler,
@@ -269,7 +316,8 @@ def create_editable_type_defined_listview_and_model(
             cell_renderer = CellRendererText()
         cell_renderer.connect(
             'edited',
-            cell_edited_update_original_modelhandler, model, i)
+            cell_edited_update_original_modelhandler, model, i,
+            field_list[i][FIELD_TYPE])
         cell_renderer.set_property("editable", True)
         cell_renderer.set_property("editable-set", True)
         tvc = TreeViewColumn(fieldname, cell_renderer, text=i)
@@ -282,7 +330,7 @@ def create_editable_type_defined_listview_and_model(
     buttons[0].connect(
         "clicked",
         editable_listview_add_button_clicked_handler,
-        model, new_row_func )
+        model, new_row_func, field_list  )
     buttons[1].connect(
         "clicked",
         editable_listview_del_button_clicked_handler,
@@ -291,7 +339,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (cell_renderer_date_to_string(date.today()), 'yep', 'aha')
+    return (date.today(), 'yep', 'aha')
 
 def test_prog_list_changed(*args):
     print 'list changed'
