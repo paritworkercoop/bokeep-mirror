@@ -252,6 +252,7 @@ def display_fieldtype_transform(fieldtype):
     #
     # other functions will need to change as well, such as
     # transform_list_row_into_twice_repeated_row_for_model
+    # and editable_listview_add_button_clicked_handler
     return str
 
 def store_fieldtype_transform(fieldtype):
