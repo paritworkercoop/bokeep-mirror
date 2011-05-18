@@ -269,7 +269,10 @@ def store_fieldtype_transform(fieldtype):
     if fieldtype in(date, Decimal):
         return gobject.TYPE_PYOBJECT
     elif type(fieldtype) == tuple:
-        return fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
+        # woot, recursion, fixes the case where we have a list of
+        # date or Decimal compared to just returning
+        # fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
+        return store_fieldtype_transform(fieldtype[COMBO_TYPE_STORE_TYPE_FIELD])
     return fieldtype
 
 def transform_list_row_into_twice_repeated_row_for_model(list_row, field_list):
@@ -348,7 +351,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'me', 'aha', 2)
+    return (date.today(), 'yep', 'me', 2, 'aha', 2)
 
 def test_prog_list_changed(*args):
     print 'list changed'
@@ -368,6 +371,9 @@ def main():
           ('choose-me-only',
            (False, str, 'yo', 'hi', 'me', 'fun')
            ), # end choose-me tuple
+          ('choose-me-num',
+           (False, int, 1, 2, 3, 4)
+           ), # end choose-num tuple
           ('description', str),
           ('count', int),
           ), # end type tuple
