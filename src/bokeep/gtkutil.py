@@ -340,9 +340,19 @@ def create_editable_type_defined_listview_and_model(
                   parralell_list, change_register )
     model.connect("row-deleted",
                   row_deleted_handler, parralell_list, change_register )
+
     for i, (fieldname, fieldtype) in enumerate(field_list):
+        def setup_edited_handler_for_renderer_to_original_model(cell_renderer):
+            cell_renderer.connect(
+                'edited',
+                cell_edited_update_original_modelhandler, model, i,
+                field_list[i][FIELD_TYPE])
+            return cell_renderer
+
         if fieldtype == date:
-            cell_renderer = CellRendererDate()
+            cell_renderer = \
+                setup_edited_handler_for_renderer_to_original_model(
+                CellRendererDate() )
         elif type(fieldtype) == tuple:
             cell_renderer = CellRendererCombo()
             cell_renderer.set_property("has-entry",
@@ -357,17 +367,19 @@ def create_editable_type_defined_listview_and_model(
                         combo_value) )
             cell_renderer.set_property("model", combo_liststore)
             cell_renderer.set_property("text-column", 0)
+            setup_edited_handler_for_renderer_to_original_model(cell_renderer)
+
         elif type(fieldtype) == dict and fieldtype['type'] == file:
             cell_renderer = CellRendererFile(
                 fieldtype['file_type']  if 'file_type' in fieldtype
                 else FILE_CHOOSER_ACTION_OPEN 
                 )
+            setup_edited_handler_for_renderer_to_original_model(cell_renderer)
         else:
-            cell_renderer = CellRendererText()
-        cell_renderer.connect(
-            'edited',
-            cell_edited_update_original_modelhandler, model, i,
-            field_list[i][FIELD_TYPE])
+            cell_renderer = \
+                setup_edited_handler_for_renderer_to_original_model(
+                CellRendererText() )
+
         cell_renderer.set_property("editable", True)
         cell_renderer.set_property("editable-set", True)
         tvc = TreeViewColumn(fieldname, cell_renderer, text=i)
