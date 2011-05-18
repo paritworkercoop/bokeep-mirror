@@ -75,6 +75,27 @@ def pack_in_stock_but_and_ret(but, box):
     box.pack_start(but, expand=False)
     return but
 
+
+class CellRendererFile(CellRendererText):
+    def __init__(self, file_chooser_type=FILE_CHOOSER_ACTION_OPEN):
+        gtk.CellRendererText.__init__(self)
+        self.file_chooser_type = file_chooser_type
+        self.props.editable = True
+
+    def do_start_editing(self, event, widget, path, background_area,
+                         cell_area, flags):
+        new_file_path = file_selection_path(
+            "Select a file" 
+            if self.file_chooser_type == FILE_CHOOSER_ACTION_OPEN 
+            else "Select a directory",
+
+            self.file_chooser_type)
+        if new_file_path != None:
+            self.emit('edited', path, new_file_path)
+
+gobject.type_register(CellRendererFile)
+
+
 # CellRendererDate code was copied and modified from the pygtk FAQ
 # by Mark Jenkins <mark@parit.ca> on May 5, 2011
 #
@@ -190,6 +211,8 @@ def listvalue_from_string_to_original_type(value, field_type):
         return cell_renderer_string_to_date(value)
     elif type(field_type) == tuple:
         field_type = field_type[COMBO_TYPE_STORE_TYPE_FIELD]
+    elif type(field_type) == dict and field_type['type'] == file:
+        return value
     # possible exception here caught by caller
     return field_type(value)
 
@@ -275,6 +298,8 @@ def store_fieldtype_transform(fieldtype):
         # date or Decimal compared to just returning
         # fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
         return store_fieldtype_transform(fieldtype[COMBO_TYPE_STORE_TYPE_FIELD])
+    elif type(fieldtype) == dict and fieldtype['type'] == file:
+        return str
     return fieldtype
 
 def transform_list_row_into_twice_repeated_row_for_model(list_row, field_list):
@@ -326,6 +351,11 @@ def create_editable_type_defined_listview_and_model(
                     (str(combo_value), combo_value) ) 
             cell_renderer.set_property("model", combo_liststore)
             cell_renderer.set_property("text-column", 0)
+        elif type(fieldtype) == dict and fieldtype['type'] == file:
+            cell_renderer = CellRendererFile(
+                fieldtype['file_type']  if 'file_type' in fieldtype
+                else FILE_CHOOSER_ACTION_OPEN 
+                )
         else:
             cell_renderer = CellRendererText()
         cell_renderer.connect(
@@ -353,7 +383,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'me', 2, 'aha', 2)
+    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/')
 
 def test_prog_list_changed(*args):
     print 'list changed'
@@ -378,6 +408,8 @@ def main():
            ), # end choose-num tuple
           ('description', str),
           ('count', int),
+          ('file_path', {'type': file,
+                         'file_type':FILE_CHOOSER_ACTION_SELECT_FOLDER} ),
           ), # end type tuple
         test_program_return_new_row, [], test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
