@@ -73,7 +73,7 @@ class TimelogPlugin(SimplePlugin):
             "Timelog plugin configuration", parent_window,
             buttons=(STOCK_OK, RESPONSE_OK))
         hbox = HBox()
-        dia.get_content_area().pack_start( hbox, expand=False )
+        dia.vbox.pack_start( hbox, expand=False )
         
         if book.has_module_enabled("bokeep.plugins.payroll"):
             hbox.pack_start( Label("Pick a payroll plugin instance"),
