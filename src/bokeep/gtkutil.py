@@ -72,10 +72,6 @@ def pack_in_stock_but_and_ret(but, box):
     box.pack_start(but, expand=False)
     return but
 
-def iterative_append_to_liststore(liststore, itersource):
-    for value in itersource:
-        liststore.append(value)
-
 # CellRendererDate code was copied and modified from the pygtk FAQ
 # by Mark Jenkins <mark@parit.ca> on May 5, 2011
 #
@@ -285,11 +281,11 @@ def create_editable_type_defined_listview_and_model(
     # with the existing items first prior to adding event handlers
     # (row-changed, row-inserted, row-deleted) that
     # look for changes and keep the two lists in sync
-    iterative_append_to_liststore(
-        model,
-        ( tuple(transform_list_row_into_twice_repeated_row_for_model(
-                    list_row, field_list))
-          for list_row in parralell_list ) )
+    for list_row in parralell_list:
+        model.append(
+            tuple(transform_list_row_into_twice_repeated_row_for_model(
+                    list_row, field_list) )
+            ) # append
     
     model.connect("row-changed",
                   row_changed_handler,
@@ -308,11 +304,10 @@ def create_editable_type_defined_listview_and_model(
                                        fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD])
             combo_liststore = ListStore(
                 str, fieldtype[COMBO_TYPE_STORE_TYPE_FIELD] )
-            iterative_append_to_liststore(
-                combo_liststore,
-                ( (str(combo_value), combo_value)
-                  for combo_value in islice(
-                        fieldtype, COMBO_TYPE_FIRST_VALUE, None) ) )
+            for combo_value in islice(
+                fieldtype, COMBO_TYPE_FIRST_VALUE, None):
+                combo_liststore.append(
+                    (str(combo_value), combo_value) ) 
             cell_renderer.set_property("model", combo_liststore)
             cell_renderer.set_property("text-column", 0)
         else:
