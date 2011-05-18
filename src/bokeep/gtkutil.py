@@ -22,7 +22,7 @@
 from datetime import date
 import datetime
 from itertools import islice, chain
-from decimal import InvalidOperation
+from decimal import InvalidOperation, Decimal
 
 # gtk imports
 from gtk import \
@@ -263,7 +263,7 @@ def display_fieldtype_transform(fieldtype):
     return str
 
 def store_fieldtype_transform(fieldtype):
-    if fieldtype == date:
+    if fieldtype in(date, Decimal):
         return gobject.TYPE_PYOBJECT
     elif type(fieldtype) == tuple:
         return fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
