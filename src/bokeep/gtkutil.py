@@ -28,6 +28,7 @@ from decimal import InvalidOperation, Decimal
 from gtk import \
     FileChooserDialog, MessageDialog, \
     FILE_CHOOSER_ACTION_SAVE, FILE_CHOOSER_ACTION_OPEN, \
+    FILE_CHOOSER_ACTION_SELECT_FOLDER, \
     STOCK_CANCEL, RESPONSE_CANCEL, \
     STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
     MESSAGE_ERROR, BUTTONS_OK, \
@@ -39,11 +40,12 @@ import gtk
 
 COMBO_NO_SELECTION = -1
 
-def file_selection_path(msg="choose file"):   
+def file_selection_path(msg="choose file",
+                        selection_code=FILE_CHOOSER_ACTION_OPEN):
     fcd = FileChooserDialog(
         msg,
         None,
-        FILE_CHOOSER_ACTION_OPEN,
+        selection_code,
         (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_OPEN, RESPONSE_OK) )
     fcd.set_modal(True)
     result = fcd.run()
