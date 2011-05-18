@@ -194,13 +194,6 @@ def listvalue_to_string_from_original_type(value, field_type):
     else:
         return value
 
-def store_fieldtype_transform(fieldtype):
-    if fieldtype == date:
-        return gobject.TYPE_PYOBJECT
-    elif type(fieldtype) == tuple:
-        return fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
-    return fieldtype
-
 def cell_edited_update_original_modelhandler(
     cellrenderer, model_row_path, new_str, original_model, original_column,
     field_type):
@@ -260,6 +253,13 @@ def display_fieldtype_transform(fieldtype):
     # other functions will need to change as well, such as
     # transform_list_row_into_twice_repeated_row_for_model
     return str
+
+def store_fieldtype_transform(fieldtype):
+    if fieldtype == date:
+        return gobject.TYPE_PYOBJECT
+    elif type(fieldtype) == tuple:
+        return fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
+    return fieldtype
 
 def transform_list_row_into_twice_repeated_row_for_model(list_row, field_list):
     return chain( (listvalue_to_string_from_original_type(
