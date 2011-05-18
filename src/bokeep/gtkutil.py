@@ -24,6 +24,7 @@ from __future__ import print_function
 from datetime import date
 import datetime
 from itertools import islice, chain
+from decimal import InvalidOperation
 
 # gtk imports
 from gtk import \
@@ -186,28 +187,36 @@ def listvalue_from_string_to_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_string_to_date(value)
     else:
-        return value
+        # possible exception here caught by caller
+        return field_type(value)
 
 def listvalue_to_string_from_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_date_to_string(value)
     else:
-        return value
+        return str(value)
 
 def cell_edited_update_original_modelhandler(
     cellrenderer, model_row_path, new_str, original_model, original_column,
     field_type):
-    original_model.set_value(
-        original_model.get_iter(model_row_path), original_column,
-        new_str )
-    location_of_real_value_in_model = \
-        len(original_model[model_row_path])/2 + original_column
-    new_real_value = listvalue_from_string_to_original_type(
+    try:
+        new_real_value = listvalue_from_string_to_original_type(
             new_str, field_type )
-    original_model.set_value(
-        original_model.get_iter(model_row_path),
-        location_of_real_value_in_model,
-        new_real_value )
+    # do nothing if conversion to int fails
+    except ValueError: pass
+    # do nothing if conversion to Decimal fails
+    except InvalidOperation: pass
+    # else we use the converted value
+    else:
+        original_model.set_value(
+            original_model.get_iter(model_row_path), original_column,
+            new_str )
+        location_of_real_value_in_model = \
+            len(original_model[model_row_path])/2 + original_column
+        original_model.set_value(
+            original_model.get_iter(model_row_path),
+            location_of_real_value_in_model,
+            new_real_value )
 
 def editable_listview_add_button_clicked_handler(button, model, new_row_func,
                                                  field_list):
@@ -338,7 +347,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'aha')
+    return (date.today(), 'yep', 'aha', 2)
 
 def test_prog_list_changed(*args):
     print('list changed')
@@ -356,6 +365,7 @@ def main():
            (True, str, 'yo', 'hi', 'me', 'fun')
            ), # end choose-me tuple
           ('description', str),
+          ('count', int),
           ), # end type tuple
         test_program_return_new_row, [], test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
