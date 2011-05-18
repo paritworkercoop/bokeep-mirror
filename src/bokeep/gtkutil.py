@@ -37,6 +37,8 @@ from gtk import \
 import gobject
 import gtk
 
+COMBO_NO_SELECTION = -1
+
 def file_selection_path(msg="choose file"):   
     fcd = FileChooserDialog(
         msg,
