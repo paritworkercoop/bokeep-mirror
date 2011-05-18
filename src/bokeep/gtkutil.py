@@ -19,7 +19,7 @@
 
 
 # python imports
-from datetime import date
+from datetime import date, timedelta
 import datetime
 from itertools import islice, chain
 from decimal import InvalidOperation, Decimal
@@ -210,7 +210,8 @@ def listvalue_from_string_to_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_string_to_date(value)
     elif type(field_type) == tuple:
-        field_type = field_type[COMBO_TYPE_STORE_TYPE_FIELD]
+        return listvalue_from_string_to_original_type(
+            value, field_type[COMBO_TYPE_STORE_TYPE_FIELD] )
     elif type(field_type) == dict and field_type['type'] == file:
         return value
     # possible exception here caught by caller
@@ -219,6 +220,9 @@ def listvalue_from_string_to_original_type(value, field_type):
 def listvalue_to_string_from_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_date_to_string(value)
+    elif type(field_type) == tuple:
+        return listvalue_to_string_from_original_type(
+            value, field_type[COMBO_TYPE_STORE_TYPE_FIELD] )
     else:
         return str(value)
 
@@ -344,11 +348,13 @@ def create_editable_type_defined_listview_and_model(
             cell_renderer.set_property("has-entry",
                                        fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD])
             combo_liststore = ListStore(
-                str, fieldtype[COMBO_TYPE_STORE_TYPE_FIELD] )
+                str, store_fieldtype_transform(fieldtype) )
             for combo_value in islice(
                 fieldtype, COMBO_TYPE_FIRST_VALUE, None):
-                combo_liststore.append(
-                    (str(combo_value), combo_value) ) 
+                combo_liststore.append( (
+                        listvalue_to_string_from_original_type(
+                            combo_value, fieldtype),
+                        combo_value) )
             cell_renderer.set_property("model", combo_liststore)
             cell_renderer.set_property("text-column", 0)
         elif type(fieldtype) == dict and fieldtype['type'] == file:
@@ -383,7 +389,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/')
+    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/', date.today())
 
 def test_prog_list_changed(*args):
     print 'list changed'
@@ -394,6 +400,7 @@ def main():
     w.connect( "delete-event", main_quit )
     vbox = VBox()
     w.add(vbox)
+    ONE_DAY = timedelta(days=1)
     model, tv, tv_vbox = \
         create_editable_type_defined_listview_and_model(
         ( ('date', date,),
@@ -410,6 +417,9 @@ def main():
           ('count', int),
           ('file_path', {'type': file,
                          'file_type':FILE_CHOOSER_ACTION_SELECT_FOLDER} ),
+          ('choose-me-date',
+           (False, date,
+            date.today() - ONE_DAY, date.today(), date.today() + ONE_DAY ) ),
           ), # end type tuple
         test_program_return_new_row, [], test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
