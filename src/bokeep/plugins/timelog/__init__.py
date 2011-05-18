@@ -47,11 +47,6 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
             self.trans.timelog_list, self.change_register_function,
             )
         self.mainvbox.pack_start( tree_box, expand=False)
-        # before populating the liststore, you might want to read this
-        # pygtk FAQ:
-        # 
-        # 13.43. Are there tips for improving performance when adding many
-        # rows to a Treeview?
 
 class MultiEmployeeTimelogEntry(Transaction):
     def __init__(self, associated_plugin):
