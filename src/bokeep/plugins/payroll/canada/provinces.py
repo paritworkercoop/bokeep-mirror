@@ -1,5 +1,5 @@
 # provinces.py
-# Copyright (C) 2006-2008 ParIT Worker Co-operative <paritinfo@parit.ca>
+# Copyright (C) 2006-2011 ParIT Worker Co-operative <paritinfo@parit.ca>
 # Copyright (C) 2001-2007 Paul Evans <pevans@catholic.org>
 # 
 # This program is free software; you can redistribute it and/or modify
@@ -17,6 +17,7 @@
 #
 # Author(s): Mark Jenkins <mark@parit.ca>
 #            Paul Evans <pevans@catholic.org>
+#            Samuel Pauls <samuel@parit.ca>
 
 from income_tax import calc_annual_basic_provincial_tax_T4
 from functions import \
@@ -25,6 +26,7 @@ from functions import \
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
+     JUL_2011, \
      get_payroll_rule_period_for_paystub
 
 from decimal import Decimal
@@ -154,8 +156,21 @@ class Manitoba( Province ):
                             '19138.50', # 8
                             '20831.50', # 9
                             '22524.50', # 10
-                            ), # JAN_2010
+                            ), # JAN_2011
 
+                JUL_2011: ( '0.00',     # 0
+                            '8634.00',  # 1
+                            '9480.50',  # 2
+                            '11173.50', # 3
+                            '12866.50', # 4
+                            '14559.50', # 5
+                            '16252.50', # 6
+                            '17945.50', # 7
+                            '19638.50', # 8
+                            '21331.50', # 9
+                            '23024.50', # 10
+                            ), # JUL_2011
+               
                 } # TD_PROV
 
     # convert the above table values from string constants to Decimal values
@@ -206,6 +221,12 @@ class Manitoba( Province ):
                       ('0.1275', '605'),   # 31000 < A <= 67000
                       ('0.1740', '3720'), )# 67000 < A
                     ), # JAN_2011
+                                           
+        JUL_2011: ( ('31000', '67000'),
+                    ( ('0.1080', '0'),     #         A <= 31000
+                      ('0.1275', '605'),   # 31000 < A <= 67000
+                      ('0.1740', '3720'), )# 67000 < A
+                    ), # JUL_2011
         
         } # PROVINCIAL_THRESHOLDS_AND_TAX_RATES
 
