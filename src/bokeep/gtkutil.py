@@ -194,7 +194,7 @@ def listvalue_to_string_from_original_type(value, field_type):
     else:
         return value
 
-def fieldtype_transform(fieldtype):
+def store_fieldtype_transform(fieldtype):
     if fieldtype == date:
         return gobject.TYPE_PYOBJECT
     elif type(fieldtype) == tuple:
@@ -273,7 +273,7 @@ def create_editable_type_defined_listview_and_model(
     tv = TreeView()
     model = ListStore( * chain((display_fieldtype_transform(fieldtype)
                                 for fieldname, fieldtype in field_list),
-                               (fieldtype_transform(fieldtype)
+                               (store_fieldtype_transform(fieldtype)
                                 for fieldname, fieldtype in field_list)
                                ) # chain
                          ) # ListStore
