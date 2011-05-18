@@ -19,6 +19,7 @@
 
 # python imports
 from datetime import date
+from decimal import Decimal
 
 # zodb imports
 from persistent.list import PersistentList
@@ -36,13 +37,13 @@ from bokeep.gtkutil import \
 
 def create_timelog_new_row(timelog_plugin):
     def timelog_new_row():
-        return ('new employee', date.today(), '0', 'task')
+        return ('new employee', date.today(), Decimal(0), 'task')
     return timelog_new_row
 
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
     def simple_init_before_show(self):
         self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
-            ( ('Employee', str), ('Day', date), ('Hours', str), ('Description', str), ),
+            ( ('Employee', str), ('Day', date), ('Hours', Decimal), ('Description', str), ),
             create_timelog_new_row(self.plugin),
             self.trans.timelog_list, self.change_register_function,
             )
