@@ -226,6 +226,18 @@ def listvalue_to_string_from_original_type(value, field_type):
     else:
         return str(value)
 
+def set_underlying_model_pair(
+     model_row_path, new_str, new_real_value, original_model, original_column):
+    original_model.set_value(
+        original_model.get_iter(model_row_path), original_column,
+        new_str )
+    location_of_real_value_in_model = \
+        len(original_model[model_row_path])/2 + original_column
+    original_model.set_value(
+        original_model.get_iter(model_row_path),
+        location_of_real_value_in_model,
+        new_real_value )
+
 def cell_edited_update_original_modelhandler(
     cellrenderer, model_row_path, new_str, original_model, original_column,
     field_type):
@@ -238,15 +250,15 @@ def cell_edited_update_original_modelhandler(
     except InvalidOperation: pass
     # else we use the converted value
     else:
-        original_model.set_value(
-            original_model.get_iter(model_row_path), original_column,
-            new_str )
-        location_of_real_value_in_model = \
-            len(original_model[model_row_path])/2 + original_column
-        original_model.set_value(
-            original_model.get_iter(model_row_path),
-            location_of_real_value_in_model,
-            new_real_value )
+        set_underlying_model_pair(model_row_path, new_str, new_real_value,
+                                  original_model, original_column )
+
+def combo_cell_edited_update_original_modelhandler(
+    cellrenderer, model_row_path, new_str, original_model, original_column,
+    lookup_dict):
+    if new_str in lookup_dict:
+        set_underlying_model_pair(model_row_path, new_str, lookup_dict[new_str],
+                                  original_model, original_column)           
 
 def editable_listview_add_button_clicked_handler(button, model, new_row_func,
                                                  field_list):
@@ -371,7 +383,20 @@ def create_editable_type_defined_listview_and_model(
                         combo_value) )
             cell_renderer.set_property("model", combo_liststore)
             cell_renderer.set_property("text-column", 0)
-            setup_edited_handler_for_renderer_to_original_model(cell_renderer)
+            if fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD]:
+                setup_edited_handler_for_renderer_to_original_model(
+                    cell_renderer)
+            else:
+                lookup_dict = dict(
+                    ( listvalue_to_string_from_original_type(
+                            combo_value, fieldtype), combo_value)
+                    for combo_value in islice(
+                        fieldtype, COMBO_TYPE_FIRST_VALUE, None ) )
+                cell_renderer.connect(
+                'edited',
+                combo_cell_edited_update_original_modelhandler, model, i,
+                lookup_dict)
+
 
         elif type(fieldtype) == dict and fieldtype['type'] == file:
             cell_renderer = CellRendererFile(
