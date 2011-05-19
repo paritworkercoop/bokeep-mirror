@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author: Mark Jenkins <mark@parit.ca>
-
+# Author: Samuel Pauls <samuel@parit.ca>
 
 # python imports
 from datetime import date
@@ -246,13 +246,17 @@ def cell_edited_update_original_modelhandler(
 
 def editable_listview_add_button_clicked_handler(button, model, new_row_func,
                                                  field_list):
-    new_row = list(new_row_func())
-    model.append( tuple(
-            chain( (listvalue_to_string_from_original_type(
-                        item, field_list[i][FIELD_TYPE])
-                    for i, item in enumerate(new_row)),
-                   new_row ) # chain
-            ) ) # tuple and append
+    """new_row_func: This function is called and its return value is used to
+       populate the new row.  If "None" is returned, the new row isn't added."""
+    addition = new_row_func()
+    if addition != None:
+        new_row = list(addition)
+        model.append( tuple(
+                chain( (listvalue_to_string_from_original_type(
+                            item, field_list[i][FIELD_TYPE])
+                        for i, item in enumerate(new_row)),
+                       new_row ) # chain
+                ) ) # tuple and append
 
 def editable_listview_del_button_clicked_handler(button, tv):
     model, treeiter = tv.get_selection().get_selected()
