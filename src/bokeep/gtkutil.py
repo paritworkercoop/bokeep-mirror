@@ -255,9 +255,6 @@ def listvalue_to_string_from_original_type(value, field_type):
                     combobox_list_strings_and_values_iteration(field_type):
                 if value == possible_value:
                     return possible_string
-                else:
-                    print value, type(value), 'not match', possible_value, \
-                        type(possible_value)
             else:
                 assert(False)
             # we should never reach the end of this loop, something should
