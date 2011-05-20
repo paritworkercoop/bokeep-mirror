@@ -450,7 +450,7 @@ def main():
            ), # end choose-me tuple
           ('choose-me-only',
            (False, str, 'yo', 'hi', 'me', 'fun')
-           ), # end choose-me tuple
+           ), # end choose-me-only tuple
           ('choose-me-num',
            (False, int, 1, 2, 3, 4)
            ), # end choose-num tuple
