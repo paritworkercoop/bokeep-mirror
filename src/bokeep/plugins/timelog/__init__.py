@@ -45,12 +45,18 @@ def create_timelog_new_row(timelog_plugin):
 
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
     def simple_init_before_show(self):
-        self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
-            ( ('Employee', str), ('Day', date), ('Hours', Decimal), ('Description', str), ),
-            create_timelog_new_row(self.plugin),
-            self.trans.timelog_list, self.change_register_function,
-            )
-        self.mainvbox.pack_start( tree_box, expand=False)
+        if getattr(self.plugin, 'payroll_plugin', None) == None:
+            self.mainvbox.pack_start(
+                Label("no payroll plugin for timelog plugin to work with "
+                      "selected. Go to your book and plugin configuration "
+                      "dialogs") )
+        else:
+            self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
+                ( ('Employee', str), ('Day', date), ('Hours', Decimal), ('Description', str), ),
+                create_timelog_new_row(self.plugin),
+                self.trans.timelog_list, self.change_register_function,
+                )
+            self.mainvbox.pack_start( tree_box, expand=False)
 
 class MultiEmployeeTimelogEntry(Transaction):
     def __init__(self, associated_plugin):
