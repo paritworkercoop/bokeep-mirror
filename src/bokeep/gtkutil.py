@@ -481,8 +481,12 @@ def create_editable_type_defined_listview_and_model(
     vbox.pack_start(hbox, expand=False)
     return model, tv, vbox
 
+class TestProgType(object):
+    pass
+
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/', date.today(), 3,
+    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/', date.today(),
+            None,
             Decimal('5.34') )
 
 def test_prog_list_changed(*args):
@@ -516,7 +520,8 @@ def main():
            (False, date,
             date.today() - ONE_DAY, date.today(), date.today() + ONE_DAY ) ),
           ('choose-me-obj',
-           (False, (1, 2, 3), '1', '2', '3' ) ),
+           (False, (None, TestProgType(), TestProgType()),
+            'None', 'obj 1', 'obj 2' ) ),
           ('choose-me-Decimal',
            (True, Decimal, '3.1', '3.4') ),
           ), # end type tuple
