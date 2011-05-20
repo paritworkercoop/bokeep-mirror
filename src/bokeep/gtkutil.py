@@ -21,7 +21,7 @@
 # python imports
 from datetime import date, timedelta
 import datetime
-from itertools import islice, chain
+from itertools import islice, chain, izip
 from decimal import InvalidOperation, Decimal
 
 # gtk imports
@@ -210,6 +210,12 @@ def listvalue_from_string_to_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_string_to_date(value)
     elif type(field_type) == tuple:
+        # for combo lists without an arbitrary entry field, this
+        # conversion should never take place, the original value
+        # should be used
+        assert(fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD])
+
+        # woot, recursive answer
         return listvalue_from_string_to_original_type(
             value, field_type[COMBO_TYPE_STORE_TYPE_FIELD] )
     elif type(field_type) == dict and field_type['type'] == file:
@@ -217,12 +223,45 @@ def listvalue_from_string_to_original_type(value, field_type):
     # possible exception here caught by caller
     return field_type(value)
 
+def combobox_list_strings_and_values_iteration(field_type):
+    sliced_values_iter = slice_the_values_part_of_a_combo_tuple(field_type)
+    if type(field_type[COMBO_TYPE_STORE_TYPE_FIELD]) == tuple:
+        return izip(
+            sliced_values_iter,
+            field_type[COMBO_TYPE_STORE_TYPE_FIELD],
+            )
+    else:
+        return ( (listvalue_to_string_from_original_type(
+                    combo_value, field_type), combo_value)
+                 for combo_value in sliced_values_iter )
+
 def listvalue_to_string_from_original_type(value, field_type):
     if field_type == date:
         return cell_renderer_date_to_string(value)
     elif type(field_type) == tuple:
-        return listvalue_to_string_from_original_type(
+        multi_chooser_assertion(field_type)
+        # if the user can explicitly define a value, or
+        # they are values of convertible types and not a specific list
+        # of value, then we do the conversion recursively (woot!)
+        if (field_type[COMBO_TYPE_HAS_ENTRY_FIELD] or 
+            type(field_type[COMBO_TYPE_STORE_TYPE_FIELD]) != tuple ):
+            return listvalue_to_string_from_original_type(
             value, field_type[COMBO_TYPE_STORE_TYPE_FIELD] )
+        # else we have an arbitrary list of values to convert from
+        else:
+            assert( type(field_type[COMBO_TYPE_STORE_TYPE_FIELD]) == tuple )
+            # linear search time baby!
+            for possible_string, possible_value in \
+                    combobox_list_strings_and_values_iteration(field_type):
+                if value == possible_value:
+                    return possible_string
+                else:
+                    print value, type(value), 'not match', possible_value, \
+                        type(possible_value)
+            else:
+                assert(False)
+            # we should never reach the end of this loop, something should
+            # match
     else:
         return str(value)
 
@@ -281,7 +320,10 @@ def editable_listview_del_button_clicked_handler(button, tv):
 
 def slice_the_data_part_of_a_row(row):
     return tuple(islice(row, len(row)/2, None) )
-        
+
+def slice_the_values_part_of_a_combo_tuple(combo_type_tuple):
+    return islice(combo_type_tuple, COMBO_TYPE_FIRST_VALUE, None)
+
 def row_changed_handler(
     model, path, treeiter, parralell_list, change_register, field_list):
     new_row  = slice_the_data_part_of_a_row(model[path[0]])
@@ -301,6 +343,15 @@ def row_deleted_handler(
     del parralell_list[ path[0] ]
     change_register()
 
+def multi_chooser_assertion(fieldtype):
+    # if there is a specific list of stored values, we had better
+    # not be able to enter an arbitrary value
+    #
+    # stated with different logic, we expect to be not allowed arbitary
+    # to not be provided a specific object list
+    assert( not fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD] or
+            type(fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]) != tuple )
+
 def display_fieldtype_transform(fieldtype):
     # will differ once we have support for things other than CellRendererText
     # and derivitives of it
@@ -313,11 +364,22 @@ def display_fieldtype_transform(fieldtype):
 def store_fieldtype_transform(fieldtype):
     if fieldtype in(date, Decimal):
         return gobject.TYPE_PYOBJECT
+    # ComboBox or EntryComboBox selection when the type is a tuple
     elif type(fieldtype) == tuple:
-        # woot, recursion, fixes the case where we have a list of
-        # date or Decimal compared to just returning
-        # fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
-        return store_fieldtype_transform(fieldtype[COMBO_TYPE_STORE_TYPE_FIELD])
+        multi_chooser_assertion(fieldtype)
+
+        # if we're dealing with some kind of type that can be eddited
+        # such as str, int, Decimal and Date
+        if fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD]:
+            # woot, recursion, fixes the case where we have a list of
+            # date or Decimal compared to just returning
+            # fieldtype[COMBO_TYPE_STORE_TYPE_FIELD]
+            return store_fieldtype_transform(
+                fieldtype[COMBO_TYPE_STORE_TYPE_FIELD])
+        # else we're not able to enter an arbitrary value, then we just store
+        # whatever original py object co-responds to the list entry
+        else:
+            return gobject.TYPE_PYOBJECT
     elif type(fieldtype) == dict and fieldtype['type'] == file:
         return str
     return fieldtype
@@ -375,12 +437,9 @@ def create_editable_type_defined_listview_and_model(
                                        fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD])
             combo_liststore = ListStore(
                 str, store_fieldtype_transform(fieldtype) )
-            for combo_value in islice(
-                fieldtype, COMBO_TYPE_FIRST_VALUE, None):
-                combo_liststore.append( (
-                        listvalue_to_string_from_original_type(
-                            combo_value, fieldtype),
-                        combo_value) )
+            for combo_string, combo_value in \
+                    combobox_list_strings_and_values_iteration(fieldtype):
+                combo_liststore.append( (combo_string, combo_value) )
             cell_renderer.set_property("model", combo_liststore)
             cell_renderer.set_property("text-column", 0)
             if fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD]:
@@ -388,15 +447,11 @@ def create_editable_type_defined_listview_and_model(
                     cell_renderer)
             else:
                 lookup_dict = dict(
-                    ( listvalue_to_string_from_original_type(
-                            combo_value, fieldtype), combo_value)
-                    for combo_value in islice(
-                        fieldtype, COMBO_TYPE_FIRST_VALUE, None ) )
+                    combobox_list_strings_and_values_iteration(fieldtype) )
                 cell_renderer.connect(
                 'edited',
                 combo_cell_edited_update_original_modelhandler, model, i,
                 lookup_dict)
-
 
         elif type(fieldtype) == dict and fieldtype['type'] == file:
             cell_renderer = CellRendererFile(
@@ -430,7 +485,7 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/', date.today())
+    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/', date.today(), 3)
 
 def test_prog_list_changed(*args):
     print 'list changed'
@@ -442,6 +497,7 @@ def main():
     vbox = VBox()
     w.add(vbox)
     ONE_DAY = timedelta(days=1)
+    existing_list = [test_program_return_new_row()]
     model, tv, tv_vbox = \
         create_editable_type_defined_listview_and_model(
         ( ('date', date,),
@@ -461,8 +517,10 @@ def main():
           ('choose-me-date',
            (False, date,
             date.today() - ONE_DAY, date.today(), date.today() + ONE_DAY ) ),
+          ('choose-me-obj',
+           (False, (1, 2, 3), '1', '2', '3' ) ),
           ), # end type tuple
-        test_program_return_new_row, [], test_prog_list_changed,
+        test_program_return_new_row, existing_list, test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
     vbox.pack_start( tv_vbox )
     w.show_all()
