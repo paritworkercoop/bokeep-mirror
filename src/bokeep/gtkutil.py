@@ -213,7 +213,7 @@ def listvalue_from_string_to_original_type(value, field_type):
         # for combo lists without an arbitrary entry field, this
         # conversion should never take place, the original value
         # should be used
-        assert(fieldtype[COMBO_TYPE_HAS_ENTRY_FIELD])
+        assert(field_type[COMBO_TYPE_HAS_ENTRY_FIELD])
 
         # woot, recursive answer
         return listvalue_from_string_to_original_type(
@@ -485,7 +485,8 @@ def create_editable_type_defined_listview_and_model(
     return model, tv, vbox
 
 def test_program_return_new_row():
-    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/', date.today(), 3)
+    return (date.today(), 'yep', 'me', 2, 'aha', 2, '/', date.today(), 3,
+            Decimal('5.34') )
 
 def test_prog_list_changed(*args):
     print 'list changed'
@@ -519,6 +520,8 @@ def main():
             date.today() - ONE_DAY, date.today(), date.today() + ONE_DAY ) ),
           ('choose-me-obj',
            (False, (1, 2, 3), '1', '2', '3' ) ),
+          ('choose-me-Decimal',
+           (True, Decimal, '3.1', '3.4') ),
           ), # end type tuple
         test_program_return_new_row, existing_list, test_prog_list_changed,
         ) # create_editable_type_defined_listview_and_model
