@@ -256,9 +256,9 @@ def listvalue_to_string_from_original_type(value, field_type):
                 if value == possible_value:
                     return possible_string
             else:
+                # we should never reach the end of this loop, something should
+                # match
                 assert(False)
-            # we should never reach the end of this loop, something should
-            # match
     else:
         return str(value)
 
