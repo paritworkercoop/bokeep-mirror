@@ -20,6 +20,7 @@
 # python imports
 from datetime import date
 from decimal import Decimal
+from itertools import chain
 
 # zodb imports
 from persistent.list import PersistentList
@@ -40,7 +41,7 @@ from bokeep.gtkutil import \
 
 def create_timelog_new_row(timelog_plugin):
     def timelog_new_row():
-        return ('new employee', date.today(), Decimal(0), 'task')
+        return (None, date.today(), Decimal(0), 'task')
     return timelog_new_row
 
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
@@ -51,8 +52,28 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
                       "selected. Go to your book and plugin configuration "
                       "dialogs") )
         else:
-            self.model, self.tv, tree_box = create_editable_type_defined_listview_and_model(
-                ( ('Employee', str), ('Day', date), ('Hours', Decimal), ('Description', str), ),
+            # its good that we're using sorted here not only for sorting by
+            # the keys in the employee dictionary index, but also because we
+            # only iterate through the list of employees provided by the
+            # payroll plugin once, we wouldn't want to call
+            # get_employees() twice and get two different dicts
+            sorted_employee_list = sorted(
+                self.plugin.payroll_plugin.get_employees().iteritems() )
+            employee_listing = tuple(
+                chain( (None, ),
+                       (value for key, value in sorted_employee_list)
+                       ) ) # end chain, end tuple
+
+            employee_combo_specifier = tuple( chain(
+                    (False, employee_listing,'None'),
+                    (key for key, value in sorted_employee_list),
+                ) ) # end chain, end tuple
+            self.model, self.tv, tree_box = \
+                create_editable_type_defined_listview_and_model(
+                ( ('Employee',
+                   employee_combo_specifier, 
+                   ), # employee type tuple
+                  ('Day', date), ('Hours', Decimal), ('Description', str), ),
                 create_timelog_new_row(self.plugin),
                 self.trans.timelog_list, self.change_register_function,
                 )
