@@ -14,3 +14,10 @@ class ObjectRegistry(Persistent):
 
     def registered_obj_and_owner_per_unique_key(self, key):
         return self.__non_unique_key_registry.get(key, () )
+
+    def registered_obj_and_owner_per_unique_key_range(self, key_min, key_max):
+        return ( (key, pair)
+                 for (key, da_set) in self.__non_unique_key_registry.iteritems(
+                key_min, key_max)
+                 for pair in da_set )
+            

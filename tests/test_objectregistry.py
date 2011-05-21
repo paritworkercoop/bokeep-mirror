@@ -32,6 +32,7 @@ class BasicTest(BasicTestSetup):
         o1 = object()
         o2 = object()
         owner = object()
+
         self.obr.register_interest_by_non_unique_key(
             1, o1, owner)
         self.obr.register_interest_by_non_unique_key(
@@ -41,6 +42,10 @@ class BasicTest(BasicTestSetup):
             for val, owner in
             self.obr.registered_obj_and_owner_per_unique_key(1)
             )
+        self.assert_( o1 in result and o2 in result )
+        result = tuple(
+            val for key, (val, owner) in
+            self.obr.registered_obj_and_owner_per_unique_key_range(1,1) )
         self.assert_( o1 in result and o2 in result )
 
 if __name__ == "__main__":
