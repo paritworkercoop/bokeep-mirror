@@ -48,5 +48,12 @@ class BasicTest(BasicTestSetup):
             self.obr.registered_obj_and_owner_per_unique_key_range(1,1) )
         self.assert_( o1 in result and o2 in result )
 
+        self.assert_(
+            self.obr.final_deregister_interest_for_obj_non_unique_key(
+                1, o1, owner ) )
+        self.assert_(
+            self.obr.final_deregister_interest_for_obj_non_unique_key(
+                1, o2, owner ) )
+
 if __name__ == "__main__":
     main()
