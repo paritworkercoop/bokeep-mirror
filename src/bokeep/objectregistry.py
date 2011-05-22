@@ -20,6 +20,6 @@ class ObjectRegistry(Persistent):
                  for (key, da_set) in self.__non_unique_key_registry.iteritems(
                 key_min, key_max)
                  for pair in da_set )
-            
+    
     def deregister_interest_by_non_unique_key(self, key, obj, owner):
         self.__non_unique_key_registry.get(key).remove( (obj, owner) )
