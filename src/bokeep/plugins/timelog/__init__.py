@@ -38,6 +38,7 @@ from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gtkutil import \
     create_editable_type_defined_listview_and_model, COMBO_NO_SELECTION
+from bokeep.objectregistry import ObjectRegistry
 
 def create_timelog_new_row(timelog_plugin):
     def timelog_new_row():
@@ -101,6 +102,11 @@ class TimelogPlugin(SimplePlugin):
     def __init__(self):
         SimplePlugin.__init__(self)
         self.payroll_plugin = None
+
+    def get_timelog_entry_registry(self):
+        setattr(self, 'timelog_registry',
+                getattr(self, 'timelog_registry', ObjectRegistry()) )
+        return self.timelog_registry
 
     def payroll_plugin_selection_combobox_changed(self, combobox, model):
         if combobox.get_active() == COMBO_NO_SELECTION:
