@@ -125,7 +125,8 @@ def cell_renderer_date_to_string(a_date, date_format=CELL_RENDERER_DATE_FORMAT):
 
 def cell_renderer_string_to_date(
     a_date_str, date_format=CELL_RENDERER_DATE_FORMAT):
-    return datetime.datetime.strptime(a_date_str, date_format)    
+    new_date = datetime.datetime.strptime(a_date_str, date_format)
+    return date(new_date.year, new_date.month, new_date.day)
 
 class CellRendererDate(gtk.CellRendererText):
 
