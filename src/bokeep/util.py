@@ -566,3 +566,9 @@ def adler32_of_file(file_path):
     return_value = adler32(''.join(f)) & 0xffffffff
     f.close()
     return return_value
+
+def get_and_establish_attribute(obj, attr, default_cls, *args, **kargs):
+    return_attr = getattr(obj, attr,
+                          default_cls(*args, **kargs) )
+    setattr(obj, attr, return_attr )
+    return return_attr
