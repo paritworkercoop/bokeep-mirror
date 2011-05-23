@@ -38,6 +38,9 @@ from gtk import \
 import gobject
 import gtk
 
+# zodb imports
+from persistent.list import PersistentList
+
 COMBO_NO_SELECTION = -1
 
 def file_selection_path(msg="choose file",
@@ -315,20 +318,33 @@ def editable_listview_del_button_clicked_handler(button, tv):
         model.remove(treeiter)
 
 def slice_the_data_part_of_a_row(row):
-    return tuple(islice(row, len(row)/2, None) )
+    return islice(row, len(row)/2, None)
 
 def slice_the_values_part_of_a_combo_tuple(combo_type_tuple):
     return islice(combo_type_tuple, COMBO_TYPE_FIRST_VALUE, None)
 
 def row_changed_handler(
     model, path, treeiter, parralell_list, change_register, field_list):
-    new_row  = slice_the_data_part_of_a_row(model[path[0]])
-    parralell_list[ path[0] ] = new_row
+    new_row_iter = slice_the_data_part_of_a_row(model[path[0]])
+    row_list = parralell_list[ path[0] ]
+    # we change the row in place, item by item
+    for i, value in enumerate(new_row_iter):
+        # expand the list if needed
+        if i == len(row_list):
+            row_list.append(value)
+        else:
+            row_list[i] = value
+    # shrink the list if the new one is smaller
+    last_elem = len(row_list) - 1
+    while last_elem > i:
+        row_list.pop(i)
+        last_elem-=1            
+    
     change_register()
 
 def row_inserted_handler(
     model, path, treeiter, parralell_list, change_register):
-    new_row = slice_the_data_part_of_a_row(model[path[0]])
+    new_row = PersistentList(slice_the_data_part_of_a_row(model[path[0]]))
     parralell_list.insert(path[0],
                           new_row,
                           ) # insert
@@ -503,7 +519,7 @@ def main():
     vbox = VBox()
     w.add(vbox)
     ONE_DAY = timedelta(days=1)
-    existing_list = [test_program_return_new_row()]
+    existing_list = [PersistentList(test_program_return_new_row())]
     model, tv, tv_vbox = \
         create_editable_type_defined_listview_and_model(
         ( ('date', date,),
