@@ -1,11 +1,22 @@
+# zodb imports
 from persistent import Persistent
 from persistent.mapping import PersistentMapping
 from BTrees.OOBTree import BTree, Set
 
+# bokeep imports
+from bokeep.util import get_and_establish_attribute
+
 class ObjectRegistry(Persistent):
     def __init__(self):
         self.__non_unique_key_registry = BTree()
-        self.__unique_key_registry = PersistentMapping()
+
+    def get_keys_for_object(self, obj):
+        # this is awful!
+        return ( key
+                 for key, da_set
+                 in self.__non_unique_key_registry.iteritems()
+                 for search_obj, search_owner in da_set
+                 if obj == search_obj )
 
     def register_interest_by_non_unique_key(
         self, key, obj, owner):
