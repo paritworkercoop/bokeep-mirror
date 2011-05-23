@@ -80,7 +80,6 @@ class CellRendererFile(CellRendererText):
     def __init__(self, file_chooser_type=FILE_CHOOSER_ACTION_OPEN):
         gtk.CellRendererText.__init__(self)
         self.file_chooser_type = file_chooser_type
-        self.props.editable = True
 
     def do_start_editing(self, event, widget, path, background_area,
                          cell_area, flags):
@@ -388,7 +387,8 @@ def transform_list_row_into_twice_repeated_row_for_model(list_row, field_list):
                   list_row )
 
 def create_editable_type_defined_listview_and_model(
-    field_list, new_row_func, parralell_list, change_register):
+    field_list, new_row_func, parralell_list, change_register,
+    readonly=False):
     vbox = VBox()
     tv = TreeView()
     model = ListStore( * chain((display_fieldtype_transform(fieldtype)
@@ -406,15 +406,15 @@ def create_editable_type_defined_listview_and_model(
             tuple(transform_list_row_into_twice_repeated_row_for_model(
                     list_row, field_list) )
             ) # append
-    
-    model.connect("row-changed",
-                  row_changed_handler,
-                  parralell_list, change_register, field_list )
-    model.connect("row-inserted",
-                  row_inserted_handler,
-                  parralell_list, change_register )
-    model.connect("row-deleted",
-                  row_deleted_handler, parralell_list, change_register )
+    if not readonly:
+        model.connect("row-changed",
+                      row_changed_handler,
+                      parralell_list, change_register, field_list )
+        model.connect("row-inserted",
+                      row_inserted_handler,
+                      parralell_list, change_register )
+        model.connect("row-deleted",
+                      row_deleted_handler, parralell_list, change_register )
 
     for i, (fieldname, fieldtype) in enumerate(field_list):
         def setup_edited_handler_for_renderer_to_original_model(cell_renderer):
@@ -460,9 +460,9 @@ def create_editable_type_defined_listview_and_model(
             cell_renderer = \
                 setup_edited_handler_for_renderer_to_original_model(
                 CellRendererText() )
-
-        cell_renderer.set_property("editable", True)
-        cell_renderer.set_property("editable-set", True)
+        if not readonly:
+            cell_renderer.set_property("editable", True)
+            cell_renderer.set_property("editable-set", True)
         tvc = TreeViewColumn(fieldname, cell_renderer, text=i)
         tv.append_column(tvc)
     vbox.pack_start(tv)
@@ -470,14 +470,18 @@ def create_editable_type_defined_listview_and_model(
     hbox = HBox()
     buttons = [ pack_in_stock_but_and_ret(start_stock_button(code), hbox)
                 for code in (STOCK_ADD, STOCK_DELETE) ]
-    buttons[0].connect(
-        "clicked",
-        editable_listview_add_button_clicked_handler,
-        model, new_row_func, field_list  )
-    buttons[1].connect(
-        "clicked",
-        editable_listview_del_button_clicked_handler,
-        tv )
+    if readonly: 
+        for button in buttons:
+            button.set_property("sensitive", False)
+    else:
+        buttons[0].connect(
+            "clicked",
+            editable_listview_add_button_clicked_handler,
+            model, new_row_func, field_list  )
+        buttons[1].connect(
+            "clicked",
+            editable_listview_del_button_clicked_handler,
+            tv )
     vbox.pack_start(hbox, expand=False)
     return model, tv, vbox
 
@@ -526,6 +530,7 @@ def main():
            (True, Decimal, '3.1', '3.4') ),
           ), # end type tuple
         test_program_return_new_row, existing_list, test_prog_list_changed,
+        False
         ) # create_editable_type_defined_listview_and_model
     vbox.pack_start( tv_vbox )
     w.show_all()
