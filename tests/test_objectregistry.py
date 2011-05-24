@@ -64,6 +64,8 @@ class BasicTest(BasicTestSetup):
             1, a, o1)
         self.obr.register_interest_by_non_unique_key(
             1, b, o1)
+        self.assertEquals(len(tuple(self.obr.get_keys_for_object(a))), 1 )
+        self.assertEquals(len(tuple(self.obr.get_keys_for_object(b))), 1 )
         self.assert_(
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 1, a, o1 ) )
