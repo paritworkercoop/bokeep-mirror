@@ -55,5 +55,21 @@ class BasicTest(BasicTestSetup):
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 1, o2, owner ) )
 
+    def test_diff_list_add(self):
+        a = [ None ]
+        b = list( (None,) )
+        o1 = object()
+        o2 = object()
+        self.obr.register_interest_by_non_unique_key(
+            1, a, o1)
+        self.obr.register_interest_by_non_unique_key(
+            1, b, o1)
+        self.assert_(
+            self.obr.final_deregister_interest_for_obj_non_unique_key(
+                1, a, o1 ) )
+        self.assertEquals(len(tuple(self.obr.get_keys_for_object(a))), 0 )
+        self.assertEquals(len(tuple(self.obr.get_keys_for_object(b))), 1 )
+        
+        
 if __name__ == "__main__":
     main()
