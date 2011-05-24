@@ -23,15 +23,20 @@ from unittest import TestCase, main
 # bokeep imports
 from bokeep.objectregistry import ObjectRegistry
 
+# zodb imports
+from persistent.list import PersistentList
+
+class TestObj(object): pass
+
 class BasicTestSetup(TestCase):
     def setUp(self):
         self.obr = ObjectRegistry()
 
 class BasicTest(BasicTestSetup):
     def test_same_key_add(self):
-        o1 = object()
-        o2 = object()
-        owner = object()
+        o1 = TestObj()
+        o2 = TestObj()
+        owner = TestObj()
 
         self.obr.register_interest_by_non_unique_key(
             1, o1, owner)
@@ -48,18 +53,32 @@ class BasicTest(BasicTestSetup):
             self.obr.registered_obj_and_owner_per_unique_key_range(1,1) )
         self.assert_( o1 in result and o2 in result )
 
+        self.assert_(hasattr(o1, '_obr_unique_key') )
+        self.assert_(hasattr(o2, '_obr_unique_key') )
+        self.assert_(hasattr(owner, '_obr_unique_key') )
+
         self.assert_(
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 1, o1, owner ) )
+        #self.obr.deregister_interest_by_non_unique_key(1, o1, owner)
+
+        result = tuple(
+            self.obr.registered_obj_and_owner_per_unique_key(1) )
+        self.assertEquals( len(result), 1 )
+        self.assert_( (o2, owner) in result )
+
+        self.assert_(not hasattr(o1, '_obr_unique_key') )
+        self.assert_(hasattr(o2, '_obr_unique_key') )
+        self.assert_(hasattr(owner, '_obr_unique_key') )
         self.assert_(
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 1, o2, owner ) )
 
     def test_diff_list_add(self):
-        a = [ None ]
-        b = list( (None,) )
-        o1 = object()
-        o2 = object()
+        a = PersistentList( [ None ] )
+        b = PersistentList( (None,) )
+        o1 = TestObj()
+        o2 = TestObj()
         self.obr.register_interest_by_non_unique_key(
             1, a, o1)
         self.obr.register_interest_by_non_unique_key(
