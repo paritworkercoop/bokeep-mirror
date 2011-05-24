@@ -38,12 +38,15 @@ from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 from bokeep.gtkutil import \
     create_editable_type_defined_listview_and_model, COMBO_NO_SELECTION
+from bokeep.util import get_and_establish_attribute
 from bokeep.objectregistry import ObjectRegistry
 
 def create_timelog_new_row(timelog_plugin):
     def timelog_new_row():
         return (None, date.today(), Decimal(0), 'task')
     return timelog_new_row
+
+EMPLOYEE, DAY, HOURS, DESCRIPTION = range(4)
 
 class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
     def simple_init_before_show(self):
@@ -69,6 +72,17 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
                     (False, employee_listing,'None'),
                     (key for key, value in sorted_employee_list),
                 ) ) # end chain, end tuple
+
+            # force reset of dataset for devel purposes
+            self.trans.timelog_list = PersistentList()
+            self.plugin.timelog_registry = ObjectRegistry()
+
+            # providing a null function for change registration because
+            # we're going to be installing our own event handlers to
+            # react to the model changes and index them by date
+            # its bad to allow persistence to happen before then because
+            # we want the changes to self.trans.timelog_list and
+            # our index of it by date to happen automically
             self.model, self.tv, tree_box = \
                 create_editable_type_defined_listview_and_model(
                 ( ('Employee',
@@ -76,9 +90,62 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
                    ), # employee type tuple
                   ('Day', date), ('Hours', Decimal), ('Description', str), ),
                 create_timelog_new_row(self.plugin),
-                self.trans.timelog_list, self.change_register_function,
+                self.trans.timelog_list, lambda: None,
                 )
+
+
+            self.model.connect_after(
+                "row-changed",
+                self.timelog_after_row_changed_handler )
+
+            # the reason we register both for the event with
+            # connect and connect_after is that we first need access to the
+            # row before it is deleted by the event handler from gtkutil
+            # but we still need to do our change flush
+            # (self.change_register_function) after everything is done
+            self.model.connect(
+                "row-deleted",
+                self.timelog_row_del_handler )
+            self.model.connect_after(
+                "row-deleted",
+                lambda *args: self.change_register_function() )
+
             self.mainvbox.pack_start( tree_box, expand=False)
+
+    def remove_timelog_entry_from_registry(self, timelog_entry):
+        registry = self.plugin.get_timelog_entry_registry()
+        object_keys = tuple(registry.get_keys_for_object(timelog_entry))
+
+        # we're only tracking by one key, by date
+        print 'len', len(object_keys)
+        assert( len(object_keys) == 1)
+        # BIG assumption, that we're the only one with an interest in the
+        # object being tracked; to enforce this we're going to have to
+        # lock up this whole interface when the timelog entries are
+        # non-new
+        registry.final_deregister_interest_for_obj_non_unique_key(
+            object_keys[0], timelog_entry, self.trans )        
+
+    def timelog_after_row_changed_handler(self, model, path, treeiter):
+        timelog_entry = self.trans.timelog_list[path[0]]
+        # don't even bother playing with the registry until the date is set
+        if None != timelog_entry[DAY]:
+            registry = self.plugin.get_timelog_entry_registry()
+            object_keys = tuple(registry.get_keys_for_object(timelog_entry))
+            if len(object_keys) > 0:
+                self.remove_timelog_entry_from_registry(timelog_entry)
+
+            # now we re-register with the new date
+            registry.register_interest_by_non_unique_key(
+            timelog_entry[DAY], timelog_entry, self.trans)        
+            self.change_register_function()
+
+            print 'keys are', tuple(registry.get_keys_for_object(timelog_entry))
+
+    def timelog_row_del_handler(self, model, path):
+        timelog_entry = self.trans.timelog_list[path[0]]
+        registry = self.plugin.get_timelog_entry_registry()
+        self.remove_timelog_entry_from_registry(timelog_entry)        
 
 class MultiEmployeeTimelogEntry(Transaction):
     def __init__(self, associated_plugin):
@@ -104,9 +171,8 @@ class TimelogPlugin(SimplePlugin):
         self.payroll_plugin = None
 
     def get_timelog_entry_registry(self):
-        setattr(self, 'timelog_registry',
-                getattr(self, 'timelog_registry', ObjectRegistry()) )
-        return self.timelog_registry
+        return get_and_establish_attribute(
+            self, 'timelog_registry', ObjectRegistry )
 
     def payroll_plugin_selection_combobox_changed(self, combobox, model):
         if combobox.get_active() == COMBO_NO_SELECTION:
