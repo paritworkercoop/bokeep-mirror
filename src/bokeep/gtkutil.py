@@ -41,6 +41,9 @@ import gtk
 # zodb imports
 from persistent.list import PersistentList
 
+# bokeep imports
+from bokeep.util import null_function
+
 COMBO_NO_SELECTION = -1
 
 def file_selection_path(msg="choose file",
@@ -325,9 +328,11 @@ def slice_the_values_part_of_a_combo_tuple(combo_type_tuple):
     return islice(combo_type_tuple, COMBO_TYPE_FIRST_VALUE, None)
 
 def row_changed_handler(
-    model, path, treeiter, parralell_list, change_register, field_list):
-    new_row_iter = slice_the_data_part_of_a_row(model[path[0]])
+    model, path, treeiter, parralell_list, change_register, field_list,
+    changed_pre_hook, changed_post_hook):
+    new_row_iter = tuple(slice_the_data_part_of_a_row(model[path[0]]))
     row_list = parralell_list[ path[0] ]
+    changed_pre_hook(path[0], row_list, new_row_iter)
     # we change the row in place, item by item
     for i, value in enumerate(new_row_iter):
         # expand the list if needed
@@ -340,20 +345,26 @@ def row_changed_handler(
     while last_elem > i:
         row_list.pop(i)
         last_elem-=1            
-    
+    changed_post_hook(path[0], row_list, new_row_iter)
     change_register()
 
 def row_inserted_handler(
-    model, path, treeiter, parralell_list, change_register):
+    model, path, treeiter, parralell_list, change_register,
+    insert_pre_hook, insert_post_hook):
     new_row = PersistentList(slice_the_data_part_of_a_row(model[path[0]]))
+    insert_pre_hook(path[0], new_row)
     parralell_list.insert(path[0],
                           new_row,
                           ) # insert
+    insert_post_hook(path[0], new_row)
     change_register()
 
 def row_deleted_handler(
-    model, path, parralell_list, change_register):
+    model, path, parralell_list, change_register,
+    del_pre_hook, del_post_hook):
+    del_pre_hook(path[0], parralell_list[ path[0] ])
     del parralell_list[ path[0] ]
+    del_post_hook(path[0])
     change_register()
 
 def multi_chooser_assertion(fieldtype):
@@ -405,7 +416,10 @@ def transform_list_row_into_twice_repeated_row_for_model(list_row, field_list):
 
 def create_editable_type_defined_listview_and_model(
     field_list, new_row_func, parralell_list, change_register,
-    readonly=False):
+    readonly=False,
+    insert_pre_hook=null_function, insert_post_hook=null_function,
+    change_pre_hook=null_function, change_post_hook=null_function,
+    del_pre_hook=null_function, del_post_hook=null_function):
     vbox = VBox()
     tv = TreeView()
     model = ListStore( * chain((display_fieldtype_transform(fieldtype)
@@ -426,12 +440,16 @@ def create_editable_type_defined_listview_and_model(
     if not readonly:
         model.connect("row-changed",
                       row_changed_handler,
-                      parralell_list, change_register, field_list )
+                      parralell_list, change_register, field_list,
+                      change_pre_hook, change_post_hook,
+                      )
         model.connect("row-inserted",
                       row_inserted_handler,
-                      parralell_list, change_register )
+                      parralell_list, change_register,
+                      insert_pre_hook, insert_post_hook )
         model.connect("row-deleted",
-                      row_deleted_handler, parralell_list, change_register )
+                      row_deleted_handler, parralell_list, change_register,
+                      del_pre_hook, del_post_hook)
 
     for i, (fieldname, fieldtype) in enumerate(field_list):
         def setup_edited_handler_for_renderer_to_original_model(cell_renderer):
