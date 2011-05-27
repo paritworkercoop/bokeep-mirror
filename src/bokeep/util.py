@@ -572,3 +572,5 @@ def get_and_establish_attribute(obj, attr, default_cls, *args, **kargs):
                           default_cls(*args, **kargs) )
     setattr(obj, attr, return_attr )
     return return_attr
+
+def null_function(*args, **kargs): pass
