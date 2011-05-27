@@ -90,34 +90,26 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
                    ), # employee type tuple
                   ('Day', date), ('Hours', Decimal), ('Description', str), ),
                 create_timelog_new_row(self.plugin),
-                self.trans.timelog_list, lambda: None,
+                self.trans.timelog_list, self.change_register_function,
+                insert_pre_hook=self.timelog_inserted_handler,
+                change_pre_hook=self.remove_timelog_entry_from_registry,
+                change_post_hook=self.timelog_after_row_changed_handler,
+                del_pre_hook=self.remove_timelog_entry_from_registry,
                 )
-
-
-            self.model.connect_after(
-                "row-changed",
-                self.timelog_after_row_changed_handler )
-
-            # the reason we register both for the event with
-            # connect and connect_after is that we first need access to the
-            # row before it is deleted by the event handler from gtkutil
-            # but we still need to do our change flush
-            # (self.change_register_function) after everything is done
-            self.model.connect(
-                "row-deleted",
-                self.timelog_row_del_handler )
-            self.model.connect_after(
-                "row-deleted",
-                lambda *args: self.change_register_function() )
 
             self.mainvbox.pack_start( tree_box, expand=False)
 
-    def remove_timelog_entry_from_registry(self, timelog_entry):
+    def timelog_inserted_handler(self, index, timelog_entry):
+        registry = self.plugin.get_timelog_entry_registry()
+        registry.register_interest_by_non_unique_key(
+            date.min, timelog_entry, self.trans)
+        
+    def remove_timelog_entry_from_registry(self, index, timelog_entry,
+                                           new_row=None):
         registry = self.plugin.get_timelog_entry_registry()
         object_keys = tuple(registry.get_keys_for_object(timelog_entry))
 
         # we're only tracking by one key, by date
-        print 'len', len(object_keys)
         assert( len(object_keys) == 1)
         # BIG assumption, that we're the only one with an interest in the
         # object being tracked; to enforce this we're going to have to
@@ -126,26 +118,14 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
         registry.final_deregister_interest_for_obj_non_unique_key(
             object_keys[0], timelog_entry, self.trans )        
 
-    def timelog_after_row_changed_handler(self, model, path, treeiter):
-        timelog_entry = self.trans.timelog_list[path[0]]
-        # don't even bother playing with the registry until the date is set
-        if None != timelog_entry[DAY]:
-            registry = self.plugin.get_timelog_entry_registry()
-            object_keys = tuple(registry.get_keys_for_object(timelog_entry))
-            if len(object_keys) > 0:
-                self.remove_timelog_entry_from_registry(timelog_entry)
-
-            # now we re-register with the new date
-            registry.register_interest_by_non_unique_key(
-            timelog_entry[DAY], timelog_entry, self.trans)        
-            self.change_register_function()
-
-            print 'keys are', tuple(registry.get_keys_for_object(timelog_entry))
-
-    def timelog_row_del_handler(self, model, path):
-        timelog_entry = self.trans.timelog_list[path[0]]
+    def timelog_after_row_changed_handler(self,  index, timelog_entry, new_row):
         registry = self.plugin.get_timelog_entry_registry()
-        self.remove_timelog_entry_from_registry(timelog_entry)        
+        # don't even bother playing with the registry until the date is set
+        # to something real instead of date.min [ date(1,1,1) ]
+        # now we re-register with the new date
+        registry.register_interest_by_non_unique_key(
+            date.min if timelog_entry[DAY]==None else timelog_entry[DAY],
+            timelog_entry, self.trans )
 
 class MultiEmployeeTimelogEntry(Transaction):
     def __init__(self, associated_plugin):
