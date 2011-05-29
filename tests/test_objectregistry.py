@@ -93,6 +93,14 @@ class BasicTest(BasicTestSetup):
         self.assertEquals( tuple(self.obr.get_keys_for_object(o2)),
                            (0,) )
         self.assertEquals( len(self.obr._ObjectRegistry__obr_registry), 3)
+        result = tuple(
+            self.obr.registered_obj_and_owner_per_unique_key(1) )
+        self.assertEquals( len(result), 1 )
+        self.assert_( (o1, owner) in result )
+        result = tuple(
+            self.obr.registered_obj_and_owner_per_unique_key(0) )
+        self.assertEquals( len(result), 1 )
+        self.assert_( (o2, owner) in result )
         self.assert_(
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 0, o2, owner ) )
