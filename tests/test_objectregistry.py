@@ -81,13 +81,53 @@ class BasicTest(BasicTestSetup):
 
         self.obr.register_interest_by_non_unique_key(
             1, o1, owner)
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o1)),
+                           (1,) )
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o2)),
+                           () )
         self.obr.register_interest_by_non_unique_key(
             0, o2, owner)
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o1)),
+                           (1,) )
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o2)),
+                           (0,) )
         self.assert_(
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 0, o2, owner ) )
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o1)),
+                           (1,) )
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o2)),
+                           () )
+        self.assertEquals( len(self.obr._ObjectRegistry__obr_registry),
+                           1 )
+        self.assert_( self.obr._ObjectRegistry__obr_registry.has_key(
+                o1._obr_unique_key ) )
+        self.assertEquals(
+            len(self.obr._ObjectRegistry__non_unique_key_registry[1]),
+            1 )
+        self.assertEquals( len(self.obr._ObjectRegistry__obr_registry), 2)
+        self.assertEquals(
+            self.obr._ObjectRegistry__non_unique_key_registry[1][0],
+            (o1._obr_unique_key, owner._obr_unique_key) )
+        result = tuple(
+            self.obr.registered_obj_and_owner_per_unique_key(1) )
+        self.assertEquals( len(result), 1)
+        self.assert_( (o1, owner) in result )
         self.obr.register_interest_by_non_unique_key(
             1, o2, owner)
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o1)),
+                           (1,) )
+        self.assertEquals( tuple(self.obr.get_keys_for_object(o2)),
+                           (1,) )
+        result = tuple(
+            self.obr.registered_obj_and_owner_per_unique_key(1) )
+        self.assertEquals( len(result), 2)
+        self.assert_( (o1, owner) in result and
+                      (o2, owner) in result )
+        result = tuple(
+            val for key, (val, owner) in
+            self.obr.registered_obj_and_owner_per_unique_key_range(1,1) )
+        self.assert_( o1 in result and o2 in result )
         self.assert_(
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 1, o2, owner ) )
