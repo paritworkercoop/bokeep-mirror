@@ -130,7 +130,7 @@ class MultiEmployeeTimelogEntry(Transaction):
         # object being tracked; to enforce this we're going to have to
         # lock up this whole interface when the timelog entries are
         # non-new
-        registry.final_deregister_interest_for_obj_non_unique_key(
+        return registry.final_deregister_interest_for_obj_non_unique_key(
             object_keys[0], timelog_entry, self )
 
     def get_financial_transactions(self):
@@ -150,6 +150,17 @@ class TimelogPlugin(SimplePlugin):
     def __init__(self):
         SimplePlugin.__init__(self)
         self.payroll_plugin = None
+
+    def remove_transaction(self, front_end_id):
+        trans = self.trans_registry[front_end_id]
+        registry = self.get_timelog_entry_registry()
+        result = all(
+            trans.remove_timelog_entry_from_registry(i, entry)
+            for i, entry in enumerate(trans.timelog_list)
+            )
+        assert(result)
+        if result:
+            SimplePlugin.remove_transaction(self, front_end_id)
 
     def get_timelog_entry_registry(self):
         return get_and_establish_attribute(
