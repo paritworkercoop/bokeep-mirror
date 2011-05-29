@@ -22,6 +22,12 @@ class ObjectRegistry(Persistent):
             return self.__non_unique_keys_for_obj[obj._obr_unique_key]
 
     def __register_object(self, obj):
+        """Should not be called directly, call __get_object_registered
+        """
+        # important because code below resets things like the non-unique
+        # key set
+        # 
+        assert( not hasattr(obj, '_obr_unique_key') )
         obr_unique_key = get_and_establish_attribute(
                 obj, '_obr_unique_key',
                 lambda: (0 if len(self.__obr_registry) == 0
@@ -34,6 +40,10 @@ class ObjectRegistry(Persistent):
         self.__non_unique_keys_for_obj[obr_unique_key] = Set()
         return obr_unique_key
     
+    def __get_object_registered(self, obj):
+        return (obj._obr_unique_key if hasattr(obj, '_obr_unique_key')
+                else self.__register_object(obj) )
+
     def __deregister_object(self, obj):
         obj_key = obj._obr_unique_key
         if self.__non_unique_keys_for_obj.has_key(obj_key):
@@ -44,8 +54,8 @@ class ObjectRegistry(Persistent):
 
     def register_interest_by_non_unique_key(
         self, key, obj, owner):
-        obj_key, owner_key = \
-            self.__register_object(obj), self.__register_object(owner)
+        obj_key, owner_key = (self.__get_object_registered(obj), 
+                              self.__get_object_registered(owner) )
         set_for_key = self.__non_unique_key_registry.setdefault(key, Set())
         set_for_key.insert( (obj_key, owner_key) )
         for obr_unique_key in obj_key, owner_key:
@@ -82,6 +92,7 @@ class ObjectRegistry(Persistent):
             owner_search_key = owner_search._obr_unique_key
             if obj_search_key == obj_key: obj_count+=1
             if owner_search_key == owner_key: owner_count+=1
+        print 'owner_count', owner_count
         for count, da_obj_key, da_obj in \
                 ( (obj_count, obj_key, obj), (owner_count, owner_key, owner) ):
             if count == 0:
