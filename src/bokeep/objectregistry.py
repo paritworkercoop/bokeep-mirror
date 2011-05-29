@@ -41,6 +41,9 @@ class ObjectRegistry(Persistent):
         return obr_unique_key
     
     def __get_object_registered(self, obj):
+        # the assumption here about order of operations on ternary expressions
+        # is that self.__register_object(obj) won't be called unless
+        # the ternary condition fails
         result = (obj._obr_unique_key if hasattr(obj, '_obr_unique_key')
                   else self.__register_object(obj) )
         assert( self.__obr_registry.has_key(result) )
