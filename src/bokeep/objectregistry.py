@@ -96,7 +96,6 @@ class ObjectRegistry(Persistent):
             owner_search_key = owner_search._obr_unique_key
             if obj_search_key == obj_key: obj_count+=1
             if owner_search_key == owner_key: owner_count+=1
-        print 'owner_count', owner_count
         for count, da_obj_key, da_obj in \
                 ( (obj_count, obj_key, obj), (owner_count, owner_key, owner) ):
             if count == 0:
