@@ -149,6 +149,14 @@ class TimelogPlugin(SimplePlugin):
     def remove_transaction(self, front_end_id):
         trans = self.trans_registry[front_end_id]
         registry = self.get_timelog_entry_registry()
+        # The big assumption here is that success in removing all
+        # individual timelog entries, and that requires they not be
+        # registered by anything else. This isn't good, it means
+        # the delete feature in the shell should actually check with us
+        # e.g. we need an api change
+        #
+        # in the meantime, we should at least limit shell level
+        # delete to new transactions unless a special mode is  enabled
         result = all(
             trans.remove_timelog_entry_from_registry(i, entry)
             for i, entry in enumerate(trans.timelog_list)
