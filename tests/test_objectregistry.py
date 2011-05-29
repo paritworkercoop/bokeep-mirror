@@ -78,7 +78,8 @@ class BasicTest(BasicTestSetup):
         o1 = TestObj()
         o2 = TestObj()
         owner = TestObj()
-
+        # there's currently a mix of black and whitebox testing in
+        # here, should really be separated
         self.obr.register_interest_by_non_unique_key(
             1, o1, owner)
         self.assertEquals( tuple(self.obr.get_keys_for_object(o1)),
