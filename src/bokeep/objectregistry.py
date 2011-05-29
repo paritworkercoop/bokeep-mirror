@@ -41,8 +41,11 @@ class ObjectRegistry(Persistent):
         return obr_unique_key
     
     def __get_object_registered(self, obj):
-        return (obj._obr_unique_key if hasattr(obj, '_obr_unique_key')
-                else self.__register_object(obj) )
+        result = (obj._obr_unique_key if hasattr(obj, '_obr_unique_key')
+                  else self.__register_object(obj) )
+        assert( self.__obr_registry.has_key(result) )
+        assert( self.__non_unique_keys_for_obj.has_key(result) )
+        return result
 
     def __deregister_object(self, obj):
         obj_key = obj._obr_unique_key
