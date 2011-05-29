@@ -109,7 +109,7 @@ class BasicTest(BasicTestSetup):
         self.assertEquals( tuple(self.obr.get_keys_for_object(o2)),
                            () )
         self.assertEquals( len(self.obr._ObjectRegistry__obr_registry),
-                           1 )
+                           2 )
         self.assert_( self.obr._ObjectRegistry__obr_registry.has_key(
                 o1._obr_unique_key ) )
         self.assertEquals(
