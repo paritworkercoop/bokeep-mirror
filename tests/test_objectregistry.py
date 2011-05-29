@@ -74,6 +74,24 @@ class BasicTest(BasicTestSetup):
             self.obr.final_deregister_interest_for_obj_non_unique_key(
                 1, o2, owner ) )
 
+    def test_second_obj_key_change(self):
+        o1 = TestObj()
+        o2 = TestObj()
+        owner = TestObj()
+
+        self.obr.register_interest_by_non_unique_key(
+            1, o1, owner)
+        self.obr.register_interest_by_non_unique_key(
+            0, o2, owner)
+        self.assert_(
+            self.obr.final_deregister_interest_for_obj_non_unique_key(
+                0, o2, owner ) )
+        self.obr.register_interest_by_non_unique_key(
+            1, o2, owner)
+        self.assert_(
+            self.obr.final_deregister_interest_for_obj_non_unique_key(
+                1, o2, owner ) )
+
     def test_diff_list_add(self):
         a = PersistentList( [ None ] )
         b = PersistentList( (None,) )
