@@ -102,7 +102,7 @@ class ObjectRegistry(Persistent):
                 self.__non_unique_keys_for_obj[da_obj_key].remove(key)
                 # very important, the association of da_obj with
                 # the key had to have been the only key for us to
-                # completely degrister it
+                # completely deregister it
                 if len(self.__non_unique_keys_for_obj[da_obj_key]) == 0:
                     self.__deregister_object(da_obj)
 
