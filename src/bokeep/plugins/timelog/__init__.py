@@ -93,9 +93,9 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
                 create_timelog_new_row(self.plugin),
                 self.trans.timelog_list, self.change_register_function,
                 insert_pre_hook=self.timelog_inserted_handler,
-                change_pre_hook=self.remove_timelog_entry_from_registry,
+                change_pre_hook=self.trans.remove_timelog_entry_from_registry,
                 change_post_hook=self.timelog_after_row_changed_handler,
-                del_pre_hook=self.remove_timelog_entry_from_registry,
+                del_pre_hook=self.trans.remove_timelog_entry_from_registry,
                 )
 
             self.mainvbox.pack_start( tree_box, expand=False)
@@ -105,20 +105,6 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
         registry.register_interest_by_non_unique_key(
             date.min, timelog_entry, self.trans)
         
-    def remove_timelog_entry_from_registry(self, index, timelog_entry,
-                                           new_row=None):
-        registry = self.plugin.get_timelog_entry_registry()
-        object_keys = tuple(registry.get_keys_for_object(timelog_entry))
-
-        # we're only tracking by one key, by date
-        assert( len(object_keys) == 1)
-        # BIG assumption, that we're the only one with an interest in the
-        # object being tracked; to enforce this we're going to have to
-        # lock up this whole interface when the timelog entries are
-        # non-new
-        registry.final_deregister_interest_for_obj_non_unique_key(
-            object_keys[0], timelog_entry, self.trans )        
-
     def timelog_after_row_changed_handler(self,  index, timelog_entry, new_row):
         registry = self.plugin.get_timelog_entry_registry()
         # don't even bother playing with the registry until the date is set
@@ -132,6 +118,20 @@ class MultiEmployeeTimelogEntry(Transaction):
     def __init__(self, associated_plugin):
         Transaction.__init__(self, associated_plugin)
         self.timelog_list = PersistentList()
+
+    def remove_timelog_entry_from_registry(self, index, timelog_entry,
+                                           new_row=None):
+        registry = self.associated_plugin.get_timelog_entry_registry()
+        object_keys = tuple(registry.get_keys_for_object(timelog_entry))
+
+        # we're only tracking by one key, by date
+        assert( len(object_keys) == 1)
+        # BIG assumption, that we're the only one with an interest in the
+        # object being tracked; to enforce this we're going to have to
+        # lock up this whole interface when the timelog entries are
+        # non-new
+        registry.final_deregister_interest_for_obj_non_unique_key(
+            object_keys[0], timelog_entry, self )
 
     def get_financial_transactions(self):
         raise BoKeepTransactionNotMappableToFinancialTransaction(
