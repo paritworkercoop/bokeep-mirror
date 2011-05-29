@@ -76,7 +76,8 @@ class MultiEmployeeTimelogEditor(SimpleTransactionEditor):
             # force reset of dataset for devel purposes
             self.trans.timelog_list = PersistentList()
             self.plugin.timelog_registry = ObjectRegistry()
-
+            delattr(self.trans, '_obr_unique_key')
+            
             # providing a null function for change registration because
             # we're going to be installing our own event handlers to
             # react to the model changes and index them by date
