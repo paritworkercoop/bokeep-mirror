@@ -84,6 +84,10 @@ class ObjectRegistry(Persistent):
         # this is sort of rediculous counting up all the references for
         # obj and owner and making a deletion decision on that
         # when we could of just kept count them all along
+        #
+        # And remember, this isn't the count for all references for obj and
+        # owner, just all references related to key, very important at the
+        # end of this function
         obj_count = 0
         owner_count = 0
         for obj_search, owner_search in \
@@ -97,7 +101,11 @@ class ObjectRegistry(Persistent):
                 ( (obj_count, obj_key, obj), (owner_count, owner_key, owner) ):
             if count == 0:
                 self.__non_unique_keys_for_obj[da_obj_key].remove(key)
-                self.__deregister_object(da_obj)
+                # very important, the association of da_obj with
+                # the key had to have been the only key for us to
+                # completely degrister it
+                if len(self.__non_unique_keys_for_obj[da_obj_key]) == 0:
+                    self.__deregister_object(da_obj)
 
     def final_deregister_interest_for_obj_non_unique_key(self, key, obj, owner):
         obj_key = obj._obr_unique_key
