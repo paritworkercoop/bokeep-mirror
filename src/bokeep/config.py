@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # ZODB imports
 from ZODB.FileStorage import FileStorage
@@ -37,6 +38,9 @@ ZODB_CONFIG_FILESTORAGE = 'filestorage'
 DEFAULT_BOOKS_FILESTORAGE_DIR = 'bo-keep-database'
 DEFAULT_BOOKS_FILESTORAGE_FILE = 'bokeep_books.fs'
 
+PLUGIN_DIRECTORIES_SECTION = 'plugin_directories'
+PLUGIN_DIRECTORIES = 'directories'
+
 DATABASE_VERSION_SUBDB_KEY = 'db_version'
 
 CURRENT_DATABASE_VERSION = '0.4.1'
@@ -55,6 +59,9 @@ def initialize_config(config):
     config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
                expanduser("~/%s/%s" % (DEFAULT_BOOKS_FILESTORAGE_DIR,
                                        DEFAULT_BOOKS_FILESTORAGE_FILE) ) )
+    
+    config.add_section(PLUGIN_DIRECTORIES_SECTION)
+    config.set(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES, [])
 
 def create_config_file(path):
     """Creates a configuration file at path.
@@ -82,6 +89,25 @@ def create_config_file(path):
         # no way in hell we should have trouble reading it after, especially
         # because initialize_config uses config.set functions..
         assert( len(success_reads) == 1 )
+
+# Returns the directories that front and back-end plugins are located in.
+def get_plugins_directories_from_config(config):
+    plugin_directories_str = config.get(PLUGIN_DIRECTORIES_SECTION,
+                                        PLUGIN_DIRECTORIES)
+    if plugin_directories_str == '[]':
+        plugin_directories = []
+    else:
+        plugin_directories = plugin_directories_str[2:-2].split("', '")
+    
+    return plugin_directories
+
+# Saves the directories that front and back-end plugins are located in.
+def set_plugin_directories_in_config(config, plugin_directories):
+    config_path = get_bokeep_config_paths()[0]
+    config.set(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES, plugin_directories)
+    config_fp = file(config_path, 'w')
+    config.write(config_fp)
+    config_fp.close()
 
 def first_config_file_in_list_to_exist_and_parse(files):
     for i,config_file in enumerate(files):

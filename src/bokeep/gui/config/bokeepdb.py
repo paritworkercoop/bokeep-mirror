@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -17,6 +17,7 @@
 #
 # Authors: Mark Jenkins <mark@parit.ca>
 #          Sara Arenson <sara_arenson@yahoo.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # python imports
 from os.path import \
@@ -24,6 +25,7 @@ from os.path import \
 import os
 from os import makedirs
 import sys
+from sys import path
 
 # ZODB imports
 from ZODB.FileStorage import FileStorage
@@ -37,18 +39,20 @@ from gtk import \
     RESPONSE_OK, RESPONSE_CANCEL, RESPONSE_DELETE_EVENT, \
     FILE_CHOOSER_ACTION_SAVE, FileChooserDialog, \
     DIALOG_MODAL, MESSAGE_ERROR, BUTTONS_OK, MessageDialog, \
-    STOCK_CANCEL, STOCK_SAVE
+    STOCK_CANCEL, STOCK_SAVE, FILE_CHOOSER_ACTION_SELECT_FOLDER, \
+    Label, STOCK_OK, STOCK_OPEN, Dialog, Button, HBox
 
 # bokeep imports
 from bokeep.config import \
     BoKeepConfigurationDatabaseException, get_bokeep_configuration, \
     DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
-    ZODB_CONFIG_FILESTORAGE
+    ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config
 from bokeep.book import BoKeepBookSet, \
     PluginImportError, BackendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
+from bokeep.plugin_directories import PluginDirectories
 
 # bokeep.gui.config imports
 from state import BoKeepConfigGuiState, \
@@ -174,18 +178,10 @@ class BoKeepConfigDialog(object):
             TreeViewColumn("Enabled", crt, active=1) )
         self.plugins_window.add(self.plugins_tv)
         self.plugins_tv.show()
+        self.plugin_directories_button.connect('clicked',
+                            self.__on_plugin_directories_button_click)
 
-        available_plugin_liststore = ListStore(str)
-        for plugin_name in available_plugins():
-            available_plugin_liststore.append([plugin_name])
-        self.plugin_add_entry_combo.set_model(available_plugin_liststore)
-        self.plugin_add_entry_combo.set_text_column(0)
-
-        available_backend_plugin_liststore = ListStore(str)
-        for backend_plugin_name in available_backend_plugins():
-            available_backend_plugin_liststore.append([backend_plugin_name])
-        self.backend_plugin_entry_combo.set_model(available_backend_plugin_liststore)
-        self.backend_plugin_entry_combo.set_text_column(0)
+        self.__populate_possible_plugins()
 
         if filestorage_path != None:
             self.do_action(DB_ENTRY_CHANGE, filestorage_path)
@@ -202,6 +198,21 @@ class BoKeepConfigDialog(object):
         self.set_sensitivities()
         self.selection_change_lock = False
         self.backend_entry_lock = False
+        
+    def __populate_possible_plugins(self):
+        """Populates the GUI with the possible front and backend plugins."""
+        
+        available_plugin_liststore = ListStore(str)
+        for plugin_name in available_plugins():
+            available_plugin_liststore.append([plugin_name])
+        self.plugin_add_entry_combo.set_model(available_plugin_liststore)
+        self.plugin_add_entry_combo.set_text_column(0)
+
+        available_backend_plugin_liststore = ListStore(str)
+        for backend_plugin_name in available_backend_plugins():
+            available_backend_plugin_liststore.append([backend_plugin_name])
+        self.backend_plugin_entry_combo.set_model(available_backend_plugin_liststore)
+        self.backend_plugin_entry_combo.set_text_column(0)
 
     def do_action(self, action, arg=None):
         try:
@@ -357,4 +368,94 @@ class BoKeepConfigDialog(object):
                         self.state.data[BOOK].get_backend_module_name() )
                     self.backend_entry_lock = False
             self.set_sensitivities()
+    
+    def __on_plugin_directories_button_click(self, button):
+        """Present a dialog to the user for selecting extra plugin directories
+        and process the request."""
+        
+        dia = Dialog('Plugin Directories',
+             None, DIALOG_MODAL,
+             (STOCK_OK, RESPONSE_OK,
+             STOCK_CANCEL, RESPONSE_CANCEL ) )
+        dia.resize(500, 300)
+        dia.vbox.set_spacing(8)
+        
+        # Setup the tree view of plugin directories.
+        model = ListStore(str) # each row contains a single string
+        tv = TreeView(model)
+        cell = CellRendererText()
+        column = TreeViewColumn('Directory', cell, text = 0)
+        tv.append_column(column)
+        dia.vbox.pack_start(tv)
+        
+        # Populate the tree view.
+        config = get_bokeep_configuration()
+        plugin_directories = get_plugins_directories_from_config(config)
+        for plugin_directory in plugin_directories:
+            row = (plugin_directory,)
+            model.append(row)
+        
+        modify_box = HBox(spacing = 8)
+        
+        # Setup the remove directory button.
+        remove_button = Button('Remove')
+        remove_button.set_sensitive(False) # no directory selected initially
+        remove_button.connect('clicked', self.__on_remove, tv)
+        modify_box.pack_end(remove_button, expand = False)
+        
+        tv.connect('cursor-changed', self.__on_select, remove_button)
+        
+        # Setup the add directory button.
+        add_button = Button('Add')
+        add_button.connect('clicked', self.__on_add, tv)
+        modify_box.pack_end(add_button, expand = False)
+        
+        dia.vbox.pack_start(modify_box, expand = False)
+        
+        # Setup the "already included directories" label.
+        included_label = Label('Plugins in the PYTHONPATH are already ' +
+                               'available to BoKeep.')
+        # Use a horizontal box to left-justify the label.  For some reason,
+        # the label's set_justification property doesn't work for me.
+        label_box = HBox()
+        label_box.pack_start(included_label, expand = False)
+        dia.vbox.pack_start(label_box, expand = False)
+        
+        dia.show_all()
+        dia_result = dia.run()
+        
+        if dia_result == RESPONSE_OK:
+            plugin_directories = []
+            for row in model:
+                plugin_directory = row[0]
+                plugin_directories.append(plugin_directory)
+            PluginDirectories.change(plugin_directories)
             
+            self.__populate_possible_plugins()
+        
+        dia.destroy()
+    
+    def __on_add(self, button, tree_view):
+        file_chooser = FileChooserDialog('Add Plugin Path', None, FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                    (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_OPEN, RESPONSE_OK) )
+        result = file_chooser.run()
+        model = tree_view.get_model()
+        if result == RESPONSE_OK:
+            row = (file_chooser.get_filename(),)
+            model.append(row)
+            
+        file_chooser.destroy()
+    
+    def __on_remove(self, button, tree_view):
+        model, iter = tree_view.get_selection().get_selected()
+        model.remove(iter)
+        
+        # Disable the remove button as no row is selected after deletion.
+        button.set_sensitive(False)
+        
+    def __on_select(self, tree_view, remove_button):
+        model, iter = tree_view.get_selection().get_selected()
+        # Just changing the cursor doesn't necessarily mean that a row was
+        # selected.
+        if iter != None:
+            remove_button.set_sensitive(True)

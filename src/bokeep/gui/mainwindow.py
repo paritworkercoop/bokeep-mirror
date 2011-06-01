@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # Python library
 from os.path import exists, abspath, dirname, join
@@ -49,6 +50,7 @@ from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
     establish_bokeep_db
 from main_window_glade import get_main_window_glade_file
+from bokeep.plugin_directories import PluginDirectories
 
 GUI_STATE_SUB_DB = 'gui_state'
 
@@ -138,6 +140,7 @@ class MainWindow(object):
                 self.application_shutdown()
                 return
 
+        PluginDirectories.initialize()
         self.after_background_load()
         assert(self.gui_built)
 
