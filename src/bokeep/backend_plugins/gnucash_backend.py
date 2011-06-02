@@ -320,6 +320,7 @@ class GnuCash(SessionBasedRobustBackendPlugin):
                      parent_window, DIALOG_MODAL,
                      (STOCK_OK, RESPONSE_OK,
                       STOCK_CANCEL, RESPONSE_CANCEL ) )
+        dia.set_response_sensitive(RESPONSE_OK, False)
         
         # An open session is required to get the list of back-end accounts.
         self.open_session_and_retain()
@@ -339,6 +340,7 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         account_entry = ComboBoxEntry(list_store) # drop down list
         account_entry.child.set_completion(completion) # auto complete list
         account_entry.child.set_width_chars(60)
+        account_entry.connect('changed', self.__on_account_entry_changed, dia)
         dia.vbox.pack_start(account_entry)
         
         dia.vbox.show_all()
@@ -349,6 +351,21 @@ class GnuCash(SessionBasedRobustBackendPlugin):
             return tuple(account_text.split(':')), account_text
         else:
             return None, ''
+
+    def __on_account_entry_changed(self, combobox, dialog):
+        # Can we find the account entered in the combo box?
+        text = combobox.child.get_text()
+        model = combobox.get_model()
+        iter = model.get_iter_first()
+        while iter != None and model.get_value(iter, 0) != text:
+            iter = model.iter_next(iter)
+        if iter != None and model.get_value(iter, 0) == text:
+            found_account = True
+        else:
+            found_account = False
+        
+        # If so, enable OK.
+        dialog.set_response_sensitive(RESPONSE_OK, found_account)
 
 def get_plugin_class():
     return GnuCash
