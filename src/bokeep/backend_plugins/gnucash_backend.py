@@ -44,7 +44,8 @@ from gnucash.gnucash_core_c import \
 from gtk import \
     RESPONSE_OK, RESPONSE_CANCEL, ListStore, \
     FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, Dialog, Entry, \
-    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL, EntryCompletion
+    STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL, EntryCompletion, \
+    ComboBoxEntry
         
 SQLITE3 = 'sqlite3'
 XML = 'xml'
@@ -320,11 +321,6 @@ class GnuCash(SessionBasedRobustBackendPlugin):
                      (STOCK_OK, RESPONSE_OK,
                       STOCK_CANCEL, RESPONSE_CANCEL ) )
         
-        # Create an account entry widget.
-        account_entry = Entry()
-        account_entry.set_width_chars(60)
-        dia.vbox.pack_start(account_entry)
-        
         # An open session is required to get the list of back-end accounts.
         self.open_session_and_retain()
         
@@ -338,11 +334,16 @@ class GnuCash(SessionBasedRobustBackendPlugin):
             list_store.append([name])
         completion.set_model(list_store)
         completion.set_text_column(0)
-        account_entry.set_completion(completion)
+        
+        # Create an account entry widget.
+        account_entry = ComboBoxEntry(list_store) # drop down list
+        account_entry.child.set_completion(completion) # auto complete list
+        account_entry.child.set_width_chars(60)
+        dia.vbox.pack_start(account_entry)
         
         dia.vbox.show_all()
         result = dia.run()
-        account_text = account_entry.get_text()
+        account_text = account_entry.child.get_text()
         dia.destroy()
         if result == RESPONSE_OK:
             return tuple(account_text.split(':')), account_text
