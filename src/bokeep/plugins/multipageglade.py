@@ -493,6 +493,10 @@ def make_get_entry_val_func(page, entry_name):
             widget_state_dict[widget_key], entry_name, page, config)
     return return_func
 
+def make_get_entry_val_func_multi(page, *entry_names):
+    return ( make_get_entry_val_func(page, entry_name)
+             for entry_name in entry_names )
+
 def make_get_cal_grab_function(page, calendar_name):
     def return_func(widget_state_dict, *args):
         widget_key = (page, calendar_name)
