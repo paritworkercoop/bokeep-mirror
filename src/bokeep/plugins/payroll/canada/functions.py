@@ -20,11 +20,10 @@
 
 from bisect import bisect_left
 from itertools import ifilter, ifilterfalse, takewhile
-from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
-
-# useful with Decimal.quantize
-TWOPLACES = Decimal('0.01')
-ZEROPLACES = Decimal('1.')
+from decimal import Decimal
+from bokeep.util import \
+    decimal_round_two_place_using_third_digit, \
+    decimal_truncate_two_places
 
 ZERO = Decimal('0.00')
 
@@ -68,37 +67,6 @@ def iterate_until_value(iterable, value, include_final_value=False):
             break
         else:
             yield(val)
-
-
-def decimal_round_two_place_using_third_digit(decimal_value):
-    # we want these results eh?
-    # >>> Decimal('0.025').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
-    # Decimal("0.03")
-    # >>> Decimal('0.015').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
-    # Decimal("0.02")
-    # >>> Decimal('-0.015').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
-    # Decimal("-0.02")
-    # >>> Decimal('-0.025').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
-    # Decimal("-0.03")
-    #
-    # and this
-    # >>> Decimal('0.02499999999999999').quantize(Decimal('0.00'),
-    #  rounding=ROUND_HALF_UP)
-    # Decimal("0.02")
-    #
-    # Not this
-    # >>> Decimal('0.02499999999999999').quantize(Decimal('0.00'),
-    # rounding=ROUND_UP)
-    # Decimal("0.03")
-
-    return decimal_value.quantize(TWOPLACES, ROUND_HALF_UP)
-
-def decimal_truncate_two_places(decimal_value):
-    """ round something like 0.019 to 0.01 and -0.019 to -0.01
-    """
-    # note that using ROUND_FLOOR wouldn't achieve the desired results
-    # with negative numbers
-    return decimal_value.quantize(TWOPLACES, rounding=ROUND_DOWN)
 
 def convert_tuple_of_strings_to_tuple_of_decimals(tuple_of_string):
     return tuple( Decimal(element) for element in tuple_of_string )

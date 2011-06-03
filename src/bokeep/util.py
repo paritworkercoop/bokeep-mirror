@@ -24,6 +24,7 @@ from threading import Thread, Condition, Event
 from os.path import abspath, dirname, join, exists, basename
 from datetime import date, timedelta
 from zlib import adler32
+from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
 
 # ZODB
 import transaction
@@ -574,3 +575,37 @@ def get_and_establish_attribute(obj, attr, default_cls, *args, **kargs):
     return return_attr
 
 def null_function(*args, **kargs): pass
+
+# useful with Decimal.quantize
+TWOPLACES = Decimal('0.01')
+ZEROPLACES = Decimal('1.')
+
+def decimal_round_two_place_using_third_digit(decimal_value):
+    # we want these results eh?
+    # >>> Decimal('0.025').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
+    # Decimal("0.03")
+    # >>> Decimal('0.015').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
+    # Decimal("0.02")
+    # >>> Decimal('-0.015').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
+    # Decimal("-0.02")
+    # >>> Decimal('-0.025').quantize(Decimal('0.00'), rounding=ROUND_HALF_UP)
+    # Decimal("-0.03")
+    #
+    # and this
+    # >>> Decimal('0.02499999999999999').quantize(Decimal('0.00'),
+    #  rounding=ROUND_HALF_UP)
+    # Decimal("0.02")
+    #
+    # Not this
+    # >>> Decimal('0.02499999999999999').quantize(Decimal('0.00'),
+    # rounding=ROUND_UP)
+    # Decimal("0.03")
+
+    return decimal_value.quantize(TWOPLACES, ROUND_HALF_UP)
+
+def decimal_truncate_two_places(decimal_value):
+    """ round something like 0.019 to 0.01 and -0.019 to -0.01
+    """
+    # note that using ROUND_FLOOR wouldn't achieve the desired results
+    # with negative numbers
+    return decimal_value.quantize(TWOPLACES, rounding=ROUND_DOWN)
