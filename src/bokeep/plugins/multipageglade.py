@@ -460,7 +460,7 @@ class EntryTextToDecimalConversionFail(Exception):
 class WidgetFindError(Exception):
     pass
 
-def make_sum_entry_val_func(positive_funcs, negative_funcs):
+def make_sum_entry_val_func(positive_funcs, negative_funcs=()):
     def return_func(*args):
         return sum( chain( (positive_function(*args)
                             for positive_function in positive_funcs),
