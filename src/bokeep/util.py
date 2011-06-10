@@ -609,3 +609,9 @@ def decimal_truncate_two_places(decimal_value):
     # note that using ROUND_FLOOR wouldn't achieve the desired results
     # with negative numbers
     return decimal_value.quantize(TWOPLACES, rounding=ROUND_DOWN)
+
+def tup_chain(*args):
+    return tuple(chain(*args))
+
+def tup_multi_append(original_tuple, *args):
+    return tup_chain(original_tuple, args)
