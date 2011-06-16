@@ -1,0 +1,6 @@
+BoKeep 1.3
+
+- GnuCash account selection is now assisted with auto-complete.
+- Plugin directories can now be set in the BoKeep configuration GUI.
+- New front-end plugin tutorial.
+- Duplicate plugin listings bug is fixed.
