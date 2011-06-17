@@ -25,6 +25,7 @@ from os.path import abspath, dirname, join, exists, basename
 from datetime import date, timedelta
 from zlib import adler32
 from decimal import Decimal, ROUND_DOWN, ROUND_HALF_UP
+from itertools import chain
 
 # ZODB
 import transaction
