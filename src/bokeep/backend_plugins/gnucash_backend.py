@@ -31,6 +31,7 @@ from plugin import BoKeepBackendException, \
 from session_based_robust_backend_plugin import \
     SessionBasedRobustBackendPlugin
 from bokeep.util import attribute_or_blank
+from bokeep.gtkutil import gtk_error_message
 
 # gnucash imports
 from gnucash import Session, Split, GncNumeric, GUID, Transaction, \
@@ -318,7 +319,12 @@ class GnuCash(SessionBasedRobustBackendPlugin):
     def backend_account_dialog(self, parent_window=None):
         # An open session is required to get the list of back-end accounts.
         self.open_session_and_retain()
-        
+
+        if not self.can_write():
+            gtk_error_message("The gnucash file %s is not available due to %s" %
+                              (self.gnucash_file, self.current_session_error) )
+            return None, ''
+
         dia = Dialog("Please enter a gnucash account",
                      parent_window, DIALOG_MODAL,
                      (STOCK_OK, RESPONSE_OK,
