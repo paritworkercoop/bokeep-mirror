@@ -92,6 +92,11 @@ def create_config_file(path):
 
 # Returns the directories that front and back-end plugins are located in.
 def get_plugins_directories_from_config(config):
+    # old versions of bokeep didn't have the plugin directories section
+    # so we need to handle that
+    if not config.has_option(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES):
+        set_plugin_directories_in_config(config, '[]')
+    
     plugin_directories_str = config.get(PLUGIN_DIRECTORIES_SECTION,
                                         PLUGIN_DIRECTORIES)
     if plugin_directories_str == '[]':
@@ -104,6 +109,8 @@ def get_plugins_directories_from_config(config):
 # Saves the directories that front and back-end plugins are located in.
 def set_plugin_directories_in_config(config, plugin_directories):
     config_path = get_bokeep_config_paths()[0]
+    if not config.has_section(PLUGIN_DIRECTORIES_SECTION):
+        config.add_section(PLUGIN_DIRECTORIES_SECTION)
     config.set(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES, plugin_directories)
     config_fp = file(config_path, 'w')
     config.write(config_fp)
