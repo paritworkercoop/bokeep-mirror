@@ -316,14 +316,14 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         return names
     
     def backend_account_dialog(self, parent_window=None):
+        # An open session is required to get the list of back-end accounts.
+        self.open_session_and_retain()
+        
         dia = Dialog("Please enter a gnucash account",
                      parent_window, DIALOG_MODAL,
                      (STOCK_OK, RESPONSE_OK,
                       STOCK_CANCEL, RESPONSE_CANCEL ) )
         dia.set_response_sensitive(RESPONSE_OK, False)
-        
-        # An open session is required to get the list of back-end accounts.
-        self.open_session_and_retain()
         
         # Setup auto-complete for the entry widget.
         completion = EntryCompletion()
