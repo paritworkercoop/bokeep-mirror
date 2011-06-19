@@ -61,7 +61,7 @@ class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
         self.type_string = "Multi page glade"
 
     def run_configuration_interface(
-        self, parent_window, backend_account_fetch):
+        self, parent_window, backend_account_fetch, **kargs):
         self.set_config_file( file_selection_path("select config file") )
 
     def register_transaction(self, front_end_id, trust_trans):
