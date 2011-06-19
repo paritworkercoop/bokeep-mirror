@@ -17,8 +17,6 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
-from operator import __and__
-
 from persistent import Persistent
 
 from bokeep.book_transaction import \
@@ -136,20 +134,18 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
                 "return a list; stacktrace:\n%s" % (str(type_e),)
         else:
             # check the FinancialTransaction type
-            if not reduce(__and__, (
+            if not all( # all conditions are True
                     isinstance(fin_trans, FinancialTransaction) 
-                    for fin_trans in fin_trans_list),
-                          True): # end reduce
+                    for fin_trans in fin_trans_list ):
                 error_code = BackendDataStateMachine.ERROR_OTHER
                 error_str = \
                 "get_financial_transactions() returned " \
                 "list/iterable of invalid types"
-            elif not reduce(__and__, (
+            elif not all( # all conditions True
                     isinstance(fin_trans_line,
                                FinancialTransactionLine)
                     for fin_trans in fin_trans_list
-                    for fin_trans_line in fin_trans.lines ),
-                            True): # end reduce
+                    for fin_trans_line in fin_trans.lines ):
                 error_code = BackendDataStateMachine.ERROR_OTHER
                 error_str = \
                 "get_financial_transactions() returned " \
