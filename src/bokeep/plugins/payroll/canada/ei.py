@@ -1,6 +1,6 @@
 # ei.py EI payroll deductions calculations for Canada
 # Copyright (C) 2001-2006 Paul Evans <pevans@catholic.org>
-# Copyright (C) 2006-2008 ParIT Worker Co-operative <paritinfo@parit.ca>
+# Copyright (C) 2006-2011 ParIT Worker Co-operative <paritinfo@parit.ca>
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,12 +17,14 @@
 #
 # Author(s): Paul Evans <pevans@catholic.org>
 #            Mark Jenkins <mark@parit.ca>
+#            Samuel Pauls <samuel@parit.ca>
 
 from paystub_line import \
      PaystubCalculatedDeductionLine, PaystubCalculatedEmployerContributionLine
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
+     JUL_2011, \
      get_payroll_rule_period_for_paystub
 
 from functions import decimal_round_two_place_using_third_digit, \
@@ -42,6 +44,7 @@ EI_RATE_TABLE = { JUL_2006: '0.0187', # 1.87%
                   APR_2009: '0.0173', # 1.73%
                   JAN_2010: '0.0173', # 1.73%
                   JAN_2011: '0.0178', # 1.73%
+                  JUL_2011: '0.0178', # 1.78%
                   }
 convert_dict_of_string_to_dict_of_decimals_in_place(EI_RATE_TABLE)
 
@@ -52,6 +55,7 @@ MAX_EI_PREMIUM_TABLE = { JUL_2006: '729.30',
                          APR_2009: '731.79',
                          JAN_2010: '747.36',
                          JAN_2011: '786.76',
+                         JUL_2011: '786.76',
                          }
 convert_dict_of_string_to_dict_of_decimals_in_place(MAX_EI_PREMIUM_TABLE)
 
@@ -98,6 +102,6 @@ class PaystubEIEmployerContributionLine(
 
         return EIemp
 
-EI_RATE_QUEBEC = Decimal('0.0141') # 1.53%
+EI_RATE_QUEBEC = Decimal('0.0141') # 1.41%
 MAX_EI_PREMIUM_QUEBEC = Decimal('623.22')
     

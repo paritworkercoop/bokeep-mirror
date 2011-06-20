@@ -1,5 +1,5 @@
 # payroll_rule_period.py 
-# Copyright (C) 2006-2008 ParIT Worker Co-operative <paritinfo@parit.ca>
+# Copyright (C) 2006-2011 ParIT Worker Co-operative <paritinfo@parit.ca>
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Author(s): Mark Jenkins <mark@parit.ca>
+#            Samuel Pauls <samuel@parit.ca>
 
-JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011 = range(7)
-LAST_RULE_PERIOD = JAN_2011
+JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
+JUL_2011 = range(8)
+LAST_RULE_PERIOD = JUL_2011
 
 CODE_TO_YEAR_AND_MONTHS = { JUL_2006: (2006, range(7, 12+1) ),
                             JAN_2007: (2007, range(1, 12+1) ),
@@ -26,6 +28,7 @@ CODE_TO_YEAR_AND_MONTHS = { JUL_2006: (2006, range(7, 12+1) ),
                             APR_2009: (2009, range(4, 12+1) ),
                             JAN_2010: (2010, range(1, 12+1) ),
                             JAN_2011: (2011, range(1, 12+1) ),
+                            JUL_2011: (2011, range(1, 6+1) ),
                             }
 
 YEAR_AND_MONTH_TO_CODE = {}
