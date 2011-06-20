@@ -59,7 +59,7 @@ from state import BoKeepConfigGuiState, \
     DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE, \
     BOOK
 
-def establish_bokeep_db(mainwindow, config_path, db_exception):
+def establish_bokeep_db(mainwindow, config_path, config, db_exception):
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
     if db_exception == None:
@@ -69,7 +69,6 @@ def establish_bokeep_db(mainwindow, config_path, db_exception):
             str(db_exception), 
             "BoKeep requires a working database to operate" )
     
-    config = get_bokeep_configuration(config_path)
     filestorage_path = config.get(ZODB_CONFIG_SECTION,
                                   ZODB_CONFIG_FILESTORAGE)
     config_dialog = BoKeepConfigDialog(filestorage_path, extra_error_info)

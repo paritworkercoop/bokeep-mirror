@@ -34,20 +34,77 @@ if exists(SRC_PATH):
     if SRC_PATH not in path:
         path.insert(0, SRC_PATH )
 
-# Gtk
-import gtk
-
 # Bo-Keep
-from bokeep.gui.mainwindow import MainWindow
+from bokeep.gui.mainwindow import \
+    shell_startup, shell_startup_config_establish, shell_startup_bookset_fetch
+
+from bokeep.config import \
+    get_bokeep_config_paths, \
+    get_bokeep_bookset_from_config, get_bokeep_configuration, \
+    BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException
+
+from bokeep.plugin_directories import PluginDirectories
 
 def bokeep_main():
+    def bookset_startup_once_config_established(
+        config_path, config, config_approved_func, bookset_approved_func, e, *cbargs):
+        config_approved_func(config_path, config)
+        # this isn't viable until the config file established, and it
+        # looks like this PluginDirectories initializer doesn't actually use the
+        # config file we're using, we should be passing it...
+        PluginDirectories.initialize()
+        bookset = shell_startup_bookset_fetch(config_path, config, e, *cbargs)
+        bookset_ok = bookset != None
+        if bookset_ok:
+            bookset_approved_func(bookset)
+        return bookset_ok
+
     op = OptionParser()
     op.add_option("-c", "--config", dest="configfile",
                   default=None,
                   help="specify configuration file" )
     (options, args) = op.parse_args()
-    window = MainWindow(options, args)
-    gtk.main()
+
+    config_path = get_bokeep_config_paths(options.configfile)[0]
+    
+    # default state until we've successfully loaded them
+    config = None
+    bookset = None
+    try:
+        config = get_bokeep_configuration(config_path)
+        bookset = get_bokeep_bookset_from_config(config_path, config)
+    except BoKeepConfigurationFileException, e:
+        def startup_callback(config_path, config, config_approved_func,
+                             bookset_approved_func, *cbargs):
+            config_path, config = shell_startup_config_establish(config_path, e, *cbargs)
+            if config_path == None or config == None:
+                return False
+            else:
+                return bookset_startup_once_config_established(
+                    config_path, config, config_approved_func, bookset_approved_func,
+                    None, *cbargs)
+
+    except BoKeepConfigurationDatabaseException, e:
+        def startup_callback(config_path, config, config_approved_func,
+                             bookset_approved_func, *cbargs):
+             if config == None or config_path == None:
+                 return False
+             else:
+                 return bookset_startup_once_config_established(
+                     config_path, config, config_approved_func, bookset_approved_func,
+                     e, *cbargs)
+    else:
+        # this isn't viable until the config file established, and it
+        # looks like this PluginDirectories initializer doesn't actually use the
+        # config file we're using, we should be passing it...
+        PluginDirectories.initialize()
+
+        startup_callback = lambda *args, **kargs: True
+
+    # we call this here instead of in either of the two except clauses or else clause
+    # so we can get rid of the exception handling stack frame, because whichever function
+    # this it, it probably blocks for a long, long time...
+    shell_startup(config_path, config, bookset, startup_callback )
     
 if __name__ == "__main__":
     bokeep_main() # should really look at return value and set exit status
