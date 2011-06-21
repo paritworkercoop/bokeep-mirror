@@ -64,7 +64,34 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         self.state = BoKeepGuiState()
         self.state.do_action(BOOK_CHANGE, self.test_book_1)
 
-    def test_basic_transaction(self):
+    def test_basic_transaction_with_backend_close(self):
+        ONE_INT = 1
+        ONE = GncNumeric(ONE_INT, 1)
+        NEG_ONE = GncNumeric(-ONE_INT, 1)
+
+        self.state.do_action(NEW)
+        self.assert_(self.test_book_1.has_transaction(0))
+        trust_trans = self.test_book_1.get_transaction(0)
+        trust_trans.set_trustor(TEST_TRUSTOR)
+        trust_trans.transfer_amount = Decimal(ONE_INT)
+        self.state.do_action(CLOSE)
+        self.backend_module.close()
+        self.assertFalse(self.backend_module.transaction_is_clean(0))
+
+        self.backend_module.flush_backend()
+        self.assert_(self.backend_module.transaction_is_clean(0))
+        self.backend_module.close()
+
+        (s, book, root, accounts) = \
+            self.acquire_gnucash_session_book_root_and_accounts()
+        assets, bank, petty_cash = accounts[:3]
+        bank_splits = bank.GetSplitList()
+        petty_cash_splits = petty_cash.GetSplitList()
+        self.assert_(petty_cash_splits[0].GetAmount().equal( ONE ) )
+        self.assert_(bank_splits[0].GetAmount().equal( NEG_ONE ) )
+        self.gnucash_session_termination(s)
+        
+    def test_basic_transaction_without_backend_close(self):
         ONE_INT = 1
         ONE = GncNumeric(ONE_INT, 1)
         NEG_ONE = GncNumeric(-ONE_INT, 1)
@@ -84,13 +111,11 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3]
-        bank_splits = [Split(instance=split_inst)
-                       for split_inst in bank.GetSplitList() ]
-        petty_cash_splits = [Split(instance=split_inst)
-                             for split_inst in petty_cash.GetSplitList() ]
+        bank_splits = bank.GetSplitList()
+        petty_cash_splits = petty_cash.GetSplitList()
         self.assert_(petty_cash_splits[0].GetAmount().equal( ONE ) )
         self.assert_(bank_splits[0].GetAmount().equal( NEG_ONE ) )
-        self.gnucash_session_termination(s)                             
+        self.gnucash_session_termination(s)
 
     def test_change_transaction(self):
         self.state.do_action(NEW)

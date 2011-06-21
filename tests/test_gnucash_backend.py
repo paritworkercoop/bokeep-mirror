@@ -269,10 +269,8 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
         assets, bank, petty_cash = accounts[:3]
 
         return_value = False
-        bank_splits = [Split(instance=split_inst)
-                       for split_inst in bank.GetSplitList() ]
-        petty_cash_splits = [Split(instance=split_inst)
-                             for split_inst in petty_cash.GetSplitList() ]
+        bank_splits = bank.GetSplitList()
+        petty_cash_splits = petty_cash.GetSplitList()
         ONE = GncNumeric(1, 1)
         NEG_ONE = GncNumeric(-1, 1)
 
@@ -364,10 +362,8 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
         assets, bank, petty_cash = accounts[:3]
 
         return_value = False
-        bank_splits = [Split(instance=split_inst)
-                       for split_inst in bank.GetSplitList() ]
-        petty_cash_splits = [Split(instance=split_inst)
-                             for split_inst in petty_cash.GetSplitList() ]
+        bank_splits = bank.GetSplitList()
+        petty_cash_splits = petty_cash.GetSplitList()
         self.assertEquals(len(bank_splits), 0)
         self.assertEquals(len(petty_cash_splits), 0)
         self.gnucash_session_termination(s)
