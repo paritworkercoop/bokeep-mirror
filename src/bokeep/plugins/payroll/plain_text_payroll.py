@@ -17,6 +17,7 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 # Author: Jamie Campbell <jamie@parit.ca>
+# Author: Samuel Pauls <samuel@parit.ca>
 
 # Python library
 from sys import argv
@@ -519,6 +520,12 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
         backend_module.error_log_file = "bo_keep_backend_error_log"
         backend_module.mark_transaction_dirty(payday_trans_id,
                                               payday)
+        backend_module.close() # Hack to make flush_backend() keep on working
+                               # with GnuCash going from version 2.4.2 to 2.4.6.
+                               # (This close() line can be removed once the
+                               # test_trust_gnucash_guistate_fullstack.py >
+                               # test_basic_transaction_without_backend_close()
+                               # method passes.  TODO
         backend_module.flush_backend()
         transaction.get().commit()
 
