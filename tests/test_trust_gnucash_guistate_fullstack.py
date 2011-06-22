@@ -40,7 +40,7 @@ TEST_TRUSTOR = 'testtrustor'
 
 BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend'
 
-class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
+class BoKeepFullStackTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
     def setUp(self):
         BoKeepWithBookSetup.setUp(self)
         
@@ -64,6 +64,12 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         self.state = BoKeepGuiState()
         self.state.do_action(BOOK_CHANGE, self.test_book_1)
 
+    def tearDown(self):
+        self.state.do_action(CLOSE)
+        GnuCashBasicSetup.tearDown(self)
+        BoKeepWithBookSetup.tearDown(self)
+
+class BoKeepFullStackTests(BoKeepFullStackTestSetup):
     def test_basic_transaction_with_backend_close(self):
         ONE_INT = 1
         ONE = GncNumeric(ONE_INT, 1)
@@ -120,11 +126,6 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
     def test_change_transaction(self):
         self.state.do_action(NEW)
         self.state.do_action(TYPE_CHANGE, 1)
-
-    def tearDown(self):
-        self.state.do_action(CLOSE)
-        GnuCashBasicSetup.tearDown(self)
-        BoKeepWithBookSetup.tearDown(self)
 
 if __name__ == "__main__":
     main()
