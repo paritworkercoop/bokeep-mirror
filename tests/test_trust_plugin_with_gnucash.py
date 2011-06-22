@@ -38,7 +38,7 @@ TEST_TRUSTOR = 'testtrustor'
 
 BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend'
 
-class BoKeepFullStackTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
+class BoKeepTrustGnuCashTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
     def setUp(self):
         BoKeepWithBookSetup.setUp(self)
         
@@ -64,7 +64,7 @@ class BoKeepFullStackTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
         BoKeepWithBookSetup.tearDown(self)
 
 
-class BoKeepFullStackTests2(BoKeepFullStackTestSetup):
+class BoKeepTrustGnuCashTest(BoKeepTrustGnuCashTestSetup):
     def test_me(self):
         trans = TrustTransaction(self.trust_plugin)
         trans_id = self.test_book_1.insert_transaction(trans)
