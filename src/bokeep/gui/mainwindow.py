@@ -30,7 +30,7 @@ from gtk import main_quit, ListStore, CellRendererText, AboutDialog
 from gtk.glade import XML
 import gobject
 from gtk.gdk import pixbuf_new_from_file_at_size
-
+import gtk
 
 # Bo-Keep
 from state import \
@@ -41,6 +41,7 @@ from bokeep.book_transaction import \
 from bokeep.gui.gladesupport.glade_util import \
      load_glade_file_get_widgets_and_connect_signals
 from bokeep.config import \
+    get_bokeep_configuration, \
     get_bokeep_bookset, get_bokeep_config_paths, \
     first_config_file_in_list_to_exist_and_parse, \
     BoKeepConfigurationException, \
@@ -50,11 +51,28 @@ from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
     establish_bokeep_db
 from main_window_glade import get_main_window_glade_file
-from bokeep.plugin_directories import PluginDirectories
 
 GUI_STATE_SUB_DB = 'gui_state'
 
 COMBO_SELECTION_NONE = -1
+
+def shell_startup(config_path, config, bookset, startup_callback):
+    shell_window = MainWindow(config_path, config, bookset, startup_callback)
+    gtk.main()
+
+def shell_startup_config_establish(config_path, e, *cbargs):
+    mainwindow = cbargs[0]
+    config_path = establish_bokeep_config(mainwindow, (config_path,), e)
+    try:
+        return ( (None, None)
+                 if config_path == None
+                 else config_path, get_bokeep_configuration(config_path) )
+    except BoKeepConfigurationFileException:
+        return None, None
+
+def shell_startup_bookset_fetch(config_path, config, e, *cbargs):
+    mainwindow = cbargs[0]
+    return establish_bokeep_db(mainwindow, config_path, config, e)
 
 def get_bo_keep_logo():
     import mainwindow as main_window_module
@@ -68,13 +86,15 @@ class MainWindow(object):
     def on_quit_activate(self, args):
         self.application_shutdown()
 
-    def __init__(self, options, args):
+    def __init__(self, config_path, config, bookset, startup_callback):
         self.gui_built = False
         self.current_editor = None
-        self.cmdline_options = options
-        self.cmdline_args = args
+        self.config_path_and_config_set(config_path, config)
+        self.bookset_set(bookset)
+        
         self.build_gui()
         self.programmatic_transcombo_index = False
+        self.__startup_callback = startup_callback
 
         # program in an event that will only run once on startup
         # the startup_event_handler function will use
@@ -83,6 +103,13 @@ class MainWindow(object):
             "window-state-event", self.startup_event_handler )
         # should we do an emit to ensure it happens, or be satisfyed
         # that it always happens in tests?
+
+    def config_path_and_config_set(self, config_path, config):
+        self.__config_path = config_path
+        self.__config = config        
+
+    def bookset_set(self, bookset):
+        self.bookset = bookset
 
     def flush_backend_of_book(self, book):
         book.get_backend_module().flush_backend()
@@ -113,36 +140,13 @@ class MainWindow(object):
         delattr(self, 'startup_event_handler')
         assert(not self.gui_built)
 
-        config_paths = get_bokeep_config_paths(
-            self.cmdline_options.configfile)
-        try:
-            self.bookset = get_bokeep_bookset(config_paths[0])
-        except BoKeepConfigurationFileException, e:
-            config_path = establish_bokeep_config(
-                self.mainwindow, config_paths, e)
-            if config_path == None:
-                self.application_shutdown()
-                return
-            self.bookset = establish_bokeep_db(
-                self.mainwindow, config_path, None)
-            if self.bookset == None:
-                self.application_shutdown()
-                return
-        except BoKeepConfigurationDatabaseException, e:
-            config_path = first_config_file_in_list_to_exist_and_parse(
-                config_paths)
-            if config_path == None:
-                self.application_shutdown()
-                return
-            self.bookset = establish_bokeep_db(
-                self.mainwindow, config_path, e)
-            if self.bookset == None:
-                self.application_shutdown()
-                return
-
-        PluginDirectories.initialize()
-        self.after_background_load()
-        assert(self.gui_built)
+        if self.__startup_callback(self.__config_path, self.__config,
+                                   self.config_path_and_config_set,
+                                   self.bookset_set, self.mainwindow ):
+            self.after_background_load()
+            assert(self.gui_built)
+        else:
+            self.application_shutdown()
 
     def build_gui(self):
         glade_file = get_main_window_glade_file()
@@ -434,16 +438,12 @@ class MainWindow(object):
         self.closedown_for_config()
         self.bookset.close()
         assert( not self.gui_built )
-        # this probably isn't right, should actually retain config path
-        # from startup or even the config object, and adjust this api
-        # to take tht instead
-        config_paths = get_bokeep_config_paths(
-            self.cmdline_options.configfile)
+
         # major flaw right now is that we don't want this to
         # re-open the same DB at the end, and we need to do something
         # the return value and seting bookset
         self.bookset = \
-            establish_bokeep_db(self.mainwindow, config_paths[0], None)
+            establish_bokeep_db(self.mainwindow, self.__config_path, self.__config, None)
 
         # if there's uncommited stuff, we need to ditch it because
         # the above function killed off and re-opened the db connecion

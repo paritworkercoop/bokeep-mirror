@@ -147,7 +147,9 @@ def get_bokeep_configuration(provided_path=None):
     
 def get_bokeep_bookset(provided_config_path=None):
     config = get_bokeep_configuration(provided_config_path)
+    return get_bokeep_bookset_from_config(provided_config_path, config)
 
+def get_bokeep_bookset_from_config(provided_config_path, config):
     if not config.has_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE):
         raise BoKeepConfigurationFileException(
             "the bokeep config file %s does not have a zodb filestorage "
