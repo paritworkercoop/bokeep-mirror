@@ -59,7 +59,6 @@ class BoKeepTrustGnuCashTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
         self.trust_plugin.set_trust_liability_account(BANK_FULL_SPEC)
 
     def tearDown(self):
-        self.state.do_action(CLOSE)
         GnuCashBasicSetup.tearDown(self)
         BoKeepWithBookSetup.tearDown(self)
 

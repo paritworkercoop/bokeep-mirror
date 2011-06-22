@@ -31,6 +31,7 @@ from bokeep.gui.state import \
 from test_bokeep_book import BoKeepWithBookSetup
 from test_gnucash_backend import \
     GnuCashBasicSetup, BANK_FULL_SPEC, PETTY_CASH_FULL_SPEC
+from test_trust_plugin_with_gnucash import BoKeepTrustGnuCashTestSetup
 
 # gnucash
 from gnucash import GncNumeric, Split
@@ -40,34 +41,17 @@ TEST_TRUSTOR = 'testtrustor'
 
 BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend'
 
-class BoKeepFullStackTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
+class BoKeepFullStackTestSetup(BoKeepTrustGnuCashTestSetup):
     def setUp(self):
-        BoKeepWithBookSetup.setUp(self)
+        BoKeepTrustGnuCashTestSetup.setUp(self)
         
-        # set up GnuCash backend plugin
-        GnuCashBasicSetup.setUp(self)
-        self.backend_module.close()
-        self.test_book_1.set_backend_module(BACKEND_PLUGIN)
-        self.backend_module = self.test_book_1.get_backend_module()
-        self.backend_module.setattr(
-            'gnucash_file', self.get_gnucash_file_name_with_protocol() )
-
-        # set up the trust plugin
-        self.test_book_1.add_module(TRUST_PLUGIN)
-        self.test_book_1.enable_module(TRUST_PLUGIN)
-        self.trust_plugin = self.test_book_1.get_module(TRUST_PLUGIN)
-        self.trust_plugin.add_trustor_by_name(TEST_TRUSTOR)
-        self.trust_plugin.set_cash_account(PETTY_CASH_FULL_SPEC)
-        self.trust_plugin.set_trust_liability_account(BANK_FULL_SPEC)
-
         # set up the gui state
         self.state = BoKeepGuiState()
         self.state.do_action(BOOK_CHANGE, self.test_book_1)
 
     def tearDown(self):
         self.state.do_action(CLOSE)
-        GnuCashBasicSetup.tearDown(self)
-        BoKeepWithBookSetup.tearDown(self)
+        BoKeepTrustGnuCashTestSetup.tearDown(self)
 
 class BoKeepFullStackTests(BoKeepFullStackTestSetup):
     def test_basic_transaction_with_backend_close(self):
