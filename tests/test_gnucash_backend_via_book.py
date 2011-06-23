@@ -21,16 +21,15 @@ from unittest import main
 from decimal import Decimal
 
 from test_gnucash_backend import \
-    GnuCashBasicSetup, TestTransaction, BANK_FULL_SPEC, PETTY_CASH_FULL_SPEC
+    GnuCashFileSetup, TestTransaction, BANK_FULL_SPEC, PETTY_CASH_FULL_SPEC
 
 from test_bokeep_book import BoKeepWithBookSetup
 
 BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend'
 
-class TestGnuCashBackendViaBook(GnuCashBasicSetup, BoKeepWithBookSetup):
+class TestGnuCashBackendViaBook(GnuCashFileSetup, BoKeepWithBookSetup):
     def setUp(self):
-        GnuCashBasicSetup.setUp(self)
-        self.backend_module.close()
+        GnuCashFileSetup.setUp(self)
 
         BoKeepWithBookSetup.setUp(self)
 
@@ -53,7 +52,7 @@ class TestGnuCashBackendViaBook(GnuCashBasicSetup, BoKeepWithBookSetup):
         self.assert_(self.z_backend_module.transaction_is_clean(trans_id))
 
     def tearDown(self):
-        GnuCashBasicSetup.tearDown(self)
+        GnuCashFileSetup.tearDown(self)
         BoKeepWithBookSetup.tearDown(self)
 
 if __name__ == "__main__":
