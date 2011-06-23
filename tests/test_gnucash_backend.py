@@ -78,10 +78,8 @@ class TestTransaction(Transaction):
     def get_financial_transactions(self):
        return [self.fin_trans]
 
-class GnuCashBasicSetup(TestCase):
+class GnuCashFileSetup(TestCase):
     def setUp(self):
-        from bokeep.backend_plugins.gnucash_backend import \
-            GnuCash
         from gnucash import Account, GnuCashBackendException
         from gnucash.gnucash_core_c import \
             ACCT_TYPE_ASSET, ERR_FILEIO_BACKUP_ERROR 
@@ -124,12 +122,6 @@ class GnuCashBasicSetup(TestCase):
                          e.errors[0] == ERR_FILEIO_BACKUP_ERROR ):
                 raise e
         self.gnucash_session_termination(s)
-
-        self.backend_module = GnuCash()
-        self.assertFalse(self.backend_module.can_write())
-        self.backend_module.setattr(
-            'gnucash_file', self.get_gnucash_file_name_with_protocol() )
-        self.assert_(self.backend_module.can_write())
 
     def tearDown(self):
         self.backend_module.close()
@@ -202,6 +194,22 @@ class GnuCashBasicSetup(TestCase):
         s.end()
         s.destroy()
 
+class GnuCashBasicSetup(GnuCashFileSetup):
+    def setUp(self):
+        from bokeep.backend_plugins.gnucash_backend import \
+            GnuCash
+
+        GnuCashFileSetup.setUp(self)
+        self.backend_module = GnuCash()
+        self.assertFalse(self.backend_module.can_write())
+        self.backend_module.setattr(
+            'gnucash_file', self.get_gnucash_file_name_with_protocol() )
+        self.assert_(self.backend_module.can_write())       
+
+    def tearDown(self):
+        self.backend_module.close()
+        self.assertFalse(self.backend_module.can_write())
+        GnuCashFileSetup.tearDown(self)
 
 class GetProtocolXML(object):
     def get_protocol(self):
