@@ -246,6 +246,10 @@ class GnuCashBasicTest(GnuCashBasicSetup):
                 front_end_id).endswith(
                 "transaction doesn't balance"))
 
+    def test_double_close(self):
+        self.backend_module.close()
+        self.backend_module.close()
+
 class GnuCashBasicTestXML(GetProtocolXML, GnuCashBasicTest): pass
 
 class GnuCashBasicTestUSD(GetCurrencyUSD, GnuCashBasicTest): pass
