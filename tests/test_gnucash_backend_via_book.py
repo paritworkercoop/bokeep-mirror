@@ -34,8 +34,8 @@ class TestGnuCashBackendViaBook(GnuCashFileSetup, BoKeepWithBookSetup):
         BoKeepWithBookSetup.setUp(self)
 
         self.test_book_1.set_backend_module(BACKEND_PLUGIN)
-        self.z_backend_module = self.test_book_1.get_backend_module()
-        self.z_backend_module.setattr(
+        self.backend_module = self.test_book_1.get_backend_module()
+        self.backend_module.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
 
     def test_test_transaction_mark_and_flush(self):
@@ -43,13 +43,14 @@ class TestGnuCashBackendViaBook(GnuCashFileSetup, BoKeepWithBookSetup):
         trans = TestTransaction( Decimal(1), BANK_FULL_SPEC,
                                  Decimal(-1), PETTY_CASH_FULL_SPEC )
         trans_id = 1
-        self.z_backend_module.mark_transaction_dirty(trans_id, trans)
-        self.z_backend_module.flush_backend()
-        if not self.z_backend_module.transaction_is_clean(trans_id):
+        self.backend_module.mark_transaction_dirty(trans_id, trans)
+        
+        self.backend_module.flush_backend()
+        if not self.backend_module.transaction_is_clean(trans_id):
             self.assertEquals(
-                self.z_backend_module.reason_transaction_is_dirty(trans_id),
+                self.backend_module.reason_transaction_is_dirty(trans_id),
                 None)
-        self.assert_(self.z_backend_module.transaction_is_clean(trans_id))
+        self.assert_(self.backend_module.transaction_is_clean(trans_id))
 
     def tearDown(self):
         GnuCashFileSetup.tearDown(self)
