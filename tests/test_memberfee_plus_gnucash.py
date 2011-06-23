@@ -45,6 +45,14 @@ class MemberFeeGnucashTestCaseSetup(memberAfterSpreadSetup, GnuCashBasicSetup):
                                                    self.feetrans)
         self.backend_module.flush_backend()
 
+    def test_sucess_flush(self):
+        self.assertEquals(
+            self.backend_module.reason_transaction_is_dirty(
+                self.bokeep_trans_id),
+            None)
+        self.assert_(
+            self.backend_module.transaction_is_clean(self.bokeep_trans_id))
+
 # should really write some python binding code to check things worked
 #    def testLeaveGnucashFile(self):
 #        self.backend_module.close()
