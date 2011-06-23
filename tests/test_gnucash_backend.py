@@ -124,8 +124,6 @@ class GnuCashFileSetup(TestCase):
         self.gnucash_session_termination(s)
 
     def tearDown(self):
-        self.backend_module.close()
-        self.assertFalse(self.backend_module.can_write())
         for file_name in glob(self.gnucash_file_name + '*'):
             remove(file_name)
 
