@@ -41,18 +41,14 @@ from bokeep.gui.mainwindow import \
 from bokeep.config import \
     get_bokeep_config_paths, \
     get_bokeep_bookset_from_config, get_bokeep_configuration, \
-    BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException
-
-from bokeep.plugin_directories import PluginDirectories
+    BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException, \
+    get_plugins_directories_from_config
 
 def bokeep_main():
     def bookset_startup_once_config_established(
         config_path, config, config_approved_func, bookset_approved_func, e, *cbargs):
         config_approved_func(config_path, config)
-        # this isn't viable until the config file established, and it
-        # looks like this PluginDirectories initializer doesn't actually use the
-        # config file we're using, we should be passing it...
-        PluginDirectories.initialize()
+        __initialize_plugin_directories(config)
         bookset = shell_startup_bookset_fetch(config_path, config, e, *cbargs)
         bookset_ok = bookset != None
         if bookset_ok:
@@ -94,10 +90,7 @@ def bokeep_main():
                      config_path, config, config_approved_func, bookset_approved_func,
                      e, *cbargs)
     else:
-        # this isn't viable until the config file established, and it
-        # looks like this PluginDirectories initializer doesn't actually use the
-        # config file we're using, we should be passing it...
-        PluginDirectories.initialize()
+        __initialize_plugin_directories(config)
 
         startup_callback = lambda *args, **kargs: True
 
@@ -105,6 +98,11 @@ def bokeep_main():
     # so we can get rid of the exception handling stack frame, because whichever function
     # this it, it probably blocks for a long, long time...
     shell_startup(config_path, config, bookset, startup_callback )
-    
+
+# Add the plugin directories from the configuration to the program's path.
+def __initialize_plugin_directories(config):
+	for plugin_directory in get_plugins_directories_from_config(config):
+		path.append(plugin_directory)
+
 if __name__ == "__main__":
     bokeep_main() # should really look at return value and set exit status

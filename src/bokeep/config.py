@@ -101,14 +101,15 @@ def get_plugins_directories_from_config(config):
                                         PLUGIN_DIRECTORIES)
     if plugin_directories_str == '[]':
         plugin_directories = []
+    elif plugin_directories_str.__class__ == list:
+        plugin_directories = plugin_directories_str
     else:
         plugin_directories = plugin_directories_str[2:-2].split("', '")
     
     return plugin_directories
 
 # Saves the directories that front and back-end plugins are located in.
-def set_plugin_directories_in_config(config, plugin_directories):
-    config_path = get_bokeep_config_paths()[0]
+def set_plugin_directories_in_config(config, config_path, plugin_directories):
     if not config.has_section(PLUGIN_DIRECTORIES_SECTION):
         config.add_section(PLUGIN_DIRECTORIES_SECTION)
     config.set(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES, plugin_directories)

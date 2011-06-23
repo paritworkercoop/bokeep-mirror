@@ -46,13 +46,13 @@ from gtk import \
 from bokeep.config import \
     BoKeepConfigurationDatabaseException, get_bokeep_configuration, \
     DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
-    ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config
+    ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config, \
+    set_plugin_directories_in_config
 from bokeep.book import BoKeepBookSet, \
     PluginImportError, BackendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
-from bokeep.plugin_directories import PluginDirectories
 
 # bokeep.gui.config imports
 from state import BoKeepConfigGuiState, \
@@ -71,7 +71,8 @@ def establish_bokeep_db(mainwindow, config_path, config, db_exception):
     
     filestorage_path = config.get(ZODB_CONFIG_SECTION,
                                   ZODB_CONFIG_FILESTORAGE)
-    config_dialog = BoKeepConfigDialog(filestorage_path, extra_error_info)
+    config_dialog = BoKeepConfigDialog(filestorage_path, config_path, config,
+                                       extra_error_info)
     result, new_filestorage_path = config_dialog.run()
     
     assert( result == RESPONSE_OK or result==RESPONSE_CANCEL or
@@ -154,7 +155,13 @@ def available_plugins_search(plugin_file_name, plugin_subdir):
     return bokeep_packages + bokeep_modules
 
 class BoKeepConfigDialog(object):
-    def __init__(self, filestorage_path, error_msg=None):
+    config_path = None
+    config = None
+    
+    def __init__(self, filestorage_path, config_path, config, error_msg=None):
+        self.config_path = config_path
+        self.config = config
+        
         load_glade_file_get_widgets_and_connect_signals(
             get_main_window_glade_file(), "bokeep_config_dialog",
             self, self)
@@ -388,8 +395,7 @@ class BoKeepConfigDialog(object):
         dia.vbox.pack_start(tv)
         
         # Populate the tree view.
-        config = get_bokeep_configuration()
-        plugin_directories = get_plugins_directories_from_config(config)
+        plugin_directories = get_plugins_directories_from_config(self.config)
         for plugin_directory in plugin_directories:
             row = (plugin_directory,)
             model.append(row)
@@ -423,14 +429,28 @@ class BoKeepConfigDialog(object):
         dia.show_all()
         dia_result = dia.run()
         
-        if dia_result == RESPONSE_OK:
+        if dia_result == RESPONSE_OK:            
+            # Remove the old plugin directories from the program's path.
+            plugin_directories = \
+                get_plugins_directories_from_config(self.config)
+            for plugin_directory in plugin_directories:
+                path.remove(plugin_directory)
+            
+            # Get the new plugin directories from the dialog.
             plugin_directories = []
             for row in model:
                 plugin_directory = row[0]
                 plugin_directories.append(plugin_directory)
-            PluginDirectories.change(plugin_directories)
             
+            # Update the BoKeep PYTHONPATH so that new plugins can be loaded and
+            # populate the list of possible new plugins.
+            for plugin_directory in plugin_directories:
+                path.append(plugin_directory)
             self.__populate_possible_plugins()
+            
+            # Save the new plugin directories in the configuration file.
+            set_plugin_directories_in_config(self.config,
+                self.config_path, plugin_directories)
         
         dia.destroy()
     
