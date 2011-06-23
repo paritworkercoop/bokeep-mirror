@@ -18,6 +18,10 @@
 # Authors: Mark Jenkins <mark@parit.ca>
 #          Samuel Pauls <samuel@parit.ca>
 
+# This file is responsible for accessing the BoKeep configuration.  It stores
+# settings such as plugin directories and the location of the BoKeep books
+# database.
+
 # ZODB imports
 from ZODB.FileStorage import FileStorage
 from ZODB import DB
@@ -55,6 +59,8 @@ class BoKeepConfigurationDatabaseException(BoKeepConfigurationException):
     pass
 
 def initialize_config(config):
+    """Populate the configuration with default values."""
+    
     config.add_section(ZODB_CONFIG_SECTION)
     config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
                expanduser("~/%s/%s" % (DEFAULT_BOOKS_FILESTORAGE_DIR,
@@ -66,9 +72,10 @@ def initialize_config(config):
 def create_config_file(path):
     """Creates a configuration file at path.
 
-    Note, this doesn't care if one is already there, so if this is undisirable
+    Note, this doesn't care if one is already there, so if this is undesirable
     check for existence before calling this function!
     """
+    
     config = ConfigParser()
     initialize_config(config)
     try:
@@ -90,8 +97,10 @@ def create_config_file(path):
         # because initialize_config uses config.set functions..
         assert( len(success_reads) == 1 )
 
-# Returns the directories that front and back-end plugins are located in.
 def get_plugins_directories_from_config(config):
+    """Returns the directories that front and back-end plugins are located
+    in."""
+    
     # old versions of bokeep didn't have the plugin directories section
     # so we need to handle that
     if not config.has_option(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES):
@@ -108,8 +117,9 @@ def get_plugins_directories_from_config(config):
     
     return plugin_directories
 
-# Saves the directories that front and back-end plugins are located in.
 def set_plugin_directories_in_config(config, config_path, plugin_directories):
+    """Saves the directories that front and back-end plugins are located in."""
+    
     if not config.has_section(PLUGIN_DIRECTORIES_SECTION):
         config.add_section(PLUGIN_DIRECTORIES_SECTION)
     config.set(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES, plugin_directories)
@@ -126,14 +136,20 @@ def first_config_file_in_list_to_exist_and_parse(files):
             return config_file
     return None
 
-def get_bokeep_config_paths(provided_path=None):
-    if provided_path == None:
+def get_bokeep_config_paths(provided_config_path=None):
+    """Returns all possible BoKeep configuration filenames.
+    Note that a particular returned item may not actually exist as a file."""
+    
+    if provided_config_path == None:
         return (CONFIG_HOME,)
     else:
-        return (provided_path,)    
+        return (provided_config_path,)
 
-def get_bokeep_configuration(provided_path=None):
-    file_list = get_bokeep_config_paths(provided_path)
+def get_bokeep_configuration(provided_config_path=None):
+    """Return a ConfigParser that represents the BoKeep configuration.
+    If no configuration exists, throw a BoKeepConfigurationFileException"""
+    
+    file_list = get_bokeep_config_paths(provided_config_path)
         
     good_config = first_config_file_in_list_to_exist_and_parse(file_list)
     if good_config == None:
@@ -147,6 +163,8 @@ def get_bokeep_configuration(provided_path=None):
     return config
     
 def get_bokeep_bookset(provided_config_path=None):
+    """Returns a set of BoKeep books."""
+    
     config = get_bokeep_configuration(provided_config_path)
     return get_bokeep_bookset_from_config(provided_config_path, config)
 
@@ -184,7 +202,5 @@ def get_bokeep_bookset_from_config(provided_config_path, config):
         return bookset
 
     # never expected to reach here, except block is supposed to re-throw
-    # else block is reponsible for return
+    # else block is responsible for return
     assert(False)
-
-    
