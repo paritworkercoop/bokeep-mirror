@@ -23,7 +23,7 @@ from decimal import Decimal
 from os import system
 
 # bo-keep
-from bokeep.plugins.trust import TrustTransaction
+from bokeep.plugins.trust import TrustTransaction, TrustModule
 
 # bo-keep tests
 from test_bokeep_book import BoKeepWithBookSetup
@@ -37,6 +37,29 @@ TRUST_PLUGIN = 'bokeep.plugins.trust'
 TEST_TRUSTOR = 'testtrustor'
 
 BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend'
+
+class SimplerTrustTest(GnuCashBasicSetup):
+    def setUp(self):
+        # set up GnuCash backend plugin
+        GnuCashBasicSetup.setUp(self)
+        self.trust_plugin = TrustModule()
+        self.trust_plugin.add_trustor_by_name(TEST_TRUSTOR)
+        self.trust_plugin.set_cash_account(PETTY_CASH_FULL_SPEC)
+        self.trust_plugin.set_trust_liability_account(BANK_FULL_SPEC)        
+
+    def test_me(self):
+        trans = TrustTransaction(self.trust_plugin)
+        trans_id = 1
+        self.backend_module.mark_transaction_dirty(trans_id, trans)
+        self.backend_module.flush_backend()
+        if not self.backend_module.transaction_is_clean(trans_id):
+            self.assertEquals(
+                self.backend_module.reason_transaction_is_dirty(trans_id),
+                None)
+        self.assert_(self.backend_module.transaction_is_clean(trans_id))
+
+    def tearDown(self):
+        GnuCashBasicSetup.tearDown(self)
 
 class BoKeepTrustGnuCashTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
     def setUp(self):
