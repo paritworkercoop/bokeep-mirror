@@ -18,12 +18,17 @@
 # Author: Mark Jenkins <mark@parit.ca
 
 def get_plugin_class():
+    """Returns a class that's instantiated once for all entries that this plugin
+    provides.  This function should be overridden in each front end plugin."""
+    
     return PrototypePlugin
 
 from persistent import Persistent
 from bokeep.book_transaction import Transaction
 
 class PrototypePlugin(Persistent):
+    """A basic front end plugin."""
+    
     def run_configuration_interface(self, parent_window, backend_account_fetch):
         """Instructs a plugin to run a configuration dialog
         
