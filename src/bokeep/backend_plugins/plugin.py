@@ -294,6 +294,14 @@ class BackendPlugin(Persistent):
         is in a state you're comfortable having commited
         """
         setattr(self, attr, value)
+        # an attribute change is possibly a big deal -- for example if
+        # we had a file based backend and we changed the file name
+        # so as a default assumption we assume the attribute change
+        # justifies closing the resources used by the backend before
+        # we flush with the new attribute in place
+        #
+        # this missed consideration caused bug #33616
+        self.close()
         self.flush_backend()
 
    
