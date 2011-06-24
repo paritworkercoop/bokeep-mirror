@@ -80,10 +80,18 @@ def create_basic_test_class(name, income, fed_tax_credits, prov_tax_credits,
 # now based on actual values from CRA calculator for July 1st
 TestTinyIncome = create_basic_test_class('TestTinyIncome', 100, 1, 1,
                                          0, 0, '1.78')
+
 # CRA calculate says income tax deductions of 14.49, but we'll say close enough
 # for now
 TestSmallIncome = create_basic_test_class('TestSmallIncome', 480, 1, 1,
                                           '14.48', '17.10', '8.54')
+def test_income_tax_specific(self):
+    income_tax_line = list(self.paystub_one.get_income_tax_deduction_lines())[0]
+    self.assertEquals(
+        income_tax_line.get_federal_part(),
+        Decimal('1.28') )
+TestSmallIncome.test_income_tax_specific = test_income_tax_specific
+
 TestMedIncome = create_basic_test_class('TestMedIncome', 740, 1, 1,
                                         '77.05', '29.97', '13.17')
 
