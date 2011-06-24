@@ -253,6 +253,35 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         return ''.join(list( guid_to_string(trans_guid.get_instance()) ) )
 
     def open_session(self):
+        # not checking for gnucash_file == None contributed to bug #33616
+        #
+        # The gnucash python bindings implementation of Session just does
+        # nothing if you pass it book_uri == None
+        # It probably behaves that way so you can have a way to init the
+        # Session instance and not do anything else -- as the default is
+        # sure pretty active in terms of calling several undering functions
+        #
+        # so passing None to that argument and expecting Session to
+        # throw an Exception was definitely the wrong expectation
+        #
+        # The only reason that ever worked was because
+        # Session.save() was being called shortly after
+        # open_session() here, and would get angry, and the gnucash backend
+        # would immediately close down the session
+        #
+        # Not so as of GnuCash 2.4.6, and possibly some of the versions
+        # after 2.4.2 ... Session.save would just do nothing when
+        # initialized with book_uri=None...
+        #
+        # by checking for this and refusing right away to open the
+        # session, we no longer rely on Session.save() later to tell
+        # us that None is a stupid value
+        if self.gnucash_file == None:
+            self.current_session_error = "no gnucash file selected"
+            return None
+
+        # but this try/except is fine for other bogus values
+        # of self.gnucash_file/book_uri
         try:
             session = Session(self.gnucash_file, is_new=False)
             self.current_session_error = None
