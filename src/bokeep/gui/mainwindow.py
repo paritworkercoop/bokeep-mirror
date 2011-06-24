@@ -40,7 +40,7 @@ from bokeep.config import get_bokeep_configuration, \
     BoKeepConfigurationFileException
 from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
-    establish_bokeep_db
+    establish_bokeep_transaction_database
 from main_window_glade import get_main_window_glade_file
 
 GUI_STATE_SUB_DB = 'gui_state'
@@ -65,7 +65,7 @@ def shell_startup_config_establish(config_path, e, *cbargs):
 
 def shell_startup_bookset_fetch(config_path, config, e, *cbargs):
     mainwindow = cbargs[0]
-    return establish_bokeep_db(mainwindow, config_path, config, e)
+    return establish_bokeep_transaction_database(mainwindow, config_path, config, e)
 
 def get_bo_keep_logo():
     """Returns the filename of the BoKeep logo."""
@@ -481,7 +481,7 @@ class MainWindow(object):
         # re-open the same DB at the end, and we need to do something
         # the return value and seting bookset
         self.bookset = \
-            establish_bokeep_db(self.mainwindow, self.__config_path, self.__config, None)
+            establish_bokeep_transaction_database(self.mainwindow, self.__config_path, self.__config, None)
 
         # if there's uncommited stuff, we need to ditch it because
         # the above function killed off and re-opened the db connecion

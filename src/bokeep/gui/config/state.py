@@ -192,7 +192,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
             self.plugin_liststore.append((plugin_name, False))
         return (self.data[DB_PATH], self.data[BOOKSET], new_book )
 
-    def __clear_plugin_list(self, next_state):
+    def __clear_plugin_list(self, next_state = None):
         self.plugin_liststore.clear()
         return self.data
 

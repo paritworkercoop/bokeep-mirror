@@ -21,16 +21,14 @@
 
 # python imports
 from os.path import \
-    exists, isdir, isfile, basename, split as path_split, join as path_join, abspath
+    exists, isdir, join as path_join
 import os
-from os import makedirs
 import sys
 from sys import path
 
 # ZODB imports
 from ZODB.FileStorage import FileStorage
 from ZODB import DB
-import transaction
 
 # gtk imports
 from gtk import \
@@ -44,12 +42,10 @@ from gtk import \
 
 # bokeep imports
 from bokeep.config import \
-    BoKeepConfigurationDatabaseException, get_bokeep_configuration, \
-    DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
+    BoKeepConfigurationDatabaseException, ZODB_CONFIG_SECTION, \
     ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config, \
     set_plugin_directories_in_config
-from bokeep.book import BoKeepBookSet, \
-    FrontendPluginImportError, BackendPluginImportError
+from bokeep.book import BoKeepBookSet, FrontendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
@@ -59,7 +55,10 @@ from state import BoKeepConfigGuiState, \
     DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE, \
     BOOK
 
-def establish_bokeep_db(mainwindow, config_path, config, db_exception):
+def establish_bokeep_transaction_database(mainwindow, config_path, config,
+                                          db_exception):
+    """Create the BoKeep transaction database."""
+    
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
     if db_exception == None:
@@ -89,12 +88,12 @@ def establish_bokeep_db(mainwindow, config_path, config, db_exception):
         config_fp.close()
 
     fs = FileStorage(new_filestorage_path, create=False )
-    return BoKeepBookSet( DB(fs) )    
+    return BoKeepBookSet( DB(fs) )
 
-def available_plugins():
+def get_available_frontend_plugins():
     return available_plugins_search("BOKEEP_PLUGIN", "plugins")
 
-def available_backend_plugins():
+def get_available_backend_plugins():
     return available_plugins_search("BOKEEP_BACKEND_PLUGIN", "backend_plugins")
 
 def available_plugins_search(plugin_file_name, plugin_subdir):
@@ -155,6 +154,8 @@ def available_plugins_search(plugin_file_name, plugin_subdir):
     return bokeep_packages + bokeep_modules
 
 class BoKeepConfigDialog(object):
+    """GUI for configuring BoKeep."""
+    
     config_path = None
     config = None
     
@@ -209,18 +210,20 @@ class BoKeepConfigDialog(object):
         """Populates the GUI with the possible front and backend plugins."""
         
         available_plugin_liststore = ListStore(str)
-        for plugin_name in available_plugins():
+        for plugin_name in get_available_frontend_plugins():
             available_plugin_liststore.append([plugin_name])
         self.plugin_add_entry_combo.set_model(available_plugin_liststore)
         self.plugin_add_entry_combo.set_text_column(0)
 
         available_backend_plugin_liststore = ListStore(str)
-        for backend_plugin_name in available_backend_plugins():
+        for backend_plugin_name in get_available_backend_plugins():
             available_backend_plugin_liststore.append([backend_plugin_name])
         self.backend_plugin_entry_combo.set_model(available_backend_plugin_liststore)
         self.backend_plugin_entry_combo.set_text_column(0)
 
     def do_action(self, action, arg=None):
+        """Update the configuration state machine.  Display any errors."""
+        
         try:
             self.state.do_action(action, arg)
         except FrontendPluginImportError, err:
@@ -249,6 +252,9 @@ class BoKeepConfigDialog(object):
             raise
 
     def run(self):
+        """Run the BoKeep configuration dialog so the user can interact with
+        it."""
+        
         self.bokeep_config_dialog.run()
         if self.state.action_allowed(BOOK_CHANGE):
             self.do_action(BOOK_CHANGE, None)
@@ -258,6 +264,8 @@ class BoKeepConfigDialog(object):
         return RESPONSE_OK, self.last_commit_db_path 
 
     def set_sensitivities(self):
+        """Set the enabled/disabled property of all config widgets."""
+        
         for obj, action in (
             (self.apply_db_change_button, DB_PATH_CHANGE),
             (self.books_tv, BOOK_CHANGE),
@@ -271,6 +279,8 @@ class BoKeepConfigDialog(object):
             obj.set_sensitive( self.state.action_allowed(action) )
 
     def get_currently_selected_book(self, *args):
+        """Return the currently selected book in the configuration dialog."""
+        
         sel = self.books_tv.get_selection()
         sel_iter = sel.get_selected()[1]
         if sel_iter == None:
@@ -280,6 +290,8 @@ class BoKeepConfigDialog(object):
             return sel_row[0]
 
     def select_book(self, new_book):
+        """Visually select a given book in the configuration dialog."""
+        
         selection = self.books_tv.get_selection()
         selection.unselect_all()
         for path, book in enumerate(self.state.book_liststore):
@@ -290,6 +302,8 @@ class BoKeepConfigDialog(object):
     # event handles
 
     def on_apply_db_change_button_clicked(self, *args):
+        """Changes the BoKeep transaction database."""
+        
         self.last_commit_db_path = self.db_path_entry.get_text()
         self.selection_change_lock = True
         self.do_action(DB_PATH_CHANGE)
@@ -297,6 +311,8 @@ class BoKeepConfigDialog(object):
         self.set_sensitivities()
 
     def on_selectdb_button_clicked(self, *args):
+        """Browse for the location of a new BoKeep transaction database."""
+        
         fcd = FileChooserDialog(
             "Where should the database be?",
             self.bokeep_config_dialog,
