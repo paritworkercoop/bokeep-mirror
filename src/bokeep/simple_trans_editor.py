@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # gtk imports
 from gtk import Window, VBox
@@ -38,6 +39,7 @@ class SimpleTransactionEditor(object):
         if 'book' in kargs:
             self.book = kargs['book']
 
+        # An offscreen place for the transaction's GUI to hide while not in use.
         self.hide_parent = Window()
         self.hide_parent.hide()
         self.mainvbox = VBox()
@@ -49,11 +51,17 @@ class SimpleTransactionEditor(object):
         self.mainvbox.reparent(self.gui_parent)
 
     def simple_init_before_show(self):
+        """Create the GUI for this type of BoKeep transaction.  Widgets can be
+        added to the "self.mainvbox" object."""
+        
         raise Exception("simple_init_before_show must be overrided by "
                         "sub classes of SimpleTransactionEditor")
 
     def detach(self):
-        """Sub classes overriding this are recommended to do thier own work first, and
+        """Detach the BoKeep transaction's GUI from the visible window and
+        attach it to a hidden window.
+        
+        Sub classes overriding this are recommended to do their own work first, and
         then delegate back up to this original detach so it may do the widget reparenting
         work"""
         self.mainvbox.reparent(self.hide_parent)
