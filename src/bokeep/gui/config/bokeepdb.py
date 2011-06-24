@@ -176,7 +176,7 @@ class BoKeepConfigDialog(object):
             "changed", self.on_book_selection_change)
         self.books_window.add(self.books_tv)
         self.books_tv.show()
-        self.plugins_tv = TreeView(self.state.plugin_liststore)
+        self.plugins_tv = TreeView(self.state.frontend_plugin_liststore)
         self.plugins_tv.append_column(
             TreeViewColumn("Plugin", CellRendererText(), text=0) )
         crt = CellRendererToggle()
@@ -235,15 +235,15 @@ class BoKeepConfigDialog(object):
                 err.plugin_names.remove(backend_plugin_name)
 
             frontend_plugins = {}
-            for name, enabled in self.state.plugin_liststore:
+            for name, enabled in self.state.frontend_plugin_liststore:
                 frontend_plugins[name] = (name, enabled)
 
             for err_plugin_name in err.plugin_names:
                 del frontend_plugins[err_plugin_name]
 
-            self.state.plugin_liststore.clear()
+            self.state.frontend_plugin_liststore.clear()
             for valid_plugin_name, enabled in frontend_plugins.values():
-                self.state.plugin_liststore.append((valid_plugin_name, enabled))
+                self.state.frontend_plugin_liststore.append((valid_plugin_name, enabled))
 
             error_dialog = MessageDialog(self.bokeep_config_dialog, DIALOG_MODAL, 
                            MESSAGE_ERROR, BUTTONS_OK, str(err))
@@ -359,7 +359,7 @@ class BoKeepConfigDialog(object):
 
     def on_plugin_add_clicked(self, *args):
         entry = self.plugin_add_entry_combo.child
-        self.state.plugin_liststore.append((entry.get_text(), True))
+        self.state.frontend_plugin_liststore.append((entry.get_text(), True))
         entry.set_text("")
 
     def on_backend_plugin_entry_combo_changed(self, *args):

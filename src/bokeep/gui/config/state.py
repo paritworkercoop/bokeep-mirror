@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # python imports
 from os.path import \
@@ -30,9 +31,7 @@ from ZODB import DB
 from ZODB.FileStorage import FileStorage
 
 # bo-keep
-from bokeep.util import \
-    ends_with_commit, FunctionAndDataDrivenStateMachine, \
-    state_machine_do_nothing, state_machine_always_true
+from bokeep.util import FunctionAndDataDrivenStateMachine
 from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE
 from bokeep.book import BoKeepBookSet, BackendPluginImportError, FrontendPluginImportError
 
@@ -46,13 +45,13 @@ from bokeep.book import BoKeepBookSet, BackendPluginImportError, FrontendPluginI
 class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     NUM_STATES = 3
     (
-        # There is no working database selected
+        # There is no working database selected.
         NO_DATABASE,
-        # There is a working database, but no book selected
+        # There is a working database, but no book selected.
         NO_BOOK,
-        # There is a book selected on a working database
+        # There is a book selected on a working database.
         BOOK_SELECTED,
-        ) = range(NUM_STATES)
+    ) = range(NUM_STATES)
 
     def __init__(self, db_error_msg=None):
         FunctionAndDataDrivenStateMachine.__init__(
@@ -61,7 +60,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
             initial_state=BoKeepConfigGuiState.NO_DATABASE)
         self.db_error_msg = db_error_msg
         self.book_liststore = ListStore(str)
-        self.plugin_liststore = ListStore(str, bool)
+        self.frontend_plugin_liststore = ListStore(str, bool)
         self.run_until_steady_state()
         assert(self.state == BoKeepConfigGuiState.NO_DATABASE)
 
@@ -114,7 +113,6 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         
         return self._v_table_cache
 
-    
     def action_allowed(self, action):
         if not hasattr(self, '_v_action_allowed_table'):
             self._v_action_allowed_table = {
@@ -178,22 +176,22 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         return (self._v_action_arg, None, None)
 
     def __handle_book_change_load_plugin_list(self, next_state):
-        self.plugin_liststore.clear()
+        self.frontend_plugin_liststore.clear()
         new_book_name = self._v_action_arg
         if new_book_name == None:
             return (self.data[DB_PATH], self.data[BOOKSET], None)
         if not self.data[BOOKSET].has_book(new_book_name):
             self.data[BOOKSET].add_book(new_book_name)
         new_book = self.data[BOOKSET].get_book(new_book_name)
-        # construct plugin_liststore from book
+        # construct frontend_plugin_liststore from book
         for plugin_name in new_book.get_frontend_plugins().iterkeys():
-            self.plugin_liststore.append((plugin_name, True))
+            self.frontend_plugin_liststore.append((plugin_name, True))
         for plugin_name in new_book.disabled_frontend_plugins.iterkeys():
-            self.plugin_liststore.append((plugin_name, False))
+            self.frontend_plugin_liststore.append((plugin_name, False))
         return (self.data[DB_PATH], self.data[BOOKSET], new_book )
 
     def __clear_plugin_list(self, next_state = None):
-        self.plugin_liststore.clear()
+        self.frontend_plugin_liststore.clear()
         return self.data
 
     def __apply_plugin_changes_and_clear(self, next_state):
@@ -219,7 +217,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
 
     def __apply_plugin_changes(self):
         not_found_modules = []
-        for plugin_name, plugin_enabled in self.plugin_liststore:
+        for plugin_name, plugin_enabled in self.frontend_plugin_liststore:
             # fix any plugins that are marked enabled, but not
             if plugin_enabled and \
                     not self.data[BOOK].has_enabled_frontend_plugin(plugin_name):
