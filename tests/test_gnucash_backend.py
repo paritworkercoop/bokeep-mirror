@@ -200,9 +200,24 @@ class GnuCashBasicSetup(GnuCashFileSetup):
         GnuCashFileSetup.setUp(self)
         self.backend_module = GnuCash()
         self.assertFalse(self.backend_module.can_write())
+        
+        # this early flush is something that bokeep.book.Book does
+        # right after backend plugin loading
+        #
+        # the absense of this closer emulation made this entire test file
+        # pretty useless in detecting bug #33616 
+        self.backend_module.flush_backend()
+
+        # the above flush should have failed due to no gnucash file
+        # having been established yet; back when we were pursuing
+        # bug #33616 this assert would fail... the above flush
+        # would work despite no actual file name having been defined yet
+        self.assertFalse(self.backend_module.can_write())
+
+        # underneath this calls flush_backend() again
         self.backend_module.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
-        self.assert_(self.backend_module.can_write())       
+        self.assert_(self.backend_module.can_write())
 
     def tearDown(self):
         self.backend_module.close()
@@ -260,9 +275,58 @@ class GnuCashBasicTestXML(GetProtocolXML, GnuCashBasicTest): pass
 
 class GnuCashBasicTestUSD(GetCurrencyUSD, GnuCashBasicTest): pass
 
-class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
+class GnuCashAlternativeBasicSetup(GnuCashBasicSetup):
+    """See inline comment in setUp() for why this TestCase and children
+    exist
+    """
     def setUp(self):
+        from bokeep.backend_plugins.gnucash_backend import \
+            GnuCash
+
+        # we don't call GnuCashBasicSetup.setUp because this implementation
+        # of setUp is overriding its behavior
+        GnuCashFileSetup.setUp(self)
+        self.backend_module = GnuCash()
+        self.assertFalse(self.backend_module.can_write())
+        
+        # what makes these tests "alternative" is that we don't
+        # do backend.module.flush_backend() at this point like
+        # bokeep.book.Book does. No requirement at all to do things that
+        # way, and seeing how GnuCashBasicSetup had previously done
+        # things that way, this "alternative" test setup was
+        # put in place so we could keep a bunch of tests done that way
+        # even after GnuCashBasicSetup was altered to behave more like
+        # how bokeep.book.Book and users of it behave.
+
+        # back when we were pursuing bug #33616 this would only fail if
+        # self.backend_module.flush_backend was called first
+        # but with that not being the sequence above we've never seen it
+        # fail
+        self.assertFalse(self.backend_module.can_write())
+
+        # underneath this calls flush_backend() (for the first time
+        # here in the alternative test set)
+        self.backend_module.setattr(
+            'gnucash_file', self.get_gnucash_file_name_with_protocol() )
+        self.assert_(self.backend_module.can_write())
+
+class GnuCashAlternativeBasicTests(
+    GnuCashAlternativeBasicSetup, GnuCashBasicTest): pass
+
+class GnuCashAlternativeBasicTestXML(
+    GetProtocolXML, GnuCashAlternativeBasicTests): pass
+
+class GnuCashAlternativeBasicTestUSD(
+    GetCurrencyUSD, GnuCashAlternativeBasicTests): pass
+
+class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
+    def designated_superclass_setUp(self):
         GnuCashBasicSetup.setUp(self)
+        
+    def setUp(self):
+        # method resolution order kludge, overridden by subclasses
+        self.designated_superclass_setUp()
+
         self.test_trans = TestTransaction(Decimal(1), BANK_FULL_SPEC,
                                           Decimal(-1), PETTY_CASH_FULL_SPEC )
         self.test_trans.set_currency(self.get_currency())
@@ -299,6 +363,13 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
         self.gnucash_session_termination(s)
 
         return return_value
+
+class GnuCashStartsWithMarkAlternativeSetup(
+    GnuCashStartsWithMarkSetup, GnuCashAlternativeBasicSetup):
+
+    def designated_superclass_setUp(self):
+        # method resolution order kludge
+        GnuCashAlternativeBasicSetup.setUp(self)
 
 class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):   
     def test_simple_flush(self):
@@ -411,6 +482,18 @@ class GnuCashStartsWithMarkTestsXML(
 
 class GnuCashStartsWithMarkTestsUSD(
     GetCurrencyUSD, GnuCashStartsWithMarkTests):
+    pass
+
+class GnuCashStartsWithMarkAlternativeTests(
+    GnuCashStartsWithMarkAlternativeSetup, GnuCashStartsWithMarkTests):
+    pass
+
+class GnuCashStartsWithMarkTestsAlternativeXML(
+    GetProtocolXML, GnuCashStartsWithMarkAlternativeTests):
+    pass
+
+class GnuCashStartsWithMarkTestsAlternativeUSD(
+    GetCurrencyUSD, GnuCashStartsWithMarkAlternativeTests):
     pass
 
 if __name__ == "__main__":
