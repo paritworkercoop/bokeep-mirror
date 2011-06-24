@@ -93,9 +93,10 @@ class BoKeepTrustGnuCashTest(BoKeepTrustGnuCashTestSetup):
         self.trust_plugin.register_transaction(trans_id, trans)
         self.backend_module.mark_transaction_dirty(trans_id, trans)
         self.backend_module.flush_backend()
-        self.assertEquals(
-            self.backend_module.reason_transaction_is_dirty(trans_id),
-            None)
+        if not self.backend_module.transaction_is_clean(trans_id):
+            self.assertEquals(
+                self.backend_module.reason_transaction_is_dirty(trans_id),
+                None)
         self.assert_(self.backend_module.transaction_is_clean(trans_id))
 
 if __name__ == "__main__":

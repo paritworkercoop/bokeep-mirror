@@ -46,10 +46,11 @@ class MemberFeeGnucashTestCaseSetup(memberAfterSpreadSetup, GnuCashBasicSetup):
         self.backend_module.flush_backend()
 
     def test_sucess_flush(self):
-        self.assertEquals(
-            self.backend_module.reason_transaction_is_dirty(
-                self.bokeep_trans_id),
-            None)
+        if not self.backend_module.transaction_is_clean(self.bokeep_trans_id):
+            self.assertEquals(
+                self.backend_module.reason_transaction_is_dirty(
+                    self.bokeep_trans_id),
+                None)
         self.assert_(
             self.backend_module.transaction_is_clean(self.bokeep_trans_id))
 
