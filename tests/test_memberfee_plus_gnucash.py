@@ -32,22 +32,22 @@ class MemberFeeGnucashTestCaseSetup(memberAfterSpreadSetup, GnuCashBasicSetup):
     def setUp(self):
         memberAfterSpreadSetup.setUp(self)
         GnuCashBasicSetup.setUp(self)
-        self.backend_module.close()
-        self.test_book_1.set_backend_module(BACKEND_PLUGIN)
-        self.backend_module = self.test_book_1.get_backend_module()
-        self.backend_module.setattr(
+        self.backend_plugin.close()
+        self.test_book_1.set_backend_plugin(BACKEND_PLUGIN)
+        self.backend_plugin = self.test_book_1.get_backend_plugin()
+        self.backend_plugin.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
         self.memberfee_plugin.set_income_account(INCOME_FULL_SPEC)
         self.memberfee_plugin.set_unearned_account(
             UNEARNED_REVENUE_FULL_SPEC)
         self.memberfee_plugin.set_cash_account(PETTY_CASH_FULL_SPEC)
-        self.backend_module.mark_transaction_dirty(self.bokeep_trans_id,
+        self.backend_plugin.mark_transaction_dirty(self.bokeep_trans_id,
                                                    self.feetrans)
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
 
 # should really write some python binding code to check things worked
 #    def testLeaveGnucashFile(self):
-#        self.backend_module.close()
+#        self.backend_plugin.close()
 #        system('cp %s %s' %(self.gnucash_file_name,
 #                            'andrew_and_mark_are_peeking.gnucash'))
 

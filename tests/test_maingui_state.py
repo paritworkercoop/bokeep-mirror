@@ -74,13 +74,12 @@ class GuiTestWithBook(GuiTestWithBookSetup):
 
     test_transid_none = make_state_transid_tester()
 
-TEST_MODULE='tests.test_transaction_and_module'
+TEST_FRONTEND_PLUGIN='tests.test_transaction_and_module'
 class GuiTestWithBookAndAvailableTypesSetup(GuiTestWithBookSetup):
     def setUp(self):
         super(GuiTestWithBookAndAvailableTypesSetup, self).setUp()
-        self.book.add_module(TEST_MODULE)
-        self.book.enable_module(TEST_MODULE)
-                                            
+        self.book.add_frontend_plugin(TEST_FRONTEND_PLUGIN)
+        self.book.enable_frontend_plugin(TEST_FRONTEND_PLUGIN)
 
 class GuiTestWithBookAndAvailableTypes(
     GuiTestWithBookAndAvailableTypesSetup):

@@ -46,16 +46,16 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         
         # set up GnuCash backend plugin
         GnuCashBasicSetup.setUp(self)
-        self.backend_module.close()
-        self.test_book_1.set_backend_module(BACKEND_PLUGIN)
-        self.backend_module = self.test_book_1.get_backend_module()
-        self.backend_module.setattr(
+        self.backend_plugin.close()
+        self.test_book_1.set_backend_plugin(BACKEND_PLUGIN)
+        self.backend_plugin = self.test_book_1.get_backend_plugin()
+        self.backend_plugin.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
 
         # set up the trust plugin
-        self.test_book_1.add_module(TRUST_PLUGIN)
-        self.test_book_1.enable_module(TRUST_PLUGIN)
-        self.trust_plugin = self.test_book_1.get_module(TRUST_PLUGIN)
+        self.test_book_1.add_frontend_plugin(TRUST_PLUGIN)
+        self.test_book_1.enable_frontend_plugin(TRUST_PLUGIN)
+        self.trust_plugin = self.test_book_1.get_frontend_plugin(TRUST_PLUGIN)
         self.trust_plugin.add_trustor_by_name(TEST_TRUSTOR)
         self.trust_plugin.set_cash_account(PETTY_CASH_FULL_SPEC)
         self.trust_plugin.set_trust_liability_account(BANK_FULL_SPEC)
@@ -75,12 +75,12 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         trust_trans.set_trustor(TEST_TRUSTOR)
         trust_trans.transfer_amount = Decimal(ONE_INT)
         self.state.do_action(CLOSE)
-        self.backend_module.close()
-        self.assertFalse(self.backend_module.transaction_is_clean(0))
+        self.backend_plugin.close()
+        self.assertFalse(self.backend_plugin.transaction_is_clean(0))
 
-        self.backend_module.flush_backend()
-        self.assert_(self.backend_module.transaction_is_clean(0))
-        self.backend_module.close()
+        self.backend_plugin.flush_backend()
+        self.assert_(self.backend_plugin.transaction_is_clean(0))
+        self.backend_plugin.close()
 
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
@@ -102,11 +102,11 @@ class BoKeepFullStackTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         trust_trans.set_trustor(TEST_TRUSTOR)
         trust_trans.transfer_amount = Decimal(ONE_INT)
         self.state.do_action(CLOSE)
-        self.assertFalse(self.backend_module.transaction_is_clean(0))
+        self.assertFalse(self.backend_plugin.transaction_is_clean(0))
 
-        self.backend_module.flush_backend()
-        self.assert_(self.backend_module.transaction_is_clean(0))
-        self.backend_module.close()
+        self.backend_plugin.flush_backend()
+        self.assert_(self.backend_plugin.transaction_is_clean(0))
+        self.backend_plugin.close()
 
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()

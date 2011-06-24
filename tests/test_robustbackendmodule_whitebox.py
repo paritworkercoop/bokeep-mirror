@@ -72,7 +72,7 @@ def create_return_override_function(func, cmd):
             return original_return
     return return_override_function
 
-class BackendModuleUnitTest(RobustBackendPlugin):
+class BackendPluginUnitTest(RobustBackendPlugin):
     def __init__(self):
         RobustBackendPlugin.__init__(self)
         self.clear_actions_queue()
@@ -153,18 +153,18 @@ class TestTransaction(Transaction):
     def get_financial_transactions(self):
        return [self.fin_trans]
 
-class BackendModuleWhiteboxStartWithInsertSetup(TestCase):
+class BackendPluginWhiteboxStartWithInsertSetup(TestCase):
     def setUp(self):
-        self.backend_module = BackendModuleUnitTest()
+        self.backend_plugin = BackendPluginUnitTest()
         self.transaction = TestTransaction()
         self.fin_trans = self.transaction.get_financial_transactions()[0]
         self.front_end_id = 0
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id, self.transaction)    
         self.FIRST_BACKEND_ID = 1
 
     def pop_all_look_for_save(self):
-        actions = self.backend_module.pop_actions_queue()
+        actions = self.backend_plugin.pop_actions_queue()
         self.assertEquals(len(actions), 1)
         self.look_for_save(actions)
         
@@ -200,7 +200,7 @@ class BackendModuleWhiteboxStartWithInsertSetup(TestCase):
         self.assertEquals(transaction, fin_trans)
 
     def look_for_empty_actions_queue(self):
-        actions = self.backend_module.pop_actions_queue()
+        actions = self.backend_plugin.pop_actions_queue()
         self.assertEquals(len(actions), 0)        
 
     def assertBackendException(self, callable, *args, **kargs):
@@ -209,76 +209,76 @@ class BackendModuleWhiteboxStartWithInsertSetup(TestCase):
 
     def assertTransactionIsCleanFail(self, trans_id):
         self.assertBackendException(
-            self.backend_module.transaction_is_clean,
+            self.backend_plugin.transaction_is_clean,
             trans_id )
 
     def assertTransactionIsClean(self, trans_id):
         self.assert_(
-            self.backend_module.transaction_is_clean(trans_id))
+            self.backend_plugin.transaction_is_clean(trans_id))
         # this should not throw an exception, idealy we'd check that
         # it always returns None instead of a string, but we're not
         # too worried about forcing that, a backend implementation
         # doesn't need to do that...
         self.assertRaises(
             BoKeepBackendException,
-            self.backend_module.reason_transaction_is_dirty,
+            self.backend_plugin.reason_transaction_is_dirty,
             trans_id )
 
     def assertTransactionIsDirty(self, trans_id):
         self.assertFalse(
-            self.backend_module.transaction_is_clean(trans_id))
+            self.backend_plugin.transaction_is_clean(trans_id))
 
         self.assert_( isinstance(
-                self.backend_module.reason_transaction_is_dirty(trans_id),
+                self.backend_plugin.reason_transaction_is_dirty(trans_id),
                 str ) )
 
     def run_inspection_of_create_save(self, backend_id=None):
-        actions = self.backend_module.pop_actions_queue()
+        actions = self.backend_plugin.pop_actions_queue()
         self.assertEquals(len(actions), 2) # create, save
         self.look_for_create(actions, backend_id, self.fin_trans )
         self.look_for_save(actions)
 
-class BackendModuleWhiteboxInsertTests(
-    BackendModuleWhiteboxStartWithInsertSetup):
+class BackendPluginWhiteboxInsertTests(
+    BackendPluginWhiteboxStartWithInsertSetup):
 
     def test_create_lost_by_reset(self):
         def check_for_right_financial_trans(backend_mod_self, fin_trans):
             return self.fin_trans == fin_trans
         
-        self.backend_module.program_failure(
+        self.backend_plugin.program_failure(
             CREATION_RESET, BoKeepBackendResetException,
             "creation lost to reset", check_for_right_financial_trans)
-        self.backend_module.flush_backend()
-        actions = self.backend_module.pop_actions_queue()
+        self.backend_plugin.flush_backend()
+        actions = self.backend_plugin.pop_actions_queue()
         self.assertEquals(len(actions), 1) # create
-        state_machine = self.backend_module.\
+        state_machine = self.backend_plugin.\
             _RobustBackendPlugin__front_end_to_back[
             self.front_end_id]
         self.assertEquals(state_machine.state,
                           BackendDataStateMachine.BACKEND_OUT_OF_SYNC)
         
         # creation process should work now that programmed reset is gone
-        #self.backend_module.flush_backend()
-        self.backend_module.\
+        #self.backend_plugin.flush_backend()
+        self.backend_plugin.\
             _RobustBackendPlugin__advance_all_dirty_transaction_state_machine(
             True)
         self.assertEquals(state_machine.state,
                           BackendDataStateMachine.BACKEND_CREATION_TRIED)
-        dirty_set_copy = self.backend_module.dirty_transaction_set.copy()
-        self.backend_module.save()
+        dirty_set_copy = self.backend_plugin.dirty_transaction_set.copy()
+        self.backend_plugin.save()
         for dirty_trans_id in \
-                self.backend_module.dirty_transaction_set.iterkeys():
-            self.backend_module.dirty_transaction_set[dirty_trans_id] = \
+                self.backend_plugin.dirty_transaction_set.iterkeys():
+            self.backend_plugin.dirty_transaction_set[dirty_trans_id] = \
                 BackendDataStateMachine.LAST_ACT_SAVE
             self._p_changed = True
-        self.backend_module.\
+        self.backend_plugin.\
             _RobustBackendPlugin__advance_all_dirty_transaction_state_machine()
-        self.backend_module.\
+        self.backend_plugin.\
             _RobustBackendPlugin__update_dirty_and_held_transaction_sets()
         for trans_id, original_input_value in \
                 dirty_set_copy.iteritems():
-            if trans_id in self.backend_module.dirty_transaction_set:
-                self.backend_module.dirty_transaction_set[trans_id] = \
+            if trans_id in self.backend_plugin.dirty_transaction_set:
+                self.backend_plugin.dirty_transaction_set[trans_id] = \
                     original_input_value
         self.assertEquals(state_machine.state,
                           BackendDataStateMachine.BACKEND_SYNCED)
@@ -286,48 +286,48 @@ class BackendModuleWhiteboxInsertTests(
         self.assertTransactionIsClean(self.front_end_id)
         self.run_inspection_of_create_save(self.FIRST_BACKEND_ID)
 
-class StartWithTwoInsertAndSetup(BackendModuleWhiteboxStartWithInsertSetup):
+class StartWithTwoInsertAndSetup(BackendPluginWhiteboxStartWithInsertSetup):
     def setUp(self):
-        BackendModuleWhiteboxStartWithInsertSetup.setUp(self)
+        BackendPluginWhiteboxStartWithInsertSetup.setUp(self)
         self.transaction2 = TestTransaction()
         self.fin_trans2 = self.transaction2.get_financial_transactions()[0]
         assert(self.fin_trans2 != self.fin_trans)
         self.front_end_id_2 = 1
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id_2, self.transaction2)
         self.SECOND_BACKEND_ID = 2
 
     def test_double_create_where_second_one_kills_first_with_reset(self):
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
         self.assertTransactionIsClean(self.front_end_id)
         self.assertTransactionIsClean(self.front_end_id_2)
-        self.backend_module.pop_actions_queue()
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.pop_actions_queue()
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id, self.transaction)
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id_2, self.transaction2)
-        self.backend_module.flush_backend()        
+        self.backend_plugin.flush_backend()        
 
-        actions = self.backend_module.pop_actions_queue()
+        actions = self.backend_plugin.pop_actions_queue()
         self.assertEquals(len(actions), 7)
         cmd, return_val, backend_ident, fin_trans = actions.pop()
         if fin_trans == self.fin_trans:
             second_fin_trans_recreate = self.fin_trans2
             first_fin_trans_recreate = self.fin_trans
             state_machine_1 = \
-                self.backend_module._RobustBackendPlugin__front_end_to_back[
+                self.backend_plugin._RobustBackendPlugin__front_end_to_back[
                 self.front_end_id]
             state_machine_2 = \
-                self.backend_module._RobustBackendPlugin__front_end_to_back[
+                self.backend_plugin._RobustBackendPlugin__front_end_to_back[
                 self.front_end_id_2]
         else:
             second_fin_trans_recreate = self.fin_trans
             first_fin_trans_recreate = self.fin_trans2
             state_machine_1 = \
-                self.backend_module._RobustBackendPlugin__front_end_to_back[
+                self.backend_plugin._RobustBackendPlugin__front_end_to_back[
                 self.front_end_id_2]
             state_machine_2 = \
-                self.backend_module._RobustBackendPlugin__front_end_to_back[
+                self.backend_plugin._RobustBackendPlugin__front_end_to_back[
                 self.front_end_id]
         assert( (second_fin_trans_recreate == self.fin_trans2) or \
                     (second_fin_trans_recreate == self.fin_trans) )
@@ -335,16 +335,16 @@ class StartWithTwoInsertAndSetup(BackendModuleWhiteboxStartWithInsertSetup):
         def check_for_right_financial_trans(backend_mod_self, fin_trans_in):
             return second_fin_trans_recreate == fin_trans_in
         
-        self.backend_module.program_failure(
+        self.backend_plugin.program_failure(
             CREATION_RESET, BoKeepBackendResetException,
             "creation lost to reset", check_for_right_financial_trans)
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id, self.transaction)
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id_2, self.transaction2)
         self.assertTransactionIsDirty(self.front_end_id)
         self.assertTransactionIsDirty(self.front_end_id_2)
-        #self.backend_module.flush_backend()
+        #self.backend_plugin.flush_backend()
         self.assertNotEquals(state_machine_1, state_machine_2)
         self.assertEquals(
             len(state_machine_1.data.get_value(
@@ -362,7 +362,7 @@ class StartWithTwoInsertAndSetup(BackendModuleWhiteboxStartWithInsertSetup):
         
         #self.assertRaises(
         #    BoKeepBackendResetException, 
-        #    self.backend_module.\
+        #    self.backend_plugin.\
         #    _RobustBackendPlugin__advance_all_dirty_transaction_state_machine )
         
         #state_machine_1.run_until_steady_state()
@@ -420,7 +420,7 @@ class StartWithTwoInsertAndSetup(BackendModuleWhiteboxStartWithInsertSetup):
             len(state_machine_2.data.get_value(
                     'old_backend_ids_to_fin_trans')), 1)
 
-        self.backend_module.\
+        self.backend_plugin.\
             _RobustBackendPlugin__set_all_transactions_to_reset_and_advance()
         self.assertEquals(
             len(state_machine_1.data.get_value(
@@ -436,28 +436,28 @@ class StartWithTwoInsertAndSetup(BackendModuleWhiteboxStartWithInsertSetup):
                     'old_backend_ids_to_fin_trans')), 1)
 
 
-        actions = self.backend_module.pop_actions_queue()
+        actions = self.backend_plugin.pop_actions_queue()
         self.assertEquals(len(actions), 6)
         # check for which backend ids survive
         self.assertTransactionIsDirty(self.front_end_id)
         self.assertTransactionIsDirty(self.front_end_id_2)
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
         self.assertTransactionIsClean(self.front_end_id)
         self.assertTransactionIsClean(self.front_end_id_2)
-        actions = self.backend_module.pop_actions_queue()
+        actions = self.backend_plugin.pop_actions_queue()
         self.assertEquals(len(actions), 7)        
 
-class BackendModuleWhiteboxStartWithInsertAndFlushSetup(
-    BackendModuleWhiteboxStartWithInsertSetup):
+class BackendPluginWhiteboxStartWithInsertAndFlushSetup(
+    BackendPluginWhiteboxStartWithInsertSetup):
 
     def setUp(self):
-        BackendModuleWhiteboxStartWithInsertSetup.setUp(self)
-        self.backend_module.flush_backend()
-        self.backend_module.pop_actions_queue()
+        BackendPluginWhiteboxStartWithInsertSetup.setUp(self)
+        self.backend_plugin.flush_backend()
+        self.backend_plugin.pop_actions_queue()
         self.SECOND_BACKEND_ID = self.FIRST_BACKEND_ID+1    
     
-class BackendModuleWhiteboxInsertAndFlushTests(
-    BackendModuleWhiteboxStartWithInsertAndFlushSetup):
+class BackendPluginWhiteboxInsertAndFlushTests(
+    BackendPluginWhiteboxStartWithInsertAndFlushSetup):
     def test_after_verify_triggered_reset_prior_to_removal(self):
         reason_for_backend_fail = "this is just a test, not a real failure " \
             "on verify, testing reset"
@@ -465,24 +465,24 @@ class BackendModuleWhiteboxInsertAndFlushTests(
             backend_mod_self, backend_id, fin_trans):
             return backend_id == self.FIRST_BACKEND_ID and \
                 fin_trans == self.fin_trans
-        self.backend_module.program_failure(
+        self.backend_plugin.program_failure(
             VERIFY_RESET, BoKeepBackendResetException,
             reason_for_backend_fail, test_for_correct_backend_id)
-        self.backend_module.mark_transaction_for_removal(self.front_end_id)
+        self.backend_plugin.mark_transaction_for_removal(self.front_end_id)
         try:
-            self.backend_module.\
+            self.backend_plugin.\
             _RobustBackendPlugin__advance_all_dirty_transaction_state_machine()
         except BoKeepBackendResetException, reset_except:
-            actions = self.backend_module.pop_actions_queue()
+            actions = self.backend_plugin.pop_actions_queue()
             self.assertEquals(len(actions), 1)
-            blah = self.backend_module._RobustBackendPlugin__front_end_to_back[
+            blah = self.backend_plugin._RobustBackendPlugin__front_end_to_back[
             self.front_end_id]
             self.assertEquals(
                 blah.get_state(),
                 BackendDataStateMachine.BACKEND_OUT_OF_SYNC)
-            self.backend_module.\
+            self.backend_plugin.\
               _RobustBackendPlugin__set_all_transactions_to_reset_and_advance()
-            actions = self.backend_module.pop_actions_queue()
+            actions = self.backend_plugin.pop_actions_queue()
             self.assertEquals(len(actions), 0)
         else:
             self.assert_(False)

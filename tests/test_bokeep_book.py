@@ -90,7 +90,7 @@ class BoKeepWithBookSetup(BoKeepBasicTestSetup):
 
 class TestBoKeepBookWithAdd(BoKeepWithBookSetup):
     def test_book_enabled_attr(self):
-        self.assert_(hasattr(self.books.get_book(TESTBOOK), 'enabled_modules'))
+        self.assert_(hasattr(self.books.get_book(TESTBOOK), 'enabled_frontend_plugins'))
 
     def test_book_enabled_attr_after_close(self):
         transaction.get().commit()
