@@ -17,8 +17,17 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+# This test can only be run directly
+# $ python tests/tests/test_gnucash_backend_via_book.py and not via the
+# $ ./setup.py test because it actually tries to persist in
+# bokeep.book.BoKeepBook a transaction type created here and not one from
+# a normally found path
+
 from unittest import main
 from decimal import Decimal
+
+from bokeep.book_transaction import \
+    Transaction, FinancialTransaction, FinancialTransactionLine
 
 from test_gnucash_backend import \
     GnuCashFileSetup, TestTransaction, BANK_FULL_SPEC, PETTY_CASH_FULL_SPEC

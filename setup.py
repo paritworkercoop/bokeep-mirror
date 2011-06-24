@@ -50,9 +50,11 @@ class TestCommand(Command):
         return ( 
             "%s.%s" % ( TESTS_DIR, splitext(basename(t))[0])
             for t in glob(os.path.join(self._dir, TESTS_DIR, '*.py'))
-            # don't run tests for the gnucash2.2 backend
-            if not t.endswith('__init__.py') and \
-                not t.endswith('test_transaction.py')
+            # don't run tests files that cause trouble
+            if all( not t.endswith(bad_file)
+                    for bad_file in (
+                    '__init__.py', 'test_transaction.py',
+                    'test_gnucash_backend_via_book.py') )
             )
     
     def run(self):
