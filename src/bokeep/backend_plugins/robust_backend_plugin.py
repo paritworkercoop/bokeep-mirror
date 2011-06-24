@@ -876,15 +876,6 @@ class RobustBackendPlugin(BackendPlugin):
 
     # TODO convience functions for hold and forced remove
 
-    @ends_with_commit
-    def setattr(self, attr, value):
-        """When this is done, it does a zopedb transaction commit, if you're
-        sharing a zopedb thread with this you'll want to be sure your data
-        is in a state you're comfortable having commited
-        """
-        setattr(self, attr, value)
-        self.flush_backend()
-
     # END MANDATORY BO-KEEP BACKEND PLUGIN API
 
     def front_end_to_back_del(self, key):
