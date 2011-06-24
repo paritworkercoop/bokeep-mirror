@@ -19,7 +19,7 @@
 #          Samuel Pauls <samuel@parit.ca>
 
 # Python library
-from os.path import exists, abspath, dirname, join
+from os.path import abspath, dirname, join
 import sys
 
 # ZOPE
@@ -27,8 +27,6 @@ import transaction
 
 # Gtk
 from gtk import main_quit, ListStore, CellRendererText, AboutDialog
-from gtk.glade import XML
-import gobject
 from gtk.gdk import pixbuf_new_from_file_at_size
 import gtk
 
@@ -36,17 +34,10 @@ import gtk
 from state import \
     BoKeepGuiState, \
     NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE, RESET
-from bokeep.book_transaction import \
-     Transaction
 from bokeep.gui.gladesupport.glade_util import \
-     load_glade_file_get_widgets_and_connect_signals
-from bokeep.config import \
-    get_bokeep_configuration, \
-    get_bokeep_bookset, get_bokeep_config_paths, \
-    first_config_file_in_list_to_exist_and_parse, \
-    BoKeepConfigurationException, \
-    BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException
-from bokeep.book import BoKeepBookSet
+    load_glade_file_get_widgets_and_connect_signals
+from bokeep.config import get_bokeep_configuration, \
+    BoKeepConfigurationFileException
 from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
     establish_bokeep_db
@@ -57,6 +48,8 @@ GUI_STATE_SUB_DB = 'gui_state'
 COMBO_SELECTION_NONE = -1
 
 def shell_startup(config_path, config, bookset, startup_callback):
+    """Start the BoKeep GUI that manages BoKeep transactions."""
+    
     shell_window = MainWindow(config_path, config, bookset, startup_callback)
     gtk.main()
 
@@ -75,12 +68,17 @@ def shell_startup_bookset_fetch(config_path, config, e, *cbargs):
     return establish_bokeep_db(mainwindow, config_path, config, e)
 
 def get_bo_keep_logo():
+    """Returns the filename of the BoKeep logo."""
+    
     import mainwindow as main_window_module
     return join( dirname( abspath(main_window_module.__file__)),
                  'bo-keep.svg')
 
 
 class MainWindow(object):
+    """The main BoKeep window.  It contains the BoKeep shell, which in turn
+    contains the BoKeep books and their transactions."""
+    
     # Functions for window initialization 
 
     def on_quit_activate(self, args):
@@ -89,8 +87,8 @@ class MainWindow(object):
     def __init__(self, config_path, config, bookset, startup_callback):
         self.gui_built = False
         self.current_editor = None
-        self.config_path_and_config_set(config_path, config)
-        self.bookset_set(bookset)
+        self.set_config_path_and_config(config_path, config)
+        self.set_bookset(bookset)
         
         self.build_gui()
         self.programmatic_transcombo_index = False
@@ -104,18 +102,24 @@ class MainWindow(object):
         # should we do an emit to ensure it happens, or be satisfyed
         # that it always happens in tests?
 
-    def config_path_and_config_set(self, config_path, config):
+    def set_config_path_and_config(self, config_path, config):
         self.__config_path = config_path
-        self.__config = config        
+        self.__config = config
 
-    def bookset_set(self, bookset):
+    def set_bookset(self, bookset):
+        """Sets the set of BoKeep books."""
+        
         self.bookset = bookset
 
-    def flush_backend_of_book(self, book):
+    def flush_book_backend(self, book):
+        """Save the BoKeep book."""
+        
         book.get_backend_plugin().flush_backend()
         transaction.get().commit()
 
-    def close_backend_of_book(self, book):
+    def close_book_backend(self, book):
+        """Close the backend used for saving the BoKeep book."""
+        
         book.get_backend_plugin().close()
         transaction.get().commit()
 
@@ -141,14 +145,16 @@ class MainWindow(object):
         assert(not self.gui_built)
 
         if self.__startup_callback(self.__config_path, self.__config,
-                                   self.config_path_and_config_set,
-                                   self.bookset_set, self.mainwindow ):
+                                   self.set_config_path_and_config,
+                                   self.set_bookset, self.mainwindow ):
             self.after_background_load()
             assert(self.gui_built)
         else:
             self.application_shutdown()
 
     def build_gui(self):
+        """Setup the BoKeep shell that stores BoKeep transaction GUIs."""
+        
         glade_file = get_main_window_glade_file()
         load_glade_file_get_widgets_and_connect_signals(
             glade_file, "mainwindow", self, self )
@@ -228,9 +234,12 @@ class MainWindow(object):
         self.trans_type_model.clear()
         self.programmatic_transcombo_index = False      
         
-    # Functions for window initialization and use thereafter
+    # Functions for window initialisation and use thereafter
 
     def set_book_from_combo(self):
+        """Callback of the book combo box that is used to set the current BoKeep
+        book."""
+        
         self.guistate.do_action(
             BOOK_CHANGE, 
             self.books_combobox_model[
@@ -238,10 +247,16 @@ class MainWindow(object):
             )
 
     def refresh_trans_types_and_set_sensitivities_and_status(self):
+        """Update the shell's GUI in regard to the types of transactions
+        available and also update the sensitivities and status."""
+        
         self.refresh_trans_types()
         self.set_sensitivities_and_status()
 
     def refresh_trans_types(self):
+        """Update the shell's GUI in regard to the types of transactions
+        available in the current BoKeep book."""
+        
         book = self.guistate.get_book()
         if book == None:
             return
@@ -254,7 +269,7 @@ class MainWindow(object):
         if self.guistate.get_transaction_id() != None:
             cur_trans = book.get_transaction(self.guistate.get_transaction_id())
 
-        modules = book.get_frontend_plugins()
+        frontend_plugins = book.get_frontend_plugins()
         current_trans_type_index = COMBO_SELECTION_NONE
         for i, (code, trans_cls, module) in \
                 enumerate(book.get_iter_of_code_class_module_tripplets()):
@@ -271,7 +286,7 @@ class MainWindow(object):
             self.set_transcombo_index(current_trans_type_index)
             self.reset_trans_view()
 
-    def set_transcombo_index(self, indx):        
+    def set_transcombo_index(self, indx):
         self.programmatic_transcombo_index = True
         self.trans_type_combo.set_active(indx)
         self.programmatic_transcombo_index = False      
@@ -283,7 +298,7 @@ class MainWindow(object):
         currmodule = self.trans_type_combo.get_model().get_value(currindex,2)
         editor_generator = currmodule.\
             get_transaction_edit_interface_hook_from_code(currcode)
-        self.clear_trans_view()
+        self.hide_transaction()
         trans_id = self.guistate.get_transaction_id()
 
         # when we call the function/class provided by
@@ -304,11 +319,17 @@ class MainWindow(object):
                 self.main_vbox, self.guistate.record_trans_dirty_in_backend,
                 **editor_generator_extra_keywordargs)
 
-    def clear_trans_view(self):
+    def hide_transaction(self):
+        """Hide the current transaction so that no transaction is visible in the
+        shell."""
+        
         if self.current_editor != None: 
             self.current_editor.detach()
 
     def set_sensitivities_and_status(self):
+        """Update the enabled/disabled attributes of the GUI and update the
+        status."""
+        
         for (sensitive_widget, action_code) in \
                 ( (self.back_button, BACKWARD),
                   (self.forward_button, FORWARD),
@@ -328,6 +349,9 @@ class MainWindow(object):
         self.set_transid_label()
 
     def set_transid_label(self):
+        """Update the field indicating the current transaction index out of the
+        total number of transactions."""
+        
         if self.gui_built and not(self.guistate.get_book() == None):
             last_trans_id = self.guistate.get_book().get_latest_transaction_id()
             if last_trans_id != None:
@@ -338,6 +362,8 @@ class MainWindow(object):
         self.transid_label.set_text("")
 
     def set_backend_error_indicator(self):
+        """Update the shell's error field."""
+        
         # don't bother if the gui isn't built yet
         if not self.gui_built: return
 
@@ -378,6 +404,8 @@ class MainWindow(object):
     # Event handlers
 
     def on_books_combobox_changed(self, combobox):
+        """Change the current BoKeep book."""
+        
         #don't mess with stuff until we've finished constructing the gui
         if not self.gui_built:
             return
@@ -386,16 +414,20 @@ class MainWindow(object):
         self.refresh_trans_types_and_set_sensitivities_and_status()
         
     def new_button_clicked(self, *args):
+        """Create a new BoKeep transaction."""
+        
         self.guistate.do_action(NEW)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
 
     def delete_button_clicked(self, *args):
+        """Delete a BoKeep transaction."""
+        
         self.guistate.do_action(DELETE)
         book = self.guistate.get_book()
         if self.guistate.get_transaction_id() == None:
             self.set_transcombo_index(COMBO_SELECTION_NONE)
-            self.clear_trans_view()
+            self.hide_transaction()
         else:
             self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
@@ -421,11 +453,15 @@ class MainWindow(object):
             self.set_sensitivities_and_status()
 
     def forward_button_clicked(self, *args):
+        """Go forward to next transaction."""
+        
         self.guistate.do_action(FORWARD)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
     
     def back_button_clicked(self, *args):
+        """Go back to previous transaction."""
+        
         self.guistate.do_action(BACKWARD)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
@@ -434,6 +470,8 @@ class MainWindow(object):
         self.application_shutdown()
     
     def on_configuration1_activate(self, *args):
+        """Configure BoKeep."""
+        
         assert( self.gui_built )
         self.closedown_for_config()
         self.bookset.close()
@@ -460,6 +498,8 @@ class MainWindow(object):
         
 
     def on_configure_backend1_activate(self, *args):
+        """Configure the backend plugin."""
+        
         book = self.guistate.get_book()
         if book != None:
             backend = book.get_backend_plugin()
@@ -468,6 +508,8 @@ class MainWindow(object):
             transaction.get().commit()
 
     def on_configure_plugin1_activate(self, *args):
+        """Configure the current front end plugin."""
+        
         # the gui should never allow this event handler to be triggered
         # if there is no transaction and thus no associated plugin
         # to configure
@@ -494,11 +536,13 @@ class MainWindow(object):
                 ).backend_account_dialog,
             **extra_keywordargs)
         # hmm, this doesn't seem to be getting it done
-        self.clear_trans_view()
+        self.hide_transaction()
         self.reset_trans_view()
         transaction.get().commit()
 
     def on_about_activate(self, *args):
+        """Displays the Help > About dialog."""
+        
         bo_keep_logo_path = get_bo_keep_logo()
         ab = AboutDialog()
         ab.set_transient_for(self.mainwindow)
@@ -540,15 +584,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         ab.destroy()
 
     def on_backend_flush_request(self, *args):
+        """Saves the BoKeep transactions."""
+        
         if self.guistate.get_book() == None:
             return
-        self.flush_backend_of_book(self.guistate.get_book())
+        self.flush_book_backend(self.guistate.get_book())
         self.set_backend_error_indicator()
 
     def on_backend_close_request(self, *args):
+        """Releases the backend that's used to save BoKeep transactions."""
+        
         book = self.guistate.get_book()
         if book == None:
             return
-        self.flush_backend_of_book(book)
-        self.close_backend_of_book(book)
+        self.flush_book_backend(book)
+        self.close_book_backend(book)
         self.set_backend_error_indicator()
