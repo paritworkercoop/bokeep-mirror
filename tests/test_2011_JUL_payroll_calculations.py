@@ -86,3 +86,5 @@ TestTinyIncome = create_basic_test_class('TestTinyIncome', 100, 1, 1,
                                          0, 0, '1.78')
 TestSmallIncome = create_basic_test_class('TestSmallIncome', 480, 1, 1,
                                           '16.56', '17.10', '8.54')
+if __name__ == "__main__":
+    main()
