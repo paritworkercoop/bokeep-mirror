@@ -77,14 +77,13 @@ def create_basic_test_class(name, income, fed_tax_credits, prov_tax_credits,
     new_test_class.__name__ = name
     return new_test_class
 
-# The following numbers are the same as they would be for January 1st, 2011.
-# However, we still test them as our updates for July 1st, 2011, could have
-# caused a regression.
-# At the time of writing this source code, the CRA's Payroll Deductions Online
-# Calculator hadn't yet been updated to include the July 2011 changes.
+# now based on actual values from CRA calculator for July 1st
 TestTinyIncome = create_basic_test_class('TestTinyIncome', 100, 1, 1,
                                          0, 0, '1.78')
+# CRA calculate says income tax deductions of 14.49, but we'll say close enough
+# for now
 TestSmallIncome = create_basic_test_class('TestSmallIncome', 480, 1, 1,
-                                          '16.56', '17.10', '8.54')
+                                          '14.48', '17.10', '8.54')
+                                                
 if __name__ == "__main__":
     main()
