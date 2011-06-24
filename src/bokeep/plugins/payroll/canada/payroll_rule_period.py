@@ -21,6 +21,15 @@ JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
 JUL_2011 = range(8)
 LAST_RULE_PERIOD = JUL_2011
 
+# dictionary where each period is a key and the vaule is a two element tuple 
+# consisting of the year part and the month part
+# the month part itself is tuple containing all the months (january =1,
+# december  = 12) that the period includes
+#
+# we use the builtin function range for second tuple and always just
+# specify the first month as the first argument and the last month
+# with a +1 in front of it because range will count up to the last one
+# exclusive
 CODE_TO_YEAR_AND_MONTHS = { JUL_2006: (2006, range(7, 12+1) ),
                             JAN_2007: (2007, range(1, 12+1) ),
                             JAN_2008: (2008, range(1, 12+1) ),
@@ -28,7 +37,7 @@ CODE_TO_YEAR_AND_MONTHS = { JUL_2006: (2006, range(7, 12+1) ),
                             APR_2009: (2009, range(4, 12+1) ),
                             JAN_2010: (2010, range(1, 12+1) ),
                             JAN_2011: (2011, range(1, 12+1) ),
-                            JUL_2011: (2011, range(1, 6+1) ),
+                            JUL_2011: (2011, range(7, 12+1) ),
                             }
 
 YEAR_AND_MONTH_TO_CODE = {}
