@@ -17,10 +17,6 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
-# ZODB
-from persistent import Persistent
-import transaction
-
 from bokeep.util import \
     ends_with_commit, FunctionAndDataDrivenStateMachine, \
     state_machine_do_nothing, state_machine_always_true
@@ -42,7 +38,7 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
         TMP_GOTO_NO_TRANS_OR_BROWSE,
         # A book is selected, but there are no transactions
         NO_TRANSACTIONS,
-        # A new transaction is being editted
+        # A new transaction is being edited
         NEW_TRANSACTION,
         # we're looking at an existing transaction
         BROWSING,
