@@ -28,6 +28,8 @@ from gtk import MessageDialog, MESSAGE_QUESTION, BUTTONS_YES_NO, DIALOG_MODAL, \
     RESPONSE_YES
 
 def establish_bokeep_config(mainwindow, paths, config_exception):
+    """Create a new BoKeep configuration file."""
+    
     assert(isinstance(config_exception, BoKeepConfigurationFileException))
 
     # This is here to support the old default

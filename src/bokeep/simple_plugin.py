@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # zodb imports
 from persistent.mapping import PersistentMapping
@@ -24,6 +25,12 @@ from persistent.mapping import PersistentMapping
 from bokeep.prototype_plugin import PrototypePlugin
 
 class SimplePlugin(PrototypePlugin):
+    """A simplified front end plugin.  A single instance is created upon first
+    use of this plugin.  After that this class is reloaded.
+    
+    Store the configuration of the associated front end plugin in class
+    variables in the class that extends this class."""
+    
     # signals to mainwindow.py that this plugin supports the
     # extra keyword argument book when the function
     # returned by get_transaction_edit_interface_hook_from_code is called.
@@ -35,13 +42,22 @@ class SimplePlugin(PrototypePlugin):
         self.type_strings = self.__class__.DEFAULT_TYPE_STRS
 
     def register_transaction(self, front_end_id, trust_trans):
+        """Registers a transaction with this front end plugin, using a unique
+        id."""
+        
         assert( not self.has_transaction(front_end_id) )
         self.trans_registry[front_end_id] = trust_trans
 
     def remove_transaction(self, front_end_id):
+        """Removes the transaction with the given id from this front end
+        plugin."""
+        
         del self.trans_registry[front_end_id]
 
     def has_transaction(self, trans_id):
+        """Checks if this front end plugin has a transaction with the given
+        id."""
+        
         return trans_id in self.trans_registry
 
     @classmethod

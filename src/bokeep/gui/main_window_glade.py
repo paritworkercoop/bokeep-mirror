@@ -21,9 +21,13 @@
 from os.path import abspath, dirname, join
 
 def get_this_module_file_path():
+    """Returns the filename of this code file."""
+    
     import main_window_glade as main_window_glade_module
     return main_window_glade_module.__file__
 
 def get_main_window_glade_file():
+    """Returns the filename of the main window."""
+    
     return join( dirname( abspath(get_this_module_file_path() ) ),
                  'bokeep_main_window.glade' )
