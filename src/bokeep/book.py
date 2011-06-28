@@ -15,12 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
-# python imports
-from itertools import chain
-
-import ZODB.config
 from persistent import Persistent
 import transaction
 from BTrees.IOBTree import IOBTree
@@ -32,6 +29,8 @@ DEFAULT_BACKEND_MODULE = "bokeep.backend_plugins.null"
 BOOKS_SUB_DB_KEY = 'books'
 
 class BoKeepDBHandle(object):
+    """Generic database management."""
+    
     def __init__(self, dbcon):
         self.dbcon = dbcon
         self.dbroot = self.dbcon.root()
@@ -62,6 +61,8 @@ class BoKeepDBHandle(object):
         
 
 class BoKeepBookSet(object):
+    """High level management of the BoKeep books stored within a database."""
+    
     def __init__(self, zodb):
         self.zodb = zodb
         self.dbhandle = self.get_new_dbhandle()
@@ -114,6 +115,11 @@ class BoKeepBookSet(object):
         self.dbhandle.get_sub_database_do_cls_init(BOOKS_SUB_DB_KEY, dict)
 
 class BoKeepBook(Persistent):
+    """A BoKeep book stores the details that are used to create simplified
+    balanced accounting transactions.  For example, a BoKeep book may contain
+    the hours an employee worked so that it can create an accounting transaction
+    on the employee's payday."""
+    
     def __init__(self, new_book_name):
         self.book_name = new_book_name
         self.trans_tree = IOBTree()
@@ -122,6 +128,9 @@ class BoKeepBook(Persistent):
         self.disabled_modules = {}
 
     def add_module(self, module_name):
+        """Add a frontend plugin to this BoKeep book, starting in a disabled
+        state.  FrontendPluginImportError is thrown if there's a problem."""
+        
         assert( module_name not in self.enabled_modules and 
                 module_name not in self.disabled_modules )
         # get the module class and instantiate as a new disabled module
@@ -162,7 +171,7 @@ class BoKeepBook(Persistent):
             self.has_module_disabled(module_name)
 
     def get_iter_of_code_class_module_tripplets(self):
-        # there has good to be a more functional way to write this..
+        # there has got to be a more functional way to write this..
         # while also maintaining that good ol iterator don't waste memory
         # property... some kind of nice nested generator expressions
         # with some kind of functional/itertool y thing
@@ -218,6 +227,8 @@ class BoKeepBook(Persistent):
     backend_module = property(get_backend_module, set_backend_module)
 
     def insert_transaction(self, trans):
+        """Adds a transaction to this BoKeep book."""
+        
         if len(self.trans_tree) == 0:
             largest_in_current = -1
         else:
@@ -255,6 +266,8 @@ class BoKeepBook(Persistent):
         return trans_id > self.trans_tree.minKey()
 
     def get_next_trans(self, trans_id):
+        """Returns the key of the next transaction or None."""
+        
         if not self.has_transaction(trans_id):
             return None
         try:

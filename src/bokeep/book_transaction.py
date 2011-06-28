@@ -15,13 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 from persistent import Persistent
-import transaction
-from threading import Thread, Condition
-from util import \
-    ChangeMessageRecievingThread, EntityChangeManager, entitymod
 
 class FinancialTransactionLine(object):
     """Represents a line in a balanced financial transaction.
@@ -29,21 +26,21 @@ class FinancialTransactionLine(object):
     are credits. The amount must be of the builtin type decimal.Decimal
     
     In addition to amount, some accounting backends allow for other
-    attributes to be associated with a financial tranaction line. If you set
+    attributes to be associated with a financial transaction line. If you set
     them on instances of this class, they will be picked up and used by
-    backend modules that support them.
-    Backends that don't support particular attributes will ignore them
+    backend plugins that support them.
+    Backends that don't support particular attributes will ignore them.
     
     account_spec -- specifies an account to associate with the line;
-                    will be supported by GnuCash and SerialFile backend modules
-                    The format/type of this attribute is backend module
+                    will be supported by GnuCash and SerialFile backend plugins
+                    The format/type of this attribute is backend plugin
                     specific, eventually, anything using this attribute should
                     be able to get an object of right tu[e simply by
                     communicating with the backend
-                    module. (the backend module should also facilitate the
+                    plugin. (the backend plugin should also facilitate the
                     selection)
     line_memo -- specifies a string to associate with the line,
-                 will be supported by GnuCash and SerialFile backend modules
+                 will be supported by GnuCash and SerialFile backend plugins
     """
     def __init__(self, amount):
         self.amount = amount
@@ -51,7 +48,7 @@ class FinancialTransactionLine(object):
 class FinancialTransaction(object):
     """Represents a balanced financial transaction, which consists of
     FinancialTransactionLine s. The amount of all the FinancialTransactionLine
-    s must add up to zero (this is what makes them balanced)
+    s must add up to zero. (This is what makes them balanced.)
 
     Extended attributes: (not required, but may be optionally specified,
     will be supported by some backends)
@@ -60,12 +57,12 @@ class FinancialTransaction(object):
     date should be the one used to include or exclude the transaction from
     income statements and balance sheets. Must be a datetime.date or
     datetime.datetime object. Will be GnuCash and SerialFile backend
-    modules
+    plugins
 
     description -- a description (string) for the entire transaction.
     If the accounting backend supports it, this should be the text used for
     the name on a cheque. Will be supported by GnuCash and SerialFile backend
-    modules
+    plugins
 
     chequenum -- a number (integer) to assign if the transaction is a cheque,
     or other numberic transaction identifier. Will be supported by GnuCash
@@ -79,13 +76,18 @@ class FinancialTransaction(object):
 
 def make_trans_line_pair(amount, debit_account, credit_account,
                          debit_memo='', credit_memo=''):
-        return [ make_fin_line(amount,
-                               debit_account, debit_memo),
-                 make_fin_line(-amount,
-                                credit_account, credit_memo) ]
+    """Creates the lines of a financial transaction, but not the transaction
+    itself."""
+    
+    return [ make_fin_line(amount,
+                           debit_account, debit_memo),
+             make_fin_line(-amount,
+                           credit_account, credit_memo) ]
 
 def make_common_fin_trans(lines, trans_date, description,
                           currency, chequenum=None):
+    """Creates a typical financial transaction."""
+    
     trans = FinancialTransaction(lines)
     trans.trans_date = trans_date
     trans.description = description
@@ -95,6 +97,8 @@ def make_common_fin_trans(lines, trans_date, description,
     return trans
 
 def make_fin_line(amount, accounts, comment):
+    """Creates a transaction line."""
+    
     line = FinancialTransactionLine(amount)
     line.account_spec = accounts
     line.line_memo = comment
@@ -104,6 +108,8 @@ class BoKeepTransactionNotMappableToFinancialTransaction(Exception):
     pass
 
 class Transaction(Persistent):
+    """A BoKeep transaction."""
+    
     def __init__(self, associated_plugin):
         self.associated_plugin = associated_plugin
 
