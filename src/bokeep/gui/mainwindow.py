@@ -480,7 +480,7 @@ class MainWindow(object):
         currmodule = self.trans_type_combo.get_model().get_value(
             currindex,2)
 
-        # added in bokeep version 1.0.3 to provide additional keyword
+        # added in bokeep version 1.1.0 to provide additional keyword
         # arguments not provided in previous versions, but in a 
         # backwards compatible way
         #
@@ -504,7 +504,7 @@ class MainWindow(object):
         ab.set_transient_for(self.mainwindow)
         ab.set_modal(True)
         ab.set_name("Bo-Keep")
-        ab.set_version("1.0.3")
+        ab.set_version("1.1.0")
         ab.set_copyright("ParIT Worker Co-operative, Ltd. 2006-2011")
         ab.set_comments(
             """Bo-Keep helps you keep your books so you don't get lost.
