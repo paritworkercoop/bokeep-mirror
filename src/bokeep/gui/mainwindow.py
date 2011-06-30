@@ -286,23 +286,10 @@ class MainWindow(object):
         self.clear_trans_view()
         trans_id = self.guistate.get_transaction_id()
 
-        # when we call the function/class provided by
-        # get_transaction_edit_interface_hook_from_code() we would like to provide
-        # the argument book. But, this wasn't part of the original bokeep api
-        # so we don't want to break old plugins during a 0.0.x release.
-        #
-        # So we just add it as an optional keyword argument if the plugin
-        # explicitly declares that it supports them.
-        #
-        # This should be taken out for bo-keep 1.1 and just done as an extra
-        # regular argument like its comrads where an such a breaking api change is okay
-        editor_generator_extra_keywordargs = {}
-        if hasattr(currmodule, 'SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW'):
-            editor_generator_extra_keywordargs['book'] = book
         self.current_editor = editor_generator(
                 book.get_transaction(trans_id), trans_id, currmodule,
                 self.main_vbox, self.guistate.record_trans_dirty_in_backend,
-                **editor_generator_extra_keywordargs)
+                book)
 
     def clear_trans_view(self):
         if self.current_editor != None: 
@@ -480,19 +467,10 @@ class MainWindow(object):
         currmodule = self.trans_type_combo.get_model().get_value(
             currindex,2)
 
-        # added in bokeep version 1.1.0 to provide additional keyword
-        # arguments not provided in previous versions, but in a 
-        # backwards compatible way
-        #
-        # Will be replaced with normal arguments in bokeep 1.1
-        # when backwards compatibility can be broken
-        extra_keywordargs = {}
-        if hasattr(currmodule, 'SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW'):
-            extra_keywordargs['book'] = self.guistate.get_book()
         currmodule.run_configuration_interface(
             self.mainwindow, self.guistate.get_book().get_backend_module(
                 ).backend_account_dialog,
-            **extra_keywordargs)
+            self.guistate.get_book())
         # hmm, this doesn't seem to be getting it done
         self.clear_trans_view()
         self.reset_trans_view()

@@ -201,7 +201,7 @@ class PayrollPlugin(PrototypePlugin):
         self.configuration_file = config_file
 
     def run_configuration_interface(
-        self, parent_window, backend_account_fetch):
+        self, parent_window, backend_account_fetch, book):
         # imported here to avoid importing graphics code at top
         # makes tests without a display avoid calling gtk and
         # no graphics error

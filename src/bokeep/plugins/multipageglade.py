@@ -49,19 +49,13 @@ def get_plugin_class():
 MULTIPAGEGLADE_CODE = 0
 
 class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
-    # signals to mainwindow.py that this plugin supports the
-    # extra keyword argument book when the function
-    # returned by get_transaction_edit_interface_hook_from_code is called.
-    # To be removed in bokeep 1.1 See mainwindow.py
-    SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW = True
-
     def __init__(self):
         SafeConfigBasedPlugin.__init__(self) #  self.config_file = None
         self.trans_registry = PersistentMapping()
         self.type_string = "Multi page glade"
 
     def run_configuration_interface(
-        self, parent_window, backend_account_fetch, **kargs):
+        self, parent_window, backend_account_fetch, book):
         self.set_config_file( file_selection_path("select config file") )
 
     def register_transaction(self, front_end_id, trust_trans):

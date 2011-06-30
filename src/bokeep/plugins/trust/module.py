@@ -99,7 +99,7 @@ class TrustModule(Persistent):
         self.init_trust_database()
 
     def run_configuration_interface(self, parent_window,
-                                    backend_account_fetch=None):
+                                    backend_account_fetch, book):
         trustor_management(self, parent_window, backend_account_fetch)
 
     def init_trustors_database(self):

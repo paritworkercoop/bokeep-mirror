@@ -177,7 +177,7 @@ class TimelogPlugin(SimplePlugin):
                 model[combobox.get_active()][PAYROLL_PLUGIN_STORE_POSITION]
 
     def run_configuration_interface(
-        self, parent_window, backend_account_fetch, book=None):
+        self, parent_window, backend_account_fetch, book):
         # shell will set this keyword argument, to be replaced with
         # a normal argument
         assert( book != None )
