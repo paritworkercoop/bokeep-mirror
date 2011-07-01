@@ -110,10 +110,8 @@ class trustor_entry(object):
         entered_amount = self.widgets['amount_entry'].get_text()
 
         if entered_amount == '':
-            print 'setting amount to zero'
             self.trust_trans.transfer_amount = Decimal('0')          
         else:
-            print 'using ' + entered_amount + ' for amount'
             self.trust_trans.transfer_amount = Decimal(entered_amount)
 
         textbuff = self.widgets['description_textview'].get_buffer()
