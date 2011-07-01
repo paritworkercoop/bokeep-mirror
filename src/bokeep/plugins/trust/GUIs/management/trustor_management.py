@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authors: Jamie Campbell <jamie@parit.ca>, Mark Jenkins <mark@parit.ca>
-    
+# Authors: Jamie Campbell <jamie@parit.ca>
+#          Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
+
 # python imports
 from decimal import Decimal
 
@@ -30,8 +32,10 @@ from bokeep.plugins.trust import \
 from bokeep.gui.gladesupport.glade_util import \
     do_OldGladeWindowStyleConnect
 
-from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog
-import gtk
+from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog, \
+    MESSAGE_QUESTION, BUTTONS_OK_CANCEL, Entry, \
+    FileChooserDialog, FILE_CHOOSER_ACTION_SAVE, STOCK_CANCEL, \
+    RESPONSE_CANCEL, STOCK_SAVE, RESPONSE_OK
 
 from datetime import datetime
 
@@ -100,8 +104,25 @@ class trustor_management(object):
             self, self.construct_filename(filename), top_window)
 
     def on_add_button_clicked(self, *args):
-        self.current_name = None
-        self.widgets['name_entry'].set_text('')
+        # Ask the user for a new trustor's name.
+        md = MessageDialog(parent = self.top_window,
+                           type = MESSAGE_QUESTION,
+                           buttons = BUTTONS_OK_CANCEL,
+                           message_format = "What's the new trustor's name?")
+        vbox = md.get_child()
+        name_entry = Entry()
+        vbox.pack_end(name_entry)
+        vbox.show_all()
+        r = md.run()
+        new_trustor_name = name_entry.get_text()
+        md.destroy() # destroys embedded widgets too
+        
+        # Save the new trustor.
+        if r == RESPONSE_OK and new_trustor_name != '':
+            self.current_name = new_trustor_name
+            self.trust_module.add_trustor_by_name(new_trustor_name)
+            transaction.get().commit()
+            self.refresh_trustor_list()
 
     def on_remove_button_clicked(self, *args):
         for_delete = self.widgets['name_entry'].get_text()
@@ -126,21 +147,12 @@ class trustor_management(object):
             trans = trustor_transactions(trustor, self.top_window)
 
     def on_save_button_clicked(self, *args):
-        if self.current_name == None:
-            #we're adding someone new
-            trustor_name = self.widgets['name_entry'].get_text()
-            self.current_name = trustor_name
-            self.trust_module.add_trustor_by_name(trustor_name)
-            transaction.get().commit()
-            self.refresh_trustor_list()
-            trustor_name = self.widgets['name_entry'].set_text('')
-        else:
-            #we're updating the name of someone who already exists
-            new_name = self.widgets['name_entry'].get_text()
-            self.trust_module.rename_trustor(self.current_name, new_name)
-            transaction.get().commit()
-            self.current_name = new_name            
-            self.refresh_trustor_list()
+        #we're updating the name of someone who already exists
+        new_name = self.widgets['name_entry'].get_text()
+        self.trust_module.rename_trustor(self.current_name, new_name)
+        transaction.get().commit()
+        self.current_name = new_name            
+        self.refresh_trustor_list()
 
     def set_trustor(self, trustor_selected):
         trustor = self.trust_module.get_trustor(trustor_selected)
@@ -167,12 +179,11 @@ class trustor_management(object):
         report_file.close()
 
     def on_report_button_clicked(self, *args):
-        fcd = gtk.FileChooserDialog(
-            "Choose report file and location",
-            None,
-            gtk.FILE_CHOOSER_ACTION_SAVE,
-            (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-             gtk.STOCK_SAVE, gtk.RESPONSE_OK) )
+        fcd = FileChooserDialog("Choose report file and location",
+                                None,
+                                FILE_CHOOSER_ACTION_SAVE,
+                                (STOCK_CANCEL, RESPONSE_CANCEL,
+                                    STOCK_SAVE, RESPONSE_OK))
         fcd.set_modal(True)
         result = fcd.run()
         file_path = fcd.get_filename()
