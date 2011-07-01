@@ -103,7 +103,7 @@ class trustor_management(object):
         self.current_name = None
         self.widgets['name_entry'].set_text('')
 
-    def on_delete_button_clicked(self, *args):
+    def on_remove_button_clicked(self, *args):
         for_delete = self.widgets['name_entry'].get_text()
         self.widgets['name_entry'].set_text('')
         if self.current_name == None:
@@ -120,7 +120,7 @@ class trustor_management(object):
             transaction.get().commit()
             self.refresh_trustor_list()
 
-    def on_zoom_button_clicked(self, *args):
+    def on_details_button_clicked(self, *args):
         if self.current_name != None:
             trustor = self.trust_module.get_trustor(self.current_name)
             trans = trustor_transactions(trustor, self.top_window)
