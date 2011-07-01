@@ -119,7 +119,6 @@ class trustor_entry(object):
 
         self.trust_trans.memo = entered_description
 
-        print self.trust_trans.get_displayable_amount()
         self.change_register_function()
         trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
 
