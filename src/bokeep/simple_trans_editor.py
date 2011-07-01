@@ -21,9 +21,8 @@
 from gtk import Window, VBox
 
 class SimpleTransactionEditor(object):   
-    def __init__(self,
-                 trans, transid, plugin, gui_parent, change_register_function,
-                 **kargs):
+    def __init__(self, trans, transid, plugin, gui_parent,
+                 change_register_function, book):
         """Sub classes should not override this __init__ but instead
         implement simple_init_before_show() to hook in at the right time
         """
@@ -32,11 +31,7 @@ class SimpleTransactionEditor(object):
         self.plugin = plugin
         self.gui_parent = gui_parent
         self.change_register_function = change_register_function
-        # this will be taken out in bokeep 1.1 where the api can be changed
-        # and replaced with an explicit argument
-        # see related commend in mainwindow.py
-        if 'book' in kargs:
-            self.book = kargs['book']
+        self.book = book
 
         self.hide_parent = Window()
         self.hide_parent.hide()
