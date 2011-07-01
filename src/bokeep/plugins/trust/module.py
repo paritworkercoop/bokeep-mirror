@@ -38,7 +38,6 @@ def null_edit_function(*args):
 
 def trustor_editable_editor(trans, trans_id, module, gui_parent,
                             change_register_function, book):
-    print 'generating an editor for trustors'
     editor = trustor_entry(trans, trans_id, module, gui_parent, True,
                            change_register_function)
     return editor
