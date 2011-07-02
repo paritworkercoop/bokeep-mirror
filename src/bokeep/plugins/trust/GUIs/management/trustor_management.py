@@ -33,9 +33,9 @@ from bokeep.gui.gladesupport.glade_util import \
     do_OldGladeWindowStyleConnect
 
 from gtk import ListStore, TreeViewColumn, CellRendererText, MessageDialog, \
-    MESSAGE_QUESTION, BUTTONS_OK_CANCEL, Entry, \
+    MESSAGE_QUESTION, BUTTONS_OK_CANCEL, Entry, BUTTONS_OK, \
     FileChooserDialog, FILE_CHOOSER_ACTION_SAVE, STOCK_CANCEL, \
-    RESPONSE_CANCEL, STOCK_SAVE, RESPONSE_OK
+    RESPONSE_CANCEL, STOCK_SAVE, RESPONSE_OK, DIALOG_MODAL
 
 from datetime import datetime
 
@@ -125,41 +125,32 @@ class trustor_management(object):
             self.refresh_trustor_list()
 
     def on_remove_button_clicked(self, *args):
-        for_delete = self.widgets['name_entry'].get_text()
-        self.widgets['name_entry'].set_text('')
-        if self.current_name == None:
-            return
-
-        trustor = self.trust_module.get_trustor(for_delete)
+        trustor = self.trust_module.get_trustor(self.current_name)
 
         if len(trustor.transactions) > 0:
-            cantDeleteDia = MessageDialog(flags=gtk.DIALOG_MODAL, message_format='Cannot delete, trustor has associated transacactions.', buttons=gtk.BUTTONS_OK)
+            cantDeleteDia = MessageDialog(
+                flags = DIALOG_MODAL,
+                message_format = 'Cannot delete, trustor has associated transacactions.',
+                buttons = BUTTONS_OK)
             cantDeleteDia.run()
             cantDeleteDia.hide()
         else:            
-            self.trust_module.drop_trustor_by_name(for_delete)
+            self.trust_module.drop_trustor_by_name(self.current_name)
             transaction.get().commit()
+            
+            # Update the view.
+            self.widgets['remove_button'].set_sensitive(False)
+            self.widgets['details_button'].set_sensitive(False)
             self.refresh_trustor_list()
 
     def on_details_button_clicked(self, *args):
         if self.current_name != None:
             trustor = self.trust_module.get_trustor(self.current_name)
-            trans = trustor_transactions(trustor, self.top_window)
-
-    def on_save_button_clicked(self, *args):
-        #we're updating the name of someone who already exists
-        new_name = self.widgets['name_entry'].get_text()
-        self.trust_module.rename_trustor(self.current_name, new_name)
-        transaction.get().commit()
-        self.current_name = new_name            
-        self.refresh_trustor_list()
+            trans = trustor_transactions(self.trust_module, trustor, self)
 
     def set_trustor(self, trustor_selected):
         trustor = self.trust_module.get_trustor(trustor_selected)
-
         self.current_name = trustor.name
-        self.widgets['name_entry'].set_text(trustor.name)
-        self.widgets['dyn_balance'].set_text(str(trustor.get_balance()))
 
     def on_trustor_view_cursor_changed(self, *args):
         sel = self.trustor_view.get_selection()
@@ -167,6 +158,10 @@ class trustor_management(object):
         sel_row = self.trustor_list[sel_iter]
         trustor_selected = sel_row[0]
         self.set_trustor(trustor_selected)
+        
+        # Update the view.
+        self.widgets['remove_button'].set_sensitive(True)
+        self.widgets['details_button'].set_sensitive(True)
 
     def generate_balance_report(self, filename):
         report_file = open(filename, 'w')
@@ -188,7 +183,7 @@ class trustor_management(object):
         result = fcd.run()
         file_path = fcd.get_filename()
         fcd.destroy()
-        if result == gtk.RESPONSE_OK and file_path != None:
+        if result == RESPONSE_OK and file_path != None:
             self.generate_balance_report(file_path)
 
     def handle_account_fetch(self, label, setter):
@@ -197,7 +192,7 @@ class trustor_management(object):
         if account_spec != None:
             setter(account_spec, account_str)
             label.set_text(account_str)
-
+    
     def on_select_trust_liability_clicked(self, *args):
         self.handle_account_fetch(
             self.widgets['trust_liability_account_label'],
@@ -207,10 +202,8 @@ class trustor_management(object):
         self.handle_account_fetch(
             self.widgets['cash_account_label'],
             self.trust_module.set_cash_account )
-        
+    
     def currency_text_entry_changed(self, *args):
         self.trust_module.currency = \
             self.widgets['currency_text_entry'].get_text()
         transaction.get().commit()
-
-    
