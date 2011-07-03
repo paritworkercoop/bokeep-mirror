@@ -26,7 +26,8 @@ import sys
 import transaction
 
 # Gtk
-from gtk import main_quit, ListStore, CellRendererText, AboutDialog
+from gtk import main_quit, ListStore, CellRendererText, AboutDialog, \
+    MessageDialog, MESSAGE_ERROR, BUTTONS_OK
 from gtk.glade import XML
 import gobject
 from gtk.gdk import pixbuf_new_from_file_at_size
@@ -81,7 +82,7 @@ def get_bo_keep_logo():
 
 
 class MainWindow(object):
-    # Functions for window initialization 
+    # Functions for window initialization
 
     def on_quit_activate(self, args):
         self.application_shutdown()
@@ -129,7 +130,7 @@ class MainWindow(object):
             self.bookset.close()
             # or, should I be only doing
             # self.bookset.close_primary_connection() instead..?
-        main_quit()       
+        main_quit()
 
     def startup_event_handler(self, *args):
         # this should only be programmed to run once
@@ -271,7 +272,7 @@ class MainWindow(object):
             self.set_transcombo_index(current_trans_type_index)
             self.reset_trans_view()
 
-    def set_transcombo_index(self, indx):        
+    def set_transcombo_index(self, indx):
         self.programmatic_transcombo_index = True
         self.trans_type_combo.set_active(indx)
         self.programmatic_transcombo_index = False      
@@ -288,7 +289,7 @@ class MainWindow(object):
 
         self.current_editor = editor_generator(
                 book.get_transaction(trans_id), trans_id, currmodule,
-                self.main_vbox, self.guistate.record_trans_dirty_in_backend,
+                self.transaction_viewport, self.guistate.record_trans_dirty_in_backend,
                 book)
 
     def clear_trans_view(self):
@@ -335,11 +336,23 @@ class MainWindow(object):
             backend = book.get_backend_module()
             if backend.transaction_is_clean(trans_id):
                 self.backend_error_light.hide()
-                self.backend_error_msg_label.set_text("")
+                self.backend_error_msg_label.hide()
+                self.error_details_button.hide()
             else:
                 self.backend_error_light.show()
                 self.backend_error_msg_label.set_text(
                     backend.reason_transaction_is_dirty(trans_id) )
+                self.backend_error_msg_label.show()
+                self.error_details_button.show()
+
+    def on_error_details_button_clicked(self, *args):
+        md = MessageDialog(parent = self.mainwindow,
+                           type = MESSAGE_ERROR,
+                           buttons = BUTTONS_OK,
+                           message_format =
+                               self.backend_error_msg_label.get_text())
+        md.run()
+        md.destroy()
 
     # Functions for use to event handlers, not used during initialization
 
@@ -372,12 +385,12 @@ class MainWindow(object):
         self.set_book_from_combo()
         self.refresh_trans_types_and_set_sensitivities_and_status()
         
-    def new_button_clicked(self, *args):
+    def on_new_button_clicked(self, *args):
         self.guistate.do_action(NEW)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
 
-    def delete_button_clicked(self, *args):
+    def on_delete_button_clicked(self, *args):
         self.guistate.do_action(DELETE)
         book = self.guistate.get_book()
         if self.guistate.get_transaction_id() == None:
@@ -407,12 +420,12 @@ class MainWindow(object):
             self.reset_trans_view()
             self.set_sensitivities_and_status()
 
-    def forward_button_clicked(self, *args):
+    def on_forward_button_clicked(self, *args):
         self.guistate.do_action(FORWARD)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
     
-    def back_button_clicked(self, *args):
+    def on_back_button_clicked(self, *args):
         self.guistate.do_action(BACKWARD)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
