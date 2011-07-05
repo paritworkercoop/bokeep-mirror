@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -56,6 +56,8 @@ class trustor_entry(object):
 
         self.top_window.hide()
         self.gui_built = True
+        
+        self.update_trans() # save new transaction immediately after creation
 
     def description_changed(self, textbuffer, args):
         if self.gui_built:
