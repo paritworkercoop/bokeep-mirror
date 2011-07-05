@@ -261,10 +261,10 @@
                             <child>
                               <widget class="GtkComboBoxEntry" id="plugin_add_entry_combo">
                                 <property name="visible">True</property>
-                                <property name="can_focus">False</property>
+                                <property name="can_focus">True</property>
                                 <child internal-child="entry">
                                   <widget class="GtkEntry" id="comboboxentry-entry2">
-                                    <property name="can_focus">False</property>
+                                    <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
                                     <property name="primary_icon_activatable">False</property>
                                     <property name="secondary_icon_activatable">False</property>
@@ -329,11 +329,11 @@
                         <child>
                           <widget class="GtkComboBoxEntry" id="backend_plugin_entry_combo">
                             <property name="visible">True</property>
-                            <property name="can_focus">False</property>
+                            <property name="can_focus">True</property>
                             <signal name="changed" handler="on_backend_plugin_entry_combo_changed" swapped="no"/>
                             <child internal-child="entry">
                               <widget class="GtkEntry" id="comboboxentry-entry4">
-                                <property name="can_focus">False</property>
+                                <property name="can_focus">True</property>
                                 <property name="invisible_char">●</property>
                                 <property name="primary_icon_activatable">False</property>
                                 <property name="secondary_icon_activatable">False</property>
