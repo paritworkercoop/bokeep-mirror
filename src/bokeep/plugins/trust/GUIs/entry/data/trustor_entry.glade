@@ -1,117 +1,147 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <glade-interface>
   <!-- interface-requires gtk+ 2.6 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="window1">
     <property name="visible">True</property>
+    <property name="can_focus">False</property>
     <property name="title" translatable="yes">trustor entry</property>
     <property name="modal">True</property>
-    <signal name="destroy" handler="on_window_destroy"/>
+    <signal name="destroy" handler="on_window_destroy" swapped="no"/>
     <child>
-      <widget class="GtkVBox" id="vbox1">
+      <widget class="GtkTable" id="table">
         <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="border_width">8</property>
+        <property name="n_rows">4</property>
+        <property name="n_columns">2</property>
+        <property name="column_spacing">8</property>
+        <property name="row_spacing">8</property>
+        <child>
+          <widget class="GtkEntry" id="amount_entry">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="invisible_char">●</property>
+            <property name="invisible_char_set">True</property>
+            <property name="primary_icon_activatable">False</property>
+            <property name="secondary_icon_activatable">False</property>
+            <property name="primary_icon_sensitive">True</property>
+            <property name="secondary_icon_sensitive">True</property>
+            <signal name="changed" handler="on_amount_entry_changed" swapped="no"/>
+          </widget>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkLabel" id="amount_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="xalign">0</property>
+            <property name="label" translatable="yes">Amount:  </property>
+          </widget>
+          <packing>
+            <property name="top_attach">3</property>
+            <property name="bottom_attach">4</property>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkLabel" id="description_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="xalign">0</property>
+            <property name="yalign">0.47999998927116394</property>
+            <property name="label" translatable="yes">Description:  </property>
+          </widget>
+          <packing>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkLabel" id="trustor_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="xalign">0</property>
+            <property name="label" translatable="yes">Trustor:     </property>
+          </widget>
+          <packing>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkComboBox" id="trustor_combo">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="items" translatable="yes">test</property>
+            <signal name="changed" handler="on_trustor_combo_changed" swapped="no"/>
+          </widget>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">1</property>
+            <property name="bottom_attach">2</property>
+            <property name="y_options">GTK_FILL</property>
+          </packing>
+        </child>
         <child>
           <widget class="GtkLabel" id="entry_date_label">
             <property name="visible">True</property>
+            <property name="can_focus">False</property>
             <property name="xalign">0</property>
             <property name="xpad">5</property>
             <property name="label" translatable="yes">2011-01-30</property>
           </widget>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="y_options">GTK_FILL</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkHBox" id="hbox1">
+          <widget class="GtkLabel" id="label3">
             <property name="visible">True</property>
-            <child>
-              <widget class="GtkLabel" id="label2">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Trustor:     </property>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkComboBox" id="trustor_combo">
-                <property name="visible">True</property>
-                <property name="items" translatable="yes">test</property>
-                <signal name="changed" handler="on_trustor_combo_changed"/>
-              </widget>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
+            <property name="can_focus">False</property>
+            <property name="xalign">0</property>
+            <property name="label" translatable="yes">Date:</property>
           </widget>
           <packing>
-            <property name="expand">False</property>
-            <property name="position">1</property>
+            <property name="x_options">GTK_FILL</property>
+            <property name="y_options">GTK_FILL</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkHBox" id="hbox3">
+          <widget class="GtkScrolledWindow" id="scrollable_textwindow">
             <property name="visible">True</property>
-            <child>
-              <widget class="GtkLabel" id="description">
-                <property name="visible">True</property>
-                <property name="yalign">0.47999998927116394</property>
-                <property name="label" translatable="yes">Description:  </property>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
+            <property name="can_focus">True</property>
+            <property name="hscrollbar_policy">never</property>
+            <property name="vscrollbar_policy">automatic</property>
+            <property name="window_placement_set">True</property>
+            <property name="shadow_type">in</property>
             <child>
               <widget class="GtkTextView" id="description_textview">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="wrap_mode">word</property>
               </widget>
-              <packing>
-                <property name="position">1</property>
-              </packing>
             </child>
           </widget>
           <packing>
-            <property name="padding">8</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <widget class="GtkHBox" id="hbox2">
-            <property name="visible">True</property>
-            <child>
-              <widget class="GtkLabel" id="label1">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Amount:  </property>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkEntry" id="amount_entry">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="invisible_char">&#x25CF;</property>
-                <signal name="changed" handler="on_amount_entry_changed"/>
-              </widget>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </widget>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">3</property>
+            <property name="left_attach">1</property>
+            <property name="right_attach">2</property>
+            <property name="top_attach">2</property>
+            <property name="bottom_attach">3</property>
           </packing>
         </child>
       </widget>

@@ -24,7 +24,7 @@ from bokeep.gui.gladesupport.glade_util import \
 # ZOPEDB imports
 import transaction
 
-from gtk import ListStore, TextBuffer
+from gtk import ListStore, TextBuffer, main_quit
 
 from decimal import Decimal
 
@@ -49,7 +49,7 @@ class trustor_entry(object):
         self.extended_init()
 
         if not gui_parent == None:
-            self.widgets['vbox1'].reparent(gui_parent)
+            self.widgets['table'].reparent(gui_parent)
 
         buff = self.widgets['description_textview'].get_buffer()
         buff.connect("changed", self.description_changed, None)
@@ -62,7 +62,7 @@ class trustor_entry(object):
             self.update_trans()
 
     def detach(self):
-        self.widgets['vbox1'].reparent(self.top_window)
+        self.widgets['table'].reparent(self.top_window)
 
     def extended_init(self):
         self.trustor_combo = self.widgets['trustor_combo']
@@ -128,7 +128,7 @@ class trustor_entry(object):
     def on_window_destroy(self, *args):
         if self.editable:
             self.update_trans()
-        gtk.main_quit()
+        main_quit()
 
     def on_trustor_combo_changed(self, *args):
         if self.gui_built:
