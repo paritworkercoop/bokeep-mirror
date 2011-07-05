@@ -1,5 +1,12 @@
-BoKeep 1.1.0
+BoKeep 1.1.1
+- Improved default shell's view.
+- Improved trust plugin's configuration and transaction entry views.
+- Fixed show stopper glitch in simple plugin framework.
+- Fixed paper cut glitch in trust plugin that occurred when attempting to change
+  a new trust transaction's trustor.
+- Trust plugin is now listed in BoKeep's configuration view.
 
+BoKeep 1.1.0
 - GnuCash account selection is now assisted with auto-complete.
 - Plugin directories can now be set in the BoKeep configuration GUI.
 - New front-end plugin tutorial.
