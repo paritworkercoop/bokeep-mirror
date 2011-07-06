@@ -5,6 +5,8 @@ BoKeep 1.1.1
 - Fixed paper cut glitch in trust plugin that occurred when attempting to change
   a new trust transaction's trustor.
 - Trust plugin is now listed in BoKeep's configuration view.
+- GnuCash accounts can now be created at time of use.
+- Trust plugin now uses subaccounts for each trustor.
 
 BoKeep 1.1.0
 - GnuCash account selection is now assisted with auto-complete.
