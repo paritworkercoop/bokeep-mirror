@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 from persistent import Persistent
 import transaction
@@ -47,6 +48,17 @@ class FinancialTransactionLine(object):
     """
     def __init__(self, amount):
         self.amount = amount
+        self.__create_account_if_missing = False
+    
+    def set_create_account_if_missing(self, value):
+        """value -- A boolean that if "True" means that the account referred to
+        in this transaction line will be created if it doesn't already exist."""
+        self.__create_account_if_missing = value
+    
+    def get_create_account_if_missing(self):
+        """If "True" is returned the account specified in this transaction line
+        should be created if it doesn't already exist."""
+        return self.__create_account_if_missing
 
 class FinancialTransaction(object):
     """Represents a balanced financial transaction, which consists of

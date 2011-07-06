@@ -52,8 +52,14 @@ class TrustTransaction(Transaction):
         liability_line = \
             FinancialTransactionLine(self.get_transfer_amount() * NEG_1)
         if hasattr(self.trust_module, 'trust_liability_account'):
-            liability_line.account_spec = \
-                self.trust_module.trust_liability_account
+            if self.get_trustor() == None:
+                liability_line.account_spec = \
+                    self.trust_module.trust_liability_account
+            else:
+                liability_line.set_create_account_if_missing(True)
+                liability_line.account_spec = \
+                    self.trust_module.trust_liability_account + \
+                    (self.get_trustor().name,)
         fin_trans = FinancialTransaction( (cash_line, liability_line) )
         if self.trustor != None:
             # this should never be so, yet in the unit tests it comes up

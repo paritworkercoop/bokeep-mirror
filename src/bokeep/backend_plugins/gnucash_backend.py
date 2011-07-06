@@ -88,27 +88,40 @@ def gnc_numeric_from_decimal(decimal_value):
 def get_amount_from_trans_line(trans_line):
     return gnc_numeric_from_decimal(trans_line.amount)
 
-def account_from_path(top_account, account_path, original_path=None):
+def account_from_path(gnucash_book, top_account, account_path,
+                      original_path=None, create_account_if_missing=False):
     if original_path==None: original_path = account_path
     if not isinstance(account_path, tuple):
         raise BoKeepBackendException(
             "account %s is not a tuple" % str(account_path) )
-    account, account_path = account_path[0], account_path[1:]
-    account = top_account.lookup_by_name(account)
+    account_name, account_path = account_path[0], account_path[1:]
+    account = top_account.lookup_by_name(account_name)
     if account.get_instance() == None:
-        raise BoKeepBackendException(
-            "path " + ''.join(original_path) + " could not be found")
-    if len(account_path) > 0 :
-        return account_from_path(account, account_path, original_path)
+        if create_account_if_missing:
+            account = Account(gnucash_book)
+            account.SetName(account_name)
+            account.SetCommodity(top_account.GetCommodity())
+            account.SetType(top_account.GetType())
+            top_account.append_child(account)
+        else:
+            raise BoKeepBackendException(
+                "path " + ''.join(original_path) + " could not be found")
+    if len(account_path) > 0:
+        return account_from_path(gnucash_book, account, account_path,
+                                 original_path, create_account_if_missing)
     else:
         return account
 
-def get_account_from_trans_line(top_level_account, trans_line):
+def get_account_from_trans_line(gnucash_book, trans_line):
     if not hasattr(trans_line, "account_spec"):
         raise BoKeepBackendException("the gnucash backend needs the "
                                      "optional attribute account_spec "
                                      "to be set" )
-    return account_from_path(top_level_account, trans_line.account_spec)
+    
+    return account_from_path(gnucash_book, gnucash_book.get_root_account(),
+                             trans_line.account_spec,
+                             create_account_if_missing =
+                                trans_line.get_create_account_if_missing())
 
 def make_new_split(book, amount, account, trans, currency):
     # the fraction tests used to be !=, but it was realized that
@@ -215,7 +228,7 @@ class GnuCash(SessionBasedRobustBackendPlugin):
                         self._v_session_active.book,
                         get_amount_from_trans_line(trans_line),
                         get_account_from_trans_line(
-                            self._v_session_active.book.get_root_account(),
+                            self._v_session_active.book,
                             trans_line ),
                         trans,
                         currency ) )
