@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -210,6 +210,7 @@ class TrustModule(Persistent):
         self.ensure_trust_database()
         self.transaction_track_database[front_end_id] = (trust_trans, None)
         self._p_changed = True
+        trust_trans.set_id(front_end_id)
 
     def remove_transaction(self, front_end_id):
         self.ensure_trust_database()

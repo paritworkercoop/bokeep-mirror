@@ -38,6 +38,7 @@ class TrustTransaction(Transaction):
             self.trustor = trust_module.get_trustors().values()[0]
         self.memo = ''
         self.trans_date = datetime.today()
+        self.set_id(-1)
 
     def get_financial_transactions(self):
         # you should throw BoKeepTransactionNotMappableToFinancialTransaction
@@ -68,6 +69,7 @@ class TrustTransaction(Transaction):
             else:
                 fin_trans.description = self.trustor.name
         fin_trans.trans_date = self.trans_date
+        fin_trans.chequenum = self.__id
         fin_trans.currency = self.trust_module.get_currency()
         # should add chequenum at some point, legal aid requested this
         # for ordering
@@ -78,6 +80,11 @@ class TrustTransaction(Transaction):
 
     def set_trustor(self, trustor):
         self.trustor = trustor
+        
+    def set_id(self, id):
+        """Sets the ID of this trust transaction.  It's used as the ID in the
+        backend, or as the GnuCash plugin would call it, the chequenum."""
+        self.__id = id
 
     def get_trustor(self):
         return self.trustor
