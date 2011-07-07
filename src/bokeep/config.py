@@ -25,6 +25,8 @@
 # ZODB imports
 from ZODB.FileStorage import FileStorage
 from ZODB import DB
+import ZODB.config # Import in a way that needs ZODB to be prepended to avoid
+                   # confusion with general BoKeep config concepts.
 
 # python imports
 from ConfigParser import ConfigParser
@@ -38,9 +40,11 @@ CONFIG_FILE = '.bo-keep.cfg'
 CONFIG_HOME = expanduser("~/%s" % CONFIG_FILE)
 
 ZODB_CONFIG_SECTION = 'zodb'
+DEFAULT_BOOKS_DIR = 'bo-keep-database'
 ZODB_CONFIG_FILESTORAGE = 'filestorage'
-DEFAULT_BOOKS_FILESTORAGE_DIR = 'bo-keep-database'
 DEFAULT_BOOKS_FILESTORAGE_FILE = 'bokeep_books.fs'
+ZODB_CONFIG_ZCONFIG = 'zconfig'
+DEFAULT_BOOKS_ZCONFIG_FILE = 'bokeep_books.conf'
 
 PLUGIN_DIRECTORIES_SECTION = 'plugin_directories'
 PLUGIN_DIRECTORIES = 'directories'
@@ -63,8 +67,11 @@ def initialize_config(config):
     
     config.add_section(ZODB_CONFIG_SECTION)
     config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
-               expanduser("~/%s/%s" % (DEFAULT_BOOKS_FILESTORAGE_DIR,
+               expanduser("~/%s/%s" % (DEFAULT_BOOKS_DIR,
                                        DEFAULT_BOOKS_FILESTORAGE_FILE) ) )
+    config.set(ZODB_CONFIG_SECTION, "# " + ZODB_CONFIG_ZCONFIG,
+               expanduser("~/%s/%s" % (DEFAULT_BOOKS_DIR,
+                                       DEFAULT_BOOKS_ZCONFIG_FILE) ) )
     
     config.add_section(PLUGIN_DIRECTORIES_SECTION)
     config.set(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES, [])
@@ -169,38 +176,77 @@ def get_bokeep_bookset(provided_config_path=None):
     return get_bokeep_bookset_from_config(provided_config_path, config)
 
 def get_bokeep_bookset_from_config(provided_config_path, config):
-    if not config.has_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE):
-        raise BoKeepConfigurationFileException(
-            "the bokeep config file %s does not have a zodb filestorage "
-            "section" % provided_config_path )
+    """Returns BoKeep transactions stored in one of several ways.
     
-    filestorage_path = config.get(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE)
-
+    A BoKeepConfigurationDatabaseException is thrown if a requested file doesn't
+    exist or is of an incompatible version."""
+    
+    if config.has_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE):
+        filestorage_path = config.get(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE)
+        bookset = get_bokeep_bookset_from_filestorage(filestorage_path)
+    elif config.has_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_ZCONFIG):
+        zconfig_path = config.get(ZODB_CONFIG_SECTION, ZODB_CONFIG_ZCONFIG)
+        bookset = get_bokeep_bookset_from_zconfig(zconfig_path)
+    else:
+        raise BoKeepConfigurationFileException(
+            "the bokeep config file %s does not have a %s or %s attribute in "
+            "the %s section" % (provided_config_path,
+                                ZODB_CONFIG_FILESTORAGE,
+                                ZODB_CONFIG_ZCONFIG,
+                                ZODB_CONFIG_SECTION) )
+    
+    # Ensure the loaded BoKeep transaction database's version is compatible
+    # with this version of BoKeep. 
+    db_version = bookset.get_dbhandle().get_sub_database_do_cls_init(
+        DATABASE_VERSION_SUBDB_KEY,
+        lambda : CURRENT_DATABASE_VERSION,
+        )
+    if db_version != CURRENT_DATABASE_VERSION:
+        raise BoKeepConfigurationDatabaseException(
+            "the database versions don't match, %s is db and %s is code" %
+            (db_version, CURRENT_DATABASE_VERSION ) )
+    
+    return bookset
+    
+def get_bokeep_bookset_from_filestorage(filestorage_path):
+    """Returns BoKeep transactions stored in a file.
+    
+    A BoKeepConfigurationDatabaseException is thrown if a requested file doesn't
+    exist."""
+    
+    # Ensure the file storage path exists.
     if not exists(filestorage_path):
         raise BoKeepConfigurationDatabaseException(
             "bokeep database filestorage path %s does not exist" %
             filestorage_path)
+    
     try:
         fs = FileStorage(filestorage_path, create=False )
-        bookset = BoKeepBookSet( DB(fs) )
+        return BoKeepBookSet( DB(fs) )
     except IOError, e:
         raise BoKeepConfigurationDatabaseException(
-            "there was a problem opening %s: %s" % (
-                filestorage_path, e.message )
+            "there was a problem opening the filestorage path %s: %s"
+            % (filestorage_path, e.message)
             )
-    else:
-        # what about configuration file versioning...?
+    # never reaches this point
 
-        db_version = bookset.get_dbhandle().get_sub_database_do_cls_init(
-            DATABASE_VERSION_SUBDB_KEY,
-            lambda : CURRENT_DATABASE_VERSION,
+def get_bokeep_bookset_from_zconfig(zconfig_path):
+    """Returns BoKeep transactions described by a Zope configuration file.
+    
+    A BoKeepConfigurationDatabaseException is thrown if a requested file doesn't
+    exist."""
+    
+    # Ensure the zconfig path exists.
+    if not exists(zconfig_path):
+        raise BoKeepConfigurationDatabaseException(
+            "bokeep database zope config path %s does not exist" %
+            zconfig_path)
+    
+    try:
+        return BoKeepBookSet(ZODB.config.databaseFromURL(zconfig_path))
+    except IOError, e:
+        raise BoKeepConfigurationDatabaseException(
+            "there was a problem opening the zconfig path %s: %s"
+            % (zconfig_path, e.message)
             )
-        if db_version != CURRENT_DATABASE_VERSION:
-            raise BoKeepConfigurationDatabaseException(
-                "the database versions don't match, %s is db and %s is code" %
-                (db_version, CURRENT_DATABASE_VERSION ) )
-        return bookset
-
-    # never expected to reach here, except block is supposed to re-throw
-    # else block is responsible for return
-    assert(False)
+    # never reaches this point
