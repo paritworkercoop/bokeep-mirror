@@ -23,7 +23,7 @@
                 <property name="use_action_appearance">False</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-save</property>
-                <signal name="clicked" handler="on_save_button_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_save_button_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>
@@ -38,7 +38,7 @@
                 <property name="label" translatable="yes">Report</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-properties</property>
-                <signal name="clicked" handler="on_report_button_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_report_button_clicked"/>
               </widget>
               <packing>
                 <property name="expand">False</property>

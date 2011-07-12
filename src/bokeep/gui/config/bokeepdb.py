@@ -30,6 +30,7 @@ from sys import path
 # ZODB imports
 from ZODB.FileStorage import FileStorage
 from ZODB import DB
+from ZODB.config import databaseFromURL
 import transaction
 
 # gtk imports
@@ -46,8 +47,8 @@ from gtk import \
 from bokeep.config import \
     BoKeepConfigurationDatabaseException, get_bokeep_configuration, \
     DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
-    ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config, \
-    set_plugin_directories_in_config
+    ZODB_CONFIG_FILESTORAGE, ZODB_CONFIG_ZCONFIG, \
+    get_plugins_directories_from_config, set_plugin_directories_in_config
 from bokeep.book import BoKeepBookSet, \
     PluginImportError, BackendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
@@ -60,6 +61,9 @@ from state import BoKeepConfigGuiState, \
     BOOK
 
 def establish_bokeep_db(mainwindow, config_path, config, db_exception):
+    """TODO: Write this doc string!  (What this function is responsible for is
+    unclear to at least one contributor :P ) e.g. establish = create or load?"""
+    
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
     if db_exception == None:
@@ -69,27 +73,41 @@ def establish_bokeep_db(mainwindow, config_path, config, db_exception):
             str(db_exception), 
             "BoKeep requires a working database to operate" )
     
-    filestorage_path = config.get(ZODB_CONFIG_SECTION,
-                                  ZODB_CONFIG_FILESTORAGE)
-    config_dialog = BoKeepConfigDialog(filestorage_path, config_path, config,
+    if config.has_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE):
+        db_access_method = ZODB_CONFIG_FILESTORAGE
+        db_path = config.get(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE)
+    elif config.has_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_ZCONFIG):
+        db_access_method = ZODB_CONFIG_ZCONFIG
+        db_path = config.get(ZODB_CONFIG_SECTION, ZODB_CONFIG_ZCONFIG)
+    config_dialog = BoKeepConfigDialog(db_path, db_access_method,
+                                       config_path, config,
                                        extra_error_info)
-    result, new_filestorage_path = config_dialog.run()
+    result, new_db_path, new_db_access_method = config_dialog.run()
     
     assert( result == RESPONSE_OK or result==RESPONSE_CANCEL or
             result==RESPONSE_DELETE_EVENT )
-    if new_filestorage_path == None or result!=RESPONSE_OK:
+    if new_db_path == None or result!=RESPONSE_OK:
         return None
 
-    # should save new_filestorage_path in config if different
-    if new_filestorage_path != filestorage_path:
-        config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
-                   new_filestorage_path)
+    # should save new_db_path in config if different
+    if new_db_path != db_path or \
+            new_db_access_method != db_access_method:
+        if new_db_access_method == ZODB_CONFIG_FILESTORAGE:
+            config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
+                       new_db_path)
+            config.remove_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_ZCONFIG)
+        elif new_db_access_method == ZODB_CONFIG_ZCONFIG:
+            config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_ZCONFIG,
+                       new_db_path)
+            config.remove_option(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE)
         config_fp = file(config_path, 'w')
         config.write(config_fp)
         config_fp.close()
 
-    fs = FileStorage(new_filestorage_path, create=False )
-    return BoKeepBookSet( DB(fs) )    
+    if new_db_access_method == ZODB_CONFIG_FILESTORAGE:
+        return BoKeepBookSet(DB(FileStorage(new_db_path, create=False)))
+    elif new_db_access_method == ZODB_CONFIG_ZCONFIG:
+        return BoKeepBookSet(databaseFromURL(new_db_path))
 
 def available_plugins():
     return available_plugins_search("BOKEEP_PLUGIN", "plugins")
@@ -158,7 +176,10 @@ class BoKeepConfigDialog(object):
     config_path = None
     config = None
     
-    def __init__(self, filestorage_path, config_path, config, error_msg=None):
+    def __init__(self,
+                 db_path, db_access_method,
+                 config_path, config,
+                 error_msg=None):
         self.config_path = config_path
         self.config = config
         
@@ -189,17 +210,19 @@ class BoKeepConfigDialog(object):
 
         self.__populate_possible_plugins()
 
-        if filestorage_path != None:
-            self.do_action(DB_ENTRY_CHANGE, filestorage_path)
+        if db_path != None:
+            self.do_action(DB_ENTRY_CHANGE, (db_path, db_access_method))
             self.do_action(DB_PATH_CHANGE)
-        self.last_commit_db_path = filestorage_path
+        
+        if db_access_method == ZODB_CONFIG_FILESTORAGE:
+            self.filestorage_radio.set_active(True)
+        elif db_access_method == ZODB_CONFIG_ZCONFIG:
+            self.zconfig_radio.set_active(True)
 
         if error_msg == None:
             error_msg = ""
         self.message_label.set_label(error_msg)
-        self.path_entry_lock = True
-        self.db_path_entry.set_text(filestorage_path)
-        self.path_entry_lock = False
+        self.db_path_label.set_text(db_path)
 
         self.set_sensitivities()
         self.selection_change_lock = False
@@ -248,18 +271,29 @@ class BoKeepConfigDialog(object):
             error_dialog.destroy()
             raise
 
+
+    def __get_db_access_method(self):
+        if self.filestorage_radio.get_active():
+            db_access_method = ZODB_CONFIG_FILESTORAGE
+        elif self.zconfig_radio.get_active():
+            db_access_method = ZODB_CONFIG_ZCONFIG
+        return db_access_method
+
     def run(self):
         self.bokeep_config_dialog.run()
         if self.state.action_allowed(BOOK_CHANGE):
             self.do_action(BOOK_CHANGE, None)
         self.state.close()
+        
+        db_path = self.db_path_label.get_text()
+        db_access_method = self.__get_db_access_method()
+        
         self.bokeep_config_dialog.destroy()
 
-        return RESPONSE_OK, self.last_commit_db_path 
+        return RESPONSE_OK, db_path, db_access_method
 
     def set_sensitivities(self):
         for obj, action in (
-            (self.apply_db_change_button, DB_PATH_CHANGE),
             (self.books_tv, BOOK_CHANGE),
             (self.book_add_entry, BOOK_CHANGE),
             (self.book_add_button, BOOK_CHANGE),
@@ -289,13 +323,6 @@ class BoKeepConfigDialog(object):
 
     # event handles
 
-    def on_apply_db_change_button_clicked(self, *args):
-        self.last_commit_db_path = self.db_path_entry.get_text()
-        self.selection_change_lock = True
-        self.do_action(DB_PATH_CHANGE)
-        self.selection_change_lock = False
-        self.set_sensitivities()
-
     def on_selectdb_button_clicked(self, *args):
         fcd = FileChooserDialog(
             "Where should the database be?",
@@ -304,25 +331,12 @@ class BoKeepConfigDialog(object):
             (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_SAVE, RESPONSE_OK) )
         fcd.set_modal(True)
         result = fcd.run()
-        filestorage_path = fcd.get_filename()
+        db_path = fcd.get_filename()
         fcd.destroy()
-        if result == RESPONSE_OK and filestorage_path != None:
-            self.path_entry_lock = True
-            self.db_path_entry.set_text(filestorage_path)
-            self.path_entry_lock = False
-            self.selection_change_lock = True
-            self.do_action(DB_ENTRY_CHANGE, filestorage_path)
-            self.do_action(DB_PATH_CHANGE)
-            self.selection_change_lock = False
-            self.last_commit_db_path = filestorage_path
-            self.set_sensitivities()            
-
-    def on_db_path_entry_changed(self, *args):
-        if not self.path_entry_lock:
-            filestorage_path = self.db_path_entry.get_text()
-            self.selection_change_lock = True
-            self.do_action(DB_ENTRY_CHANGE, filestorage_path)
-            self.selection_change_lock = False
+        if result == RESPONSE_OK and db_path != None:
+            self.db_path_label.set_text(db_path)
+            db_access_method = self.__get_db_access_method()
+            self.__update_db_path(db_path, db_access_method)
             self.set_sensitivities()
 
     def on_book_add_entry_clicked(self, *args):
@@ -374,7 +388,53 @@ class BoKeepConfigDialog(object):
                         self.state.data[BOOK].get_backend_module_name() )
                     self.backend_entry_lock = False
             self.set_sensitivities()
+            
+    def on_storage_method_radio_toggled(self, *args):
+        """Should be called when the database storage method changes.  For
+        example, when the database was referenced directly by file storage and
+        changed to a reference through a Zope configuration.
+        
+        At this time the location used for the database is updated."""
+        
+        location = self.db_path_label.get_text()
+        if self.filestorage_radio.get_active():
+            if location.endswith(".conf"):
+                location = location[:-5]
+            location += ".fs"
+            
+            access_method = ZODB_CONFIG_FILESTORAGE
+        else:
+            if location.endswith(".fs"):
+                location = location[:-3]
+            location += ".conf"
+            
+            access_method = ZODB_CONFIG_ZCONFIG
+        self.db_path_label.set_text(location)
+        
+        self.__update_db_path(location, access_method)
     
+    def __update_db_path(self, db_path, access_method):
+        """Updates the storage location and method of BoKeep's transaction
+        database."""
+        
+        # Prevent the book selection widget from issuing events that change
+        # things beyond what we manually want the state machine to handle at the
+        # moment.
+        self.selection_change_lock = True
+        
+        # TODO: The following two config state machine actions (DB_ENTRY_CHANGE
+        # and DB_PATH_CHANGE) should be merged.  They're split because the
+        # BoKeep configuration GUI used to have a text entry widget for the
+        # transaction database path.
+        
+        # Update the transaction storage location.
+        self.do_action(DB_ENTRY_CHANGE, (db_path, access_method))
+        
+        # Commit the transaction storage location.
+        self.do_action(DB_PATH_CHANGE)
+        
+        self.selection_change_lock = False
+        
     def __on_plugin_directories_button_click(self, button):
         """Present a dialog to the user for selecting extra plugin directories
         and process the request."""

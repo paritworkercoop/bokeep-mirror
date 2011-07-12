@@ -69,9 +69,6 @@ def initialize_config(config):
     config.set(ZODB_CONFIG_SECTION, ZODB_CONFIG_FILESTORAGE,
                expanduser("~/%s/%s" % (DEFAULT_BOOKS_DIR,
                                        DEFAULT_BOOKS_FILESTORAGE_FILE) ) )
-    config.set(ZODB_CONFIG_SECTION, "# " + ZODB_CONFIG_ZCONFIG,
-               expanduser("~/%s/%s" % (DEFAULT_BOOKS_DIR,
-                                       DEFAULT_BOOKS_ZCONFIG_FILE) ) )
     
     config.add_section(PLUGIN_DIRECTORIES_SECTION)
     config.set(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES, [])
