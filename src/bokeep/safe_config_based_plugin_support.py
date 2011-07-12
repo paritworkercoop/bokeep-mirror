@@ -19,39 +19,86 @@
 
 # python imports
 from os.path import exists
+import sys
 
 # bokeep imports
-from bokeep.util import get_module_for_file_path, reload_module_at_filepath, \
-    adler32_of_file
+from bokeep.util import do_module_import, adler32_of_file
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 
 class SafeConfigBasedPlugin(object):
     def __init__(self):
-        self.config_file = None
+        self.__init_config_module_name_if_not_there()
 
-    def get_configuration(self):
+    def __init_config_module_name_if_not_there(self):
+        """Set self.config_module_name to None if the attribute isn't defined
+
+        used for backwards compatibility reasons because previous versions
+        didn't have this attribute
+        """
+        if not hasattr(self, 'config_module_name'):
+            self.config_module_name = None        
+
+    def get_configuration(self, allow_reload=True):
+        """Get the configuration module.
+
+        set allow_reload to False if you want to prevent a module reload
+        due to file changes
+        
+        """
+        # for backwards compatibility with old versions
+        self.__init_config_module_name_if_not_there()
+
         if hasattr(self, '_v_configuration'):
-            assert( self.config_file != None )
-            assert( exists(self.config_file) )
-            reload_module_at_filepath(self._v_configuration, self.config_file)
+            assert( self.config_module_name != None )
+            assert( self.config_module_name in sys.modules )
+
+            # perhaps we should handle this more gracefully, it's not really
+            # something to assert because it could happen outside our control..
+            # .....
+            assert( exists(self._v_configuration.__file__) )
+
+            if allow_reload:
+                current_checksum = adler32_of_file(
+                    self._v_configuration.__file__)
+                if self._v_configuration_checksum != current_checksum:
+                    reload(self._v_configuration)
+                    self._v_configuration_checksum = current_checksum
+
             return self._v_configuration
         else:
+            # gee, this isn't safe, should catch exception for import failing
+            # or delegate that to do_module_import
+            # (BUT BE CAREFUL, do_module_import is used elsewhere where by
+            # design the import fail exception is allowed to go up...)
             return_value = \
-                None if self.config_file == None \
-                else get_module_for_file_path(self.config_file)
+                None if self.config_module_name == None \
+                else do_module_import(self.config_module_name)
+
+            # if we're not returning None, then we should cache what we're
+            # returning, but no point setting the cache when it is None
             if return_value != None:
                 self._v_configuration = return_value
+                self._v_configuration_checksum = adler32_of_file(
+                    self._v_configuration.__file__)               
+            
             return return_value
 
-    def set_config_file(self, new_config_file):
-        old_config_file = self.config_file
-        if old_config_file == new_config_file:
-            self.get_configuration() # forces reload if cached
+    def set_config_module_name(self, new_config_module_name):
+        # for backwards compatibility with old versions
+        self.__init_config_module_name_if_not_there()
+        
+        old_config_module_name = self.config_module_name
+        if old_config_module_name == new_config_module_name
+            # forces reload if old cached module has changed
+            self.get_configuration(allow_reload=True)
+        # else its a new config module, and if there's an old cached one
+        # we dump the cache
         elif hasattr(self, '_v_configuration'):
             # get rid of cache
             delattr(self, '_v_configuration')
-        self.config_file = new_config_file
+            delattr(self, '_v_configuration_checksum')
+        self.config_module_name = new_config_module_name
 
 class SafeConfigBasedTransaction(Transaction):
     """Sublcasses must override config_valid and make_new_fin_trans
