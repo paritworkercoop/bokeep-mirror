@@ -124,9 +124,8 @@ class MultipageGladeTransaction(SafeConfigBasedTransaction):
                     val_func(self.widget_states, config) if i==0
                     else -val_func(self.widget_states, config),
                     account, memo)
-                for i in range(2)
-                for memo, val_func, account in
-                config.fin_trans_template[i]
+                for i, deb_or_cred_list in enumerate(config.fin_trans_template)
+                for memo, val_func, account in deb_or_cred_list
                 ]
             
         except EntryTextToDecimalConversionFail, e:
