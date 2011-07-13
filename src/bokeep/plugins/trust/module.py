@@ -185,9 +185,9 @@ class TrustModule(Persistent):
         #if the transaction was already associated with another trustor, 
         #dissociate it
         if not trust_trans.get_trustor() == None and not trust_trans.get_trustor() == trustor:
-            self.disassociate_trustor_with_transaction(front_end_id, trust_trans, trust_trans.get_trustor().name)
+            self.disassociate_trustor_with_transaction(front_end_id, trust_trans, trust_trans.get_trustor())
 
-        trust_trans.set_trustor(trustor)
+        trust_trans.set_trustor(trustor_name)
 
         #don't re-add...
         if not trustor.has_transaction(trust_trans):

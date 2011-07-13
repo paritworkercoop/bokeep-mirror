@@ -74,7 +74,7 @@ class trustor_entry(object):
         use_index = -1
         for trustor in self.trustors:
             self.trustor_list.append([trustor])
-            if not(self.trans_trustor == None) and self.trans_trustor.name == trustor:
+            if not(self.trans_trustor == None) and self.trans_trustor == trustor:
                 use_index = index
             index += 1
  
