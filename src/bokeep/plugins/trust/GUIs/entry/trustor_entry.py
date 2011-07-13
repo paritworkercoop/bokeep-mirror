@@ -26,7 +26,7 @@ import transaction
 
 from gtk import ListStore, TextBuffer, main_quit
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from os.path import abspath, dirname, join, exists
 
@@ -111,10 +111,11 @@ class trustor_entry(object):
     def update_trans(self):
         entered_amount = self.widgets['amount_entry'].get_text()
 
-        if entered_amount == '':
-            self.trust_trans.transfer_amount = Decimal('0')          
-        else:
+        try:
             self.trust_trans.transfer_amount = Decimal(entered_amount)
+        except InvalidOperation:
+            # In case the user has entered something like "" or ".".
+            self.trust_trans.transfer_amount = Decimal('0')
 
         textbuff = self.widgets['description_textview'].get_buffer()
         entered_description = textbuff.get_text(textbuff.get_start_iter(), textbuff.get_end_iter())
