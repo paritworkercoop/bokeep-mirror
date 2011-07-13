@@ -24,6 +24,7 @@ from datetime import datetime
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, FinancialTransactionLine, \
     BoKeepTransactionNotMappableToFinancialTransaction
+from bokeep.plugins.trust.core import Trustor
 
 ZERO = Decimal(0)
 NEG_1 = Decimal(-1)
@@ -79,6 +80,7 @@ class TrustTransaction(Transaction):
         return self.transfer_amount
 
     def set_trustor(self, trustor):
+        assert(trustor.__class__ == Trustor)
         self.trustor = trustor
         
     def set_id(self, id):
