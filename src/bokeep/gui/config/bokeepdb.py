@@ -210,6 +210,7 @@ class BoKeepConfigDialog(object):
 
         self.__populate_possible_plugins()
 
+        self.db_path_label.set_text(db_path)
         if db_path != None:
             self.do_action(DB_ENTRY_CHANGE, (db_path, db_access_method))
             self.do_action(DB_PATH_CHANGE)
@@ -222,7 +223,6 @@ class BoKeepConfigDialog(object):
         if error_msg == None:
             error_msg = ""
         self.message_label.set_label(error_msg)
-        self.db_path_label.set_text(db_path)
 
         self.set_sensitivities()
         self.selection_change_lock = False
@@ -397,16 +397,22 @@ class BoKeepConfigDialog(object):
         At this time the location used for the database is updated."""
         
         location = self.db_path_label.get_text()
+        FILESTORAGE_EXTENSION = ".fs"
+        ZCONF_EXTENSION = ".conf"
         if self.filestorage_radio.get_active():
-            if location.endswith(".conf"):
-                location = location[:-5]
-            location += ".fs"
+            # Toggle the extension from ZConfig to FS.
+            if location.endswith(ZCONF_EXTENSION):
+                location = location[:-len(ZCONF_EXTENSION)]
+            if not location.endswith(FILESTORAGE_EXTENSION):
+                location += FILESTORAGE_EXTENSION
             
             access_method = ZODB_CONFIG_FILESTORAGE
         else:
-            if location.endswith(".fs"):
-                location = location[:-3]
-            location += ".conf"
+            # Toggle the extension from FS to ZConfig.
+            if location.endswith(FILESTORAGE_EXTENSION):
+                location = location[:-len(FILESTORAGE_EXTENSION)]
+            if not location.endswith(ZCONF_EXTENSION):
+                location += ZCONF_EXTENSION
             
             access_method = ZODB_CONFIG_ZCONFIG
         self.db_path_label.set_text(location)
