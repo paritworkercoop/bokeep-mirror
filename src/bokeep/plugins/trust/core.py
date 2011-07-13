@@ -53,14 +53,14 @@ class TrustTransaction(Transaction):
         liability_line = \
             FinancialTransactionLine(self.get_transfer_amount() * NEG_1)
         if hasattr(self.trust_module, 'trust_liability_account'):
-            if self.get_trustor() == None:
+            if self.get_trustor_name() == None:
                 liability_line.account_spec = \
                     self.trust_module.trust_liability_account
             else:
                 liability_line.set_create_account_if_missing(True)
                 liability_line.account_spec = \
                     self.trust_module.trust_liability_account + \
-                    (self.get_trustor(),)
+                    (self.get_trustor_name(),)
         fin_trans = FinancialTransaction( (cash_line, liability_line) )
         if self.trustor != None:
             # this should never be so, yet in the unit tests it comes up
@@ -78,7 +78,7 @@ class TrustTransaction(Transaction):
     def get_transfer_amount(self):
         return self.transfer_amount
 
-    def set_trustor(self, trustor):
+    def set_trustor_name(self, trustor):
         assert(trustor == None or trustor.__class__ == str)
         self.trustor = trustor
         
@@ -87,7 +87,7 @@ class TrustTransaction(Transaction):
         backend, or as the GnuCash plugin would call it, the chequenum."""
         self.__id = id
 
-    def get_trustor(self):
+    def get_trustor_name(self):
         return self.trustor
 
     def get_displayable_amount(self):

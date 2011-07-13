@@ -62,7 +62,7 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         self.state.do_action(NEW)
         self.assert_(self.test_book_1.has_transaction(0))
         trust_trans = self.test_book_1.get_transaction(0)
-        trust_trans.set_trustor(TEST_TRUSTOR)
+        trust_trans.set_trustor_name(TEST_TRUSTOR)
         trust_trans.transfer_amount = Decimal(ONE_INT)
         self.state.do_action(CLOSE)
         self.backend_module.close()
@@ -89,7 +89,7 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         self.state.do_action(NEW)
         self.assert_(self.test_book_1.has_transaction(0))
         trust_trans = self.test_book_1.get_transaction(0)
-        trust_trans.set_trustor(TEST_TRUSTOR)
+        trust_trans.set_trustor_name(TEST_TRUSTOR)
         trust_trans.transfer_amount = Decimal(ONE_INT)
         self.assertFalse(self.backend_module.transaction_is_clean(0))
 

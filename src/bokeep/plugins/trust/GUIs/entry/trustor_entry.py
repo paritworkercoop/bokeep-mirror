@@ -43,7 +43,7 @@ class trustor_entry(object):
         self.trust_module = trust_module
         self.trustors = self.trust_module.get_trustors()
         self.editable = editable
-        self.trans_trustor = self.trust_trans.get_trustor()
+        self.trans_trustor = self.trust_trans.get_trustor_name()
 
         self.init()
         self.extended_init()
@@ -91,7 +91,7 @@ class trustor_entry(object):
                 (trans_date.year, trans_date.month, trans_date.day) )
 
 
-        if not self.editable or self.trust_trans.get_trustor() == None :
+        if not self.editable or self.trust_trans.get_trustor_name() == None :
             self.widgets['amount_entry'].set_sensitive(False)
 
 
