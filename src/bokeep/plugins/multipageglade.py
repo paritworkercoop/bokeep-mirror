@@ -34,10 +34,8 @@ from gtk import \
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, make_fin_line, \
     BoKeepTransactionNotMappableToFinancialTransaction
-from bokeep.gtkutil import file_selection_path, get_current_date_of_gtkcal, \
+from bokeep.gtkutil import input_entry_dialog, get_current_date_of_gtkcal, \
     gtk_error_message
-from bokeep.util import get_module_for_file_path, reload_module_at_filepath, \
-    adler32_of_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.safe_config_based_plugin_support import \
@@ -56,6 +54,10 @@ class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
 
     def run_configuration_interface(
         self, parent_window, backend_account_fetch, book):
+        config_module_name = input_entry_dialog(
+            "Enter a module name", 
+        self.set_config_module_name
+
         self.set_config_file( file_selection_path("select config file") )
 
     def register_transaction(self, front_end_id, trust_trans):
@@ -193,7 +195,7 @@ class multipage_glade_editor(object):
         self.hide_parent.add(self.mainvbox)
 
         config = self.plugin.get_configuration()
-        config_file_path = self.plugin.config_file
+        config_module_name = self.plugin.config_module_name
         if not config_valid(config):
             # even in the case of a broken config, we should still
             # display all of the data we have available...

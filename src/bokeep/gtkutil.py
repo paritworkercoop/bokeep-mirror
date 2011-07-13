@@ -61,8 +61,7 @@ def file_selection_path(msg="choose file",
         return file_path
     return None
 
-def input_entry_dialog(msg, default_answer="", parent=None, 
-                       question_type=gtk.MESSAGE_QUESTION):
+def input_entry_dialog(msg, default_answer="", parent=None):
     dia = Dialog(
         msg, parent, gtk.DIALOG_MODAL |gtk.DIALOG_DESTROY_WITH_PARENT,
         buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
