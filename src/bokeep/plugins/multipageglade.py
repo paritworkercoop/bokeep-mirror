@@ -55,10 +55,9 @@ class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
     def run_configuration_interface(
         self, parent_window, backend_account_fetch, book):
         config_module_name = input_entry_dialog(
-            "Enter a module name", 
-        self.set_config_module_name
-
-        self.set_config_file( file_selection_path("select config file") )
+            "Enter a module name", parent=parent_window)
+        if config_module_name != None:
+            self.set_config_module_name(config_module_name)
 
     def register_transaction(self, front_end_id, trust_trans):
         assert( not self.has_transaction(front_end_id) )
