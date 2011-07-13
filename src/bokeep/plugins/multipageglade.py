@@ -114,7 +114,14 @@ class MultipageGladeTransaction(SafeConfigBasedTransaction):
     def make_new_fin_trans(self):
         # assumption, you've already checked the config and you're really just
         # calling this from __get_and_cache_fin_trans
-        config = self.associated_plugin.get_configuration()
+
+        # default stance of paranoia on reload, just like 
+        # get_financial_transactions from the super class does
+        #
+        # this is very concerning because we don't want to wipe out work
+        # done by config.initialization_hook when called
+        # by multipage_glade_editor
+        config = self.associated_plugin.get_configuration(allow_reload=False)
         try:
             # for debits and credits
             trans_lines = [
@@ -193,14 +200,19 @@ class multipage_glade_editor(object):
         self.mainvbox = VBox()
         self.hide_parent.add(self.mainvbox)
 
-        config = self.plugin.get_configuration()
+        # allowing reload of the configuration module is fine
+        # here when we're bringing up the editor at first,
+        # its later after config.initialization_hook is called
+        # that we want to prevent subsequent get_configuration calls
+        # not not lose that work, including the ones done by 
+        # get_financial_transactions and make_new_fin_trans
+        config = self.plugin.get_configuration(allow_reload=True)
         config_module_name = self.plugin.config_module_name
         if not config_valid(config):
             # even in the case of a broken config, we should still
             # display all of the data we have available...
             self.mainvbox.pack_start(Label("no configuration"))
-        elif not self.trans.can_safely_proceed_with_config_and_path(
-            config_file_path, config):
+        elif not self.trans.can_safely_proceed_with_config_module(config):
             # should display all data that's available instead of just
             # this label
             #
@@ -316,7 +328,7 @@ class multipage_glade_editor(object):
         
 
     def attach_current_page(self):
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         self.current_widget_dict = self.glade_pages[self.current_page] 
         self.current_window = self.current_widget_dict[
             config.pages[self.current_page][TOP_WIDGET] ]
@@ -352,16 +364,16 @@ class multipage_glade_editor(object):
             return False
     
     def __current_page_ident(self):
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         return config.pages[self.current_page]
 
     def __entry_widget_is_check_excempt(self, widget_name):
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         return (self.__current_page_ident(), widget_name) in \
             config.non_decimal_check_labels
 
     def widget_valid(self, widget_name, widget):
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         if isinstance(widget, Entry) and \
                 not self.__entry_widget_is_check_excempt(widget_name):
             try:
@@ -376,7 +388,7 @@ class multipage_glade_editor(object):
         return True
 
     def nav_but_clicked(self, but, *args):
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         
         old_page = self.current_page
         delta = -1 if self.nav_buts[but] == GLADE_BACK_NAV else 1
@@ -401,7 +413,7 @@ class multipage_glade_editor(object):
             config.page_post_change_config_hooks(old_page, new_page)
 
     def entry_changed(self, entry, *args):
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         widget_key = ( (config.pages[self.current_page]), entry.get_name() )
         self.trans.update_widget_state(
             widget_key, entry.get_text() )
@@ -412,7 +424,7 @@ class multipage_glade_editor(object):
         # woah, see the commonality with entry_changed, perhaps it's time
         # to do some decorating no?
         print("cal changed")
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         widget_key = ( (config.pages[self.current_page]), calendar.get_name() )
         self.trans.update_widget_state(
             widget_key, get_current_date_of_gtkcal(calendar) )
@@ -421,7 +433,7 @@ class multipage_glade_editor(object):
         
 
     def update_auto_labels(self):
-        config = self.plugin.get_configuration()
+        config = self.plugin.get_configuration(allow_reload=False)
         # this function should never be called if the config hasn't been
         # checked out as okay
         assert( hasattr(config, 'auto_update_labels') )

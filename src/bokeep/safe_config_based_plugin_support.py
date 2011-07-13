@@ -162,7 +162,10 @@ class SafeConfigBasedTransaction(Transaction):
         # assumption, you've already checked that there is either no
         # trans in cache or this config is safe to try and your're
         # calling this from get_financial_transactions
-        config_module = self.associated_plugin.get_configuration()
+        #
+        # paranoid stance on allow_reload
+        config_module = self.associated_plugin.get_configuration(
+            allow_reload=False)
         if not self.config_valid(config_module):
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 "inadequet config")
