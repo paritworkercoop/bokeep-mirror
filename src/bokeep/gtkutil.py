@@ -34,7 +34,7 @@ from gtk import \
     MESSAGE_ERROR, BUTTONS_OK, \
     TreeView, ListStore, STOCK_ADD, STOCK_DELETE, VBox, HBox, Label, Button, \
     TreeViewColumn, CellRendererText, main as gtk_main, Window, main_quit, \
-    CellRendererCombo, CellRendererText, Dialog, Calendar
+    CellRendererCombo, CellRendererText, Dialog, Calendar, Entry
 import gobject
 import gtk
 
@@ -60,6 +60,20 @@ def file_selection_path(msg="choose file",
     if result == RESPONSE_OK:
         return file_path
     return None
+
+def input_entry_dialog(msg, default_answer="", parent=None, 
+                       question_type=gtk.MESSAGE_QUESTION):
+    dia = Dialog(
+        msg, parent, gtk.DIALOG_MODAL |gtk.DIALOG_DESTROY_WITH_PARENT,
+        buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                 gtk.STOCK_OK, RESPONSE_OK) )
+    dia.vbox.pack_start(Label(msg))
+    da_entry = Entry()
+    dia.vbox.pack_end( da_entry )
+    dia.show_all()
+    result = dia.run()
+    dia.destroy()
+    return None if result != RESPONSE_OK else da_entry.get_text()
 
 def get_current_date_of_gtkcal(cal):
     (year, month, day) = cal.get_date()
@@ -532,6 +546,8 @@ def test_prog_list_changed(*args):
     print 'list changed'
 
 def main():
+    print 'answer', input_entry_dialog("who what?")
+
     w = Window()
     w.resize(200, 200)
     w.connect( "delete-event", main_quit )
