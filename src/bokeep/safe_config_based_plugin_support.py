@@ -106,36 +106,46 @@ class SafeConfigBasedTransaction(Transaction):
     # if __init__ is ever defined make sure it passes appropriate stuff
     # up to Transaction.__init__
 
-    def can_safely_proceed_with_config_and_path(self, path, config):
-        config_file_path = path
+    def can_safely_proceed_with_config_module(self, config_module):
+        """Ensures a configuration module hasn't been tampered with since
+        it was last used, or if a new version is permitted
+
+        This is used by get_financial_transactions to avoid replacing
+        an original set of backend financial transactions with new ones
+        when the old ones were created under separate conditions.
+
+        Returns True if things are fine, False otherwise
+        """
+        # if doesn't have trans_cache, there there can't be a problem
+        # nothing ever done before
         if not hasattr(self, 'trans_cache'):
             return True
         else:
-            # would have been created if trans_cache attribute was
+            # would have been created if trans_cache attribute was created
             assert( hasattr(self, 'config_crc_cache') )
-        crc = adler32_of_file(config_file_path)
+        crc = adler32_of_file(config_module.__file__)
         return crc == self.config_crc_cache or \
             hasattr(config, 'force_crc_backwards_config') or \
             ( hasattr(config, 'backwards_config_support') and
               config.backwards_config_support(self.config_crc_cache) )
 
     def get_financial_transactions(self):
-        config = self.associated_plugin.get_configuration()
+        # by default, a paranoid stance on allow_reload
+        config_module = self.associated_plugin.get_configuration(
+            allow_reload=False)
         if hasattr(self, 'trans_cache'):
-            config_file_path = self.associated_plugin.config_file
             # this whole thing could be avoided if the backend tried to
             # automically first create the new transaction and delete
             # original -- all together, if the first fails we leave in
             # place the original
-            if config_file_path == None:
+            if config_module == None:
                 print(
                     "had to pull transaction from trans cache due to missing "
                     "config, but why was a change recorded in the first place?"
                     " possible bug elsewhere in code"
                     )
                 return self.trans_cache
-            if self.can_safely_proceed_with_config_and_path(config_file_path,
-                                                            config):
+            if self.can_safely_proceed_with_config_module(config_module):
                 return self.__get_and_cache_fin_trans()
             else:
                 print("had to pull transaction from trans cache due to "
@@ -152,8 +162,8 @@ class SafeConfigBasedTransaction(Transaction):
         # assumption, you've already checked that there is either no
         # trans in cache or this config is safe to try and your're
         # calling this from get_financial_transactions
-        config = self.associated_plugin.get_configuration()
-        if not self.config_valid(config):
+        config_module = self.associated_plugin.get_configuration()
+        if not self.config_valid(config_module):
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 "inadequet config")
 
@@ -161,12 +171,11 @@ class SafeConfigBasedTransaction(Transaction):
         
         # important to do this second, as above may exception out, in which
         # case these two cached variables should both not be saved
-        self.config_crc_cache = adler32_of_file(
-            self.associated_plugin.config_file)
+        self.config_crc_cache = adler32_of_file(config_module.__file__)
 
         return self.trans_cache
 
-    def config_valid(self, config):
+    def config_valid(self, config_module):
         raise BoKeepTransactionNotMappableToFinancialTransaction(
             "make_new_fin_trans from SafeConfigBasedTransaction called. "
             "This function shoudl be overridden by a subclass")
