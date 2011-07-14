@@ -267,6 +267,36 @@ class GnuCashBasicTest(GnuCashBasicSetup):
         self.backend_module.close()
         self.backend_module.close()
 
+    def test_account_creation_when_not_there(self):
+        TEST_NEW_ACCOUNT = "test created account"
+        TEST_NEW_ACCOUNT_FULL_SPEC = (ASSETS_ACCOUNT, "test created account")
+        test_trans = TestTransaction(
+            Decimal(1), TEST_NEW_ACCOUNT_FULL_SPEC,
+            Decimal(-1), PETTY_CASH_FULL_SPEC )
+        test_trans.fin_trans.lines[0].create_account_if_missing = True
+        test_trans.set_currency(self.get_currency())
+        front_end_id = 1
+        self.backend_module.mark_transaction_dirty(
+            front_end_id, test_trans)
+        self.backend_module.flush_backend()
+        if not self.backend_module.transaction_is_clean(front_end_id):
+            self.assertEquals(
+                None, self.backend_module.reason_transaction_is_dirty(
+                    front_end_id) )
+        self.assert_(self.backend_module.transaction_is_clean(front_end_id))
+        self.backend_module.close()
+        self.assertFalse(self.backend_module.can_write() )
+        (s, book, root, accounts) = \
+            self.acquire_gnucash_session_book_root_and_accounts()
+        assets, bank, petty_cash = accounts[:3]
+        test_new_account = self.do_test_for_sub_account(
+            assets, BANK_ACCOUNT)
+        test_new_account = self.do_test_for_sub_account(
+            assets, TEST_NEW_ACCOUNT)
+        # next thing we should do is test that the transaction is
+        # actually there in the sub account, not just that the
+        # account was created
+
 class GnuCashBasicTestXML(GetProtocolXML, GnuCashBasicTest): pass
 
 class GnuCashBasicTestUSD(GetCurrencyUSD, GnuCashBasicTest): pass
