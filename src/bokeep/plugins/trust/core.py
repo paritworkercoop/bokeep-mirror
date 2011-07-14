@@ -35,7 +35,7 @@ class TrustTransaction(Transaction):
         if len(trust_module.get_trustors().values()) == 0:
             self.trustor = None
         else:
-            self.trustor = trust_module.get_trustors().values()[0]
+            self.trustor = trust_module.get_trustors().values()[0].name
         self.memo = ''
         self.trans_date = datetime.today()
         self.set_id(-1)
