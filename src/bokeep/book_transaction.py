@@ -45,20 +45,12 @@ class FinancialTransactionLine(object):
                     selection)
     line_memo -- specifies a string to associate with the line,
                  will be supported by GnuCash and SerialFile backend modules
+
+    create_account_if_missing -- if present and set to True, specifies
+    that the account specified by account_spec should be created if missing
     """
     def __init__(self, amount):
         self.amount = amount
-        self.__create_account_if_missing = False
-    
-    def set_create_account_if_missing(self, value):
-        """value -- A boolean that if "True" means that the account referred to
-        in this transaction line will be created if it doesn't already exist."""
-        self.__create_account_if_missing = value
-    
-    def get_create_account_if_missing(self):
-        """If "True" is returned the account specified in this transaction line
-        should be created if it doesn't already exist."""
-        return self.__create_account_if_missing
 
 class FinancialTransaction(object):
     """Represents a balanced financial transaction, which consists of

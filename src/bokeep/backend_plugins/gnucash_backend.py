@@ -118,10 +118,13 @@ def get_account_from_trans_line(gnucash_book, trans_line):
                                      "optional attribute account_spec "
                                      "to be set" )
     
+    create_account_if_missing = (
+        False if not hasattr(trans_line, 'create_account_if_missing')
+        else trans_line.create_account_if_missing )
+        
     return account_from_path(gnucash_book, gnucash_book.get_root_account(),
                              trans_line.account_spec,
-                             create_account_if_missing =
-                                trans_line.get_create_account_if_missing())
+                             create_account_if_missing=create_account_if_missing)
 
 def make_new_split(book, amount, account, trans, currency):
     # the fraction tests used to be !=, but it was realized that
