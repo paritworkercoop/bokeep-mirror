@@ -142,6 +142,13 @@ class GnuCashFileSetup(TestCase):
     def get_protocol_full(self):
         return self.get_protocol() + "://"
 
+
+    def do_test_for_sub_account(self, parent, sub_name):
+        sub = parent.lookup_by_name(sub_name)
+        self.assertNotEquals(sub.get_instance(), None)
+        self.assertEquals(sub.GetName(), sub_name)
+        return sub
+
     def check_account_tree_is_present(self, session_provided=None):
         if session_provided == None:
             self.backend_module.close()
@@ -150,12 +157,6 @@ class GnuCashFileSetup(TestCase):
             s = session_provided
             book = s.book
             root = book.get_root_account()
-
-        def test_for_sub_account(parent, sub_name):
-            sub = parent.lookup_by_name(sub_name)
-            self.assertNotEquals(sub.get_instance(), None)
-            self.assertEquals(sub.GetName(), sub_name)
-            return sub
 
         self.acquire_test_accounts_from_root(root)
         
@@ -170,14 +171,9 @@ class GnuCashFileSetup(TestCase):
         return (s, book, root)
 
     def acquire_test_accounts_from_root(self, root):
-        def test_for_sub_account(parent, sub_name):
-            sub = parent.lookup_by_name(sub_name)
-            self.assertNotEquals(sub.get_instance(), None)
-            self.assertEquals(sub.GetName(), sub_name)
-            return sub
-        assets = test_for_sub_account(root, ASSETS_ACCOUNT)
-        bank = test_for_sub_account(assets, BANK_ACCOUNT)
-        petty_cash = test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
+        assets = self.do_test_for_sub_account(root, ASSETS_ACCOUNT)
+        bank = self.do_test_for_sub_account(assets, BANK_ACCOUNT)
+        petty_cash = self.do_test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
         return (assets, bank, petty_cash)
 
     def acquire_gnucash_session_book_root_and_accounts(self):
