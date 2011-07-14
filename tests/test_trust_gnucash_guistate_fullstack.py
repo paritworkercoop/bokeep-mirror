@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -75,10 +75,11 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3]
-        bank_splits = bank.GetSplitList()
+        trustor_account = bank.lookup_by_name(TEST_TRUSTOR)
+        bank_trustor_splits = trustor_account.GetSplitList()
         petty_cash_splits = petty_cash.GetSplitList()
         self.assert_(petty_cash_splits[0].GetAmount().equal( ONE ) )
-        self.assert_(bank_splits[0].GetAmount().equal( NEG_ONE ) )
+        self.assert_(bank_trustor_splits[0].GetAmount().equal( NEG_ONE ) )
         self.gnucash_session_termination(s)
         
     def test_basic_transaction_without_backend_close(self):
@@ -100,10 +101,11 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3]
-        bank_splits = bank.GetSplitList()
+        trustor_account = bank.lookup_by_name(TEST_TRUSTOR)
+        bank_trustor_splits = trustor_account.GetSplitList()
         petty_cash_splits = petty_cash.GetSplitList()
         self.assert_(petty_cash_splits[0].GetAmount().equal( ONE ) )
-        self.assert_(bank_splits[0].GetAmount().equal( NEG_ONE ) )
+        self.assert_(bank_trustor_splits[0].GetAmount().equal( NEG_ONE ) )
         self.gnucash_session_termination(s)
 
     def test_change_transaction(self):
