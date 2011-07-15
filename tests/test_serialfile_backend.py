@@ -59,11 +59,18 @@ class SerialFileTest(TestCase):
         self.backend_module.mark_transaction_dirty(
             self.front_end_id, self.test_trans)
         self.backend_module.flush_backend()
+        self.do_clean_and_can_write_test()
+
+    def do_clean_and_can_write_test(self):
         self.assert_(
             self.backend_module.transaction_is_clean(self.front_end_id))
         self.assert_(self.backend_module.can_write())
 
     test_second_mark_and_flush = do_mark_flush_and_check
+
+    def test_flush_no_re_dirty_mark(self):
+        self.backend_module.flush_backend()
+        self.do_clean_and_can_write_test()
 
     def tearDown(self):
         remove(self.serial_file_name)
