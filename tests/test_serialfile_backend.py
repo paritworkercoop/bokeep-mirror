@@ -55,10 +55,14 @@ class SerialFileTest(TestCase):
         self.backend_module.accounting_file = self.serial_file_name
         self.do_mark_flush_and_check()
 
-    def do_mark_flush_and_check(self):
+    def do_dirty_mark(self):
         self.backend_module.mark_transaction_dirty(
             self.front_end_id, self.test_trans)
+        
+    def do_mark_flush_and_check(self):
+        self.do_dirty_mark()
         self.backend_module.flush_backend()
+        self.do_can_write_test()
         self.do_clean_and_can_write_test()
 
     def do_clean_and_can_write_test(self):
