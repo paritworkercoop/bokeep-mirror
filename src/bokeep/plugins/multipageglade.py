@@ -39,7 +39,7 @@ from bokeep.gtkutil import input_entry_dialog, get_current_date_of_gtkcal, \
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.safe_config_based_plugin_support import \
-    SafeConfigBasedPlugin, SafeConfigBasedTransaction
+    SafeConfigBasedPlugin, SafeConfigBasedTransaction, REALLY_BAD_MODULE_NAMES
 
 def get_plugin_class():
     return MultiPageGladePlugin
@@ -56,7 +56,12 @@ class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
         self, parent_window, backend_account_fetch, book):
         config_module_name = input_entry_dialog(
             "Enter a module name", parent=parent_window)
-        if config_module_name != None:
+        # check for obvious crap, though we should actually
+        # try to import this module as well and look for import error
+        if config_module_name in REALLY_BAD_MODULE_NAMES:
+            gtk_error_message(
+                "%s not a valid module name" % config_module_name)
+        else:
             self.set_config_module_name(config_module_name)
 
     def register_transaction(self, front_end_id, trust_trans):

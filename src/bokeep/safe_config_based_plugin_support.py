@@ -26,6 +26,22 @@ from bokeep.util import do_module_import, adler32_of_file
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 
+REALLY_BAD_MODULE_NAMES = ('', None)
+
+def assert_not_really_bad_module_name(module_name):
+    # Samuel, if you're wondering wny the hell I'd risk wasting 
+    # resources creating and searching a tuple instead of
+    # just doing two comparison ops, well not only is this more
+    # "elegant / more DRY" by insane Mark standards, but its also
+    # actually caught or will be caught by good python compilers and
+    # optimized well to avoid allocating or searching the tuple at all!
+    #
+    # '' was found to be particularly nasty because passing it to
+    # __import__ doesn't result in a import error (it actually imports the
+    # bokeep package), but of course such a name isn't found in the
+    # sys.modules dictionary when we check there
+    assert( module_name not in REALLY_BAD_MODULE_NAMES )
+
 class SafeConfigBasedPlugin(object):
     def __init__(self):
         self.__init_config_module_name_if_not_there()
@@ -50,7 +66,7 @@ class SafeConfigBasedPlugin(object):
         self.__init_config_module_name_if_not_there()
 
         if hasattr(self, '_v_configuration'):
-            assert( self.config_module_name != None )
+            assert_not_really_bad_module_name(self.config_module_name)
             assert( self.config_module_name in sys.modules )
 
             # perhaps we should handle this more gracefully, it's not really
@@ -85,6 +101,9 @@ class SafeConfigBasedPlugin(object):
             return return_value
 
     def set_config_module_name(self, new_config_module_name):
+        # assert that the caller didn't give us crap
+        assert_not_really_bad_module_name(new_config_module_name)
+
         # for backwards compatibility with old versions
         self.__init_config_module_name_if_not_there()
         
