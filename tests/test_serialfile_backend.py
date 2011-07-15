@@ -64,6 +64,9 @@ class SerialFileTest(TestCase):
     def do_clean_and_can_write_test(self):
         self.assert_(
             self.backend_module.transaction_is_clean(self.front_end_id))
+        self.do_can_write_test()
+
+    def do_can_write_test(self):
         self.assert_(self.backend_module.can_write())
 
     test_second_mark_and_flush = do_mark_flush_and_check
