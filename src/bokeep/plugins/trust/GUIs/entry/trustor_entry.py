@@ -43,7 +43,7 @@ class trustor_entry(object):
         self.trust_module = trust_module
         self.trustors = self.trust_module.get_trustors()
         self.editable = editable
-        self.trans_trustor = self.trust_trans.get_trustor_name()
+        self.trans_trustor = self.trust_trans.get_trustor()
 
         self.init()
         self.extended_init()
@@ -72,9 +72,9 @@ class trustor_entry(object):
         self.trustor_combo.set_model(self.trustor_list)
         index = 0
         use_index = -1
-        for trustor in self.trustors:
-            self.trustor_list.append([trustor])
-            if not(self.trans_trustor == None) and self.trans_trustor == trustor:
+        for trustor_name in self.trustors:
+            self.trustor_list.append([trustor_name])
+            if not(self.trans_trustor == None) and self.trans_trustor.name == trustor_name:
                 use_index = index
             index += 1
  
@@ -91,7 +91,7 @@ class trustor_entry(object):
                 (trans_date.year, trans_date.month, trans_date.day) )
 
 
-        if not self.editable or self.trust_trans.get_trustor_name() == None :
+        if not self.editable or self.trust_trans.get_trustor() == None :
             self.widgets['amount_entry'].set_sensitive(False)
 
 
