@@ -89,7 +89,7 @@ class SafeConfigBasedPlugin(object):
         self.__init_config_module_name_if_not_there()
         
         old_config_module_name = self.config_module_name
-        if old_config_module_name == new_config_module_name
+        if old_config_module_name == new_config_module_name:
             # forces reload if old cached module has changed
             self.get_configuration(allow_reload=True)
         # else its a new config module, and if there's an old cached one
