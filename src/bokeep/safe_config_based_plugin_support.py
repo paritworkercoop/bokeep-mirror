@@ -144,9 +144,9 @@ class SafeConfigBasedTransaction(Transaction):
             assert( hasattr(self, 'config_crc_cache') )
         crc = adler32_of_file(config_module.__file__)
         return crc == self.config_crc_cache or \
-            hasattr(config, 'force_crc_backwards_config') or \
-            ( hasattr(config, 'backwards_config_support') and
-              config.backwards_config_support(self.config_crc_cache) )
+            hasattr(config_module, 'force_crc_backwards_config') or \
+            ( hasattr(config_module, 'backwards_config_support') and
+              config_module.backwards_config_support(self.config_crc_cache) )
 
     def get_financial_transactions(self):
         # by default, a paranoid stance on allow_reload
