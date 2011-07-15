@@ -48,7 +48,7 @@ class TrustTransaction(Transaction):
             cash_line.account_spec = self.trust_module.cash_account
 
         #use the cash line's memo field for the memo
-        cash_line.line_memo = self.memo
+        cash_line.line_memo = self.get_memo()
 
         liability_line = \
             FinancialTransactionLine(self.get_transfer_amount() * NEG_1)
@@ -100,7 +100,13 @@ class TrustTransaction(Transaction):
         return TrustTransaction.get_transfer_amount(self)
 
     def get_memo(self):
-        return self.memo
+        # Remove "if line" and just return "self.memo" once backwards
+        # compatibility with BoKeep 1.0.2's transaction database is no longer
+        # desired.  Perhaps at BoKeep 1.2.0.
+        if hasattr(self, 'memo'):
+            return self.memo
+        else:
+            return ''
 
         
 class TrustMoneyInTransaction(TrustTransaction):
