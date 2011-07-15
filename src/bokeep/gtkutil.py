@@ -72,7 +72,7 @@ def input_entry_dialog(msg, default_answer="", parent=None):
     dia.show_all()
     result = dia.run()
     dia.destroy()
-    return None if result != RESPONSE_OK else da_entry.get_text()
+    return da_entry.get_text() if result == RESPONSE_OK else None
 
 def get_current_date_of_gtkcal(cal):
     (year, month, day) = cal.get_date()
