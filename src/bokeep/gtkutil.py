@@ -71,8 +71,9 @@ def input_entry_dialog(msg, default_answer="", parent=None):
     dia.vbox.pack_end( da_entry )
     dia.show_all()
     result = dia.run()
+    datext = da_entry.get_text()
     dia.destroy()
-    return da_entry.get_text() if result == RESPONSE_OK else None
+    return datext if result == RESPONSE_OK else None
 
 def get_current_date_of_gtkcal(cal):
     (year, month, day) = cal.get_date()
