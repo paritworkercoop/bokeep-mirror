@@ -85,6 +85,7 @@ class SerialFileTest(TestCase):
         self.do_clean_and_can_write_test()
 
     def tearDown(self):
+        self.backend_module.close()
         remove(self.serial_file_name)
             
 if __name__ == "__main__":
