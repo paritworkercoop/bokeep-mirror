@@ -68,6 +68,7 @@ def input_entry_dialog(msg, default_answer="", parent=None):
                  gtk.STOCK_OK, RESPONSE_OK) )
     dia.vbox.pack_start(Label(msg))
     da_entry = Entry()
+    da_entry.set_text(default_answer)
     dia.vbox.pack_end( da_entry )
     dia.show_all()
     result = dia.run()
@@ -546,7 +547,7 @@ def test_prog_list_changed(*args):
     print 'list changed'
 
 def main():
-    print 'answer', input_entry_dialog("who what?")
+    print 'answer', input_entry_dialog("who what?", 'edit me')
 
     w = Window()
     w.resize(200, 200)
