@@ -122,8 +122,10 @@ credits
         except IOError, e:
             stderr.write(str(e))
             raise BoKeepBackendException(str(e.message))
-        else:
-            self.open_session_and_retain()
+        finally:
+            del self._v_session_active
+                    
+        self.open_session_and_retain()
 
     def configure_backend(self, parent_window=None):
         fcd = FileChooserDialog(
