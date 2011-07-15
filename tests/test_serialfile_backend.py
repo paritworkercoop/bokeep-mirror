@@ -22,6 +22,7 @@ from unittest import TestCase, main
 from os.path import abspath
 from os import remove
 from decimal import Decimal
+from itertools import izip
 
 # bokeep
 from bokeep.book_transaction import \
@@ -42,6 +43,29 @@ class TestTransaction(Transaction):
     def get_financial_transactions(self):
        return [self.fin_trans]
 
+def do_logger_function(original_func):
+    def logger_function(self, *args, **kargs):
+        self.log.append(None)
+        pos = len(self.log)-1
+        return_value = original_func(self, *args, **kargs)
+        self.log[pos] = (
+            "%s called with %s and %s and returned %s" %
+            (original_func.__name__, args, kargs, return_value) )
+        return return_value
+    return logger_function
+
+class SerialFileLogingPlugin(SerialFilePlugin):
+    def __init__(self):
+        SerialFilePlugin.__init__(self)
+        self.log = []
+
+    def get_log(self):
+        return self.log
+
+for func_name in ("open_session", "write_to_file", "close", "save"):
+    setattr(SerialFileLogingPlugin, func_name,
+            do_logger_function( getattr(SerialFilePlugin, func_name) ) )
+
 class SerialFileTest(TestCase):
     def setUp(self):
         self.serial_file_name = create_tmp_filename(
@@ -51,7 +75,7 @@ class SerialFileTest(TestCase):
             Decimal(2), None,
             Decimal(-2), None )
         self.front_end_id = 1
-        self.backend_module = SerialFilePlugin()
+        self.backend_module = SerialFileLogingPlugin()
         self.backend_module.accounting_file = self.serial_file_name
         self.do_mark_flush_and_check()
 
@@ -72,6 +96,16 @@ class SerialFileTest(TestCase):
 
     def do_can_write_test(self):
         self.assert_(self.backend_module.can_write())
+
+    def test_log_has_right_number_of_ops(self):
+        log = self.backend_module.get_log()
+        self.assertEquals( len(log), 4 )
+
+        for i, (prefix, log_entry) in enumerate(izip(
+        ("open_session", "write_to_file", "save", "open_session"),
+        log )):
+            log_entry_start = log_entry[ :len(prefix) ]
+            self.assertEquals(log_entry_start, prefix)
 
     def test_second_mark_and_flush(self):
         self.do_dirty_mark()
