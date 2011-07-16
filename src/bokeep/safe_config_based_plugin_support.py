@@ -125,6 +125,36 @@ class SafeConfigBasedTransaction(Transaction):
     # if __init__ is ever defined make sure it passes appropriate stuff
     # up to Transaction.__init__
 
+    def set_safety_cache_was_used(self):
+        """Call when the safety cache is put to use, this sets a flag
+        that will cause get_safety_cache_was_used to subsequently return
+        True until clear_safety_cache_was_used is called
+        """
+        self.__safety_cache_was_used = True
+
+    def get_safety_cache_was_used(self):
+        """Check if set_safety_cache_was_used was called to flag that
+        the safety cache had been put to use (returns True if so)
+        This will remain True until clear_safety_cache_was_used
+        """
+        return getattr(
+            self,  '__SafeConfigBasedTransaction_safety_cache_was_used',
+            False)
+
+    def clear_safety_cache_was_used(self):
+        """Call if the flag safety_cache_was_used is set and no longer should be
+
+        Should only call this if get_safety_cache_was_used() return True
+        this condition is asserted.
+        
+        get_safety_cache_was_used will subsequenlty return False until
+        set_safety_cache_was_used is called again.
+        """
+        assert(self.get_safety_cache_was_used())
+        # we re-check what was asserted above in case asserts are disabled
+        if self.get_safety_cache_was_used():
+            del self.__safety_cache_was_used
+
     def can_safely_proceed_with_config_module(self, config_module):
         """Ensures a configuration module hasn't been tampered with since
         it was last used, or if a new version is permitted
@@ -163,10 +193,12 @@ class SafeConfigBasedTransaction(Transaction):
                     "config, but why was a change recorded in the first place?"
                     " possible bug elsewhere in code"
                     )
+                self.set_safety_cache_was_used()
                 return self.trans_cache
             if self.can_safely_proceed_with_config_module(config_module):
                 return self.__get_and_cache_fin_trans()
             else:
+                self.set_safety_cache_was_used()
                 print("had to pull transaction from trans cache due to "
                       "incompatible config, but why was a change recorded in "
                       "the first place?"
@@ -190,11 +222,18 @@ class SafeConfigBasedTransaction(Transaction):
                 "inadequet config")
 
         self.trans_cache = self.make_new_fin_trans()
-        
+
+        # at this point (above line was fine)
+        # we know we managed to create a new backend transaction
+        # without relying on the cache, so we clear the safety_cache_was_used
+        # flag if in use
+        if self.get_safety_cache_was_used():
+            self.clear_safety_cache_was_used()
+
         # important to do this second, as above may exception out, in which
         # case these two cached variables should both not be saved
         self.config_crc_cache = adler32_of_file(config_module.__file__)
-
+        
         return self.trans_cache
 
     def config_valid(self, config_module):
