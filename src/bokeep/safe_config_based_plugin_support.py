@@ -138,7 +138,7 @@ class SafeConfigBasedTransaction(Transaction):
         This will remain True until clear_safety_cache_was_used
         """
         return getattr(
-            self,  '__SafeConfigBasedTransaction_safety_cache_was_used',
+            self,  '_SafeConfigBasedTransaction__safety_cache_was_used',
             False)
 
     def clear_safety_cache_was_used(self):

@@ -242,6 +242,14 @@ class multipage_glade_editor(object):
                       "the safety of your old information, last adler "
                       "CRC was %s" % self.trans.config_crc_cache ))
         else:
+            # if the safety cache was relied on before we need to tell the
+            # backend that the transaction is actually dirty,
+            # and now that we know that we have a workable config,
+            # there's a chance that we'll actually be able to avoid
+            # relying on the cache this time
+            if self.trans.get_safety_cache_was_used():
+                self.change_register_function()
+
             self.page_label = Label("")
             self.mainvbox.pack_start(self.page_label)
 
