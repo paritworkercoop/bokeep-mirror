@@ -461,7 +461,8 @@ class BoKeepConfigDialog(object):
         dia.vbox.pack_start(tv)
         
         # Populate the tree view.
-        plugin_directories = get_plugins_directories_from_config(self.config)
+        plugin_directories = \
+            get_plugins_directories_from_config(self.config, self.config_path)
         for plugin_directory in plugin_directories:
             row = (plugin_directory,)
             model.append(row)
@@ -498,7 +499,8 @@ class BoKeepConfigDialog(object):
         if dia_result == RESPONSE_OK:            
             # Remove the old plugin directories from the program's path.
             plugin_directories = \
-                get_plugins_directories_from_config(self.config)
+                get_plugins_directories_from_config(self.config,
+                                                    self.config_path)
             for plugin_directory in plugin_directories:
                 path.remove(plugin_directory)
             

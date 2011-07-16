@@ -155,9 +155,10 @@ class trustor_management(object):
     def on_trustor_view_cursor_changed(self, *args):
         sel = self.trustor_view.get_selection()
         sel_iter = sel.get_selected()[1]
-        sel_row = self.trustor_list[sel_iter]
-        trustor_selected = sel_row[0]
-        self.set_trustor(trustor_selected)
+        if sel_iter != None: # If the user clicked a row as opposed to whitespace...
+            sel_row = self.trustor_list[sel_iter]
+            trustor_selected = sel_row[0]
+            self.set_trustor(trustor_selected)
         
         # Update the view.
         self.widgets['remove_button'].set_sensitive(True)

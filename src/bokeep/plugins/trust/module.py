@@ -185,7 +185,7 @@ class TrustModule(Persistent):
         #if the transaction was already associated with another trustor, 
         #dissociate it
         if not trust_trans.get_trustor() == None and not trust_trans.get_trustor() == trustor:
-            self.disassociate_trustor_with_transaction(front_end_id, trust_trans, trust_trans.get_trustor().name)
+            self.disassociate_trustor_with_transaction(front_end_id, trust_trans, trust_trans.get_trustor())
 
         trust_trans.set_trustor(trustor)
 
@@ -198,9 +198,8 @@ class TrustModule(Persistent):
         self._p_changed = True
 
     def disassociate_trustor_with_transaction(self, front_end_id,
-                                             trust_trans, trustor_name):
+                                             trust_trans, trustor):
         self.ensure_trust_database()
-        trustor = self.get_trustor(trustor_name)
         trustor.del_transaction(trust_trans)
         self.transaction_track_database[front_end_id] = (trust_trans, None)
         trust_trans.set_trustor(None)
@@ -217,14 +216,16 @@ class TrustModule(Persistent):
         trust_trans, trustor_name = \
             self.transaction_track_database[front_end_id]
         if trustor_name != None:
+            trustor = self.get_trustor(trustor_name)
             self.disassociate_trustor_with_transaction(
-                front_end_id, trust_trans, trustor_name)
+                front_end_id, trust_trans, trustor)
         del self.transaction_track_database[front_end_id]
 
     def has_transaction(self, front_end_id):
         return front_end_id in self.transaction_track_database
 
     def get_trustors(self):
+        """Returns the trustors (objects)."""
         self.ensure_trust_database()
         return self.trustors_database
 

@@ -23,6 +23,7 @@ from os import remove
 from glob import glob
 
 # Bo-Keep
+from bokeep.config import ZODB_CONFIG_FILESTORAGE
 from bokeep.gui.config.state import \
     BoKeepConfigGuiState, \
     DB_ENTRY_CHANGE, DB_PATH_CHANGE, BOOK_CHANGE, BACKEND_PLUGIN_CHANGE, \
@@ -52,7 +53,7 @@ class BookPluginManageStateTest(BookPluginManageStateBasicSetup):
             filename = create_tmp_filestorage_filename()
             self.filestorage_files.append(filename)
             self.assert_( self.state.action_allowed(DB_ENTRY_CHANGE) )
-            self.state.do_action(DB_ENTRY_CHANGE, filename)
+            self.state.do_action(DB_ENTRY_CHANGE, (filename, ZODB_CONFIG_FILESTORAGE))
             self.assert_( self.state.action_allowed(DB_PATH_CHANGE) )
             self.state.do_action(DB_PATH_CHANGE)
             self.assertEquals( None, self.state.db_error_msg )
@@ -64,7 +65,7 @@ class BookPluginManageStateAfterDBSetSetup(BookPluginManageStateBasicSetup):
         BookPluginManageStateBasicSetup.setUp(self)
         self.filename_1 = create_tmp_filestorage_filename()
         self.filestorage_files.append(self.filename_1)        
-        self.state.do_action(DB_ENTRY_CHANGE, self.filename_1)
+        self.state.do_action(DB_ENTRY_CHANGE, (self.filename_1, ZODB_CONFIG_FILESTORAGE))
         self.state.do_action(DB_PATH_CHANGE)
     
 TESTBOOK = "mr_book"

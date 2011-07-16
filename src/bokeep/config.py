@@ -101,14 +101,14 @@ def create_config_file(path):
         # because initialize_config uses config.set functions..
         assert( len(success_reads) == 1 )
 
-def get_plugins_directories_from_config(config):
+def get_plugins_directories_from_config(config, config_path):
     """Returns the directories that front and back-end plugins are located
     in."""
     
     # old versions of bokeep didn't have the plugin directories section
     # so we need to handle that
     if not config.has_option(PLUGIN_DIRECTORIES_SECTION, PLUGIN_DIRECTORIES):
-        set_plugin_directories_in_config(config, '[]')
+        set_plugin_directories_in_config(config, config_path, '[]')
     
     plugin_directories_str = config.get(PLUGIN_DIRECTORIES_SECTION,
                                         PLUGIN_DIRECTORIES)

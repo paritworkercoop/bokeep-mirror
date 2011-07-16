@@ -142,6 +142,13 @@ class GnuCashFileSetup(TestCase):
     def get_protocol_full(self):
         return self.get_protocol() + "://"
 
+
+    def do_test_for_sub_account(self, parent, sub_name):
+        sub = parent.lookup_by_name(sub_name)
+        self.assertNotEquals(sub.get_instance(), None)
+        self.assertEquals(sub.GetName(), sub_name)
+        return sub
+
     def check_account_tree_is_present(self, session_provided=None):
         if session_provided == None:
             self.backend_module.close()
@@ -150,12 +157,6 @@ class GnuCashFileSetup(TestCase):
             s = session_provided
             book = s.book
             root = book.get_root_account()
-
-        def test_for_sub_account(parent, sub_name):
-            sub = parent.lookup_by_name(sub_name)
-            self.assertNotEquals(sub.get_instance(), None)
-            self.assertEquals(sub.GetName(), sub_name)
-            return sub
 
         self.acquire_test_accounts_from_root(root)
         
@@ -170,14 +171,9 @@ class GnuCashFileSetup(TestCase):
         return (s, book, root)
 
     def acquire_test_accounts_from_root(self, root):
-        def test_for_sub_account(parent, sub_name):
-            sub = parent.lookup_by_name(sub_name)
-            self.assertNotEquals(sub.get_instance(), None)
-            self.assertEquals(sub.GetName(), sub_name)
-            return sub
-        assets = test_for_sub_account(root, ASSETS_ACCOUNT)
-        bank = test_for_sub_account(assets, BANK_ACCOUNT)
-        petty_cash = test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
+        assets = self.do_test_for_sub_account(root, ASSETS_ACCOUNT)
+        bank = self.do_test_for_sub_account(assets, BANK_ACCOUNT)
+        petty_cash = self.do_test_for_sub_account(assets, PETTY_CASH_ACCOUNT)
         return (assets, bank, petty_cash)
 
     def acquire_gnucash_session_book_root_and_accounts(self):
@@ -270,6 +266,36 @@ class GnuCashBasicTest(GnuCashBasicSetup):
     def test_double_close(self):
         self.backend_module.close()
         self.backend_module.close()
+
+    def test_account_creation_when_not_there(self):
+        TEST_NEW_ACCOUNT = "test created account"
+        TEST_NEW_ACCOUNT_FULL_SPEC = (ASSETS_ACCOUNT, "test created account")
+        test_trans = TestTransaction(
+            Decimal(1), TEST_NEW_ACCOUNT_FULL_SPEC,
+            Decimal(-1), PETTY_CASH_FULL_SPEC )
+        test_trans.fin_trans.lines[0].create_account_if_missing = True
+        test_trans.set_currency(self.get_currency())
+        front_end_id = 1
+        self.backend_module.mark_transaction_dirty(
+            front_end_id, test_trans)
+        self.backend_module.flush_backend()
+        if not self.backend_module.transaction_is_clean(front_end_id):
+            self.assertEquals(
+                None, self.backend_module.reason_transaction_is_dirty(
+                    front_end_id) )
+        self.assert_(self.backend_module.transaction_is_clean(front_end_id))
+        self.backend_module.close()
+        self.assertFalse(self.backend_module.can_write() )
+        (s, book, root, accounts) = \
+            self.acquire_gnucash_session_book_root_and_accounts()
+        assets, bank, petty_cash = accounts[:3]
+        test_new_account = self.do_test_for_sub_account(
+            assets, BANK_ACCOUNT)
+        test_new_account = self.do_test_for_sub_account(
+            assets, TEST_NEW_ACCOUNT)
+        # next thing we should do is test that the transaction is
+        # actually there in the sub account, not just that the
+        # account was created
 
 class GnuCashBasicTestXML(GetProtocolXML, GnuCashBasicTest): pass
 

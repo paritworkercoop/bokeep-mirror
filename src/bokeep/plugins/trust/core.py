@@ -33,9 +33,9 @@ class TrustTransaction(Transaction):
         self.trust_module = trust_module
         self.transfer_amount = Decimal(0)
         if len(trust_module.get_trustors().values()) == 0:
-            self.trustor = None
+            self.set_trustor(None)
         else:
-            self.trustor = trust_module.get_trustors().values()[0]
+            self.set_trustor(trust_module.get_trustors().values()[0])
         self.memo = ''
         self.trans_date = datetime.today()
         self.set_id(-1)
@@ -48,28 +48,32 @@ class TrustTransaction(Transaction):
             cash_line.account_spec = self.trust_module.cash_account
 
         #use the cash line's memo field for the memo
-        cash_line.line_memo = self.memo
+        cash_line.line_memo = self.get_memo()
 
         liability_line = \
             FinancialTransactionLine(self.get_transfer_amount() * NEG_1)
+
         if hasattr(self.trust_module, 'trust_liability_account'):
-            if self.get_trustor() == None:
-                liability_line.account_spec = \
-                    self.trust_module.trust_liability_account
-            else:
-                liability_line.set_create_account_if_missing(True)
+            if self.get_trustor() != None:
+                liability_line.create_account_if_missing = True
                 liability_line.account_spec = \
                     self.trust_module.trust_liability_account + \
                     (self.get_trustor().name,)
+            # else we rely on the failure due to account_spec being missing
+            # should really throw
+            # BoKeepTransactionNotMappableToFinancialTransaction
+            # instead
+        # else ditto as above...
         fin_trans = FinancialTransaction( (cash_line, liability_line) )
-        if self.trustor != None:
-            # this should never be so, yet in the unit tests it comes up
-            if isinstance(self.trustor, str):
-                fin_trans.description = self.trustor
-            else:
-                fin_trans.description = self.trustor.name
+
+        if self.get_trustor() != None:
+            fin_trans.description = self.get_trustor().name
         fin_trans.trans_date = self.trans_date
-        fin_trans.chequenum = self.__id
+        # If a previous version without an ID is being used, don't attempt to
+        # set the checknum with an ID that doesn't even exist.
+        # Remove the if line once we're at version 1.2.0.
+        if hasattr(self, '__TrustTransaction_id'):
+            fin_trans.chequenum = self.__id
         fin_trans.currency = self.trust_module.get_currency()
         # should add chequenum at some point, legal aid requested this
         # for ordering
@@ -79,6 +83,8 @@ class TrustTransaction(Transaction):
         return self.transfer_amount
 
     def set_trustor(self, trustor):
+        from bokeep.plugins.trust import Trustor
+        assert(trustor == None or trustor.__class__ == Trustor)
         self.trustor = trustor
         
     def set_id(self, id):
@@ -87,13 +93,20 @@ class TrustTransaction(Transaction):
         self.__id = id
 
     def get_trustor(self):
+        """Returns the trustor (object) associated with this transaction."""
         return self.trustor
 
     def get_displayable_amount(self):
         return TrustTransaction.get_transfer_amount(self)
 
     def get_memo(self):
-        return self.memo
+        # Remove "if line" and just return "self.memo" once backwards
+        # compatibility with BoKeep 1.0.2's transaction database is no longer
+        # desired.  Perhaps at BoKeep 1.2.0.
+        if hasattr(self, 'memo'):
+            return self.memo
+        else:
+            return ''
 
         
 class TrustMoneyInTransaction(TrustTransaction):
