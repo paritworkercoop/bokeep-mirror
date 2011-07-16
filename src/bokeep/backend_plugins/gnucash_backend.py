@@ -347,7 +347,16 @@ class GnuCash(SessionBasedRobustBackendPlugin):
             # xml and sqlite
             self.setattr('gnucash_file', 'xml' + '://' + gnucashfile_path)
 
-    def get_account_names(self, account, names = [], prefix = ''):
+    def get_account_names(self, account, names = None, prefix = ''):
+        # Initialise the default value of names.
+        # Remember that Python only initialises a default parameter once upon
+        # execution of a respective def statement.  Thus a mutable default
+        # parameter can be changed on an invocation of the respective function
+        # and reused on subsequent invocations without being reset, unless we
+        # reset it like this specifically...
+        if names is None:
+            names = []
+        
         # Get the name of the current account.
         if not account.is_root():
             if not account.GetPlaceholder():
