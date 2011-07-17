@@ -120,8 +120,9 @@ class SafeConfigBasedPlugin(object):
         
         old_config_module_name = self.config_module_name
         if old_config_module_name == new_config_module_name:
-            # forces reload if old cached module has changed
-            self.get_configuration(allow_reload=True)
+            # even though the module name is unchanged, the module itself
+            # may have changed so we reload
+            self.__configuration_reload()
         # else its a new config module, and if there's an old cached one
         # we dump the cache
         elif hasattr(self, '_v_configuration'):
