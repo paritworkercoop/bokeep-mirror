@@ -119,6 +119,11 @@ class SafeConfigBasedPlugin(object):
             delattr(self, '_v_configuration_checksum')
         self.config_module_name = new_config_module_name
 
+SAFTEY_CACHE_USED_STDERR_MSG = """"had to pull transaction from trans cache
+due to missing config, but why was a change recorded in the first place?
+possible bug elsewhere in code
+"""
+
 class SafeConfigBasedTransaction(Transaction):
     """Sublcasses must override config_valid and make_new_fin_trans
     """
@@ -189,9 +194,7 @@ class SafeConfigBasedTransaction(Transaction):
             # place the original
             if config_module == None:
                 print >> sys.stderr, (
-                    "had to pull transaction from trans cache due to missing "
-                    "config, but why was a change recorded in the first place?"
-                    " possible bug elsewhere in code"
+                    SAFTEY_CACHE_USED_STDERR_MSG
                     )
                 self.set_safety_cache_was_used()
                 return self.trans_cache
@@ -200,11 +203,8 @@ class SafeConfigBasedTransaction(Transaction):
             else:
                 self.set_safety_cache_was_used()
                 print >> sys.stderr, (
-                    "had to pull transaction from trans cache due to "
-                    "incompatible config, but why was a change recorded in "
-                    "the first place?"
-                    " possible bug elsewhere in code"
-                      )
+                    SAFTEY_CACHE_USED_STDERR_MSG
+                    )
                 return self.trans_cache
         else:
             return self.__get_and_cache_fin_trans()
