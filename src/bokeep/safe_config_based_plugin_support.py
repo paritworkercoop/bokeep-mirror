@@ -55,6 +55,14 @@ class SafeConfigBasedPlugin(object):
         if not hasattr(self, 'config_module_name'):
             self.config_module_name = None        
 
+    def __configuration_reload(self):
+        assert( hasattr(self, 'config_module_name') )
+        assert( hasattr(self, '_v_configuration') )
+        assert( self._v_configuration != None )
+        assert( self.config_module_name in sys.modules )
+        assert( exists(self._v_configuration.__file__) )
+        reload(self._v_configuration)        
+
     def get_configuration(self, allow_reload=True):
         """Get the configuration module.
 
