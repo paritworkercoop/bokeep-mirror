@@ -78,12 +78,6 @@ class SafeConfigBasedPlugin(object):
         self.__init_config_module_name_if_not_there()
 
         if hasattr(self, '_v_configuration'):
-            assert_not_really_bad_module_name(self.config_module_name)
-            assert( self.config_module_name in sys.modules )
-
-
-            assert( exists(self._v_configuration.__file__) )
-
             if allow_reload:
                 self.__configuration_reload()
 
