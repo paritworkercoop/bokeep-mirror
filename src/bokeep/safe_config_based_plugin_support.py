@@ -56,6 +56,7 @@ class SafeConfigBasedPlugin(object):
             self.config_module_name = None        
 
     def __configuration_reload(self):
+        assert_not_really_bad_module_name(self.config_module_name)
         assert( hasattr(self, 'config_module_name') )
         assert( hasattr(self, '_v_configuration') )
         assert( self._v_configuration != None )
