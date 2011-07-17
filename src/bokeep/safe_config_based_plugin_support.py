@@ -95,6 +95,15 @@ class SafeConfigBasedPlugin(object):
             # returning, but no point setting the cache when it is None
             if return_value != None:
                 self._v_configuration = return_value
+                # immediately do a reload after a successful load,
+                # because if a .pyc file or similar is created
+                # we're going to end up having that be the value of
+                # self._v_configuration.__file__ instead of the original
+                # .py file, which is important because we're going to record
+                # the checksum of self._v_configuration.__file__ and we
+                # want that to be consistent with what we're going to
+                # see on the next load
+                reload(self._v_configuration)
                 self._v_configuration_checksum = adler32_of_file(
                     self._v_configuration.__file__)               
             
