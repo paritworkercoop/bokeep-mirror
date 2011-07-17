@@ -61,6 +61,9 @@ class SafeConfigBasedPlugin(object):
         assert( hasattr(self, '_v_configuration') )
         assert( self._v_configuration != None )
         assert( self.config_module_name in sys.modules )
+        # perhaps we should handle this more gracefully, it's not really
+        # something to assert because it could happen outside our control..
+        # ..... user could yank file...
         assert( exists(self._v_configuration.__file__) )
         reload(self._v_configuration)        
 
@@ -78,9 +81,7 @@ class SafeConfigBasedPlugin(object):
             assert_not_really_bad_module_name(self.config_module_name)
             assert( self.config_module_name in sys.modules )
 
-            # perhaps we should handle this more gracefully, it's not really
-            # something to assert because it could happen outside our control..
-            # .....
+
             assert( exists(self._v_configuration.__file__) )
 
             if allow_reload:
