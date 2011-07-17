@@ -83,11 +83,7 @@ class SafeConfigBasedPlugin(object):
             assert( exists(self._v_configuration.__file__) )
 
             if allow_reload:
-                current_checksum = adler32_of_file(
-                    self._v_configuration.__file__)
-                if self._v_configuration_checksum != current_checksum:
-                    self.__configuration_reload()
-                    self._v_configuration_checksum = current_checksum
+                self.__configuration_reload()
 
             return self._v_configuration
         else:
@@ -111,9 +107,7 @@ class SafeConfigBasedPlugin(object):
                 # the checksum of self._v_configuration.__file__ and we
                 # want that to be consistent with what we're going to
                 # see on the next load
-                reload(self._v_configuration)
-                self._v_configuration_checksum = adler32_of_file(
-                    self._v_configuration.__file__)               
+                self.__configuration_reload()
             
             return return_value
 
@@ -133,7 +127,6 @@ class SafeConfigBasedPlugin(object):
         elif hasattr(self, '_v_configuration'):
             # get rid of cache
             delattr(self, '_v_configuration')
-            delattr(self, '_v_configuration_checksum')
         self.config_module_name = new_config_module_name
 
 SAFTEY_CACHE_USED_STDERR_MSG = """"had to pull transaction from trans cache
