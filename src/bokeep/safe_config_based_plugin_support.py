@@ -86,7 +86,7 @@ class SafeConfigBasedPlugin(object):
                 current_checksum = adler32_of_file(
                     self._v_configuration.__file__)
                 if self._v_configuration_checksum != current_checksum:
-                    reload(self._v_configuration)
+                    self.__configuration_reload()
                     self._v_configuration_checksum = current_checksum
 
             return self._v_configuration
