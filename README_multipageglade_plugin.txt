@@ -8,6 +8,9 @@ together.
 Not yet made available for auto-detection, install with the string
 bokeep.plugins.multipageglade
 
+Don't edit a multipage glade config file while you do edits to a
+transaction using that configuration on screen
+
 Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 This file is part of Bo-Keep.
 

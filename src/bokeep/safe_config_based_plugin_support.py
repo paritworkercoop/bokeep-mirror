@@ -122,6 +122,10 @@ class SafeConfigBasedPlugin(object):
 SAFTEY_CACHE_USED_STDERR_MSG = """"had to pull transaction from trans cache
 due to missing config, but why was a change recorded in the first place?
 possible bug elsewhere in code
+
+The only known cause of this so far is editting a config file
+while having bo-keep open on a transaction that uses it... the README
+for this plugin says don't do that
 """
 
 class SafeConfigBasedTransaction(Transaction):
