@@ -188,7 +188,7 @@ class SafeConfigBasedTransaction(Transaction):
             # original -- all together, if the first fails we leave in
             # place the original
             if config_module == None:
-                print(
+                print >> sys.stderr, (
                     "had to pull transaction from trans cache due to missing "
                     "config, but why was a change recorded in the first place?"
                     " possible bug elsewhere in code"
@@ -199,10 +199,11 @@ class SafeConfigBasedTransaction(Transaction):
                 return self.__get_and_cache_fin_trans()
             else:
                 self.set_safety_cache_was_used()
-                print("had to pull transaction from trans cache due to "
-                      "incompatible config, but why was a change recorded in "
-                      "the first place?"
-                      " possible bug elsewhere in code"
+                print >> sys.stderr, (
+                    "had to pull transaction from trans cache due to "
+                    "incompatible config, but why was a change recorded in "
+                    "the first place?"
+                    " possible bug elsewhere in code"
                       )
                 return self.trans_cache
         else:
