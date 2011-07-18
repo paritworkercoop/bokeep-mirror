@@ -46,7 +46,7 @@ def backwards_config_support(crc):
 def post_module_load_hook(transaction, plugin, config_module):
     print 'post_module_load_hook'
 
-def initialization_hook(plugin_edit_instance, transaction, plugin, book):
+def gui_initialization_hook(plugin_edit_instance, transaction, plugin, book):
     print 'initialization hook'
 
 def page_change_acceptable(old_page, new_page):
