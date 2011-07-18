@@ -120,12 +120,6 @@ class MultipageGladeTransaction(SafeConfigBasedTransaction):
         # assumption, you've already checked the config and you're really just
         # calling this from __get_and_cache_fin_trans
 
-        # default stance of paranoia on reload, just like 
-        # get_financial_transactions from the super class does
-        #
-        # this is very concerning because we don't want to wipe out work
-        # done by config.initialization_hook when called
-        # by multipage_glade_editor
         config = self.get_configuration_and_provide_on_load_hook()
         try:
             # for debits and credits
