@@ -173,6 +173,25 @@ class SafeConfigBasedTransaction(Transaction):
         if self.get_safety_cache_was_used():
             del self.__safety_cache_was_used
 
+    def __config_module_on_load_hook(self, config_module):
+        """Pass a reference to this function in some calls to
+        SafeConfigBasedPlugin.get_configuration in order to end up
+        passing
+        """
+        getattr(config_module, 'post_module_load_hook', null_function)(
+            self, self.associated_plugin, config_module)
+
+    def get_configuration_and_provide_on_load_hook(self):
+        # reload is okay here (2nd argument True) as long as 
+        # __config_module_on_load_hook is called if a reload
+        # occures so that pertinent information can be passed on
+        # to the configuration module
+        #
+        # such information may be important for the module to be able to
+        # put the financial transaction together
+        return self.associated_plugin.get_configuration(
+            True, self.__config_module_on_load_hook)        
+
     def can_safely_proceed_with_config_module(self, config_module):
         """Ensures a configuration module hasn't been tampered with since
         it was last used, or if a new version is permitted
@@ -197,9 +216,11 @@ class SafeConfigBasedTransaction(Transaction):
               config_module.backwards_config_support(self.config_crc_cache) )
 
     def get_financial_transactions(self):
-        # by default, a paranoid stance on allow_reload
-        config_module = self.associated_plugin.get_configuration(
-            allow_reload=False)
+        # its important that if the configuration module is loaded at this
+        # point that we call its post-load function to provide it
+        # access to info about this transaction and plugin that it may need
+        # to generate the financial transaction
+        config_module = self.get_configuration_and_provide_on_load_hook()
         if hasattr(self, 'trans_cache'):
             # this whole thing could be avoided if the backend tried to
             # automically first create the new transaction and delete
@@ -227,10 +248,12 @@ class SafeConfigBasedTransaction(Transaction):
         # assumption, you've already checked that there is either no
         # trans in cache or this config is safe to try and your're
         # calling this from get_financial_transactions
-        #
-        # paranoid stance on allow_reload
-        config_module = self.associated_plugin.get_configuration(
-            allow_reload=False)
+
+        # its important that if the configuration module is loaded at this
+        # point that we call its post-load function to provide it
+        # access to info about this transaction and plugin that it may need
+        # to generate the financial transaction
+        config_module = self.get_configuration_and_provide_on_load_hook()
         if not self.config_valid(config_module):
             raise BoKeepTransactionNotMappableToFinancialTransaction(
                 "inadequet config")

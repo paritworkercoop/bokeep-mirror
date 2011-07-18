@@ -126,7 +126,7 @@ class MultipageGladeTransaction(SafeConfigBasedTransaction):
         # this is very concerning because we don't want to wipe out work
         # done by config.initialization_hook when called
         # by multipage_glade_editor
-        config = self.associated_plugin.get_configuration(allow_reload=False)
+        config = self.get_configuration_and_provide_on_load_hook()
         try:
             # for debits and credits
             trans_lines = [
@@ -205,13 +205,7 @@ class multipage_glade_editor(object):
         self.mainvbox = VBox()
         self.hide_parent.add(self.mainvbox)
 
-        # allowing reload of the configuration module is fine
-        # here when we're bringing up the editor at first,
-        # its later after config.initialization_hook is called
-        # that we want to prevent subsequent get_configuration calls
-        # not not lose that work, including the ones done by 
-        # get_financial_transactions and make_new_fin_trans
-        config = self.plugin.get_configuration(allow_reload=True)
+        config = self.trans.get_configuration_and_provide_on_load_hook()
         config_module_name = self.plugin.config_module_name
         if not config_valid(config):
             # even in the case of a broken config, we should still
