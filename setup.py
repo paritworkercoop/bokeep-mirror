@@ -17,7 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 
 from glob import glob
@@ -93,13 +94,19 @@ setup(name=PACKAGE_NAME,
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
       package_data={PACKAGE_NAME: [
+            'backend_plugins/gnucash_backend_BOKEEP_BACKEND_PLUGIN',
+            'backend_plugins/null_BOKEEP_BACKEND_PLUGIN',
+            'backend_plugins/serialfile_BOKEEP_BACKEND_PLUGIN',
             'gui/bokeep_main_window.glade',
             'gui/bo-keep.svg',
+            'plugins/trust/BOKEEP_PLUGIN',
             'plugins/trust/GUIs/management/data/trustor_transactions.glade',
             'plugins/trust/GUIs/management/data/trustor_management.glade',
             'plugins/trust/GUIs/entry/data/trustor_entry.glade',
+            'plugins/payroll/BOKEEP_PLUGIN',
             'plugins/payroll/gui/payroll.glade',
-            'plugins/mileage.glade'] },
+            'plugins/mileage.glade',
+            'plugins/mileage/BOKEEP_PLUGIN'] },
       data_files=[('share/applications',
                    ['bo-keep.desktop' ])
                   ]
