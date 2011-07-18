@@ -72,7 +72,7 @@ class TrustTransaction(Transaction):
         # If a previous version without an ID is being used, don't attempt to
         # set the checknum with an ID that doesn't even exist.
         # Remove the if line once we're at version 1.2.0.
-        if hasattr(self, '__TrustTransaction_id'):
+        if hasattr(self, '_TrustTransaction__id'):
             fin_trans.chequenum = self.__id
         fin_trans.currency = self.trust_module.get_currency()
         # should add chequenum at some point, legal aid requested this
