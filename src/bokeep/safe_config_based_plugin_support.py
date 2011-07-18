@@ -68,7 +68,7 @@ class SafeConfigBasedPlugin(object):
         reload(self._v_configuration)
         call_after_load(self._v_configuration)
 
-    def get_configuration(self, allow_reload=True,
+    def get_configuration(self, allow_reload=False,
                           call_after_load=null_function):
         """Get the configuration module.
 
