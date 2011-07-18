@@ -22,7 +22,7 @@ from os.path import exists
 import sys
 
 # bokeep imports
-from bokeep.util import do_module_import, adler32_of_file
+from bokeep.util import do_module_import, adler32_of_file, null_function
 from bokeep.book_transaction import \
     Transaction, BoKeepTransactionNotMappableToFinancialTransaction
 
@@ -55,7 +55,7 @@ class SafeConfigBasedPlugin(object):
         if not hasattr(self, 'config_module_name'):
             self.config_module_name = None        
 
-    def __configuration_reload(self):
+    def __configuration_reload(self, call_after_load=null_function):
         assert_not_really_bad_module_name(self.config_module_name)
         assert( hasattr(self, 'config_module_name') )
         assert( hasattr(self, '_v_configuration') )
@@ -65,9 +65,11 @@ class SafeConfigBasedPlugin(object):
         # something to assert because it could happen outside our control..
         # ..... user could yank file...
         assert( exists(self._v_configuration.__file__) )
-        reload(self._v_configuration)        
+        reload(self._v_configuration)
+        call_after_load(self._v_configuration)
 
-    def get_configuration(self, allow_reload=True):
+    def get_configuration(self, allow_reload=True,
+                          call_after_load=null_function):
         """Get the configuration module.
 
         set allow_reload to False if you want to prevent a module reload
@@ -79,7 +81,7 @@ class SafeConfigBasedPlugin(object):
 
         if hasattr(self, '_v_configuration'):
             if allow_reload:
-                self.__configuration_reload()
+                self.__configuration_reload(call_after_load)
 
             return self._v_configuration
         else:
