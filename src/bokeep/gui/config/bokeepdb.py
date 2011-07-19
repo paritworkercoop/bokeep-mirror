@@ -21,9 +21,8 @@
 
 # python imports
 from os.path import \
-    exists, isdir, isfile, basename, split as path_split, join as path_join, abspath
+    exists, isdir, join as path_join
 import os
-from os import makedirs
 import sys
 from sys import path
 
@@ -45,12 +44,11 @@ from gtk import \
 
 # bokeep imports
 from bokeep.config import \
-    BoKeepConfigurationDatabaseException, get_bokeep_configuration, \
-    DEFAULT_BOOKS_FILESTORAGE_FILE, ZODB_CONFIG_SECTION, \
-    ZODB_CONFIG_FILESTORAGE, ZODB_CONFIG_ZCONFIG, \
-    get_plugins_directories_from_config, set_plugin_directories_in_config
-from bokeep.book import BoKeepBookSet, \
-    PluginImportError, BackendPluginImportError
+    BoKeepConfigurationDatabaseException, ZODB_CONFIG_SECTION, \
+    ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config, \
+    set_plugin_directories_in_config, \
+    ZODB_CONFIG_ZCONFIG
+from bokeep.book import BoKeepBookSet, PluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
@@ -61,9 +59,29 @@ from state import BoKeepConfigGuiState, \
     BOOK
 
 def establish_bokeep_db(mainwindow, config_path, config, db_exception):
-    """TODO: Write this doc string!  (What this function is responsible for is
-    unclear to at least one contributor :P ) e.g. establish = create or load?"""
-    
+    """Dialog to edit the configuration settings for a BoKeep database, 
+    create it at the configured location if not there yet, and also
+    exercise control over other settings kept in the bokeep configuration
+    (.bo-keep.cfg), and basic things like creating books and enabling
+    plugins.
+
+    And the best part is that a BoKeepBookSet for whichever database
+    you choose to select (in this dialog) is returned or None
+    if this fails
+
+    mainwindow -- if there's a Gtk.Window we can parrent this dialog too,
+                  please provide it, otherwise set to None
+    config_path -- path the configuration file is found at
+    config     -- a  ConfigParser.ConfigParser pre-loaded with the contents
+                  of config_path .
+    db_exception -- If you experienced some kind of exception while
+                    trying to load the BoKeepBookSet without the help of a
+                    this function, pass it on to us so we can display
+                    the error to the user so they know why they're
+                    being forced into a gui to fix things up
+
+    Changes made to config are saved in config_path
+    """
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
     if db_exception == None:
@@ -173,6 +191,8 @@ def available_plugins_search(plugin_file_name, plugin_subdir):
     return bokeep_packages + bokeep_modules
 
 class BoKeepConfigDialog(object):
+    """GUI for configuring BoKeep."""
+    
     config_path = None
     config = None
     
@@ -244,6 +264,11 @@ class BoKeepConfigDialog(object):
         self.backend_plugin_entry_combo.set_text_column(0)
 
     def do_action(self, action, arg=None):
+        """Passes on an action to BoKeepConfigGuiState and gui is then
+        updated after to reflect the effects of that action by examining
+        where that state machine is at after the action.
+        """
+        
         try:
             self.state.do_action(action, arg)
         except PluginImportError, err:
@@ -269,6 +294,8 @@ class BoKeepConfigDialog(object):
                            MESSAGE_ERROR, BUTTONS_OK, str(err))
             error_dialog.run()
             error_dialog.destroy()
+            # raises last exception that had been caught, in above
+            # except clause, err
             raise
 
 
@@ -280,6 +307,9 @@ class BoKeepConfigDialog(object):
         return db_access_method
 
     def run(self):
+        """Run the BoKeep configuration dialog so the user can interact with
+        it."""
+        
         self.bokeep_config_dialog.run()
         if self.state.action_allowed(BOOK_CHANGE):
             self.do_action(BOOK_CHANGE, None)
@@ -293,6 +323,8 @@ class BoKeepConfigDialog(object):
         return RESPONSE_OK, db_path, db_access_method
 
     def set_sensitivities(self):
+        """Set the enabled/disabled property of all config widgets."""
+        
         for obj, action in (
             (self.books_tv, BOOK_CHANGE),
             (self.book_add_entry, BOOK_CHANGE),
@@ -305,6 +337,8 @@ class BoKeepConfigDialog(object):
             obj.set_sensitive( self.state.action_allowed(action) )
 
     def get_currently_selected_book(self, *args):
+        """Return the currently selected book in the configuration dialog."""
+        
         sel = self.books_tv.get_selection()
         sel_iter = sel.get_selected()[1]
         if sel_iter == None:
@@ -314,6 +348,8 @@ class BoKeepConfigDialog(object):
             return sel_row[0]
 
     def select_book(self, new_book):
+        """Visually select a given book in the configuration dialog."""
+        
         selection = self.books_tv.get_selection()
         selection.unselect_all()
         for path, book in enumerate(self.state.book_liststore):
@@ -324,6 +360,8 @@ class BoKeepConfigDialog(object):
     # event handles
 
     def on_selectdb_button_clicked(self, *args):
+        """Browse for the location of a new BoKeep transaction database."""
+        
         fcd = FileChooserDialog(
             "Where should the database be?",
             self.bokeep_config_dialog,

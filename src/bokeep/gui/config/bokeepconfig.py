@@ -28,11 +28,31 @@ from gtk import MessageDialog, MESSAGE_QUESTION, BUTTONS_YES_NO, DIALOG_MODAL, \
     RESPONSE_YES
 
 def establish_bokeep_config(mainwindow, paths, config_exception):
+    """Call after failing to successfuly load a bokeep config file to have one
+    established.
+
+    Provides a dialog asking if its okay to create the specificied file
+    and then does so.
+
+    mainwindow -- if there's a Gtk.Window to parent the dialog too,
+                  please provide it. Otherwise pass None here.
+    paths     -- list of config files to try creating, this is deprecated
+                 this function will soon be changed to only except one
+                 config path to try and create
+    config_exception -- You're calling this because you had trouble
+    loading the configuration file and got an exception, pass it on
+    so we can share the bad news in our dialog.
+
+    returns a config file path that will work or None
+    """
+    
     assert(isinstance(config_exception, BoKeepConfigurationFileException))
 
     # This is here to support the old default
     # current working directory config vs home directory configs
     # but maybe there should only be one default place to look (home dir)?
+    # (all the code that calls this already behaves this way, paths
+    # should just be switched to config_path already...)
     for path in paths:
         md = MessageDialog(
             mainwindow, DIALOG_MODAL, MESSAGE_QUESTION, BUTTONS_YES_NO,

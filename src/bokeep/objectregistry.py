@@ -1,13 +1,24 @@
 # zodb imports
 from persistent import Persistent
-from persistent.mapping import PersistentMapping
 from BTrees.OOBTree import OOBTree as BTree, OOSet as Set
 from BTrees.IOBTree import IOBTree
 
 # bokeep imports
 from bokeep.util import get_and_establish_attribute
 
+"""This is serrious crap which should be considered deprecated and not used.
+ZCatalog and some of the new libraries inspired by it do a much better
+job of this kind of thing.
+
+Once the payroll and timelog plugin's switch away to a real sollution,
+this will be removed, do don't dare use it.
+"""
+
 class ObjectRegistry(Persistent):
+    """See the objectregistry module docstring, this is deprecated and
+    should not be used by new code.
+    """
+    
     def __init__(self):
         self.__non_unique_key_registry = BTree()
         self.__obr_registry = IOBTree()
