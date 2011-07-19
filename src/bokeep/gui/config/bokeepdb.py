@@ -127,10 +127,10 @@ def establish_bokeep_db(mainwindow, config_path, config, db_exception):
     elif new_db_access_method == ZODB_CONFIG_ZCONFIG:
         return BoKeepBookSet(databaseFromURL(new_db_path))
 
-def available_plugins():
+def get_available_frontend_plugins():
     return available_plugins_search("BOKEEP_PLUGIN", "plugins")
 
-def available_backend_plugins():
+def get_available_backend_plugins():
     return available_plugins_search("BOKEEP_BACKEND_PLUGIN", "backend_plugins")
 
 def available_plugins_search(plugin_file_name, plugin_subdir):
@@ -252,13 +252,13 @@ class BoKeepConfigDialog(object):
         """Populates the GUI with the possible front and backend plugins."""
         
         available_plugin_liststore = ListStore(str)
-        for plugin_name in available_plugins():
+        for plugin_name in get_available_frontend_plugins():
             available_plugin_liststore.append([plugin_name])
         self.plugin_add_entry_combo.set_model(available_plugin_liststore)
         self.plugin_add_entry_combo.set_text_column(0)
 
         available_backend_plugin_liststore = ListStore(str)
-        for backend_plugin_name in available_backend_plugins():
+        for backend_plugin_name in get_available_backend_plugins():
             available_backend_plugin_liststore.append([backend_plugin_name])
         self.backend_plugin_entry_combo.set_model(available_backend_plugin_liststore)
         self.backend_plugin_entry_combo.set_text_column(0)
