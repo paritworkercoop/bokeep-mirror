@@ -29,7 +29,8 @@ from bokeep.book_transaction import Transaction
 class PrototypePlugin(Persistent):
     """A basic front end plugin."""
     
-    def run_configuration_interface(self, parent_window, backend_account_fetch):
+    def run_configuration_interface(self, parent_window, backend_account_fetch,
+                                    book):
         """Instructs a plugin to run a configuration dialog
         
         parent_window is a gtk.Window which the configuration dialog should

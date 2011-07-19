@@ -31,12 +31,6 @@ class SimplePlugin(PrototypePlugin):
     Store the configuration of the associated front end plugin in class
     variables in the class that extends this class."""
     
-    # signals to mainwindow.py that this plugin supports the
-    # extra keyword argument book when the function
-    # returned by get_transaction_edit_interface_hook_from_code is called.
-    # To be removed in bokeep 1.1 See mainwindow.py
-    SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW = True
-    
     def __init__(self):
         self.trans_registry = PersistentMapping()
         self.type_strings = self.__class__.DEFAULT_TYPE_STRS

@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -41,6 +41,9 @@ class FinancialTransactionLine(object):
                     selection)
     line_memo -- specifies a string to associate with the line,
                  will be supported by GnuCash and SerialFile backend plugins
+
+    create_account_if_missing -- if present and set to True, specifies
+    that the account specified by account_spec should be created if missing
     """
     def __init__(self, amount):
         self.amount = amount

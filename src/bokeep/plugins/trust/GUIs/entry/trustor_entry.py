@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -24,9 +24,9 @@ from bokeep.gui.gladesupport.glade_util import \
 # ZOPEDB imports
 import transaction
 
-from gtk import ListStore, TextBuffer
+from gtk import ListStore, TextBuffer, main_quit
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from os.path import abspath, dirname, join, exists
 
@@ -49,20 +49,22 @@ class trustor_entry(object):
         self.extended_init()
 
         if not gui_parent == None:
-            self.widgets['vbox1'].reparent(gui_parent)
+            self.widgets['table'].reparent(gui_parent)
 
         buff = self.widgets['description_textview'].get_buffer()
         buff.connect("changed", self.description_changed, None)
 
         self.top_window.hide()
         self.gui_built = True
+        
+        self.update_trans() # save new transaction immediately after creation
 
     def description_changed(self, textbuffer, args):
         if self.gui_built:
             self.update_trans()
 
     def detach(self):
-        self.widgets['vbox1'].reparent(self.top_window)
+        self.widgets['table'].reparent(self.top_window)
 
     def extended_init(self):
         self.trustor_combo = self.widgets['trustor_combo']
@@ -70,9 +72,9 @@ class trustor_entry(object):
         self.trustor_combo.set_model(self.trustor_list)
         index = 0
         use_index = -1
-        for trustor in self.trustors:
-            self.trustor_list.append([trustor])
-            if not(self.trans_trustor == None) and self.trans_trustor.name == trustor:
+        for trustor_name in self.trustors:
+            self.trustor_list.append([trustor_name])
+            if not(self.trans_trustor == None) and self.trans_trustor.name == trustor_name:
                 use_index = index
             index += 1
  
@@ -109,19 +111,17 @@ class trustor_entry(object):
     def update_trans(self):
         entered_amount = self.widgets['amount_entry'].get_text()
 
-        if entered_amount == '':
-            print 'setting amount to zero'
-            self.trust_trans.transfer_amount = Decimal('0')          
-        else:
-            print 'using ' + entered_amount + ' for amount'
+        try:
             self.trust_trans.transfer_amount = Decimal(entered_amount)
+        except InvalidOperation:
+            # In case the user has entered something like "" or ".".
+            self.trust_trans.transfer_amount = Decimal('0')
 
         textbuff = self.widgets['description_textview'].get_buffer()
         entered_description = textbuff.get_text(textbuff.get_start_iter(), textbuff.get_end_iter())
 
         self.trust_trans.memo = entered_description
 
-        print self.trust_trans.get_displayable_amount()
         self.change_register_function()
         trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
 
@@ -131,7 +131,7 @@ class trustor_entry(object):
     def on_window_destroy(self, *args):
         if self.editable:
             self.update_trans()
-        gtk.main_quit()
+        main_quit()
 
     def on_trustor_combo_changed(self, *args):
         if self.gui_built:

@@ -227,6 +227,6 @@ class MileagePlugin(SimplePlugin):
     distance_multiplier = Decimal(1)
     
     def run_configuration_interface(self, parent_window, backend_account_fetch,
-                                    **extra_arguments):
+                                    book):
         dialog = MileageConfigDialog(parent_window, backend_account_fetch, self)
         dialog.run()

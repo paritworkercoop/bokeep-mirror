@@ -2,8 +2,8 @@ Before we install Bo-Keep on GNU/Linux we have to install the required
 dependencies PyGTK and ZODB. You'll likely want GnuCash as well for a
 real backend plugin.
 
-It is assumed you have a GNU/Linux distribution with a python
-interpretor installed. (we've tested the CPython implementation
+It is assumed you have a GNU/Linux distribution with a Python
+interpreter installed. (we've tested the CPython implementation
 [http://python.org] versions 2.5 and 2.6, it's possible that we've
 written Bo-Keep to be 2.4 compatible...)
 
@@ -43,10 +43,15 @@ $ python
 >>> import persistent
 
 
-Debian based distributions are not yet shipping a version of GnuCash
-(http://gnucash.org/) 2.4.0 with python bindings enabled, so you have
-to build it yourself, which is a PITA due to build dependencies. We're
-committed to getting the Debian packaging updated for this right away.
+As of June 2011, Ubuntu's GnuCash package lacks Python bindings.  However you,
+can download GnuCash with Python bindings from "ppa:parit/gnucash".  For more
+information, please visit:
+
+https://launchpad.net/~parit/+archive/gnucash
+
+Other Debian based distributions are not yet shipping a version of GnuCash
+(http://gnucash.org/) 2.4.0 with Python bindings enabled, so you have
+to build it yourself.  (A patch has been submitted upstream.)
 
 Alternatively you may find
 http://wiki.gnucash.org/wiki/GnuCash#Installation to be helpful;
@@ -62,7 +67,7 @@ slib guile-1.6-slib libfinance-quote-perl libwww-perl libhtml-tree-perl \
 libhtml-tableextract-perl libcrypt-ssleay-perl libdate-manip-perl \
 python-dev
 
-And on to building the damn thing
+And on to building:
 
 # mkdir -p /opt/src/
 # cd /opt/src/
@@ -76,8 +81,8 @@ And on to building the damn thing
 --with-html-engine=webkit
 # make && make install
 
-To use the python bindings, you need to either install GnuCash in a
-place like /usr/ or /usr/local where your python interpreter can find
+To use the Python bindings, you need to either install GnuCash in a
+place like /usr/ or /usr/local where your Python interpreter can find
 it, or set the PYTHONPATH environmental variable
 $ export PYTHONPATH=/opt/gnucash-2.4.0/lib/python2.x/site-packages/:$PYTHONPATH
 
@@ -126,4 +131,5 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- Author: Mark Jenkins <mark@parit.ca>
+Authors: Mark Jenkins <mark@parit.ca>
+         Samuel Pauls <samuel@parit.ca>

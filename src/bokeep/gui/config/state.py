@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # python imports
 from os.path import \
@@ -28,12 +29,14 @@ from gtk import ListStore
 # ZODB
 from ZODB import DB
 from ZODB.FileStorage import FileStorage
+from ZODB.config import databaseFromURL
 
 # bo-keep
 from bokeep.util import \
     ends_with_commit, FunctionAndDataDrivenStateMachine, \
     state_machine_do_nothing, state_machine_always_true
-from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE
+from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE,\
+    ZODB_CONFIG_FILESTORAGE, ZODB_CONFIG_ZCONFIG
 from bokeep.book import BoKeepBookSet, BackendPluginImportError, PluginImportError
 
 # possible actions
@@ -41,7 +44,7 @@ from bokeep.book import BoKeepBookSet, BackendPluginImportError, PluginImportErr
     range(4)
 
 # tuple indexes for data stored in BoKeepConfigGuiState
-(DB_PATH, BOOKSET, BOOK) = range(3)
+(DB_PATH, DB_ACCESS_METHOD, BOOKSET, BOOK) = range(4)
 
 class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     NUM_STATES = 3
@@ -74,7 +77,8 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
             ( (BoKeepConfigGuiState.make_action_check_function(
                         DB_ENTRY_CHANGE),
               lambda selfish, next_state:
-                  (selfish._v_action_arg, None, None),
+                  (selfish._v_action_arg[0], selfish._v_action_arg[1], 
+                   None, None),
               BoKeepConfigGuiState.NO_DATABASE ),
              (BoKeepConfigGuiState.make_action_check_function(DB_PATH_CHANGE),
               BoKeepConfigGuiState.__open_bookset_load_list,
@@ -121,7 +125,8 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                 DB_ENTRY_CHANGE: lambda: True,
                 DB_PATH_CHANGE: lambda:
                     self.state==BoKeepConfigGuiState.NO_DATABASE and \
-                    self.data[DB_PATH] != None,
+                    self.data[DB_PATH] != None and \
+                    self.data[DB_ACCESS_METHOD] != None,
                 BOOK_CHANGE: lambda:
                     self.state != BoKeepConfigGuiState.NO_DATABASE,
                 BACKEND_PLUGIN_CHANGE:
@@ -135,8 +140,10 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     # transition functions
     def __open_bookset_load_list(self, next_state):
         assert(self.data[DB_PATH] != None)
+        assert(self.data[DB_ACCESS_METHOD] != None)
         new_path = self.data[DB_PATH]
         new_path = abspath(new_path)
+        access_method = self.data[DB_ACCESS_METHOD]
         if not exists(new_path):
             directory, filename = path_split(new_path)
             if not exists(directory):
@@ -145,24 +152,44 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                 new_path = path_join(directory,
                                      DEFAULT_BOOKS_FILESTORAGE_FILE)
             try:
-                fs = FileStorage(new_path, create=True )
-                db = DB(fs)
-                db.close()
+                if access_method == ZODB_CONFIG_FILESTORAGE:
+                    # Create a new file storage for transactions.
+                    fs = FileStorage(new_path, create=True )
+                    db = DB(fs)
+                    db.close()
+                elif access_method == ZODB_CONFIG_ZCONFIG:
+                     # Create a new Zope configuration for transactions.
+                    if new_path.endswith(".conf"):
+                        file_storage_path = new_path[:-5]
+                    file_storage_path += ".fs"
+                    zconfig_fp = file(new_path, 'w')
+                    zconfig_fp.write(
+"""<zodb>
+  <filestorage>
+  path %s
+  </filestorage>
+</zodb>
+""" % file_storage_path
+                    )
+                    zconfig_fp.close()
             except IOError, e:
                 self.db_error_msg = str(e)
-                return (None, None, None)
+                return (None, None, None, None)
         try:
-            fs = FileStorage(new_path, create=False )
-            db = DB(fs)
+            db = None
+            if access_method == ZODB_CONFIG_FILESTORAGE:
+                db = DB(FileStorage(new_path, create=False))
+            elif access_method == ZODB_CONFIG_ZCONFIG:
+                db = databaseFromURL(new_path)
         except IOError, e:
             self.db_error_msg = str(e)
-            return (None, None, None)
+            return (None, None, None, None)
         else:
             self.db_error_msg = None
             bs = BoKeepBookSet(db)
             for book_name, book in bs.iterbooks():
                 self.book_liststore.append((book_name,))
-            return (self.data[DB_PATH], bs, None)
+            return (self.data[DB_PATH], self.data[DB_ACCESS_METHOD], bs, None)
 
     def __load_book_list(self, next_state):
         assert(self.data[BOOKSET] != None)
@@ -171,17 +198,18 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
     def __clear_book_list(self, next_state):
         self.book_liststore.clear()
         self.data[BOOKSET].close()
-        return (self.data[DB_PATH], None, None)
+        return (self.data[DB_PATH], self.data[DB_ACCESS_METHOD], None, None)
 
     def __clear_book_list_absorb_changed_path(self, next_state):
         self.__clear_book_list(next_state)
-        return (self._v_action_arg, None, None)
+        return (self._v_action_arg[0], self._v_action_arg[1], None, None)
 
     def __handle_book_change_load_plugin_list(self, next_state):
         self.plugin_liststore.clear()
         new_book_name = self._v_action_arg
         if new_book_name == None:
-            return (self.data[DB_PATH], self.data[BOOKSET], None)
+            return (self.data[DB_PATH], self.data[DB_ACCESS_METHOD],
+                    self.data[BOOKSET], None)
         if not self.data[BOOKSET].has_book(new_book_name):
             self.data[BOOKSET].add_book(new_book_name)
         new_book = self.data[BOOKSET].get_book(new_book_name)
@@ -190,13 +218,17 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
             self.plugin_liststore.append((plugin_name, True))
         for plugin_name in new_book.disabled_modules.iterkeys():
             self.plugin_liststore.append((plugin_name, False))
-        return (self.data[DB_PATH], self.data[BOOKSET], new_book )
+        return (self.data[DB_PATH], self.data[DB_ACCESS_METHOD],
+                self.data[BOOKSET], new_book )
 
-    def __clear_plugin_list(self, next_state):
+    def __clear_plugin_list(self, next_state = None):
         self.plugin_liststore.clear()
         return self.data
 
     def __apply_plugin_changes_and_clear(self, next_state):
+        """Sets the GUI front-end plugin list depending on the selected book.
+        """
+        
         modules_not_found = self.__apply_plugin_changes()
         if modules_not_found == []:
             self.__clear_plugin_list()

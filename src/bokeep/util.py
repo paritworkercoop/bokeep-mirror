@@ -490,6 +490,9 @@ def reload_module_at_filepath(module, path):
     reload(module)
     drop_syspath_enhancement()
 
+def do_module_import(module_name):
+    return __import__(module_name, globals(), locals(), [""])
+
 class PluginSet(Persistent):
     def __init__(self):
         self.enabled_plugins = {}
@@ -499,8 +502,8 @@ class PluginSet(Persistent):
         assert( plugin_name not in self.enabled_plugins and 
                 plugin_name not in self.disabled_plugins )
         # get the plugin class and instantiate as a new disabled plugin
-        self.disabled_plugins[plugin_name] =  __import__(
-            plugin_name, globals(), locals(), [""]).get_plugin_class()()
+        self.disabled_plugins[plugin_name] =  do_module_import(
+            plugin_name).get_plugin_class()()
         self._p_changed = True
 
     def enable_plugin(self, plugin_name):

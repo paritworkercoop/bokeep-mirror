@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -26,6 +26,7 @@ from os import system
 from bokeep.gui.state import \
     BoKeepGuiState, \
     NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE
+from bokeep.plugins.trust import Trustor
 
 # bo-keep tests
 from test_bokeep_book import BoKeepWithBookSetup
@@ -37,7 +38,7 @@ from test_trust_plugin_with_gnucash import BoKeepTrustGnuCashTestSetup
 from gnucash import GncNumeric, Split
 
 TRUST_PLUGIN = 'bokeep.plugins.trust'
-TEST_TRUSTOR = 'testtrustor'
+TEST_TRUSTOR_NAME = 'testtrustor'
 
 BACKEND_PLUGIN = 'bokeep.backend_plugins.gnucash_backend'
 
@@ -62,7 +63,8 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         self.state.do_action(NEW)
         self.assert_(self.test_book_1.has_transaction(0))
         trust_trans = self.test_book_1.get_transaction(0)
-        trust_trans.set_trustor(TEST_TRUSTOR)
+        trustor = self.trust_plugin.get_trustor(TEST_TRUSTOR_NAME)
+        trust_trans.set_trustor(trustor)
         trust_trans.transfer_amount = Decimal(ONE_INT)
         self.state.do_action(CLOSE)
         self.backend_module.close()
@@ -75,10 +77,11 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3]
-        bank_splits = bank.GetSplitList()
+        trustor_account = bank.lookup_by_name(TEST_TRUSTOR_NAME)
+        bank_trustor_splits = trustor_account.GetSplitList()
         petty_cash_splits = petty_cash.GetSplitList()
         self.assert_(petty_cash_splits[0].GetAmount().equal( ONE ) )
-        self.assert_(bank_splits[0].GetAmount().equal( NEG_ONE ) )
+        self.assert_(bank_trustor_splits[0].GetAmount().equal( NEG_ONE ) )
         self.gnucash_session_termination(s)
         
     def test_basic_transaction_without_backend_close(self):
@@ -89,7 +92,8 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         self.state.do_action(NEW)
         self.assert_(self.test_book_1.has_transaction(0))
         trust_trans = self.test_book_1.get_transaction(0)
-        trust_trans.set_trustor(TEST_TRUSTOR)
+        trustor = self.trust_plugin.get_trustor(TEST_TRUSTOR_NAME)
+        trust_trans.set_trustor(trustor)
         trust_trans.transfer_amount = Decimal(ONE_INT)
         self.assertFalse(self.backend_module.transaction_is_clean(0))
 
@@ -100,10 +104,11 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3]
-        bank_splits = bank.GetSplitList()
+        trustor_account = bank.lookup_by_name(TEST_TRUSTOR_NAME)
+        bank_trustor_splits = trustor_account.GetSplitList()
         petty_cash_splits = petty_cash.GetSplitList()
         self.assert_(petty_cash_splits[0].GetAmount().equal( ONE ) )
-        self.assert_(bank_splits[0].GetAmount().equal( NEG_ONE ) )
+        self.assert_(bank_trustor_splits[0].GetAmount().equal( NEG_ONE ) )
         self.gnucash_session_termination(s)
 
     def test_change_transaction(self):

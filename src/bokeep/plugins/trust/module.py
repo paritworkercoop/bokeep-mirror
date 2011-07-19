@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -37,8 +37,7 @@ def null_edit_function(*args):
     pass
 
 def trustor_editable_editor(trans, trans_id, module, gui_parent,
-                            change_register_function):
-    print 'generating an editor for trustors'
+                            change_register_function, book):
     editor = trustor_entry(trans, trans_id, module, gui_parent, True,
                            change_register_function)
     return editor
@@ -99,7 +98,7 @@ class TrustModule(Persistent):
         self.init_trust_database()
 
     def run_configuration_interface(self, parent_window,
-                                    backend_account_fetch=None):
+                                    backend_account_fetch, book):
         trustor_management(self, parent_window, backend_account_fetch)
 
     def init_trustors_database(self):
@@ -186,7 +185,7 @@ class TrustModule(Persistent):
         #if the transaction was already associated with another trustor, 
         #dissociate it
         if not trust_trans.get_trustor() == None and not trust_trans.get_trustor() == trustor:
-            self.disassociate_trustor_with_transaction(front_end_id, trust_trans, trust_trans.get_trustor().name)
+            self.disassociate_trustor_with_transaction(front_end_id, trust_trans, trust_trans.get_trustor())
 
         trust_trans.set_trustor(trustor)
 
@@ -199,9 +198,8 @@ class TrustModule(Persistent):
         self._p_changed = True
 
     def disassociate_trustor_with_transaction(self, front_end_id,
-                                             trust_trans, trustor_name):
+                                             trust_trans, trustor):
         self.ensure_trust_database()
-        trustor = self.get_trustor(trustor_name)
         trustor.del_transaction(trust_trans)
         self.transaction_track_database[front_end_id] = (trust_trans, None)
         trust_trans.set_trustor(None)
@@ -211,20 +209,23 @@ class TrustModule(Persistent):
         self.ensure_trust_database()
         self.transaction_track_database[front_end_id] = (trust_trans, None)
         self._p_changed = True
+        trust_trans.set_id(front_end_id)
 
     def remove_transaction(self, front_end_id):
         self.ensure_trust_database()
         trust_trans, trustor_name = \
             self.transaction_track_database[front_end_id]
         if trustor_name != None:
+            trustor = self.get_trustor(trustor_name)
             self.disassociate_trustor_with_transaction(
-                front_end_id, trust_trans, trustor_name)
+                front_end_id, trust_trans, trustor)
         del self.transaction_track_database[front_end_id]
 
     def has_transaction(self, front_end_id):
         return front_end_id in self.transaction_track_database
 
     def get_trustors(self):
+        """Returns the trustors (objects)."""
         self.ensure_trust_database()
         return self.trustors_database
 

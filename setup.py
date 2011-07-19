@@ -17,7 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 
 from glob import glob
@@ -66,7 +67,7 @@ class TestCommand(Command):
         t.run(tests)
 
 setup(name=PACKAGE_NAME,
-      version='1.0.3',
+      version='1.1.1',
       cmdclass = { 'test': TestCommand },
       scripts=['bo-keep', 
                ],
@@ -79,25 +80,33 @@ setup(name=PACKAGE_NAME,
                 PACKAGE_NAME + '.gui.config',
                 PACKAGE_NAME + '.gui.gladesupport',
                 PACKAGE_NAME + '.plugins',
+                PACKAGE_NAME + '.plugins.memberfee',
+                PACKAGE_NAME + '.plugins.mileage',
                 PACKAGE_NAME + '.plugins.payroll',
                 PACKAGE_NAME + '.plugins.payroll.canada',
                 PACKAGE_NAME + '.plugins.payroll.gui',
+                PACKAGE_NAME + '.plugins.timelog',
                 PACKAGE_NAME + '.plugins.trust',
                 PACKAGE_NAME + '.plugins.trust.GUIs',
                 PACKAGE_NAME + '.plugins.trust.GUIs.entry',
                 PACKAGE_NAME + '.plugins.trust.GUIs.management',
-                PACKAGE_NAME + '.plugins.memberfee',
                 ],
       package_dir={PACKAGE_NAME:
                        os.path.join(BOKEEP_SRC_DIR, PACKAGE_NAME) },
       package_data={PACKAGE_NAME: [
+            'backend_plugins/gnucash_backend_BOKEEP_BACKEND_PLUGIN',
+            'backend_plugins/null_BOKEEP_BACKEND_PLUGIN',
+            'backend_plugins/serialfile_BOKEEP_BACKEND_PLUGIN',
             'gui/bokeep_main_window.glade',
             'gui/bo-keep.svg',
+            'plugins/trust/BOKEEP_PLUGIN',
             'plugins/trust/GUIs/management/data/trustor_transactions.glade',
             'plugins/trust/GUIs/management/data/trustor_management.glade',
             'plugins/trust/GUIs/entry/data/trustor_entry.glade',
+            'plugins/payroll/BOKEEP_PLUGIN',
             'plugins/payroll/gui/payroll.glade',
-            'plugins/mileage.glade'] },
+            'plugins/mileage.glade',
+            'plugins/mileage/BOKEEP_PLUGIN'] },
       data_files=[('share/applications',
                    ['bo-keep.desktop' ])
                   ]

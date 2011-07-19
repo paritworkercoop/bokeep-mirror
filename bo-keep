@@ -48,7 +48,7 @@ def bokeep_main():
     def bookset_startup_once_config_established(
         config_path, config, config_approved_func, bookset_approved_func, e, *cbargs):
         config_approved_func(config_path, config)
-        __initialize_plugin_directories(config)
+        __initialize_plugin_directories(config, config_path)
         bookset = shell_startup_bookset_fetch(config_path, config, e, *cbargs)
         bookset_ok = bookset != None
         if bookset_ok:
@@ -90,7 +90,7 @@ def bokeep_main():
                      config_path, config, config_approved_func, bookset_approved_func,
                      e, *cbargs)
     else:
-        __initialize_plugin_directories(config)
+        __initialize_plugin_directories(config, config_path)
 
         startup_callback = lambda *args, **kargs: True
 
@@ -100,8 +100,8 @@ def bokeep_main():
     shell_startup(config_path, config, bookset, startup_callback )
 
 # Add the plugin directories from the configuration to the program's path.
-def __initialize_plugin_directories(config):
-	for plugin_directory in get_plugins_directories_from_config(config):
+def __initialize_plugin_directories(config, config_path):
+	for plugin_directory in get_plugins_directories_from_config(config, config_path):
 		path.append(plugin_directory)
 
 if __name__ == "__main__":

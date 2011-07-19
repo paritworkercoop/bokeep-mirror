@@ -43,7 +43,10 @@ def backwards_config_support(crc):
     return crc in (236918719, 914482147, 1328275852, 1642840702, 2135928719, 2362158402,
                    2593818192, 3185835452, 2668236786,)
 
-def initialization_hook(plugin_edit_instance, transaction, plugin, book):
+def post_module_load_hook(transaction, plugin, config_module):
+    print 'post_module_load_hook'
+
+def gui_initialization_hook(plugin_edit_instance, transaction, plugin, book):
     print 'initialization hook'
 
 def page_change_acceptable(old_page, new_page):

@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Jamie Campbell <jamie@parit.ca>
-# Author: Mark Jenkins <mark@parit.ca>
-
+# Authors: Jamie Campbell <jamie@parit.ca>
+#          Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 import sys
 
@@ -34,15 +34,16 @@ from datetime import datetime
 from os.path import abspath, dirname, join, exists
 
 class trustor_transactions(object):
-    def __init__(self, trustor, parent_window):
-
+    def __init__(self, trust_module, trustor, trust_manager):
+        self.trust_module = trust_module
         self.trustor = trustor
+        self.trust_manager = trust_manager
 
         self.init()
         self.extended_init()
-        if parent_window != None:
-            self.top_window.set_transient_for(parent_window)
-            self.top_window.set_modal(True)
+        parent_window = trust_manager.top_window
+        self.top_window.set_transient_for(parent_window)
+        self.top_window.set_modal(True)
 
     def construct_filename(self, filename):
         import trustor_management as trust_module
@@ -58,7 +59,9 @@ class trustor_transactions(object):
             return 'unknown'
 
     def extended_init(self):
-        self.widgets['dyn_name'].set_text(self.trustor.name)
+        self.widgets['name_entry'].set_text(self.trustor.name)
+        self.widgets['name_entry'].connect('changed', self.on_name_entry_changed)
+        
         self.widgets['dyn_balance'].set_text(str(self.trustor.get_balance()))
         
         self.transactions_view = self.widgets['transactions_view']
@@ -94,6 +97,15 @@ class trustor_transactions(object):
 
         report_file.write('\ncurrent balance: ' + str(self.trustor.get_balance()) + '\n')
         report_file.close()
+        
+    def on_name_entry_changed(self, *args):
+        current_name = self.trustor.name
+        new_name = self.widgets['name_entry'].get_text()
+        save_button = self.widgets['save_button']
+        if current_name != new_name and new_name != '':
+            save_button.set_sensitive(True)
+        else:
+            save_button.set_sensitive(False)
 
     def on_report_button_clicked(self, *args):
         fcd = gtk.FileChooserDialog(
@@ -108,6 +120,13 @@ class trustor_transactions(object):
         fcd.destroy()
         if result == gtk.RESPONSE_OK and file_path != None:
             self.generate_transaction_report(file_path)
-            
-
-
+    
+    def on_save_button_clicked(self, *args):
+        #we're updating the name of someone who already exists
+        current_name = self.trustor.name
+        new_name = self.widgets['name_entry'].get_text()
+        self.trust_module.rename_trustor(current_name, new_name)
+        
+        # refresh view
+        self.trust_manager.refresh_trustor_list()
+        self.widgets['save_button'].set_sensitive(False)

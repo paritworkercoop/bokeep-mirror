@@ -26,7 +26,8 @@ import sys
 import transaction
 
 # Gtk
-from gtk import main_quit, ListStore, CellRendererText, AboutDialog
+from gtk import main_quit, ListStore, CellRendererText, AboutDialog, \
+    MessageDialog, MESSAGE_ERROR, BUTTONS_OK
 from gtk.gdk import pixbuf_new_from_file_at_size
 import gtk
 
@@ -133,7 +134,7 @@ class MainWindow(object):
             self.bookset.close()
             # or, should I be only doing
             # self.bookset.close_primary_connection() instead..?
-        main_quit()       
+        main_quit()
 
     def startup_event_handler(self, *args):
         # this should only be programmed to run once
@@ -301,23 +302,10 @@ class MainWindow(object):
         self.clear_trans_view()
         trans_id = self.guistate.get_transaction_id()
 
-        # when we call the function/class provided by
-        # get_transaction_edit_interface_hook_from_code() we would like to provide
-        # the argument book. But, this wasn't part of the original bokeep api
-        # so we don't want to break old plugins during a 0.0.x release.
-        #
-        # So we just add it as an optional keyword argument if the plugin
-        # explicitly declares that it supports them.
-        #
-        # This should be taken out for bo-keep 1.1 and just done as an extra
-        # regular argument like its comrads where an such a breaking api change is okay
-        editor_generator_extra_keywordargs = {}
-        if hasattr(currmodule, 'SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW'):
-            editor_generator_extra_keywordargs['book'] = book
         self.current_editor = editor_generator(
                 book.get_transaction(trans_id), trans_id, currmodule,
-                self.main_vbox, self.guistate.record_trans_dirty_in_backend,
-                **editor_generator_extra_keywordargs)
+                self.transaction_viewport, self.guistate.record_trans_dirty_in_backend,
+                book)
 
     def clear_trans_view(self):
         """Hide the current transaction so that no transaction is visible in the
@@ -374,11 +362,23 @@ class MainWindow(object):
             backend = book.get_backend_module()
             if backend.transaction_is_clean(trans_id):
                 self.backend_error_light.hide()
-                self.backend_error_msg_label.set_text("")
+                self.backend_error_msg_label.hide()
+                self.error_details_button.hide()
             else:
                 self.backend_error_light.show()
                 self.backend_error_msg_label.set_text(
                     backend.reason_transaction_is_dirty(trans_id) )
+                self.backend_error_msg_label.show()
+                self.error_details_button.show()
+
+    def on_error_details_button_clicked(self, *args):
+        md = MessageDialog(parent = self.mainwindow,
+                           type = MESSAGE_ERROR,
+                           buttons = BUTTONS_OK,
+                           message_format =
+                               self.backend_error_msg_label.get_text())
+        md.run()
+        md.destroy()
 
     # Functions for use to event handlers, not used during initialization
 
@@ -522,19 +522,10 @@ class MainWindow(object):
         currmodule = self.trans_type_combo.get_model().get_value(
             currindex,2)
 
-        # added in bokeep version 1.0.3 to provide additional keyword
-        # arguments not provided in previous versions, but in a 
-        # backwards compatible way
-        #
-        # Will be replaced with normal arguments in bokeep 1.1
-        # when backwards compatibility can be broken
-        extra_keywordargs = {}
-        if hasattr(currmodule, 'SUPPORTS_EXTRA_KEYWORD_ARGUMENTS_ON_VIEW'):
-            extra_keywordargs['book'] = self.guistate.get_book()
         currmodule.run_configuration_interface(
             self.mainwindow, self.guistate.get_book().get_backend_module(
                 ).backend_account_dialog,
-            **extra_keywordargs)
+            self.guistate.get_book())
         # hmm, this doesn't seem to be getting it done
         self.clear_trans_view()
         self.reset_trans_view()
@@ -548,7 +539,7 @@ class MainWindow(object):
         ab.set_transient_for(self.mainwindow)
         ab.set_modal(True)
         ab.set_name("Bo-Keep")
-        ab.set_version("1.0.3")
+        ab.set_version("1.1.1")
         ab.set_copyright("ParIT Worker Co-operative, Ltd. 2006-2011")
         ab.set_comments(
             """Bo-Keep helps you keep your books so you don't get lost.
