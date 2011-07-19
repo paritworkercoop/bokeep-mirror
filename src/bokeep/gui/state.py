@@ -236,7 +236,7 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
             new_transaction_instance)
         module.register_transaction(new_transaction_id,
                                     new_transaction_instance)
-        self.get_book().get_backend_module().mark_transaction_dirty(
+        self.get_book().get_backend_plugin().mark_transaction_dirty(
                 new_transaction_id, new_transaction_instance )
         return new_transaction_id
 
@@ -369,7 +369,7 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
         book = self.get_book()
         trans_id = self.get_transaction_id()
         if book != None and trans_id != None:
-            book.get_backend_module().mark_transaction_dirty(
+            book.get_backend_plugin().mark_transaction_dirty(
                 trans_id, book.get_transaction(trans_id) )
     
 

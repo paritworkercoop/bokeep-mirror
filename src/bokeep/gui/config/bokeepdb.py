@@ -48,7 +48,7 @@ from bokeep.config import \
     ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config, \
     set_plugin_directories_in_config, \
     ZODB_CONFIG_ZCONFIG
-from bokeep.book import BoKeepBookSet, PluginImportError
+from bokeep.book import BoKeepBookSet, FrontendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
@@ -271,12 +271,12 @@ class BoKeepConfigDialog(object):
         
         try:
             self.state.do_action(action, arg)
-        except PluginImportError, err:
+        except FrontendPluginImportError, err:
             backend_plugin_entry = self.backend_plugin_entry_combo.child
             backend_plugin_name = backend_plugin_entry.get_text()
             if backend_plugin_name in err.plugin_names:
                 self.backend_plugin_entry_combo.child.set_text(
-                        self.state.data[BOOK].get_backend_module_name() )
+                        self.state.data[BOOK].get_backend_plugin_name() )
                 err.plugin_names.remove(backend_plugin_name)
 
             frontend_plugins = {}
@@ -409,7 +409,7 @@ class BoKeepConfigDialog(object):
             if sel_book == None:
                 try:
                     self.do_action(BOOK_CHANGE, None)
-                except PluginImportError:
+                except FrontendPluginImportError:
                     self.select_book(self.state.data[BOOK])
                 else:
                     self.backend_entry_lock = True
@@ -418,12 +418,12 @@ class BoKeepConfigDialog(object):
             else:
                 try:
                     self.do_action(BOOK_CHANGE, sel_book)
-                except PluginImportError:
+                except FrontendPluginImportError:
                     self.select_book(self.state.data[BOOK])
                 else:
                     self.backend_entry_lock = True
                     self.backend_plugin_entry_combo.child.set_text(
-                        self.state.data[BOOK].get_backend_module_name() )
+                        self.state.data[BOOK].get_backend_plugin_name() )
                     self.backend_entry_lock = False
             self.set_sensitivities()
             

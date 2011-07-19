@@ -38,9 +38,9 @@ class MemberFeeTestCaseSetup(BoKeepWithBookSetup):
     def setUp(self):
         BoKeepWithBookSetup.setUp(self)
         self.test_book_1 = self.books.get_book(TESTBOOK)
-        self.test_book_1.add_module(MEMBERFEE_PLUGIN)
-        self.test_book_1.enable_module(MEMBERFEE_PLUGIN)
-        self.memberfee_plugin = self.test_book_1.get_module(
+        self.test_book_1.add_frontend_plugin(MEMBERFEE_PLUGIN)
+        self.test_book_1.enable_frontend_plugin(MEMBERFEE_PLUGIN)
+        self.memberfee_plugin = self.test_book_1.get_frontend_plugin(
             MEMBERFEE_PLUGIN)
         self.feetrans = FeeCollection(self.memberfee_plugin)
         self.feetrans.collection_date = date(2011, 1, 1)

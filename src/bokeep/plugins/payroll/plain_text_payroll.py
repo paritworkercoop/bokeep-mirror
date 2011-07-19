@@ -480,7 +480,7 @@ def add_new_payroll(book, payroll_module, display_paystubs, paydate,
                     paystub_accounting_line_config,
                     print_paystub_line_config, file_path,
                     overwrite_existing=False, add_missing_employees=False):
-    backend_module = book.get_backend_module()
+    backend_module = book.get_backend_plugin()
     
     # if a payroll has already been run with the same date, either error out
     # or use it
@@ -594,7 +594,7 @@ def payroll_get_payday(bookname, paydate, bookset=None):
 def payroll_remove_payday_cmd(bookname, paydate, bookset):
     bookset, book, payroll_module = payroll_init(bookname, bookset)
     return payroll_remove_payday(
-        book, payroll_module, book.get_backend_module(), paydate)
+        book, payroll_module, book.get_backend_plugin(), paydate)
 
 @ends_with_commit
 def payroll_remove_payday(book, payroll_module, backend_module, paydate):
@@ -673,25 +673,25 @@ def payroll_add_timesheet(bookname, emp_name, sheet_date, hours, memo,
 def handle_backend_command(book, args):
     cmd = args[0]
     if cmd == "set":
-        book.set_backend_module(args[1])
+        book.set_backend_plugin(args[1])
     if cmd == "setattr":
         #be warned that I don't think this backend command can usefully set
         #to non-string attributes, since command line args are seen as strings
         #I tried a variety of values like 99 and 4.2 that could have been 
         #parsed to non-string but they still ended up string.
-        mod = book.get_backend_module()
+        mod = book.get_backend_plugin()
         mod.setattr(args[1], args[2])
 
 def payroll_get_payroll_module(bookname, bookset):
     book = bookset.get_book(bookname)
 
-    if not book.has_module(PAYROLL_MODULE):
-        book.add_module(PAYROLL_MODULE)
+    if not book.has_frontend_plugin(PAYROLL_MODULE):
+        book.add_frontend_plugin(PAYROLL_MODULE)
 
-    if book.has_module_disabled(PAYROLL_MODULE):
-        book.enable_module(PAYROLL_MODULE)
+    if book.has_disabled_frontend_plugin(PAYROLL_MODULE):
+        book.enable_frontend_plugin(PAYROLL_MODULE)
 
-    payroll_module = book.get_module(PAYROLL_MODULE)
+    payroll_module = book.get_frontend_plugin(PAYROLL_MODULE)
     return payroll_module
 
 

@@ -115,13 +115,13 @@ class MainWindow(object):
     def flush_backend_of_book(self, book):
         """Save the BoKeep book."""
         
-        book.get_backend_module().flush_backend()
+        book.get_backend_plugin().flush_backend()
         transaction.get().commit()
 
     def close_backend_of_book(self, book):
         """Close the backend used for saving the BoKeep book."""
         
-        book.get_backend_module().close()
+        book.get_backend_plugin().close()
         transaction.get().commit()
 
     def application_shutdown(self):
@@ -129,7 +129,7 @@ class MainWindow(object):
             self.guistate.do_action(CLOSE)
         if hasattr(self, 'bookset') and self.bookset != None:
             for bookname, book in self.bookset.iterbooks():
-                book.get_backend_module().flush_backend()
+                book.get_backend_plugin().flush_backend()
                 transaction.get().commit()
             self.bookset.close()
             # or, should I be only doing
@@ -270,7 +270,7 @@ class MainWindow(object):
         if self.guistate.get_transaction_id() != None:
             cur_trans = book.get_transaction(self.guistate.get_transaction_id())
 
-        modules = book.get_modules()
+        modules = book.get_frontend_plugins()
         current_trans_type_index = COMBO_SELECTION_NONE
         for i, (code, trans_cls, module) in \
                 enumerate(book.get_iter_of_code_class_module_tripplets()):
@@ -359,7 +359,7 @@ class MainWindow(object):
         book = self.guistate.get_book()
         trans_id = self.guistate.get_transaction_id()
         if book != None and trans_id != None:
-            backend = book.get_backend_module()
+            backend = book.get_backend_plugin()
             if backend.transaction_is_clean(trans_id):
                 self.backend_error_light.hide()
                 self.backend_error_msg_label.hide()
@@ -502,7 +502,7 @@ class MainWindow(object):
         
         book = self.guistate.get_book()
         if book != None:
-            backend = book.get_backend_module()
+            backend = book.get_backend_plugin()
             backend.close()
             backend.configure_backend(self.mainwindow)
             transaction.get().commit()
@@ -523,7 +523,7 @@ class MainWindow(object):
             currindex,2)
 
         currmodule.run_configuration_interface(
-            self.mainwindow, self.guistate.get_book().get_backend_module(
+            self.mainwindow, self.guistate.get_book().get_backend_plugin(
                 ).backend_account_dialog,
             self.guistate.get_book())
         # hmm, this doesn't seem to be getting it done

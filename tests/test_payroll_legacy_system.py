@@ -216,15 +216,15 @@ class BoKeepPayrollLegacyTest(BoKeepWithBookSetup, GnuCashBasicSetup):
         # set up GnuCash backend plugin
         GnuCashBasicSetup.setUp(self)
 
-        self.backend_module.close()
-        self.test_book_1.set_backend_module(BACKEND_PLUGIN)
-        self.backend_module = self.test_book_1.get_backend_module()
-        self.backend_module.setattr(
+        self.backend_plugin.close()
+        self.test_book_1.set_backend_plugin(BACKEND_PLUGIN)
+        self.backend_plugin = self.test_book_1.get_backend_plugin()
+        self.backend_plugin.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
 
-        self.test_book_1.add_module(PAYROLL_PLUGIN)
-        self.test_book_1.enable_module(PAYROLL_PLUGIN)
-        self.payroll_plugin = self.test_book_1.get_module(PAYROLL_PLUGIN)
+        self.test_book_1.add_frontend_plugin(PAYROLL_PLUGIN)
+        self.test_book_1.enable_frontend_plugin(PAYROLL_PLUGIN)
+        self.payroll_plugin = self.test_book_1.get_frontend_plugin(PAYROLL_PLUGIN)
 
         payroll_add_employee(TESTBOOK, 'Elmer Fud', self.books)
         

@@ -75,30 +75,30 @@ class SerialFileTest(TestCase):
             Decimal(2), None,
             Decimal(-2), None )
         self.front_end_id = 1
-        self.backend_module = SerialFileLogingPlugin()
-        self.backend_module.accounting_file = self.serial_file_name
+        self.backend_plugin = SerialFileLogingPlugin()
+        self.backend_plugin.accounting_file = self.serial_file_name
         self.do_mark_flush_and_check()
 
     def do_dirty_mark(self):
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id, self.test_trans)
         
     def do_mark_flush_and_check(self):
         self.do_dirty_mark()
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
         self.do_can_write_test()
         self.do_clean_and_can_write_test()
 
     def do_clean_and_can_write_test(self):
         self.assert_(
-            self.backend_module.transaction_is_clean(self.front_end_id))
+            self.backend_plugin.transaction_is_clean(self.front_end_id))
         self.do_can_write_test()
 
     def do_can_write_test(self):
-        self.assert_(self.backend_module.can_write())
+        self.assert_(self.backend_plugin.can_write())
 
     def test_log_has_right_number_of_ops(self):
-        log = self.backend_module.get_log()
+        log = self.backend_plugin.get_log()
         self.assertEquals( len(log), 4 )
 
         for i, (prefix, log_entry) in enumerate(izip(
@@ -110,16 +110,16 @@ class SerialFileTest(TestCase):
     def test_second_mark_and_flush(self):
         self.do_dirty_mark()
         self.do_can_write_test()
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
         self.do_can_write_test()
         self.do_clean_and_can_write_test()
 
     def test_flush_no_re_dirty_mark(self):
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
         self.do_clean_and_can_write_test()
 
     def tearDown(self):
-        self.backend_module.close()
+        self.backend_plugin.close()
         remove(self.serial_file_name)
             
 if __name__ == "__main__":

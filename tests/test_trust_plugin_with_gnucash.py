@@ -50,13 +50,13 @@ class SimplerTrustTest(GnuCashBasicSetup):
     def test_me(self):
         trans = TrustTransaction(self.trust_plugin)
         trans_id = 1
-        self.backend_module.mark_transaction_dirty(trans_id, trans)
-        self.backend_module.flush_backend()
-        if not self.backend_module.transaction_is_clean(trans_id):
+        self.backend_plugin.mark_transaction_dirty(trans_id, trans)
+        self.backend_plugin.flush_backend()
+        if not self.backend_plugin.transaction_is_clean(trans_id):
             self.assertEquals(
-                self.backend_module.reason_transaction_is_dirty(trans_id),
+                self.backend_plugin.reason_transaction_is_dirty(trans_id),
                 None)
-        self.assert_(self.backend_module.transaction_is_clean(trans_id))
+        self.assert_(self.backend_plugin.transaction_is_clean(trans_id))
 
     def tearDown(self):
         GnuCashBasicSetup.tearDown(self)
@@ -67,16 +67,16 @@ class BoKeepTrustGnuCashTestSetup(BoKeepWithBookSetup, GnuCashBasicSetup):
         
         # set up GnuCash backend plugin
         GnuCashBasicSetup.setUp(self)
-        self.backend_module.close()
-        self.test_book_1.set_backend_module(BACKEND_PLUGIN)
-        self.backend_module = self.test_book_1.get_backend_module()
-        self.backend_module.setattr(
+        self.backend_plugin.close()
+        self.test_book_1.set_backend_plugin(BACKEND_PLUGIN)
+        self.backend_plugin = self.test_book_1.get_backend_plugin()
+        self.backend_plugin.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
 
         # set up the trust plugin
-        self.test_book_1.add_module(TRUST_PLUGIN)
-        self.test_book_1.enable_module(TRUST_PLUGIN)
-        self.trust_plugin = self.test_book_1.get_module(TRUST_PLUGIN)
+        self.test_book_1.add_frontend_plugin(TRUST_PLUGIN)
+        self.test_book_1.enable_frontend_plugin(TRUST_PLUGIN)
+        self.trust_plugin = self.test_book_1.get_frontend_plugin(TRUST_PLUGIN)
         self.trust_plugin.add_trustor_by_name(TEST_TRUSTOR)
         self.trust_plugin.set_cash_account(PETTY_CASH_FULL_SPEC)
         self.trust_plugin.set_trust_liability_account(BANK_FULL_SPEC)
@@ -91,13 +91,13 @@ class BoKeepTrustGnuCashTest(BoKeepTrustGnuCashTestSetup):
         trans = TrustTransaction(self.trust_plugin)
         trans_id = self.test_book_1.insert_transaction(trans)
         self.trust_plugin.register_transaction(trans_id, trans)
-        self.backend_module.mark_transaction_dirty(trans_id, trans)
-        self.backend_module.flush_backend()
-        if not self.backend_module.transaction_is_clean(trans_id):
+        self.backend_plugin.mark_transaction_dirty(trans_id, trans)
+        self.backend_plugin.flush_backend()
+        if not self.backend_plugin.transaction_is_clean(trans_id):
             self.assertEquals(
-                self.backend_module.reason_transaction_is_dirty(trans_id),
+                self.backend_plugin.reason_transaction_is_dirty(trans_id),
                 None)
-        self.assert_(self.backend_module.transaction_is_clean(trans_id))
+        self.assert_(self.backend_plugin.transaction_is_clean(trans_id))
 
 if __name__ == "__main__":
     main()

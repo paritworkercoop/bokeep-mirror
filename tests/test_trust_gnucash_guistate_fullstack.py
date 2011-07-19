@@ -67,12 +67,12 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         trust_trans.set_trustor(trustor)
         trust_trans.transfer_amount = Decimal(ONE_INT)
         self.state.do_action(CLOSE)
-        self.backend_module.close()
-        self.assertFalse(self.backend_module.transaction_is_clean(0))
+        self.backend_plugin.close()
+        self.assertFalse(self.backend_plugin.transaction_is_clean(0))
 
-        self.backend_module.flush_backend()
-        self.assert_(self.backend_module.transaction_is_clean(0))
-        self.backend_module.close()
+        self.backend_plugin.flush_backend()
+        self.assert_(self.backend_plugin.transaction_is_clean(0))
+        self.backend_plugin.close()
 
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
@@ -95,11 +95,12 @@ class BoKeepFullStackTests(BoKeepFullStackTestSetup):
         trustor = self.trust_plugin.get_trustor(TEST_TRUSTOR_NAME)
         trust_trans.set_trustor(trustor)
         trust_trans.transfer_amount = Decimal(ONE_INT)
-        self.assertFalse(self.backend_module.transaction_is_clean(0))
 
-        self.backend_module.flush_backend()
-        self.assert_(self.backend_module.transaction_is_clean(0))
-        self.backend_module.close()
+        self.assertFalse(self.backend_plugin.transaction_is_clean(0))
+
+        self.backend_plugin.flush_backend()
+        self.assert_(self.backend_plugin.transaction_is_clean(0))
+        self.backend_plugin.close()
 
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()

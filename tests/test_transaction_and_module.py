@@ -21,8 +21,8 @@ from bokeep.book_transaction import Transaction
 from bokeep.prototype_plugin import PrototypePlugin
 
 class Type1Transaction(Transaction):
-    def __init__(self, module):
-        Transaction.__init__(self, module)
+    def __init__(self, plugin):
+        Transaction.__init__(self, plugin)
         self.reset_data()
     
     def reset_data(self):
@@ -40,7 +40,7 @@ trust_transaction_types = {
     TYPE2: Type2Transaction,
 }
 
-class TestModule(PrototypePlugin):
+class TestPlugin(PrototypePlugin):
     def __init__(self):
         self.transaction_track_database = {}
         
@@ -62,6 +62,6 @@ class TestModule(PrototypePlugin):
         return trust_transaction_types[code]
 
 def get_plugin_class():
-    return TestModule
+    return TestPlugin
 
 
