@@ -59,9 +59,28 @@ from state import BoKeepConfigGuiState, \
     BOOK
 
 def establish_bokeep_db(mainwindow, config_path, config, db_exception):
-    """Create the BoKeep transaction database.
-    TODO: Expand this doc string!  (What this function is responsible for is
-    unclear to at least one contributor :P ) e.g. establish = create or load?
+    """Dialog to edit the configuration settings for a BoKeep database, 
+    create it at the configured location if not there yet, and also
+    exercise control over other settings kept in the bokeep configuration
+    (.bo-keep.cfg), and basic things like creating books and enabling
+    plugins.
+
+    And the best part is that a BoKeepBookSet for whichever database
+    you choose to select (in this dialog) is returned or None
+    if this fails
+
+    mainwindow -- if there's a Gtk.Window we can parrent this dialog too,
+                  please provide it, otherwise set to None
+    config_path -- path the configuration file is found at
+    config     -- a  ConfigParser.ConfigParser pre-loaded with the contents
+                  of config_path .
+    db_exception -- If you experienced some kind of exception while
+                    trying to load the BoKeepBookSet without the help of a
+                    this function, pass it on to us so we can display
+                    the error to the user so they know why they're
+                    being forced into a gui to fix things up
+
+    Changes made to config are saved in config_path
     """
     assert(db_exception == None or
            isinstance(db_exception, BoKeepConfigurationDatabaseException))
