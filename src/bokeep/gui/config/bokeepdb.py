@@ -45,7 +45,7 @@ from bokeep.config import \
     BoKeepConfigurationDatabaseException, ZODB_CONFIG_SECTION, \
     ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config, \
     set_plugin_directories_in_config
-from bokeep.book import BoKeepBookSet, FrontendPluginImportError
+from bokeep.book import BoKeepBookSet, PluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
