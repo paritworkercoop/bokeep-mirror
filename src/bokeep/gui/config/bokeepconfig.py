@@ -42,6 +42,8 @@ def establish_bokeep_config(mainwindow, paths, config_exception):
     config_exception -- You're calling this because you had trouble
     loading the configuration file and got an exception, pass it on
     so we can share the bad news in our dialog.
+
+    returns a config file path that will work or None
     """
     
     assert(isinstance(config_exception, BoKeepConfigurationFileException))
