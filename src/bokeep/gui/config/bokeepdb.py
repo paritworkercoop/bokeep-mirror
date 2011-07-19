@@ -264,7 +264,10 @@ class BoKeepConfigDialog(object):
         self.backend_plugin_entry_combo.set_text_column(0)
 
     def do_action(self, action, arg=None):
-        """Update the configuration state machine.  Display any errors."""
+        """Passes on an action to BoKeepConfigGuiState and gui is then
+        updated after to reflect the effects of that action by examining
+        where that state machine is at after the action.
+        """
         
         try:
             self.state.do_action(action, arg)
