@@ -47,8 +47,9 @@ class SimplePlugin(PrototypePlugin):
         self.type_strings = self.__class__.DEFAULT_TYPE_STRS
 
     def register_transaction(self, front_end_id, trust_trans):
-        """Registers a transaction with this front end plugin, using a unique
-        id."""
+        """Registers a transaction with this front end plugin, using
+        the unique identifier provided by the bokeep shell
+        """
         
         assert( not self.has_transaction(front_end_id) )
         self.trans_registry[front_end_id] = trust_trans
