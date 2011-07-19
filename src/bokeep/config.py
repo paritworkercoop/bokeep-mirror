@@ -142,7 +142,14 @@ def first_config_file_in_list_to_exist_and_parse(files):
 
 def get_bokeep_config_paths(provided_config_path=None):
     """Returns all possible BoKeep configuration filenames.
-    Note that a particular returned item may not actually exist as a file."""
+    Note that a particular returned item may not actually exist as a file.
+
+    This function is deprecated and will be removed, it was originally
+    intended to allow for range of places to be implicitly searched for config
+    files, just as current working directory and home directory, but the
+    behavior these days is to just look in the home directory and be
+    possibly be overridden by -c flag.
+    """
     
     if provided_config_path == None:
         return (CONFIG_HOME,)
