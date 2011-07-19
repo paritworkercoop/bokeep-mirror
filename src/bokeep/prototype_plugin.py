@@ -18,9 +18,19 @@
 # Author: Mark Jenkins <mark@parit.ca
 
 def get_plugin_class():
-    """Returns a class that's instantiated once for all entries that this plugin
-    provides.  This function should be overridden in each front end plugin."""
+    """Returns a class that's instantiated as part of the process of
+    loading a front end plugin into a BoKeepBook.
+
+    Right now, the class returned here is only instantiated once per book,
+    but eventually a book will be able to make multiple instances.
+
+    Implication of both of both situations above is that there shouldn't
+    be things stored in class variables of this class, each instance
+    of what's returned here should be isolated from the other datawise.
     
+    Every front end plugin should define this function in its main
+    module or __init__.py of its top level package.
+    """    
     return PrototypePlugin
 
 from persistent import Persistent
