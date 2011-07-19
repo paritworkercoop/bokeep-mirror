@@ -40,7 +40,7 @@ from bokeep.config import get_bokeep_configuration, \
     BoKeepConfigurationFileException
 from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
-    establish_bokeep_transaction_database
+    establish_bokeep_db
 from main_window_glade import get_main_window_glade_file
 
 GUI_STATE_SUB_DB = 'gui_state'
