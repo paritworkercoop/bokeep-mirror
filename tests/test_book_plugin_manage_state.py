@@ -78,7 +78,7 @@ class BookPluginManageStateAfterDBSetTest(BookPluginManageStateAfterDBSetSetup):
         self.state.do_action(BOOK_CHANGE, TESTBOOK)
         # technically whitebox testing
         self.assert_( self.state.data[BOOKSET].has_book(TESTBOOK) )
-        self.state.plugin_liststore.append((TEST_PLUG, False))
+        self.state.frontend_plugin_liststore.append((TEST_PLUG, False))
         self.state.do_action(BOOK_CHANGE, None)
         self.state.do_action(BOOK_CHANGE, TESTBOOK)
         # whitebox testing
