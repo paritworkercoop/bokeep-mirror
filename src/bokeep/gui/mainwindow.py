@@ -88,8 +88,8 @@ class MainWindow(object):
     def __init__(self, config_path, config, bookset, startup_callback):
         self.gui_built = False
         self.current_editor = None
-        self.config_path_and_config_set(config_path, config)
-        self.bookset_set(bookset)
+        self.set_config_path_and_config(config_path, config)
+        self.set_bookset(bookset)
         
         self.build_gui()
         self.programmatic_transcombo_index = False
@@ -103,22 +103,22 @@ class MainWindow(object):
         # should we do an emit to ensure it happens, or be satisfyed
         # that it always happens in tests?
 
-    def config_path_and_config_set(self, config_path, config):
+    def set_config_path_and_config(self, config_path, config):
         self.__config_path = config_path
         self.__config = config
 
-    def bookset_set(self, bookset):
+    def set_bookset(self, bookset):
         """Sets the set of BoKeep books."""
         
         self.bookset = bookset
 
-    def flush_backend_of_book(self, book):
+    def flush_book_backend(self, book):
         """Save the BoKeep book."""
         
         book.get_backend_plugin().flush_backend()
         transaction.get().commit()
 
-    def close_backend_of_book(self, book):
+    def close_book_backend(self, book):
         """Close the backend used for saving the BoKeep book."""
         
         book.get_backend_plugin().close()
@@ -146,8 +146,8 @@ class MainWindow(object):
         assert(not self.gui_built)
 
         if self.__startup_callback(self.__config_path, self.__config,
-                                   self.config_path_and_config_set,
-                                   self.bookset_set, self.mainwindow ):
+                                   self.set_config_path_and_config,
+                                   self.set_bookset, self.mainwindow ):
             self.after_background_load()
             assert(self.gui_built)
         else:
@@ -270,7 +270,7 @@ class MainWindow(object):
         if self.guistate.get_transaction_id() != None:
             cur_trans = book.get_transaction(self.guistate.get_transaction_id())
 
-        modules = book.get_frontend_plugins()
+        frontend_plugins = book.get_frontend_plugins()
         current_trans_type_index = COMBO_SELECTION_NONE
         for i, (code, trans_cls, module) in \
                 enumerate(book.get_iter_of_code_class_module_tripplets()):
@@ -299,7 +299,7 @@ class MainWindow(object):
         currmodule = self.trans_type_combo.get_model().get_value(currindex,2)
         editor_generator = currmodule.\
             get_transaction_edit_interface_hook_from_code(currcode)
-        self.clear_trans_view()
+        self.hide_transaction()
         trans_id = self.guistate.get_transaction_id()
 
         self.current_editor = editor_generator(
@@ -307,7 +307,7 @@ class MainWindow(object):
                 self.transaction_viewport, self.guistate.record_trans_dirty_in_backend,
                 book)
 
-    def clear_trans_view(self):
+    def hide_transaction(self):
         """Hide the current transaction so that no transaction is visible in the
         shell."""
         
@@ -413,25 +413,36 @@ class MainWindow(object):
         self.set_book_from_combo()
         self.refresh_trans_types_and_set_sensitivities_and_status()
         
-    def on_new_button_clicked(self, *args):
+    def new_button_clicked(self, *args):
         """Create a new BoKeep transaction."""
-        
         self.guistate.do_action(NEW)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
 
-    def on_delete_button_clicked(self, *args):
+    # to maintain compatibility with listing of event handler in
+    # the glade file.
+    # we don't change the glade file because those are impossible to
+    # maintain and merge in when developing in a branch, so once
+    # this code is merged to default the glade file can be updated
+    # and this comment and backwards compatibility assignment can be
+    # removed
+    on_new_button_clicked = new_button_clicked
+
+    def delete_button_clicked(self, *args):
         """Delete a BoKeep transaction."""
         
         self.guistate.do_action(DELETE)
         book = self.guistate.get_book()
         if self.guistate.get_transaction_id() == None:
             self.set_transcombo_index(COMBO_SELECTION_NONE)
-            self.clear_trans_view()
+            self.hide_transaction()
         else:
             self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
-        
+
+    # see comment on on_new_button_clicked
+    on_delete_button_clicked = delete_button_clicked
+
     def trans_type_changed(self, *args):
         """Event handler for when the transaction type on a new transaction
         changes
@@ -527,7 +538,7 @@ class MainWindow(object):
                 ).backend_account_dialog,
             self.guistate.get_book())
         # hmm, this doesn't seem to be getting it done
-        self.clear_trans_view()
+        self.hide_transaction()
         self.reset_trans_view()
         transaction.get().commit()
 
@@ -579,7 +590,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         
         if self.guistate.get_book() == None:
             return
-        self.flush_backend_of_book(self.guistate.get_book())
+        self.flush_book_backend(self.guistate.get_book())
         self.set_backend_error_indicator()
 
     def on_backend_close_request(self, *args):
@@ -588,6 +599,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         book = self.guistate.get_book()
         if book == None:
             return
-        self.flush_backend_of_book(book)
-        self.close_backend_of_book(book)
+        self.flush_book_backend(book)
+        self.close_book_backend(book)
         self.set_backend_error_indicator()
