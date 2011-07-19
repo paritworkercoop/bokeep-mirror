@@ -413,14 +413,14 @@ class MainWindow(object):
         self.set_book_from_combo()
         self.refresh_trans_types_and_set_sensitivities_and_status()
         
-    def new_button_clicked(self, *args):
+    def on_new_button_clicked(self, *args):
         """Create a new BoKeep transaction."""
         
         self.guistate.do_action(NEW)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
 
-    def delete_button_clicked(self, *args):
+    def on_delete_button_clicked(self, *args):
         """Delete a BoKeep transaction."""
         
         self.guistate.do_action(DELETE)
@@ -452,14 +452,14 @@ class MainWindow(object):
             self.reset_trans_view()
             self.set_sensitivities_and_status()
 
-    def forward_button_clicked(self, *args):
+    def on_forward_button_clicked(self, *args):
         """Go forward to next transaction."""
         
         self.guistate.do_action(FORWARD)
         self.set_trans_type_combo_to_current_and_reset_view()
         self.set_sensitivities_and_status()
     
-    def back_button_clicked(self, *args):
+    def on_back_button_clicked(self, *args):
         """Go back to previous transaction."""
         
         self.guistate.do_action(BACKWARD)
