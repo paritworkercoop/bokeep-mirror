@@ -37,7 +37,23 @@ from persistent import Persistent
 from bokeep.book_transaction import Transaction
 
 class PrototypePlugin(Persistent):
-    """A basic front end plugin."""
+    """A plugin that documents all of the required frontend plugin api methods
+
+    BoKeep frontend plugins need not inherit from this, but if they do
+    they get some default methods in many cases which do the minimum
+    required to get by, so inheriting from PrototypePlugin can be a way
+    to get started -- before you end up overloading all of these methods
+    (and you're pretty much gaurenteed to) it can help you get a *prototype*
+    going that respects the full BoKeep api and doesn't crash.
+
+    And that's really only useful if your plan is to directly implement the full
+    BoKeep api that's documented here.
+
+    Almost all plugin developers would get a much more satisfactory experience
+    inheriting from bokeep.simple_plugin.SimplePlugin, which hides most of
+    the cool dymaic power of the BoKeep plugin api here and just covers
+    the really comomon cases fairly well.
+    """
     
     def run_configuration_interface(self, parent_window, backend_account_fetch,
                                     book):
