@@ -25,11 +25,22 @@ from persistent.mapping import PersistentMapping
 from bokeep.prototype_plugin import PrototypePlugin
 
 class SimplePlugin(PrototypePlugin):
-    """A simplified front end plugin.  A single instance is created upon first
-    use of this plugin.  After that this class is reloaded.
-    
-    Store the configuration of the associated front end plugin in class
-    variables in the class that extends this class."""
+    """Makes implementing the BoKeep plugin api much, much simpler
+    than trying to implement all of the crazzy cool parts of the api as
+    documented in bokeep.prototype_plugin.
+
+    Inherit from this and enjoy the bliss of a lot of things being done for
+    you, and and give up the extra power and control afforded by having to
+    directly implement the BoKeep front end plugin api.
+    For most plugins this is a good trade off, which is why the intro to
+    BoKeep plugin authoring document, which writes the mileage plugin uses
+    this instead of the lower level api.
+
+    Those docs cover the requirements for those inheriting from SimplePlugin
+    fairly well, so we'll omit repeating them here for now.
+    (a quick, less tutorialish summary here would probably make sense at some
+     point)
+    """
     
     def __init__(self):
         self.trans_registry = PersistentMapping()
