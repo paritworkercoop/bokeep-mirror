@@ -291,6 +291,8 @@ class BoKeepConfigDialog(object):
                            MESSAGE_ERROR, BUTTONS_OK, str(err))
             error_dialog.run()
             error_dialog.destroy()
+            # raises last exception that had been caught, in above
+            # except clause, err
             raise
 
 
