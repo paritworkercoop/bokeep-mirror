@@ -29,7 +29,9 @@ DEFAULT_BACKEND_MODULE = "bokeep.backend_plugins.null"
 BOOKS_SUB_DB_KEY = 'books'
 
 class BoKeepDBHandle(object):
-    """Generic database management."""
+    """Wrapper around ZODB database connection for the BoKeep database
+    that adds the concept of sub databases
+    """
     
     def __init__(self, dbcon):
         self.dbcon = dbcon
@@ -61,7 +63,9 @@ class BoKeepDBHandle(object):
         
 
 class BoKeepBookSet(object):
-    """High level management of the BoKeep books stored within a database."""
+    """Aggregates all of the books (BoKeepBook) in a BoKeep database and
+    references a BoKeepDBHandle used to access them.
+    """
     
     def __init__(self, zodb):
         self.zodb = zodb
@@ -115,10 +119,43 @@ class BoKeepBookSet(object):
         self.dbhandle.get_sub_database_do_cls_init(BOOKS_SUB_DB_KEY, dict)
 
 class BoKeepBook(Persistent):
-    """A BoKeep book stores the details that are used to create simplified
-    balanced accounting transactions.  For example, a BoKeep book may contain
-    the hours an employee worked so that it can create an accounting transaction
-    on the employee's payday."""
+    """The equivilent of an accounting book in BoKeep.
+
+    Meaning there should be one of these per entity keeping accounting
+    records of itself.
+
+    Each BoKeep book has frontend plugins (as specified by
+    bokeep.prototype_plugin.ProtoTypePlugin) that provide transaction types.
+    The eventual intent is that there can be multiple
+    frontend plugin INSTANCES per frontend plugin in each book, that way
+    the same frontend plugin can be used multiple times in a book but with
+    a different configuration. Some steps in this direction have been taken,
+    the plugin class from each plugin is instantiated, that is class variables
+    aren't relied on, etc. Biggest barrier to this right now is that the
+    plugin module/package name is used to identify each instance
+
+    Its already the case the separate BoKeepBook's in the same BoKeepBookSet
+    can each use the same frontend plugin, but with a different configuration
+    each.
+
+    Each book contains BoKeep transactions (bokeep.book_transaction.Trasaction)
+    of those transaction types from the frontend plugins. These are
+    indexed by assigned transaction ids in a BTree. (which allows for
+    both fast map style direct lookup and linear, linked list style iteration)
+
+    A book also has a backend plugin so that its transactions can be
+    mirrored in a "real" accounting program. The backend plugin
+    should be informed when a BoKeep transaction
+    (bokeep.book_transaction.Transaction) is out of sync, as per the
+    bokeep.backend_plugins.BackendPlugin api.
+
+    Note that the fact that multiple front end plugins are allowed but only one
+    backend plugin per book isn't an oversight -- the former is essential, the
+    later has no obvious use case. I'd suggest that if someone does want
+    multiple backend plugins per BoKeepBook that they design a Multiplex
+    backend plugin to hide this and allow the simplicity of only dealing
+    with one backend plugin to stay.
+    """
     
     def __init__(self, new_book_name):
         self.book_name = new_book_name
