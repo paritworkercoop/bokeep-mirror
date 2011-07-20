@@ -89,7 +89,7 @@ class BoKeepBookSet(object):
         #flush out whatever's pending
         transaction.get().commit()
         for book_name, book in self.iterbooks():
-            book.get_backend_module().close()
+            book.get_backend_plugin().close()
         self.close_primary_connection()
         self.zodb.close()      
 
@@ -160,64 +160,65 @@ class BoKeepBook(Persistent):
     def __init__(self, new_book_name):
         self.book_name = new_book_name
         self.trans_tree = IOBTree()
-        self.set_backend_module(DEFAULT_BACKEND_MODULE)
+        self.set_backend_plugin(DEFAULT_BACKEND_MODULE)
         self.enabled_modules = {}
         self.disabled_modules = {}
 
-    def add_module(self, module_name):
+    def add_frontend_plugin(self, plugin_name):
         """Add a frontend plugin to this BoKeep book, starting in a disabled
         state.  FrontendPluginImportError is thrown if there's a problem."""
         
-        assert( module_name not in self.enabled_modules and 
-                module_name not in self.disabled_modules )
+        assert( plugin_name not in self.enabled_modules and 
+                plugin_name not in self.disabled_modules )
         # get the module class and instantiate as a new disabled module
         try:
-            self.disabled_modules[module_name] =  __import__(
-                module_name, globals(), locals(), [""]).get_plugin_class()()
+            self.disabled_modules[plugin_name] =  __import__(
+                plugin_name, globals(), locals(), [""]).get_plugin_class()()
             self._p_changed = True
         except ImportError:
-            raise PluginImportError(module_name)
+            raise FrontendPluginImportError(plugin_name)
 
-    def enable_module(self, module_name):
-        assert( module_name in self.disabled_modules )
-        self.enabled_modules[module_name] = self.disabled_modules[module_name]
-        del self.disabled_modules[module_name]
+    def enable_frontend_plugin(self, plugin_name):
+        """Enable a previously added frontend plugin that is currently
+        disabled."""
+        assert( plugin_name in self.disabled_modules )
+        self.enabled_modules[plugin_name] = self.disabled_modules[plugin_name]
+        del self.disabled_modules[plugin_name]
         self._p_changed = True
         
-    def disable_module(self, module_name):
-        assert( module_name in self.enabled_modules )
-        self.disabled_modules[module_name] = self.enabled_modules[module_name]
-        del self.enabled_modules[module_name]
+    def disable_frontend_plugin(self, plugin_name):
+        """Disables a presently enabled frontend plugin."""
+        assert( plugin_name in self.enabled_modules )
+        self.disabled_modules[plugin_name] = self.enabled_modules[plugin_name]
+        del self.enabled_modules[plugin_name]
         self._p_changed = True
     
-    def get_module(self, module_name):
-        return self.enabled_modules[module_name]
+    def get_frontend_plugin(self, plugin_name):
+        return self.enabled_modules[plugin_name]
 
-    def get_modules(self):
+    def get_frontend_plugins(self):
         return self.enabled_modules
 
-    def has_module_enabled(self, module_name):
-        return module_name in self.enabled_modules
+    def has_enabled_frontend_plugin(self, plugin_name):
+        return plugin_name in self.enabled_modules
 
-    def has_module_disabled(self, module_name):
-        return module_name in self.disabled_modules
+    def has_disabled_frontend_plugin(self, plugin_name):
+        return plugin_name in self.disabled_modules
 
-    def has_module(self, module_name):
-        return \
-            self.has_module_enabled(module_name) or \
-            self.has_module_disabled(module_name)
+    def has_frontend_plugin(self, plugin_name):
+        return self.has_enabled_frontend_plugin(plugin_name) or \
+               self.has_disabled_frontend_plugin(plugin_name)
 
     def get_iter_of_code_class_module_tripplets(self):
         # there has got to be a more functional way to write this..
         # while also maintaining that good ol iterator don't waste memory
         # property... some kind of nice nested generator expressions
         # with some kind of functional/itertool y thing
-        for module in self.enabled_modules.itervalues():
-            for code in module.get_transaction_type_codes():
-                yield (code, module.get_transaction_type_from_code(code),
-                       module)
-            
-        
+        for frontend_plugin in self.enabled_modules.itervalues():
+            for code in frontend_plugin.get_transaction_type_codes():
+                yield (code,
+                       frontend_plugin.get_transaction_type_from_code(code),
+                       frontend_plugin)
 
     def get_index_and_code_class_module_tripplet_for_transaction(
         self, trans_id):
@@ -232,14 +233,14 @@ class BoKeepBook(Persistent):
                 return i, (code, cls, module)
         return None, (None, None, None)
 
-    def set_backend_module(self, backend_module_name):
+    def set_backend_plugin(self, backend_plugin_name):
         if hasattr(self, '_BoKeepBook__backend_module_name'):
-            old_backend_module_name = self.get_backend_module_name()
-            old_backend_module = self.get_backend_module()
+            old_backend_module_name = self.get_backend_plugin_name()
+            old_backend_module = self.get_backend_plugin()
         try:
-            self.__backend_module_name = backend_module_name
+            self.__backend_module_name = backend_plugin_name
             self.__backend_module = __import__(
-              backend_module_name, globals(), locals(), [""] ).\
+              backend_plugin_name, globals(), locals(), [""] ).\
     	      get_plugin_class()()
             assert( isinstance(self.__backend_module, BackendPlugin) )
             # because we have changed the backend module, all transactions
@@ -253,15 +254,15 @@ class BoKeepBook(Persistent):
             # but that should only happen on book instantiation
             self.__backend_module_name = old_backend_module_name
             self.__backend_module = old_backend_module  
-            raise BackendPluginImportError(backend_module_name)
+            raise BackendPluginImportError(backend_plugin_name)
 
-    def get_backend_module(self):
+    def get_backend_plugin(self):
         return self.__backend_module
 
-    def get_backend_module_name(self):
+    def get_backend_plugin_name(self):
         return self.__backend_module_name
 
-    backend_module = property(get_backend_module, set_backend_module)
+    backend_plugin = property(get_backend_plugin, set_backend_plugin)
 
     def insert_transaction(self, trans):
         """Adds a transaction to this BoKeep book."""
@@ -325,9 +326,9 @@ class BoKeepBook(Persistent):
 
     def remove_transaction(self, trans_id):
         del self.trans_tree[trans_id]
-        self.backend_module.mark_transaction_for_removal(trans_id)
+        self.backend_plugin.mark_transaction_for_removal(trans_id)
 
-class PluginImportError(Exception):
+class FrontendPluginImportError(Exception):
     def __init__(self, plugin_name):
         if type(plugin_name) == str:
             Exception.__init__(self, "%s: missing or broken" % plugin_name)

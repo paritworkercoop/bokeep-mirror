@@ -78,12 +78,12 @@ class BookPluginManageStateAfterDBSetTest(BookPluginManageStateAfterDBSetSetup):
         self.state.do_action(BOOK_CHANGE, TESTBOOK)
         # technically whitebox testing
         self.assert_( self.state.data[BOOKSET].has_book(TESTBOOK) )
-        self.state.plugin_liststore.append((TEST_PLUG, False))
+        self.state.frontend_plugin_liststore.append((TEST_PLUG, False))
         self.state.do_action(BOOK_CHANGE, None)
         self.state.do_action(BOOK_CHANGE, TESTBOOK)
         # whitebox testing
         self.assert_(self.state.data[BOOKSET].get_book(
-                TESTBOOK).has_module_disabled(TEST_PLUG) )
+                TESTBOOK).has_disabled_frontend_plugin(TEST_PLUG) )
 
 if __name__ == "__main__":
     main()

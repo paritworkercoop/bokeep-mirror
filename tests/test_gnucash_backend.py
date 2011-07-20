@@ -91,9 +91,9 @@ class GnuCashFileSetup(TestCase):
         s, book, root = self.acquire_gnucash_session_book_and_root(True)
         # this is neccesary for the sqlite3 backend to work, a new
         # book has to be saved right away.
-        # hope the gnucash backend module itself would need to do any
+        # hope the gnucash backend plugin itself would need to do any
         # early saves; think this only applies to new book, wonder if
-        # backend module itself should ever create a new book?
+        # backend plugin itself should ever create a new book?
         s.save()
         currency = book.get_table().lookup('CURRENCY', self.get_currency())
 
@@ -151,7 +151,7 @@ class GnuCashFileSetup(TestCase):
 
     def check_account_tree_is_present(self, session_provided=None):
         if session_provided == None:
-            self.backend_module.close()
+            self.backend_plugin.close()
             s, book, root = self.acquire_gnucash_session_book_and_root()
         else:
             s = session_provided
@@ -194,30 +194,30 @@ class GnuCashBasicSetup(GnuCashFileSetup):
             GnuCash
 
         GnuCashFileSetup.setUp(self)
-        self.backend_module = GnuCash()
-        self.assertFalse(self.backend_module.can_write())
+        self.backend_plugin = GnuCash()
+        self.assertFalse(self.backend_plugin.can_write())
         
         # this early flush is something that bokeep.book.Book does
         # right after backend plugin loading
         #
         # the absense of this closer emulation made this entire test file
         # pretty useless in detecting bug #33616 
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
 
         # the above flush should have failed due to no gnucash file
         # having been established yet; back when we were pursuing
         # bug #33616 this assert would fail... the above flush
         # would work despite no actual file name having been defined yet
-        self.assertFalse(self.backend_module.can_write())
+        self.assertFalse(self.backend_plugin.can_write())
 
         # underneath this calls flush_backend() again
-        self.backend_module.setattr(
+        self.backend_plugin.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
-        self.assert_(self.backend_module.can_write())
+        self.assert_(self.backend_plugin.can_write())
 
     def tearDown(self):
-        self.backend_module.close()
-        self.assertFalse(self.backend_module.can_write())
+        self.backend_plugin.close()
+        self.assertFalse(self.backend_plugin.can_write())
         GnuCashFileSetup.tearDown(self)
 
 class GetProtocolXML(object):
@@ -236,15 +236,15 @@ class GnuCashBasicTest(GnuCashBasicSetup):
         GnuCashBasicSetup.check_account_tree_is_present
 
     def do_close_and_tree_check(self):
-        self.backend_module.close()
-        self.assertFalse(self.backend_module.can_write() )
+        self.backend_plugin.close()
+        self.assertFalse(self.backend_plugin.can_write() )
         self.check_account_tree_is_present()
 
     test_simple_close = do_close_and_tree_check
 
     def test_blank_flush_and_close(self):
-        self.backend_module.flush_backend()
-        self.assert_(self.backend_module.can_write() )
+        self.backend_plugin.flush_backend()
+        self.assert_(self.backend_plugin.can_write() )
         self.do_close_and_tree_check()
 
     def test_imbalance(self):
@@ -253,19 +253,19 @@ class GnuCashBasicTest(GnuCashBasicSetup):
             Decimal(-2), PETTY_CASH_FULL_SPEC )
         test_trans.set_currency(self.get_currency())
         front_end_id = 1
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             front_end_id, test_trans)        
-        self.backend_module.flush_backend()
-        self.assertFalse(self.backend_module.transaction_is_clean(
+        self.backend_plugin.flush_backend()
+        self.assertFalse(self.backend_plugin.transaction_is_clean(
                 front_end_id) )
         self.assert_(
-            self.backend_module.reason_transaction_is_dirty(
+            self.backend_plugin.reason_transaction_is_dirty(
                 front_end_id).endswith(
                 "transaction doesn't balance"))
 
     def test_double_close(self):
-        self.backend_module.close()
-        self.backend_module.close()
+        self.backend_plugin.close()
+        self.backend_plugin.close()
 
     def test_account_creation_when_not_there(self):
         TEST_NEW_ACCOUNT = "test created account"
@@ -276,16 +276,16 @@ class GnuCashBasicTest(GnuCashBasicSetup):
         test_trans.fin_trans.lines[0].create_account_if_missing = True
         test_trans.set_currency(self.get_currency())
         front_end_id = 1
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             front_end_id, test_trans)
-        self.backend_module.flush_backend()
-        if not self.backend_module.transaction_is_clean(front_end_id):
+        self.backend_plugin.flush_backend()
+        if not self.backend_plugin.transaction_is_clean(front_end_id):
             self.assertEquals(
-                None, self.backend_module.reason_transaction_is_dirty(
+                None, self.backend_plugin.reason_transaction_is_dirty(
                     front_end_id) )
-        self.assert_(self.backend_module.transaction_is_clean(front_end_id))
-        self.backend_module.close()
-        self.assertFalse(self.backend_module.can_write() )
+        self.assert_(self.backend_plugin.transaction_is_clean(front_end_id))
+        self.backend_plugin.close()
+        self.assertFalse(self.backend_plugin.can_write() )
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3]
@@ -312,8 +312,8 @@ class GnuCashAlternativeBasicSetup(GnuCashBasicSetup):
         # we don't call GnuCashBasicSetup.setUp because this implementation
         # of setUp is overriding its behavior
         GnuCashFileSetup.setUp(self)
-        self.backend_module = GnuCash()
-        self.assertFalse(self.backend_module.can_write())
+        self.backend_plugin = GnuCash()
+        self.assertFalse(self.backend_plugin.can_write())
         
         # what makes these tests "alternative" is that we don't
         # do backend.module.flush_backend() at this point like
@@ -325,16 +325,16 @@ class GnuCashAlternativeBasicSetup(GnuCashBasicSetup):
         # how bokeep.book.Book and users of it behave.
 
         # back when we were pursuing bug #33616 this would only fail if
-        # self.backend_module.flush_backend was called first
+        # self.backend_plugin.flush_backend was called first
         # but with that not being the sequence above we've never seen it
         # fail
-        self.assertFalse(self.backend_module.can_write())
+        self.assertFalse(self.backend_plugin.can_write())
 
         # underneath this calls flush_backend() (for the first time
         # here in the alternative test set)
-        self.backend_module.setattr(
+        self.backend_plugin.setattr(
             'gnucash_file', self.get_gnucash_file_name_with_protocol() )
-        self.assert_(self.backend_module.can_write())
+        self.assert_(self.backend_plugin.can_write())
 
 class GnuCashAlternativeBasicTests(
     GnuCashAlternativeBasicSetup, GnuCashBasicTest): pass
@@ -357,12 +357,12 @@ class GnuCashStartsWithMarkSetup(GnuCashBasicSetup):
                                           Decimal(-1), PETTY_CASH_FULL_SPEC )
         self.test_trans.set_currency(self.get_currency())
         self.front_end_id = 1
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id, self.test_trans)
 
     def check_of_test_trans_present(self):
         from gnucash import Split, GncNumeric
-        self.backend_module.close()
+        self.backend_plugin.close()
         
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
@@ -399,28 +399,28 @@ class GnuCashStartsWithMarkAlternativeSetup(
 
 class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):   
     def test_simple_flush(self):
-        self.backend_module.flush_backend()
-        if not self.backend_module.transaction_is_clean(
+        self.backend_plugin.flush_backend()
+        if not self.backend_plugin.transaction_is_clean(
                 self.front_end_id):
             self.assertEquals(
-                self.backend_module.reason_transaction_is_dirty(
+                self.backend_plugin.reason_transaction_is_dirty(
                     self.front_end_id),
                 None)
-        self.assert_(self.backend_module.transaction_is_clean(
+        self.assert_(self.backend_plugin.transaction_is_clean(
                 self.front_end_id ))
         self.assert_(self.check_of_test_trans_present())
         self.check_account_tree_is_present()
 
     def test_close_flush_close(self):
         self.assertFalse(self.check_of_test_trans_present())
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
         self.assert_(self.check_of_test_trans_present())
         self.check_account_tree_is_present()
 
     def test_close_account_commod_change_then_flush(self):
-        self.backend_module.close()
+        self.backend_plugin.close()
 
-        self.assertFalse(self.backend_module.transaction_is_clean(
+        self.assertFalse(self.backend_plugin.transaction_is_clean(
                 self.front_end_id) )
         # why not clean, the reason should be checked?
 
@@ -435,26 +435,26 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
         # perhaps doing a flush first,
         # this damage second, and verify here should also be able to
         # trigger the transaction being marked dirty
-        self.backend_module.flush_backend()
-        self.assertFalse(self.backend_module.transaction_is_clean(
+        self.backend_plugin.flush_backend()
+        self.assertFalse(self.backend_plugin.transaction_is_clean(
                 self.front_end_id) )
         reason_dirty = \
-            self.backend_module.reason_transaction_is_dirty(self.front_end_id)
+            self.backend_plugin.reason_transaction_is_dirty(self.front_end_id)
         self.assert_(reason_dirty.endswith(
                 "transaction currency and account don't match") )       
 
     def test_bad_account_path(self):
         self.test_trans.fin_trans.lines[0].account_spec = ("garbage",)
-        self.backend_module.flush_backend()
-        self.assertFalse(self.backend_module.transaction_is_clean(
+        self.backend_plugin.flush_backend()
+        self.assertFalse(self.backend_plugin.transaction_is_clean(
                 self.front_end_id) )
         self.assert_(
-            self.backend_module.reason_transaction_is_dirty(
+            self.backend_plugin.reason_transaction_is_dirty(
                 self.front_end_id).endswith(
                 "path garbage could not be found"))
         self.test_trans.fin_trans.lines[0].account_spec = BANK_FULL_SPEC
-        self.backend_module.flush_backend()
-        self.assert_(self.backend_module.transaction_is_clean(
+        self.backend_plugin.flush_backend()
+        self.assert_(self.backend_plugin.transaction_is_clean(
                 self.front_end_id))
         self.assert_(self.check_of_test_trans_present())
         # should do a flush, screw it up, re-flush and check for
@@ -463,7 +463,7 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
 
     def check_if_transaction_is_missing(self):
         from gnucash import Split
-        self.backend_module.close()
+        self.backend_plugin.close()
         (s, book, root, accounts) = \
             self.acquire_gnucash_session_book_root_and_accounts()
         assets, bank, petty_cash = accounts[:3]
@@ -476,18 +476,18 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
         self.gnucash_session_termination(s)
 
     def test_bad_account_removes_success_trans(self):
-        self.backend_module.flush_backend()
+        self.backend_plugin.flush_backend()
         self.assert_(self.check_of_test_trans_present())
-        self.assert_(self.backend_module.transaction_is_clean(
+        self.assert_(self.backend_plugin.transaction_is_clean(
                 self.front_end_id) )
         self.test_trans.fin_trans.lines[0].account_spec = ("garbage",)
-        self.backend_module.mark_transaction_dirty(
+        self.backend_plugin.mark_transaction_dirty(
             self.front_end_id, self.test_trans)
-        self.backend_module.flush_backend()
-        self.assertFalse(self.backend_module.transaction_is_clean(
+        self.backend_plugin.flush_backend()
+        self.assertFalse(self.backend_plugin.transaction_is_clean(
                 self.front_end_id) )
         self.assert_(
-            self.backend_module.reason_transaction_is_dirty(
+            self.backend_plugin.reason_transaction_is_dirty(
                 self.front_end_id).endswith(
                 "path garbage could not be found"))
         self.check_if_transaction_is_missing()
@@ -496,10 +496,10 @@ class GnuCashStartsWithMarkTests(GnuCashStartsWithMarkSetup):
         # transaction removal but not recreation as well
         self.test_trans.fin_trans.lines[0].account_spec = BANK_FULL_SPEC
         self.assertFalse(
-            self.backend_module.transaction_is_clean(self.front_end_id))
-        self.backend_module.flush_backend()
+            self.backend_plugin.transaction_is_clean(self.front_end_id))
+        self.backend_plugin.flush_backend()
         self.assert_(
-            self.backend_module.transaction_is_clean(self.front_end_id))
+            self.backend_plugin.transaction_is_clean(self.front_end_id))
         self.assert_(self.check_of_test_trans_present())
 
 class GnuCashStartsWithMarkTestsXML(

@@ -187,13 +187,13 @@ class TimelogPlugin(SimplePlugin):
         hbox = HBox()
         dia.vbox.pack_start( hbox, expand=False )
         
-        if book.has_module_enabled("bokeep.plugins.payroll"):
+        if book.has_enabled_frontend_plugin("bokeep.plugins.payroll"):
             hbox.pack_start( Label("Pick a payroll plugin instance"),
                              expand=False )
             payroll_combo = combo_box_new_text()
             payroll_liststore = ListStore(str, TYPE_PYOBJECT)
             payroll_liststore.append( (PAYROLL_PLUGIN,
-                                       book.get_module(PAYROLL_PLUGIN)) )
+                                       book.get_frontend_plugin(PAYROLL_PLUGIN)) )
             payroll_combo.set_model(payroll_liststore)
             changed_handler_id = payroll_combo.connect(
                 "changed",

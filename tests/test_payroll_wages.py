@@ -167,7 +167,7 @@ class PayrollPaydayTestCaseSetup(PayrollTestCaseSetup):
         self.payday = Payday(self.payroll_plugin)
         self.payday.set_paydate(date(2009, 04, 22), date(2009, 04, 06),
                                 date(2009, 04, 19) )
-        self.payroll_mod = self.books.get_book(TESTBOOK).get_module(
+        self.payroll_mod = self.books.get_book(TESTBOOK).get_frontend_plugin(
             PAYROLL_PLUGIN)
         self.bokeep_trans_id = self.books.get_book(TESTBOOK).insert_transaction(
             self.payday)
@@ -264,7 +264,7 @@ class wageTestCase(PayrollPaydayTestCaseSetup):
 
         book = self.books.get_book(TESTBOOK)
         self.payday = book.get_transaction(self.bokeep_trans_id)
-        self.payroll_mod = book.get_module(PAYROLL_PLUGIN)
+        self.payroll_mod = book.get_frontend_plugin(PAYROLL_PLUGIN)
 
         # copy the main emp_list
         self.emp_list = [ dict(info_dict) for info_dict in emp_list ]

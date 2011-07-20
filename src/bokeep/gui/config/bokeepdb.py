@@ -48,7 +48,7 @@ from bokeep.config import \
     ZODB_CONFIG_FILESTORAGE, get_plugins_directories_from_config, \
     set_plugin_directories_in_config, \
     ZODB_CONFIG_ZCONFIG
-from bokeep.book import BoKeepBookSet, PluginImportError
+from bokeep.book import BoKeepBookSet, FrontendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
@@ -127,10 +127,10 @@ def establish_bokeep_db(mainwindow, config_path, config, db_exception):
     elif new_db_access_method == ZODB_CONFIG_ZCONFIG:
         return BoKeepBookSet(databaseFromURL(new_db_path))
 
-def available_plugins():
+def get_available_frontend_plugins():
     return available_plugins_search("BOKEEP_PLUGIN", "plugins")
 
-def available_backend_plugins():
+def get_available_backend_plugins():
     return available_plugins_search("BOKEEP_BACKEND_PLUGIN", "backend_plugins")
 
 def available_plugins_search(plugin_file_name, plugin_subdir):
@@ -216,7 +216,7 @@ class BoKeepConfigDialog(object):
             "changed", self.on_book_selection_change)
         self.books_window.add(self.books_tv)
         self.books_tv.show()
-        self.plugins_tv = TreeView(self.state.plugin_liststore)
+        self.plugins_tv = TreeView(self.state.frontend_plugin_liststore)
         self.plugins_tv.append_column(
             TreeViewColumn("Plugin", CellRendererText(), text=0) )
         crt = CellRendererToggle()
@@ -252,13 +252,13 @@ class BoKeepConfigDialog(object):
         """Populates the GUI with the possible front and backend plugins."""
         
         available_plugin_liststore = ListStore(str)
-        for plugin_name in available_plugins():
+        for plugin_name in get_available_frontend_plugins():
             available_plugin_liststore.append([plugin_name])
         self.plugin_add_entry_combo.set_model(available_plugin_liststore)
         self.plugin_add_entry_combo.set_text_column(0)
 
         available_backend_plugin_liststore = ListStore(str)
-        for backend_plugin_name in available_backend_plugins():
+        for backend_plugin_name in get_available_backend_plugins():
             available_backend_plugin_liststore.append([backend_plugin_name])
         self.backend_plugin_entry_combo.set_model(available_backend_plugin_liststore)
         self.backend_plugin_entry_combo.set_text_column(0)
@@ -271,24 +271,24 @@ class BoKeepConfigDialog(object):
         
         try:
             self.state.do_action(action, arg)
-        except PluginImportError, err:
+        except FrontendPluginImportError, err:
             backend_plugin_entry = self.backend_plugin_entry_combo.child
             backend_plugin_name = backend_plugin_entry.get_text()
             if backend_plugin_name in err.plugin_names:
                 self.backend_plugin_entry_combo.child.set_text(
-                        self.state.data[BOOK].get_backend_module_name() )
+                        self.state.data[BOOK].get_backend_plugin_name() )
                 err.plugin_names.remove(backend_plugin_name)
 
             frontend_plugins = {}
-            for name, enabled in self.state.plugin_liststore:
+            for name, enabled in self.state.frontend_plugin_liststore:
                 frontend_plugins[name] = (name, enabled)
 
             for err_plugin_name in err.plugin_names:
                 del frontend_plugins[err_plugin_name]
 
-            self.state.plugin_liststore.clear()
+            self.state.frontend_plugin_liststore.clear()
             for valid_plugin_name, enabled in frontend_plugins.values():
-                self.state.plugin_liststore.append((valid_plugin_name, enabled))
+                self.state.frontend_plugin_liststore.append((valid_plugin_name, enabled))
 
             error_dialog = MessageDialog(self.bokeep_config_dialog, DIALOG_MODAL, 
                            MESSAGE_ERROR, BUTTONS_OK, str(err))
@@ -395,7 +395,7 @@ class BoKeepConfigDialog(object):
 
     def on_plugin_add_clicked(self, *args):
         entry = self.plugin_add_entry_combo.child
-        self.state.plugin_liststore.append((entry.get_text(), True))
+        self.state.frontend_plugin_liststore.append((entry.get_text(), True))
         entry.set_text("")
 
     def on_backend_plugin_entry_combo_changed(self, *args):
@@ -409,7 +409,7 @@ class BoKeepConfigDialog(object):
             if sel_book == None:
                 try:
                     self.do_action(BOOK_CHANGE, None)
-                except PluginImportError:
+                except FrontendPluginImportError:
                     self.select_book(self.state.data[BOOK])
                 else:
                     self.backend_entry_lock = True
@@ -418,12 +418,12 @@ class BoKeepConfigDialog(object):
             else:
                 try:
                     self.do_action(BOOK_CHANGE, sel_book)
-                except PluginImportError:
+                except FrontendPluginImportError:
                     self.select_book(self.state.data[BOOK])
                 else:
                     self.backend_entry_lock = True
                     self.backend_plugin_entry_combo.child.set_text(
-                        self.state.data[BOOK].get_backend_module_name() )
+                        self.state.data[BOOK].get_backend_plugin_name() )
                     self.backend_entry_lock = False
             self.set_sensitivities()
             
