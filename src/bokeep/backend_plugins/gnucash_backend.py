@@ -22,7 +22,9 @@
 from decimal import Decimal 
 from datetime import date
 from glob import glob
-from os import remove
+from os import remove, kill, system, name
+from os.path import exists
+from signal import SIGTERM
 from time import sleep
 
 # bokeep imports
@@ -46,8 +48,8 @@ from gtk import \
     RESPONSE_OK, RESPONSE_CANCEL, ListStore, \
     FILE_CHOOSER_ACTION_OPEN, FileChooserDialog, Dialog, Entry, \
     STOCK_CANCEL, STOCK_OPEN, STOCK_OK, DIALOG_MODAL, EntryCompletion, \
-    ComboBoxEntry
-        
+    ComboBoxEntry, MessageDialog, MESSAGE_QUESTION, Button, VBox
+
 SQLITE3 = 'sqlite3'
 XML = 'xml'
 PROTOCOL_SUFFIX = '://'
@@ -295,6 +297,75 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         if self.gnucash_file == None:
             self.current_session_error = "no gnucash file selected"
             return None
+        
+        # If the GnuCash books are locked...
+        gnucash_lock = self.gnucash_file[6:] + '.LCK'
+        if exists(gnucash_lock):
+            if name == 'posix':
+                # Attempt to get GnuCash's process ID.
+                pid_file = '/tmp/gnucashpid'
+                system('pidof gnucash > ' + pid_file)
+                f = open(pid_file, 'r')
+                line = f.readline()
+                if line == '':
+                    pid = 0
+                else:
+                    pid = int(line)
+                f.close()
+                remove(pid_file)
+                
+                if pid == 0:
+                    OTHER_PROGRAM = 'another accounting program'
+                    OTHER_PROGRAM2 = 'the other accounting program'
+                    DANGEROUS_OPTION = 'Risk corruption of the accounting ' + \
+                        'resource by having BoKeep use it in parallel!'
+                else:
+                    OTHER_PROGRAM = 'GnuCash'
+                    OTHER_PROGRAM2 = OTHER_PROGRAM
+                    DANGEROUS_OPTION = 'Terminating GnuCash and lose its ' + \
+                                       'unsaved changes!'
+                    
+                md = MessageDialog(type = MESSAGE_QUESTION,
+                    message_format = "BoKeep is waiting to save double " +
+                    "entry accounting transactions because " + OTHER_PROGRAM +
+                    " is busy with the accounting " +
+                    "resource.  It's unsafe for two programs to work " +
+                    "with the accounting resource in parallel!  " +
+                    "How do you wish to proceed?")
+                
+                # Add some response buttons in the standard way,
+                # which also sets up non-obtrusive signals.
+                save_later_button = Button(
+                    "I've closed " + OTHER_PROGRAM2 + " or wish to " +
+                    "have BoKeep update the accounting resource later.")
+                RESPONSE_SAVE_LATER = 1
+                md.add_action_widget(save_later_button, RESPONSE_SAVE_LATER)
+                save_now_button = Button(DANGEROUS_OPTION)
+                RESPONSE_SAVE_NOW = 2
+                md.add_action_widget(save_now_button, RESPONSE_SAVE_NOW)
+                
+                # Reparent the buttons to a vbox so that their layout is
+                # vertical instead of the standard horizontal.
+                vbox = VBox()
+                SPACING_BETWEEN_BUTTONS = 8
+                vbox.set_spacing(SPACING_BETWEEN_BUTTONS)
+                md.action_area.pack_start(vbox)
+                save_later_button.reparent(vbox)
+                save_now_button.reparent(vbox)
+                
+                md.show_all()
+                r = md.run()
+                md.destroy()
+                if r == RESPONSE_SAVE_NOW:
+                    if pid != 0:
+                        # As of GnuCash 2.4.6, GnuCash seems to not handle
+                        # signals so it can't be expected to save changes upon
+                        # exit.
+                        kill(pid, SIGTERM)
+                    
+                    # As of GnuCash 2.4.6, GnuCash doesn't remove locks
+                    # when terminated by signal.
+                    remove(gnucash_lock)
 
         # but this try/except is fine for other bogus values
         # of self.gnucash_file/book_uri
