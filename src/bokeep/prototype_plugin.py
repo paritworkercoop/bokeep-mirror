@@ -197,3 +197,51 @@ class PrototypePlugin(Persistent):
         """
         
         return self.get_transaction_edit_interface_hook_from_code(code)
+
+    def get_transaction_display_by_mode_hook(self, code):
+        """The new BoKeep shell to front end plugin api will go through this
+        instead of old get_transaction_edit_interface_hook_from_code and
+        get_transaction_view_interface_hook_from_code .
+
+        Those two old functions will be deprecated in BoKeep 1.2.0
+
+        Like the old function, get_transaction_display_by_mode_hook returns
+        a callable, which shells will call with the following old arguments
+        familiar from before:
+        
+        trans - BoKeep.book_transaction.Transaction 
+        transid - unique, identifying integer
+        plugin  - The plugin instance in use
+        gui_parent - The widget in the shell the plugin should display itself in
+        change_register_function - A function the plugin should call to inform
+                                   the shell that persistable objects in the
+                                   transaction and plugin have changed
+        book - The BoKeepBook the plugin instance belongs to
+
+        The new arguments for get_transaction_display_by_mode_hook are
+        display_mode - A constant instructing the plugin how it should
+                       behave, mostly in in terms of what is or isn't editable,
+                       but also for indicating if the shell is headless.
+                       These are documented in bokeep.shells.
+        transaction_edit_finished_function - when display_mode is set to
+           TRANSACTION_ALL_EDIT_FIRST_TIME_HEADLESS,
+           TRANSACTION_ALL_EDIT_HEADLESS,
+           TRANSACTION_WITH_ESSENTIALS_READ_ONLY_HEADLESS,
+           TRANSACTION_READ_ONLY_HEADLESS, it means the shell is headless
+           (has no visible gui, just window border), so the plugin itself
+           needs to provide some kind of user interface element so the user
+           can say they're done the current transaction so the headless shell
+           can know it can move on to the next one.
+
+
+        AAHHHH!, This docstring needs to be merged with the still applicable
+        elements from get_transaction_view_interface_hook_from_code and
+        get_transaction_view_interface_hook_from_code
+        """
+        def blah(trans, transid, plugin, gui_parent, change_register_function,
+                 main, display_mode, transaction_edit_finished_function):
+            class blah_cls(object):
+                def detach(self):
+                    pass
+            return blah_cls()
+        return blah
