@@ -82,3 +82,28 @@ class SimplePlugin(PrototypePlugin):
     @classmethod
     def get_transaction_edit_interface_hook_from_code(cls, code):
         return cls.EDIT_INTERFACES[code]
+
+    @classmethod
+    def get_transaction_display_by_mode_hook(cls, code):
+        """Makes SimplePlugin minimally compliant with the new BoKeep
+        api for 1.2.0 by just ignoring the new stuff
+
+        But once we actually are in development for 1.2.0, we're going
+        to drop get_transaction_edit_interface_hook_from_code and
+        get_transaction_view_interface_hook_from_code and this function
+        will actually just have the same code as
+        get_transaction_edit_interface_hook_from_code currently has
+        and the actual users of SimplePlugin will have to define display
+        functions that are actually compliant.
+
+        If you want to get ready for BoKeep 1.2.0 sooner, 
+        """
+        def display_request_function(*args):
+            # args is 
+            # trans, transid, plugin, gui_parent, change_register_function,
+            # book, display_mode, transaction_edit_finished_function
+            #
+            # everything but the last two arguments is passed on to the
+            # original way of doing things...
+            cls.get_transaction_edit_interface_hook_from_code(code)(args[:-2])
+        return display_request_function
