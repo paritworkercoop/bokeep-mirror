@@ -163,13 +163,17 @@ class PrototypePlugin(Persistent):
             should be ready to either provide something or raise
             bokeep.book_transaction.
             BoKeepTransactionNotMappableToFinancialTransaction
+
+          - bokeep.book.BoKeepBook where the transaction and plugin
+            instance come from
           
         The function returned here should return an instance of something
         representing the edditing session. This instance must implement
         a detach() method which removes the gtk elements added
         with gui_parent.pack_end()
         """
-        def blah(trans, transid, plugin, gui_parent, change_register_function):
+        def blah(trans, transid, plugin, gui_parent, change_register_function,
+                 book):
             class blah_cls(object):
                 def detach(self):
                     pass
