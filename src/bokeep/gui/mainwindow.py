@@ -813,12 +813,19 @@ class MainWindow(object):
         currmodule = self.trans_type_combo.get_model().get_value(
             currindex,2)
 
+        # technically not needed, as the self.reset_trans_view below
+        # does this as well
+        #
+        # For now, nice to leave this in hear because it makes solutions
+        # to bug #32815 much easier to test, you can see right away
+        # once the config dialog below comes up if the detatch operation
+        # was a success
+        self.hide_transaction()
+
         currmodule.run_configuration_interface(
             self.mainwindow, self.guistate.get_book().get_backend_plugin(
                 ).backend_account_dialog,
             self.guistate.get_book())
-        # hmm, this doesn't seem to be getting it done
-        self.hide_transaction()
         self.reset_trans_view()
         transaction.get().commit()
 
