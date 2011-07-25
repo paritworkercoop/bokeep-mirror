@@ -346,6 +346,11 @@ class GnuCash(SessionBasedRobustBackendPlugin):
                 
                 # Reparent the buttons to a vbox so that their layout is
                 # vertical instead of the standard horizontal.
+                # (Horizontal action buttons aren't suited to the complexity of
+                # the user's response.  Sure the response could first be
+                # summarised in the above paragraph and the user provided Yes/No
+                # buttons, but that's more lingually complicated for the user
+                # and the situation demands a clear understanding.)
                 vbox = VBox()
                 SPACING_BETWEEN_BUTTONS = 8
                 vbox.set_spacing(SPACING_BETWEEN_BUTTONS)
