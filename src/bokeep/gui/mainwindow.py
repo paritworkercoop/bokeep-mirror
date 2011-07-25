@@ -142,7 +142,9 @@ class MainWindow(object):
                 set_transcombo_index()
                 reset_trans_view()
                   self.hide_transaction()
-                  self.current_editor set with new editor instance      
+                  self.current_editor set with new editor instance  
+              else no transaction type found
+                hide_transaction()
             END refresh_trans_types as called by..
                  refresh_trans_types_and_set_sensitivities_and_status
             set_sensitivities_and_status()
@@ -178,7 +180,9 @@ class MainWindow(object):
             set_transcombo_index()
               reset_trans_view()
                 self.hide_transaction()
-                self.current_editor set with new editor instance      
+                self.current_editor set with new editor instance
+          else no transaction type found
+             hide_transaction()
         END refresh_trans_types as called by..
              refresh_trans_types_and_set_sensitivities_and_status
         set_sensitivities_and_status()
@@ -453,13 +457,16 @@ class MainWindow(object):
     def refresh_trans_types(self):
         """Updates the transaction type combobox to reflect the currently
         selected book and transaction -- then calls self.reset_trans_view()
-        to display the current transaction.
+        to display the current transaction or hide_transaction() to at
+        least clear off the old one.
 
         Does nothing if there isn't a currently selected book
         Alters the state of self.trans_type_model
-        Calls reset_trans_view if a transaction type is selected ... so the
-        assumption is that not calling that won't be a problem, that
-        there won't be some transaction editor still displayed from before..
+        Calls reset_trans_view if a transaction type is selected.
+        One of the things it does is call hide_transaction()
+        Directly call hide_transaction() if there is no transaction type
+        selected, in either case we want to be sure there isn't an old gui
+        hanging around.
         """
         
         book = self.guistate.get_book()
@@ -490,6 +497,8 @@ class MainWindow(object):
         if current_trans_type_index != COMBO_SELECTION_NONE:
             self.set_transcombo_index(current_trans_type_index)
             self.reset_trans_view()
+        else:
+            self.hide_transaction()
 
     def set_transcombo_index(self, indx):
         """Changed the currently selected transaction type combobox to the
