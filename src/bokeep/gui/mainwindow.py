@@ -137,6 +137,14 @@ class MainWindow(object):
         main_quit()
 
     def startup_event_handler(self, *args):
+        """An event handler programmed to run as soon as gtk's main loop
+        takes over
+
+        After disabling itself from running again, this
+        calls the __start_callback attribute established in __init__ and
+        if that function returns true calls after_background_load for further
+        processing. If it fails, application_shutdown() is called
+        """
         # this should only be programmed to run once
         assert( hasattr(self, 'startup_event_handler') )
         self.mainwindow.disconnect(self.startup_event_handler)
@@ -154,7 +162,20 @@ class MainWindow(object):
             self.application_shutdown()
 
     def build_gui(self):
-        """Setup the BoKeep shell that stores BoKeep transaction GUIs."""
+        """Called by __init__ to take care of the gtk work or putting the
+        gui together.
+
+        This consists of loading mainwindow from the glade file,
+        setting the bokeep logo, and getting the cell renderers and
+        empty models set up for the book and transaction type combo boxes.
+        Ends with a a call to set_sensitivities_and_status to nicely
+        grey things out until we have something for the shell to actually
+        display.
+
+        This is meant to be done without self.book or self.guistate being
+        available yet. It shouldn't be called from anywhere other than
+        __init__, and only once.
+        """
         
         glade_file = get_main_window_glade_file()
         load_glade_file_get_widgets_and_connect_signals(
@@ -170,6 +191,38 @@ class MainWindow(object):
         self.set_sensitivities_and_status()
         
     def after_background_load(self):
+        """Called to instruct the shell to load from persistent storage the
+        last visited book and transaction, sets up the list of books,
+        determins the current transaction (if any), sets up the
+        transaction type combo for the current bookm and then displays the
+        current transaction.
+
+        This is only to be called after the right database is loaded from
+        cold, and so far that kind of cold load happens in two places only:
+         * at the end of startup_event_handler, which is run once by
+           gtk's main thread on shell startup
+         * at the end of on_configuration1_activate, where the database
+           connection is entirely closed down and possibly even a tottally
+           new bookset is loaded
+        
+        This procedure sets self.guistate right at the start and may call
+        self.guistate.do_action with BOOK_CHANGE, and RESET as it determines
+        what the current book is. (including possibly None)
+        
+        Then it builds the list of available books in self.books_combobox_model
+        and sets that to whatever the current book is. 
+
+        At that point, the gui can be said to be fully built,
+        as all the elements that won't change even when viewing multiple books
+        are in place, so self.gui_built = True occures
+        The only things left to change are the transaction type combo box
+        which can differ per book, and of course the intereface for
+        whichever transaction is loaded.
+
+        As a last step, the work described above is done by
+        refresh_trans_types_and_set_sensitivities_and_status
+        (Be sure to read its docstring)
+        """
         self.guistate = (
             self.bookset.get_dbhandle().get_sub_database_do_cls_init(
                 GUI_STATE_SUB_DB, BoKeepGuiState) )
@@ -222,6 +275,13 @@ class MainWindow(object):
         self.refresh_trans_types_and_set_sensitivities_and_status()
 
     def closedown_for_config(self):
+        """Called soley by on_configuration1_activate to shut down everything
+        in the gui prior to running the configuration dialog
+
+        Starts right away by changing self.gui_built = False
+        does self.guistate.do_action(CLOSE)
+        and clears out the books combo list and transaction type combo list
+        """
         self.gui_built = False
         self.guistate.do_action(CLOSE)
         transaction.get().commit() # redundant
@@ -238,9 +298,11 @@ class MainWindow(object):
     # Functions for window initialisation and use thereafter
 
     def set_book_from_combo(self):
-        """Callback of the book combo box that is used to set the current BoKeep
-        book."""
-        
+        """Updates self.guistate based on the book selected by the books
+        combobox.
+
+        Used by after_background_load and on_books_combobox_changed
+        """
         self.guistate.do_action(
             BOOK_CHANGE, 
             self.books_combobox_model[
@@ -248,15 +310,31 @@ class MainWindow(object):
             )
 
     def refresh_trans_types_and_set_sensitivities_and_status(self):
-        """Update the shell's GUI in regard to the types of transactions
-        available and also update the sensitivities and status."""
+        """Combines a call to refresh_trans_types and
+        set_sensitivities_and_status. in that order
         
+        See the respective docstrings
+
+        used by
+         * after_background_load as a last step after figuring out the current
+           book, constructing the book list, and setting the current book
+         * on_books_combobox_changed as a last step after a new book is
+           selected
+        """
         self.refresh_trans_types()
         self.set_sensitivities_and_status()
 
     def refresh_trans_types(self):
-        """Update the shell's GUI in regard to the types of transactions
-        available in the current BoKeep book."""
+        """Updates the transaction type combobox to reflect the currently
+        selected book and transaction -- then calls self.reset_trans_view()
+        to display the current transaction.
+
+        Does nothing if there isn't a currently selected book
+        Alters the state of self.trans_type_model
+        Calls reset_trans_view if a transaction type is selected ... so the
+        assumption is that not calling that won't be a problem, that
+        there won't be some transaction editor still displayed from before..
+        """
         
         book = self.guistate.get_book()
         if book == None:
@@ -288,11 +366,27 @@ class MainWindow(object):
             self.reset_trans_view()
 
     def set_transcombo_index(self, indx):
+        """Changed the currently selected transaction type combobox to the
+        specified type by index in that combobox
+
+        The event handler, trans_type_changed is prevented from running
+        """
         self.programmatic_transcombo_index = True
         self.trans_type_combo.set_active(indx)
         self.programmatic_transcombo_index = False      
 
     def reset_trans_view(self):
+        """Clears away an old transaction editor (if present) with
+        hide_transaction and starts up a new one for the current transaction
+
+        It's assumed here that self.guistate does specify a book, transaction,
+        and current transaction type to provide an editor. So don't
+        call this when that isn't true.
+
+        Called, in this assumed context by, refresh_trans_types,
+        set_trans_type_combo_to_current_and_reset_view, trans_type_changed,
+        on_configure_plugin1_activate
+        """
         book = self.guistate.get_book()
         currindex = self.trans_type_combo.get_active_iter()
         currcode = self.trans_type_combo.get_model().get_value(currindex,1)
@@ -308,15 +402,26 @@ class MainWindow(object):
                 book)
 
     def hide_transaction(self):
-        """Hide the current transaction so that no transaction is visible in the
-        shell."""
+        """If a transaction is currently displayed (self.current_editor),
+        detach it.
+        """
         
         if self.current_editor != None: 
             self.current_editor.detach()
 
     def set_sensitivities_and_status(self):
         """Update the enabled/disabled attributes of the GUI and update the
-        status."""
+        status.
+
+        Specifically, this uses checks for action permissability from
+        self.guistate to set the sensitivity of the toolbar buttons,
+        the books and transaction type comboxes, and the plugin menu.
+        These checks are done conditional on self.gui_built being set
+        otherwise they're always set to disabled.
+
+        After those we call set_backend_error_indicator and
+        self.set_transid_label, see thier docstrings
+        """
         
         for (sensitive_widget, action_code) in \
                 ( (self.back_button, BACKWARD),
@@ -338,7 +443,13 @@ class MainWindow(object):
 
     def set_transid_label(self):
         """Update the field indicating the current transaction index out of the
-        total number of transactions."""
+        total number of transactions.
+
+        Only does this if self.gui_built is set ans there's a book selected,
+        otherwise just sets the label blank
+
+        Only called from set_transid_label
+        """
         
         if self.gui_built and not(self.guistate.get_book() == None):
             last_trans_id = self.guistate.get_book().get_latest_transaction_id()
@@ -350,7 +461,15 @@ class MainWindow(object):
         self.transid_label.set_text("")
 
     def set_backend_error_indicator(self):
-        """Update the shell's error field."""
+        """Updates the label and related widgets for displaying backend
+        plugin errors with info from the active book's backend plugin
+
+        Doesn't do anything if self.gui_built is not set, also does
+        nothing if there isn't a book and transaction selected.
+
+        Called by set_sensitivities_and_status, on_backend_flush_request,
+        and on_backend_close_request
+        """
         
         # don't bother if the gui isn't built yet
         if not self.gui_built: return
@@ -372,6 +491,9 @@ class MainWindow(object):
                 self.error_details_button.show()
 
     def on_error_details_button_clicked(self, *args):
+        """Event handler for the user requesting to see the full backend
+        plugin error display
+        """
         md = MessageDialog(parent = self.mainwindow,
                            type = MESSAGE_ERROR,
                            buttons = BUTTONS_OK,
@@ -383,6 +505,26 @@ class MainWindow(object):
     # Functions for use to event handlers, not used during initialization
 
     def set_trans_type_combo_to_current_and_reset_view(self):
+        """Call after the current transaction has changed from one to
+        another within the same book to update the transaction type combo
+        box and to update the editor interface.
+
+        Another key note is that this doesn't change what's listed in the
+        list of transaction types like refresh_trans_types does, just
+        ensures the right one is used and applies the editor interface for it.
+
+        This is called only by the only places it makes sense right now:
+        new_button_clicked, delete_button_clicked (only if a transaction
+        remains), on_forward_button_clicked, on_back_button_clicked .
+        Notice how all of the above involve situations where prior to them
+        a book was already being viewed and the transaction type list was
+        already in place, and the only thing that happened was a switch
+        to different transaction and a need to just display it.
+
+        This calls reset_trans_view as a last step to take care of
+        removing the old transaction from the display and displaying the
+        new one
+        """
         book = self.guistate.get_book()
         trans_id = self.guistate.get_transaction_id()
         assert( trans_id != None )
@@ -397,6 +539,9 @@ class MainWindow(object):
         # have cheated..
         if i == None:
             i = COMBO_SELECTION_NONE
+            # if this is actually still happening, perhaps we
+            # want a hide_transaction() here so we at least clear
+            # off the old gui (if still there...)
         self.set_transcombo_index(i)
         if i != COMBO_SELECTION_NONE:
             self.reset_trans_view()
