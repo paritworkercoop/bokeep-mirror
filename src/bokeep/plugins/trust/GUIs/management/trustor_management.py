@@ -64,7 +64,10 @@ class trustor_management(object):
                 self.trust_module.cash_account_str )
         self.widgets['currency_text_entry'].set_text(
             self.trust_module.get_currency() )
-            
+        
+        self.widgets['TrustManagement'].run()
+        self.widgets['TrustManagement'].destroy()
+        
     def construct_filename(self, filename):
         import trustor_management as trust_module
         return join( dirname( abspath( trust_module.__file__ ) ),
