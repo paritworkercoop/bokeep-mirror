@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Jamie Campbell <jamie@parit.ca>
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Jamie Campbell <jamie@parit.ca>
+#          Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 from bokeep.gui.gladesupport.glade_util import \
-    do_OldGladeWindowStyleConnect
+    load_glade_file_get_widgets_and_connect_signals
 
 # ZOPEDB imports
 import transaction
@@ -32,6 +33,8 @@ from os.path import abspath, dirname, join, exists
 
 from bokeep.plugins.trust import \
     TrustTransaction, TrustMoneyInTransaction, TrustMoneyOutTransaction
+    
+from bokeep.util import get_file_in_same_dir_as_module
 
 class trustor_entry(object):
     def __init__(self, trust_trans, trans_id, trust_module, gui_parent,
@@ -45,16 +48,23 @@ class trustor_entry(object):
         self.editable = editable
         self.trans_trustor = self.trust_trans.get_trustor()
 
-        self.init()
+        import trustor_entry as plugin_mod
+        filename = get_file_in_same_dir_as_module(plugin_mod,
+                                                  'data/trustor_entry.glade')
+        load_glade_file_get_widgets_and_connect_signals(
+            glade_file = filename,
+            root_widget = 'window1',
+            widget_holder = self,
+            signal_recipient = self)
         self.extended_init()
 
         if not gui_parent == None:
-            self.widgets['table'].reparent(gui_parent)
+            self.table.reparent(gui_parent)
 
-        buff = self.widgets['description_textview'].get_buffer()
+        buff = self.description_textview.get_buffer()
         buff.connect("changed", self.description_changed, None)
 
-        self.top_window.hide()
+        self.window1.hide()
         self.gui_built = True
         
         self.update_trans() # save new transaction immediately after creation
@@ -64,10 +74,9 @@ class trustor_entry(object):
             self.update_trans()
 
     def detach(self):
-        self.widgets['table'].reparent(self.top_window)
+        self.table.reparent(self.window1)
 
     def extended_init(self):
-        self.trustor_combo = self.widgets['trustor_combo']
         self.trustor_list = ListStore( str )
         self.trustor_combo.set_model(self.trustor_list)
         index = 0
@@ -80,36 +89,28 @@ class trustor_entry(object):
  
         if use_index > -1:
             self.trustor_combo.set_active(use_index)
-            self.widgets['amount_entry'].set_text(str(self.trust_trans.get_displayable_amount()))
-            self.widgets['description_textview'].get_buffer().set_text(str(self.trust_trans.get_memo()))
+            self.amount_entry.set_text(str(self.trust_trans.get_displayable_amount()))
+            self.description_textview.get_buffer().set_text(str(self.trust_trans.get_memo()))
         else:
             self.trustor_combo.set_active(0)
 
         trans_date = self.trust_trans.trans_date
-        self.widgets['entry_date_label'].set_text(
+        self.entry_date_label.set_text(
                 "%s-%s-%s" %
                 (trans_date.year, trans_date.month, trans_date.day) )
 
 
         if not self.editable or self.trust_trans.get_trustor() == None :
-            self.widgets['amount_entry'].set_sensitive(False)
+            self.amount_entry.set_sensitive(False)
 
 
     def construct_filename(self, filename):
         import trustor_entry as trust_module
         return join( dirname( abspath( trust_module.__file__ ) ),
                               filename)
-        
-    def init(self):
-
-        filename = 'data/trustor_entry.glade'
-        top_window = 'window1'
-        do_OldGladeWindowStyleConnect(
-            self, self.construct_filename(filename), top_window)
-
 
     def update_trans(self):
-        entered_amount = self.widgets['amount_entry'].get_text()
+        entered_amount = self.amount_entry.get_text()
 
         try:
             self.trust_trans.transfer_amount = Decimal(entered_amount)
@@ -117,13 +118,13 @@ class trustor_entry(object):
             # In case the user has entered something like "" or ".".
             self.trust_trans.transfer_amount = Decimal('0')
 
-        textbuff = self.widgets['description_textview'].get_buffer()
+        textbuff = self.description_textview.get_buffer()
         entered_description = textbuff.get_text(textbuff.get_start_iter(), textbuff.get_end_iter())
 
         self.trust_trans.memo = entered_description
 
         self.change_register_function()
-        trustor = self.trust_module.get_trustor(self.widgets['trustor_combo'].get_active_text())
+        trustor = self.trust_module.get_trustor(self.trustor_combo.get_active_text())
 
         if not(trustor == None):
             self.trust_module.associate_transaction_with_trustor(self.trans_id, self.trust_trans, trustor.name)
