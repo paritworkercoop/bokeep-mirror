@@ -24,7 +24,7 @@ from sys import path
 
 # gtk imports
 import gtk
-from gtk import Window, main_quit
+from gtk import Window, Label, main_quit
 
 # bokeep imports
 # important to do after the path adjustment above
@@ -36,7 +36,8 @@ from bokeep.config import \
     BoKeepConfigurationFileException, BoKeepConfigurationDatabaseException, \
     get_plugins_directories_from_config
 
-def shell_startup(config_path, config, bookset, startup_callback):
+def shell_startup(config_path, config, bookset, startup_callback,
+                  cmdline_options, cmdline_args):
     window = Window()
 
     def window_startup_event_handler(*args):
@@ -45,6 +46,9 @@ def shell_startup(config_path, config, bookset, startup_callback):
             null_function, null_function, 
             window)
         window.disconnect(window_connection)
+
+        window.add( Label(str(cmdline_args[0])))
+        window.show_all()
 
     def window_close(*args):
         main_quit()
@@ -116,7 +120,8 @@ def bokeep_main():
     # we call this here instead of in either of the two except clauses or else clause
     # so we can get rid of the exception handling stack frame, because whichever function
     # this it, it probably blocks for a long, long time...
-    shell_startup(config_path, config, bookset, startup_callback )
+    shell_startup(config_path, config, bookset, startup_callback,
+                  options, args)
 
 # Add the plugin directories from the configuration to the program's path.
 def __initialize_plugin_directories(config, config_path):
