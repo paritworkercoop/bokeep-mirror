@@ -41,10 +41,11 @@ def shell_startup(config_path, config, bookset, startup_callback,
     window = Window()
 
     def window_startup_event_handler(*args):
-        startup_callback(
+        if not startup_callback(
             config_path, config,
             null_function, null_function, 
-            window)
+            window):
+            main_quit()
         window.disconnect(window_connection)
 
         window.add( Label(str(cmdline_args[0])))
