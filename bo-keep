@@ -97,7 +97,8 @@ def bokeep_main():
     # we call this here instead of in either of the two except clauses or else clause
     # so we can get rid of the exception handling stack frame, because whichever function
     # this it, it probably blocks for a long, long time...
-    shell_startup(config_path, config, bookset, startup_callback )
+    shell_startup(config_path, config, bookset, startup_callback,
+                  options, args)
 
 # Add the plugin directories from the configuration to the program's path.
 def __initialize_plugin_directories(config, config_path):

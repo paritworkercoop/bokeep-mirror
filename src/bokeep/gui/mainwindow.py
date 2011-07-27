@@ -48,7 +48,8 @@ GUI_STATE_SUB_DB = 'gui_state'
 
 COMBO_SELECTION_NONE = -1
 
-def shell_startup(config_path, config, bookset, startup_callback):
+def shell_startup(config_path, config, bookset, startup_callback,
+                  cmdline_options, cmdline_args):
     """Start the BoKeep GUI that manages BoKeep transactions."""
     
     shell_window = MainWindow(config_path, config, bookset, startup_callback)
