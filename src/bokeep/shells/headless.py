@@ -26,15 +26,6 @@ from sys import path
 import gtk
 from gtk import Window, main_quit
 
-# if there is a src sub-directory, we must be running bo-keep from
-# a source tree, so add that src dir to the search path
-SRC_PATH = join(abspath(dirname(__file__)), "src")
-if exists(SRC_PATH):
-    # Only add the source path if it hasn't already been added.
-    # (For example, Eclipse already adds the source path for auto-completion.)
-    if SRC_PATH not in path:
-        path.insert(0, SRC_PATH )
-
 # bokeep imports
 # important to do after the path adjustment above
 from bokeep.util import null_function
