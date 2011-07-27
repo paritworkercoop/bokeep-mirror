@@ -24,7 +24,7 @@ from sys import path
 
 # gtk imports
 import gtk
-from gtk import Window
+from gtk import Window, main_quit
 
 # if there is a src sub-directory, we must be running bo-keep from
 # a source tree, so add that src dir to the search path
@@ -55,8 +55,12 @@ def shell_startup(config_path, config, bookset, startup_callback):
             window)
         window.disconnect(window_connection)
 
+    def window_close(*args):
+        main_quit()
+
     window_connection = window.connect(
         "window-state-event", window_startup_event_handler)
+    window.connect("delete_event", window_close)
     window.show_all()
     gtk.main()
 
