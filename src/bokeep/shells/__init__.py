@@ -51,6 +51,9 @@ being new or not and if its being viewed by a headless shell.
 
 NEW_ATTACH_EDITOR_HOOK_ATTRIBUTE provides string that can be used to check
 for the get_transaction_display_by_mode_hook attribute.
+
+GUI_STATE_SUB_DB is the name of the sub database where several shells track
+the most recent transaction being displayed
 """
 
 
@@ -64,3 +67,5 @@ for the get_transaction_display_by_mode_hook attribute.
  TRANSACTION_READ_ONLY_HEADLESS) = range(8)
 
 NEW_ATTACH_EDITOR_HOOK_ATTRIBUTE = "get_transaction_display_by_mode_hook"
+
+GUI_STATE_SUB_DB = 'gui_state'

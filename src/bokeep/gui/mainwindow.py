@@ -43,8 +43,7 @@ from bokeep.gui.config.bokeepconfig import establish_bokeep_config
 from bokeep.gui.config.bokeepdb import \
     establish_bokeep_db
 from main_window_glade import get_main_window_glade_file
-
-GUI_STATE_SUB_DB = 'gui_state'
+from bokeep.shells import GUI_STATE_SUB_DB
 
 COMBO_SELECTION_NONE = -1
 
