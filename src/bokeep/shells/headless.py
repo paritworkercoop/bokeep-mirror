@@ -21,21 +21,66 @@
 import gtk
 from gtk import Window, Label, main_quit
 
+# zodb imports
+from persistent import Persistent
+
 # bokeep imports
 # important to do after the path adjustment above
-from bokeep.util import null_function
+from bokeep.util import null_function, do_module_import
+from bokeep.shells import GUI_STATE_SUB_DB
+
+
+HEADLESS_STATE_SUB_DB = 'headless_state'
+
+class HeadlessShellState(Persistent):
+    def __init__(self):
+        # -1 instead of None because the transaction in
+        # GUI_STATE_SUB_DB might be None and in that case the code down
+        # below that does a comparison to determine if a new transaction
+        # needs to be started still needs to reach that conclusion
+        self.last_transaction_completed = -1
 
 def shell_startup(config_path, config, bookset, startup_callback,
                   cmdline_options, cmdline_args):
     window = Window()
 
     def window_startup_event_handler(*args):
-        if not startup_callback(
-            config_path, config,
-            null_function, null_function, 
-            window):
+        db_handle = bookset.get_dbhandle()
+        shell_plugin_name = cmdline_args[0]
+
+        if ( not startup_callback(
+                config_path, config,
+                null_function, null_function, 
+                window) or 
+             not db_handle.has_sub_database(GUI_STATE_SUB_DB) or
+             len(cmdline_args) < 0
+            ):
             main_quit()
+        
         window.disconnect(window_connection)
+        guistate = db_handle.get_sub_database(GUI_STATE_SUB_DB)
+        book = guistate.get_book()
+        last_transaction_id = guistate.get_transaction_id()
+
+        if (book == None or
+            not book.has_enabled_frontend_plugin(shell_plugin_name) ):
+            main_quit()
+
+        headless_state = db_handle.get_sub_database_do_cls_init(
+            HEADLESS_STATE_SUB_DB, HeadlessShellState)
+
+        shell_plugin = book.get_frontend_plugin(shell_plugin_name)
+        
+        # cases where we're starting a new transaction
+        if (not shell_plugin.has_transaction(last_transaction_id) or
+            headless_state.last_transaction_completed == last_transaction_id):
+            pass
+        elif shell_plugin.has_transaction(transaction_id):
+            pass
+        # this should never happen, shell_plugin.has_transaction(transaction_id)
+        # has to return True or False, so one of the above two cases should pass
+        else:
+            assert(False)
 
         window.add( Label(str(cmdline_args[0])))
         window.show_all()
