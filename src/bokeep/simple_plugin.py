@@ -105,5 +105,5 @@ class SimplePlugin(PrototypePlugin):
             #
             # everything but the last two arguments is passed on to the
             # original way of doing things...
-            cls.get_transaction_edit_interface_hook_from_code(code)(args[:-2])
+            cls.get_transaction_edit_interface_hook_from_code(code)(*args[:-2])
         return display_request_function
