@@ -40,6 +40,9 @@ from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.safe_config_based_plugin_support import \
     SafeConfigBasedPlugin, SafeConfigBasedTransaction, REALLY_BAD_MODULE_NAMES
+from bokeep.util import null_function
+from bokeep.shells import \
+    (TRANSACTION_ALL_EDIT_FIRST_TIME, HEADLESS_MODES )
 
 def get_plugin_class():
     return MultiPageGladePlugin
@@ -89,6 +92,11 @@ class MultiPageGladePlugin(SafeConfigBasedPlugin, Persistent):
         
     @staticmethod
     def get_transaction_edit_interface_hook_from_code(code):
+        return multipage_glade_editor
+
+    @staticmethod
+    def get_transaction_display_by_mode_hook(code):
+        assert(code == MULTIPAGEGLADE_CODE)
         return multipage_glade_editor
 
 class MultipageGladeTransaction(SafeConfigBasedTransaction):
@@ -186,13 +194,18 @@ GLADE_FILE, TOP_WIDGET = range(2)
 class multipage_glade_editor(object):
     def __init__(self,
                  trans, transid, plugin, gui_parent, change_register_function,
-                 book):
+                 book, display_mode=TRANSACTION_ALL_EDIT_FIRST_TIME,
+                 transaction_edit_finished_function=null_function):
         self.trans = trans
         self.transid = transid
         self.plugin = plugin
         self.gui_parent = gui_parent
         self.change_register_function = change_register_function
         self.book = book
+        self.display_mode = display_mode
+        self.transaction_edit_finished_function = (
+            null_function if display_mode not in HEADLESS_MODES
+            else transaction_edit_finished_function )
 
         self.hide_parent = Window()
         self.hide_parent.hide()
