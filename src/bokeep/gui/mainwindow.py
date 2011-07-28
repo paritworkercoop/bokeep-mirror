@@ -243,21 +243,10 @@ class MainWindow(object):
             transaction
     
      trans_type_changed() (called by gtk gui thread when delete button clicked)
-        #only refresh the trans view if it was the user changing the 
-        #transaction type
-        if not self.programmatic_transcombo_index:
-            assert( self.gui_built ) # and never during gui building..
-
-            # odd, when this was called without the second argument, the
-            # program rightly crashed if a NEW transaction was created,
-            # followed by TYPE_CHANGE here. But, on re-launch, the memory of
-            # the old type transaction seemed to remain in the state
-            # stuff but was no longer available in the book. The
-            # zodb transaction should of prevented this, what gives?
-            self.guistate.do_action(TYPE_CHANGE,
-                                    self.trans_type_combo.get_active())
-            self.reset_trans_view()
-            self.set_sensitivities_and_status()        
+       self.guistate.do_action(TYPE_CHANGE,
+                               self.trans_type_combo.get_active())
+       self.reset_trans_view()
+       self.set_sensitivities_and_status()        
     """
     
     # Functions for window initialization 
