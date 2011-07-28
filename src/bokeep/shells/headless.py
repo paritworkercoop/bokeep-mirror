@@ -145,6 +145,7 @@ def shell_startup(config_path, config, bookset, startup_callback,
         def transaction_edit_finished_function():
             headless_state.set_no_current_transaction()
             transaction.get().commit()
+            book.get_backend_plugin().flush_backend()
             # should change guistate (default shell persistent storage)
             # to be on this specific transid
             main_quit()
@@ -160,6 +161,7 @@ def shell_startup(config_path, config, bookset, startup_callback,
         window.show_all()
 
     def window_close(*args):
+        book.get_backend_plugin().flush_backend()
         main_quit()
 
     window_connection = window.connect(
