@@ -32,7 +32,7 @@ from ZODB.FileStorage import FileStorage
 from ZODB.config import databaseFromURL
 
 # bo-keep
-from bokeep.util import FunctionAndDataDrivenStateMachine
+from bokeep.util import FunctionAndDataDrivenStateMachine, null_function
 from bokeep.config import DEFAULT_BOOKS_FILESTORAGE_FILE,\
     ZODB_CONFIG_FILESTORAGE, ZODB_CONFIG_ZCONFIG
 from bokeep.book import BoKeepBookSet, BackendPluginImportError, FrontendPluginImportError
@@ -55,7 +55,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         BOOK_SELECTED,
     ) = range(NUM_STATES)
 
-    def __init__(self, db_error_msg=None):
+    def __init__(self, db_error_msg=None, call_for_new_plugins=null_function):
         FunctionAndDataDrivenStateMachine.__init__(
             self,
             data=(None, None, None), # DB_PATH, BOOKSET, BOOK
@@ -63,6 +63,7 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
         self.db_error_msg = db_error_msg
         self.book_liststore = ListStore(str)
         self.frontend_plugin_liststore = ListStore(str, bool)
+        self.call_for_new_plugins = call_for_new_plugins
         self.run_until_steady_state()
         assert(self.state == BoKeepConfigGuiState.NO_DATABASE)
 
@@ -258,6 +259,10 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                         self.data[BOOK].add_frontend_plugin(plugin_name)
                     # now we can enable it
                     self.data[BOOK].enable_frontend_plugin(plugin_name)
+
+                    self.call_for_new_plugins(
+                        self.data[BOOK].get_frontend_plugin(plugin_name))
+
                 except FrontendPluginImportError:
                     not_found_modules.append(plugin_name)
             # fix any plugins that are marked disabled, but aren't

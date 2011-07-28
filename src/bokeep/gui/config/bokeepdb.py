@@ -52,6 +52,7 @@ from bokeep.book import BoKeepBookSet, FrontendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
+from bokeep.gtkutil import gtk_error_message
 
 # bokeep.gui.config imports
 from state import BoKeepConfigGuiState, \
@@ -208,7 +209,8 @@ class BoKeepConfigDialog(object):
             self, self)
         self.selection_change_lock = True
 
-        self.state = BoKeepConfigGuiState(error_msg)
+        self.state = BoKeepConfigGuiState(
+            error_msg, self.__force_config_on_newly_created_plugin)
         self.books_tv = TreeView(self.state.book_liststore)
         self.books_tv.append_column(
                 TreeViewColumn("Book", CellRendererText(), text=0 ) )
@@ -584,3 +586,8 @@ class BoKeepConfigDialog(object):
         # selected.
         if iter != None:
             remove_button.set_sensitive(True)
+
+
+    def __force_config_on_newly_created_plugin(self, new_plugin):
+        gtk_error_message( "now configuring the plugin %s " % new_plugin,
+                           self.bokeep_config_dialog )
