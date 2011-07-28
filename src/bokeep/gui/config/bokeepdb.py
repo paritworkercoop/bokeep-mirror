@@ -208,7 +208,8 @@ class BoKeepConfigDialog(object):
             self, self)
         self.selection_change_lock = True
 
-        self.state = BoKeepConfigGuiState(error_msg)
+        self.state = BoKeepConfigGuiState(
+            error_msg, self.__force_config_on_newly_created_plugin)
         self.books_tv = TreeView(self.state.book_liststore)
         self.books_tv.append_column(
                 TreeViewColumn("Book", CellRendererText(), text=0 ) )
@@ -584,3 +585,10 @@ class BoKeepConfigDialog(object):
         # selected.
         if iter != None:
             remove_button.set_sensitive(True)
+
+    def __force_config_on_newly_created_plugin(self, book, new_plugin):
+        """Configures a newly added frontend plugin."""
+        new_plugin.run_configuration_interface(
+            self.bokeep_config_dialog,
+            book.get_backend_plugin().backend_account_dialog,
+            book)
