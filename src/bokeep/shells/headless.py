@@ -142,13 +142,16 @@ def shell_startup(config_path, config, bookset, startup_callback,
              book.get_backend_plugin().mark_transaction_dirty(
                 headless_state.current_transaction_id, bokeep_transaction)
 
+        def window_close(*args):
+            book.get_backend_plugin().flush_backend()
+            # should change guistate (default shell persistent storage)
+            # to be on this specific trans id now
+            main_quit()
+
         def transaction_edit_finished_function():
             headless_state.set_no_current_transaction()
             transaction.get().commit()
-            book.get_backend_plugin().flush_backend()
-            # should change guistate (default shell persistent storage)
-            # to be on this specific transid
-            main_quit()
+            window_close()
 
         window_vbox = VBox()
         window.add(window_vbox)
@@ -159,9 +162,6 @@ def shell_startup(config_path, config, bookset, startup_callback,
                      change_register_function, book,
                      display_mode, transaction_edit_finished_function)
 
-        def window_close(*args):
-            book.get_backend_plugin().flush_backend()
-            main_quit()
         window.connect("delete_event", window_close)
 
         window.show_all()
