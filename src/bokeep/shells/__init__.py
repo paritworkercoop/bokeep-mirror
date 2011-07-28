@@ -66,6 +66,11 @@ the most recent transaction being displayed
  TRANSACTION_READ_ONLY,
  TRANSACTION_READ_ONLY_HEADLESS) = range(8)
 
+HEADLESS_MODES = (TRANSACTION_ALL_EDIT_FIRST_TIME_HEADLESS,
+                  TRANSACTION_ALL_EDIT_HEADLESS,
+                  TRANSACTION_WITH_ESSENTIALS_READ_ONLY_HEADLESS,
+                  TRANSACTION_READ_ONLY_HEADLESS)
+
 NEW_ATTACH_EDITOR_HOOK_ATTRIBUTE = "get_transaction_display_by_mode_hook"
 
 GUI_STATE_SUB_DB = 'gui_state'
