@@ -114,9 +114,9 @@ def shell_startup(config_path, config, bookset, startup_callback,
             #
             # the implementation of the linear search is done as a generator
             # expression filtered on what we're searching for
-            # by trying to iterate over that generator (via iter and next) we
+            # by trying to iterate over that generator (.next()) we
             # find out if anything matches because StopIteration is
-            # raised if nothing matchines
+            # raised if nothing matches
             # but we also manage to stop the iteration early when something
             # does match
             #
@@ -124,9 +124,9 @@ def shell_startup(config_path, config, bookset, startup_callback,
             # imperitive loop with a break statement and some kind of
             # check condition after... 
             try:
-                type_code = iter(
+                type_code = (
                     type_code_test
-                    for type_code in transaction_type_codes
+                    for type_code_test in transaction_type_codes
                     if (plugin.get_transaction_type_from_code(type_code_test)
                         == bokeep_transaction.__class__)
                     ).next()
@@ -158,15 +158,17 @@ def shell_startup(config_path, config, bookset, startup_callback,
                      plugin, window_vbox,
                      change_register_function, book,
                      display_mode, transaction_edit_finished_function)
-        window.show_all()
 
-    def window_close(*args):
-        book.get_backend_plugin().flush_backend()
-        main_quit()
+        def window_close(*args):
+            book.get_backend_plugin().flush_backend()
+            main_quit()
+        window.connect("delete_event", window_close)
+
+        window.show_all()
 
     window_connection = window.connect(
         "window-state-event", window_startup_event_handler)
-    window.connect("delete_event", window_close)
+
     window.show_all()
     gtk.main()
 
