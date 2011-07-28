@@ -165,7 +165,7 @@ class MainWindow(object):
         self.application_shutdown()
     END startup_event_handler
     
-    on_books_combobox_changed (called by gtk gui thread when combo changed)
+    on_books_combobox_changed (called by gtk gui thread when book combo changed)
       exit if not self.gui_built ( this happens during the startup code above)
       set_book_from_combo()
         guistate.do_action(BOOK_CHANGE, newly selected book)
@@ -199,7 +199,65 @@ class MainWindow(object):
       END refresh_trans_types_and_set_sensitivities_and_status as 
            called by on_books_combobox_changed
     END on_books_combobox_changed
+
+    new_button_clicked (called by gtk gui thread when new button clicked)
+      guistate.do_action(NEW)
+      set_trans_type_combo_to_current_and_reset_view()
+        set_transcombo_index( based on last transaction type or
+                              first available one NEW just created the first
+                              transaction in the book)
+        reset_trans_view()
+          self.hide_transaction()
+          self.current_editor set with new editor instance
+      set_sensitivities_and_status()
+        all buttons, combos, and plugin menu are set_sensitive
+          based on guistate, thanks to gui_built having just become True
+        set_backend_error_indicator()
+           gui_built is definitely true so this updates backend error
+           label and related widgets
+        set_transid_label()
+          gui_built is definitely True, this is set based on current
+          transaction
+
+   delete_button_clicked() (called by gtk gui thread when delete button clicked)
+     guistate.do_action(DELETE)
+        book = self.guistate.get_book()
+        if there is no transaction left
+          set_transcombo_index(COMBO_SELECTION_NONE)
+          hide_transaction()
+        else there is a transaction left
+            set_trans_type_combo_to_current_and_reset_view()
+               set_transcombo_index( based on last transaction type )
+               reset_trans_view()
+                 self.hide_transaction()
+                 self.current_editor set with editor instance for whichever
+                                     old transaction is being displayed
+        self.set_sensitivities_and_status()
+          all buttons, combos, and plugin menu are set_sensitive
+             based on guistate, thanks to gui_built having just become True
+            set_backend_error_indicator()
+          gui_built is definitely true so this updates backend error
+            label and related widgets
+          set_transid_label()
+            gui_built is definitely True, this is set based on current
+            transaction
     
+     trans_type_changed() (called by gtk gui thread when delete button clicked)
+        #only refresh the trans view if it was the user changing the 
+        #transaction type
+        if not self.programmatic_transcombo_index:
+            assert( self.gui_built ) # and never during gui building..
+
+            # odd, when this was called without the second argument, the
+            # program rightly crashed if a NEW transaction was created,
+            # followed by TYPE_CHANGE here. But, on re-launch, the memory of
+            # the old type transaction seemed to remain in the state
+            # stuff but was no longer available in the book. The
+            # zodb transaction should of prevented this, what gives?
+            self.guistate.do_action(TYPE_CHANGE,
+                                    self.trans_type_combo.get_active())
+            self.reset_trans_view()
+            self.set_sensitivities_and_status()        
     """
     
     # Functions for window initialization 
