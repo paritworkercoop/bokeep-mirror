@@ -34,11 +34,10 @@ HEADLESS_STATE_SUB_DB = 'headless_state'
 
 class HeadlessShellState(Persistent):
     def __init__(self):
-        # -1 instead of None because the transaction in
-        # GUI_STATE_SUB_DB might be None and in that case the code down
-        # below that does a comparison to determine if a new transaction
-        # needs to be started still needs to reach that conclusion
-        self.last_transaction_completed = -1
+        self.set_no_current_transaction()
+
+    def set_no_current_transaction(self):
+        self.current_transaction_id = None
 
 def shell_startup(config_path, config, bookset, startup_callback,
                   cmdline_options, cmdline_args):
@@ -60,7 +59,6 @@ def shell_startup(config_path, config, bookset, startup_callback,
         window.disconnect(window_connection)
         guistate = db_handle.get_sub_database(GUI_STATE_SUB_DB)
         book = guistate.get_book()
-        last_transaction_id = guistate.get_transaction_id()
 
         if (book == None or
             not book.has_enabled_frontend_plugin(shell_plugin_name) ):
@@ -71,16 +69,12 @@ def shell_startup(config_path, config, bookset, startup_callback,
 
         shell_plugin = book.get_frontend_plugin(shell_plugin_name)
         
-        # cases where we're starting a new transaction
-        if (not shell_plugin.has_transaction(last_transaction_id) or
-            headless_state.last_transaction_completed == last_transaction_id):
+        if headless_state.current_transaction_id == None:
             pass
-        elif shell_plugin.has_transaction(transaction_id):
-            pass
-        # this should never happen, shell_plugin.has_transaction(transaction_id)
-        # has to return True or False, so one of the above two cases should pass
         else:
-            assert(False)
+            transaction = book.get_transaction(
+                headless_state.current_transaction_id)
+        
 
         window.add( Label(str(cmdline_args[0])))
         window.show_all()
