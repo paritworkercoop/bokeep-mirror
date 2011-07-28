@@ -28,6 +28,27 @@ from bokeep.util import \
 # tuple indexes for data stored in BoKeepGuiState
 (BOOK, TRANS) = range(2)
 
+def instantiate_transaction_class_add_to_book_backend_and_plugin(
+    cls, frontend_plugin, book):
+    """Instantiates a bokeep.book_transaction.Transaction class, registers
+    it in the right places.
+
+    The right places being, the book, a frontend_plugin from that book,
+    and the backend plugin used by the book.
+
+    Returns the transaction id (from the BoKeepBook) and the Transaction
+    instance itself in that order in a tuple
+    """
+
+    new_transaction_instance = cls(frontend_plugin)
+    new_transaction_id = book.insert_transaction(
+        new_transaction_instance)
+    frontend_plugin.register_transaction(
+        new_transaction_id, new_transaction_instance)
+    book.get_backend_plugin().mark_transaction_dirty(
+        new_transaction_id, new_transaction_instance )
+    return new_transaction_id, new_transaction_instance
+
 class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
     NUM_STATES = 6
     (
@@ -230,16 +251,6 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
             self.data[BOOK].get_iter_of_code_class_module_tripplets(
                 ))[index]        
 
-    def __add_transaction_instance_to_book_and_module(self, cls, module):
-        new_transaction_instance = cls(module)
-        new_transaction_id = self.data[BOOK].insert_transaction(
-            new_transaction_instance)
-        module.register_transaction(new_transaction_id,
-                                    new_transaction_instance)
-        self.get_book().get_backend_plugin().mark_transaction_dirty(
-                new_transaction_id, new_transaction_instance )
-        return new_transaction_id
-
     # state machine transition functions
     def __absorb_new_book(self, next_state):
         return (self._v_action_arg, None)
@@ -265,9 +276,10 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
             if (i, code, cls, module) == (None, None, None, None):
                 code, cls, module = \
                     self.__get_code_classs_module_for_index(0)
-        return (self.data[BOOK], 
-                self.__add_transaction_instance_to_book_and_module(
-                cls, module))
+        transaction_id, transaction = \
+            instantiate_transaction_class_add_to_book_backend_and_plugin(
+            cls, module, self.get_book() )
+        return (self.data[BOOK], transaction_id)
     
     def __purge_current_transaction(self, next_state):
         assert(self.data[TRANS] != None)
@@ -297,10 +309,10 @@ class BoKeepGuiState(FunctionAndDataDrivenStateMachine):
         assert( self._v_action_arg != None )
         code, cls, module = self.__get_code_classs_module_for_index(
             self._v_action_arg)
-        return (
-            self.data[BOOK], 
-            self.__add_transaction_instance_to_book_and_module(
-                cls, module) )
+        transaction_id, transaction = \
+            instantiate_transaction_class_add_to_book_backend_and_plugin(
+            cls, module, self.get_book() )
+        return (self.data[BOOK], transaction_id)
 
     def __go_backward(self, next_state):
         trans_id = self.data[BOOK].get_previous_trans(self.data[TRANS])
