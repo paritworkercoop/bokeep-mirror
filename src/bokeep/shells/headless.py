@@ -19,16 +19,21 @@
 
 # gtk imports
 import gtk
-from gtk import Window, Label, main_quit
+from gtk import Window, Label, main_quit, VBox
 
 # zodb imports
 from persistent import Persistent
+import transaction
 
 # bokeep imports
 # important to do after the path adjustment above
 from bokeep.util import null_function, do_module_import
-from bokeep.shells import GUI_STATE_SUB_DB
-
+from bokeep.shells import \
+    (GUI_STATE_SUB_DB,
+     TRANSACTION_ALL_EDIT_FIRST_TIME_HEADLESS,
+     TRANSACTION_ALL_EDIT_HEADLESS)
+from bokeep.gui.state import \
+    instantiate_transaction_class_add_to_book_backend_and_plugin
 
 HEADLESS_STATE_SUB_DB = 'headless_state'
 
@@ -39,13 +44,15 @@ class HeadlessShellState(Persistent):
     def set_no_current_transaction(self):
         self.current_transaction_id = None
 
+PLUGIN_ARGUMENT, TRANSACTION_TYPE_CODE = range(2)
+
 def shell_startup(config_path, config, bookset, startup_callback,
                   cmdline_options, cmdline_args):
     window = Window()
 
     def window_startup_event_handler(*args):
         db_handle = bookset.get_dbhandle()
-        shell_plugin_name = cmdline_args[0]
+        plugin_name = cmdline_args[PLUGIN_ARGUMENT]
 
         if ( not startup_callback(
                 config_path, config,
@@ -61,22 +68,95 @@ def shell_startup(config_path, config, bookset, startup_callback,
         book = guistate.get_book()
 
         if (book == None or
-            not book.has_enabled_frontend_plugin(shell_plugin_name) ):
+            not book.has_enabled_frontend_plugin(plugin_name) ):
             main_quit()
 
         headless_state = db_handle.get_sub_database_do_cls_init(
             HEADLESS_STATE_SUB_DB, HeadlessShellState)
 
-        shell_plugin = book.get_frontend_plugin(shell_plugin_name)
+        plugin = book.get_frontend_plugin(plugin_name)
         
-        if headless_state.current_transaction_id == None:
-            pass
-        else:
-            transaction = book.get_transaction(
-                headless_state.current_transaction_id)
-        
+        transaction_type_codes = tuple(plugin.get_transaction_type_codes())
 
-        window.add( Label(str(cmdline_args[0])))
+        if len(transaction_type_codes) == 0:
+            main_quit()
+
+        if (headless_state.current_transaction_id == None or
+            not plugin.has_transaction(headless_state.current_transaction_id)):
+            # check above is important because we sub index
+            # transaction_type_codes
+            type_code = (transaction_type_codes[0] if len(cmdline_args) == 1
+                         else int(cmdline_args[TRANSACTION_TYPE_CODE_POS_ARG]) )
+
+            # if the user specifies a type code, it better be an available one
+            # should convert this to a warning some day
+            if type_code not in transaction_type_codes:
+                main_quit()
+
+            transaction_id, bokeep_transaction = \
+                instantiate_transaction_class_add_to_book_backend_and_plugin(
+                plugin.get_transaction_type_from_code(type_code),
+                plugin,
+                book)
+            headless_state.current_transaction_id = transaction_id
+            display_mode = TRANSACTION_ALL_EDIT_FIRST_TIME_HEADLESS
+            transaction.get().commit()
+        else:
+            bokeep_transaction = book.get_transaction(
+                headless_state.current_transaction_id)
+
+            # go through all the transaction type codes for this plugin
+            # and find one that provides class that matches the
+            # class of the existing transaction
+            #
+            # if none of them match (how could that happen, bad error!)
+            # we quit
+            #
+            # the implementation of the linear search is done as a generator
+            # expression filtered on what we're searching for
+            # by trying to iterate over that generator (via iter and next) we
+            # find out if anything matches because StopIteration is
+            # raised if nothing matchines
+            # but we also manage to stop the iteration early when something
+            # does match
+            #
+            # yes, all this in the avoidance of doing some kind of
+            # imperitive loop with a break statement and some kind of
+            # check condition after... 
+            try:
+                type_code = iter(
+                    type_code_test
+                    for type_code in transaction_type_codes
+                    if (plugin.get_transaction_type_from_code(type_code_test)
+                        == bokeep_transaction.__class__)
+                    ).next()
+
+            except StopIteration:
+                # should give an error msg
+                main_quit()
+            
+            display_mode = TRANSACTION_ALL_EDIT_HEADLESS
+
+
+        def change_register_function():
+             book.get_backend_plugin().mark_transaction_dirty(
+                headless_state.current_transaction_id, bokeep_transaction)
+
+        def transaction_edit_finished_function():
+            headless_state.set_no_current_transaction()
+            transaction.get().commit()
+            # should change guistate (default shell persistent storage)
+            # to be on this specific transid
+            main_quit()
+
+        window_vbox = VBox()
+        window.add(window_vbox)
+        display_hook = plugin.get_transaction_display_by_mode_hook(type_code)
+        display_hook(bokeep_transaction,
+                     headless_state.current_transaction_id,
+                     plugin, window_vbox,
+                     change_register_function, book,
+                     display_mode, transaction_edit_finished_function)
         window.show_all()
 
     def window_close(*args):
