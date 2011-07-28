@@ -260,8 +260,11 @@ class BoKeepConfigGuiState(FunctionAndDataDrivenStateMachine):
                     # now we can enable it
                     self.data[BOOK].enable_frontend_plugin(plugin_name)
 
-                    self.call_for_new_plugins(
-                        self.data[BOOK].get_frontend_plugin(plugin_name))
+                    # Configure the newly added plugins.
+                    book = self.data[BOOK]
+                    frontend_plugin = \
+                        self.data[BOOK].get_frontend_plugin(plugin_name)
+                    self.call_for_new_plugins(book, frontend_plugin)
 
                 except FrontendPluginImportError:
                     not_found_modules.append(plugin_name)

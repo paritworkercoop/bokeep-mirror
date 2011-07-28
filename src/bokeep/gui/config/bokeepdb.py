@@ -52,7 +52,6 @@ from bokeep.book import BoKeepBookSet, FrontendPluginImportError
 from bokeep.gui.main_window_glade import get_main_window_glade_file
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
-from bokeep.gtkutil import gtk_error_message
 
 # bokeep.gui.config imports
 from state import BoKeepConfigGuiState, \
@@ -587,7 +586,9 @@ class BoKeepConfigDialog(object):
         if iter != None:
             remove_button.set_sensitive(True)
 
-
-    def __force_config_on_newly_created_plugin(self, new_plugin):
-        gtk_error_message( "now configuring the plugin %s " % new_plugin,
-                           self.bokeep_config_dialog )
+    def __force_config_on_newly_created_plugin(self, book, new_plugin):
+        """Configures a newly added frontend plugin."""
+        new_plugin.run_configuration_interface(
+            self.bokeep_config_dialog,
+            book.get_backend_plugin().backend_account_dialog,
+            book)
