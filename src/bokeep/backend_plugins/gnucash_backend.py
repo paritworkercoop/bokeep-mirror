@@ -34,6 +34,7 @@ from session_based_robust_backend_plugin import \
     SessionBasedRobustBackendPlugin
 from bokeep.util import attribute_or_blank
 from bokeep.gtkutil import gtk_error_message
+from bokeep.backend_plugins.gnucash_backend_config import GnuCashConfigDialog
 
 # gnucash imports
 from gnucash import Session, Split, GncNumeric, GUID, Transaction, \
@@ -409,19 +410,15 @@ class GnuCash(SessionBasedRobustBackendPlugin):
         SessionBasedRobustBackendPlugin.close(self, close_reason)
 
     def configure_backend(self, parent_window=None):
-        fcd = FileChooserDialog(
-            "Where is the gnucash file?",
-            parent_window,
-            FILE_CHOOSER_ACTION_OPEN,
-            (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_OPEN, RESPONSE_OK) )
-        fcd.set_modal(True)
-        result = fcd.run()
-        gnucashfile_path = fcd.get_filename()
-        fcd.destroy()
-        if result == RESPONSE_OK and gnucashfile_path != None:
-            # should make this a more sophisticated dialog to choose between
-            # xml and sqlite
-            self.setattr('gnucash_file', 'xml' + '://' + gnucashfile_path)
+        cd = GnuCashConfigDialog()
+        # At least when a new account is created and a backend immediately
+        # selected, self.gnucash_file is of type None.
+        if isinstance(self.gnucash_file, str):
+            gnucash_filename = self.gnucash_file[6:]
+            cd.set_book_filename(gnucash_filename)
+        cd.run()
+        gnucash_filename = cd.get_book_filename()
+        self.setattr('gnucash_file', 'xml' + '://' + gnucash_filename)
 
     def get_account_names(self, account, names = None, prefix = ''):
         # Initialise the default value of names.
