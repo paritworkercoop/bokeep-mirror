@@ -85,168 +85,210 @@ class MainWindow(object):
     Could be a lot better if an even higher level state machine or something
     a lot more functional and a lot less imperitive were used.
 
-    Oh well, in the meantime, here's a depth first major attribute change and
-    call tree with some pseudo code
-    for the most significant entry points into this class's code.
-    Please keep it up to date and also try to reflect in the in per function
-    docstrings.
+    Oh well, in the meantime, here's a depth call graph with a little pseudo-
+    code of the most intertangled functions from this module and major calls to
+    other modules that alter the state of the interface.
+    
+    This is done starting from most significant entry points into this
+    class's code.
+    Please keep it up to date and also try to reflect the interdependencies
+    in the in per function docstrings.
+    
     This is pretty much the only way one can get a big picture overview of
-    code like this...
+    how much of the code here is interrelated
 
     __init__ (called by shell_startup prior to gtk.main() )
-      self.gui_built = False
-      self.current_editor = None
-      set_config_path_and_config()
-      set_bookset()
-      build_gui()
-        books_combobox and self.books_combobox_model are established
-        trans_type_model is established and not connected to the combobox yet
-        set_sensitivities_and_status()
-          all buttons, combos, and plugin menu are set_sensitive(False) due to
-           the gui having not been built yet
-          set_backend_error_indicator()
-            does nothing due to gui having not been built yet
-          set_transid_label()
-            label is blanked due to gui having not been built yet
-      END build_gui as called by __init__
-      self.programmatic_transcombo_index = False
-    END __init__
+      build_gui
+        set_sensitivities_and_status
+          set_backend_error_indicator
+          set_transid_label
 
     startup_event_handler (first thing called by gtk.main() )
-      if __startup_callback() says go ahead
-        after_background_load()
-          self.guistate loaded from database (or established if new)
-          if no book selected and at least one available
-             guistate.do_action(BOOK_CHANGE, first book)
-          else if a book selected matches one that exists
-             guistate.do_action(RESET)
-          else if no book selected that matches, or none even available
+      after_background_load
+        if no book selected and at least one available
+           guistate.do_action(BOOK_CHANGE, first book)
+        else if a book selected matches one that exists
+           guistate.do_action(RESET)
+        else if no book selected that matches, or none even available
              guistate.do_action(BOOK_CHANGE, None)
-          books_combobox_model filled in with possible books
-          books_combobox set to the current book, or one selected if needed
-          if a current book in the combo can not be determined
-            books_combobox.set_active(first book)
-            set_book_from_combo()
-                guistate.do_action(BOOK_CHANGE, current_book_selected)
-          else
-             books_combobox.set_active( selected book as per self.guistate)
-          self.gui_built = True
-          refresh_trans_types_and_set_sensitivities_and_status()
-            refresh_trans_types()
-              exit if no book selected
-              trans_type_model is cleared and reconstucted from all active
-               plugins, attempt is made to identify transaction type
-               matching current transaction (if any)
-              trans_type_combo is setup with new model
-              if a transaction type was found matching current
-                set_transcombo_index()
-                reset_trans_view()
-                  self.hide_transaction()
-                  self.current_editor set with new editor instance  
-              else no transaction type found
-                hide_transaction()
-            END refresh_trans_types as called by..
-                 refresh_trans_types_and_set_sensitivities_and_status
-            set_sensitivities_and_status()
-              all buttons, combos, and plugin menu are set_sensitive
-               based on guistate, thanks to gui_built having just become True
-              set_backend_error_indicator()
-                with gui_built now being true, this updates backend error
-                 label and related widgets
-              set_transid_label()
-                with gui_built now being True, this is set based on current
-                 transaction
-            END set_sensitivities_and_status() as called by...
-                 refresh_trans_types_and_set_sensitivities_and_status
-          END refresh_trans_types_and_set_sensitivities_and_status
-               as called by after_background_load
-        END after_background_load as called by startup_event_handler
-      else startup_callback says things can't go on
-        self.application_shutdown()
+
+        books_combobox_model.append
+        books_combobox.set_active
+        if a current book in the combo can not be determined
+          set_book_from_combo
+              guistate.do_action(BOOK_CHANGE, current_book_selected)
+        refresh_trans_types_and_set_sensitivities_and_status
+          refresh_trans_types
+            trans_type_model.clear
+            trans_type_model.append
+            if a transaction type was found matching current
+              set_transcombo_index
+              reset_trans_view
+                self.hide_transaction
+                self.current_editor set with new editor instance  
+            else no transaction type found
+              hide_transaction
+          END refresh_trans_types as called by..
+               refresh_trans_types_and_set_sensitivities_and_status
+          set_sensitivities_and_status
+            set_backend_error_indicator
+            set_transid_label
+        END refresh_trans_types_and_set_sensitivities_and_status
+             as called by after_background_load
+      END after_background_load as called by startup_event_handler
     END startup_event_handler
     
     on_books_combobox_changed (called by gtk gui thread when book combo changed)
-      exit if not self.gui_built ( this happens during the startup code above)
-      set_book_from_combo()
+      set_book_from_combo
         guistate.do_action(BOOK_CHANGE, newly selected book)
-      refresh_trans_types_and_set_sensitivities_and_status()
-        refresh_trans_types()
-          exit if no book selected (can't happen when combobox triggered)
-          trans_type_model is cleared and reconstucted from all active
-           plugins, attempt is made to identify transaction type
-           matching current transaction (if any)
-          trans_type_combo is setup with new model
+      refresh_trans_types_and_set_sensitivities_and_status
+        refresh_trans_types
+          trans_type_model.clear
+          trans_type_model.append
           if a transaction type was found matching current
-            set_transcombo_index()
-              reset_trans_view()
-                self.hide_transaction()
-                self.current_editor set with new editor instance
+            set_transcombo_index
+            reset_trans_view
+              self.hide_transaction
+              self.current_editor set with new editor instance  
           else no transaction type found
-             hide_transaction()
+            hide_transaction
         END refresh_trans_types as called by..
              refresh_trans_types_and_set_sensitivities_and_status
-        set_sensitivities_and_status()
-          all buttons, combos, and plugin menu are set_sensitive
-           based on guistate, thanks to gui_built having just become True
-          set_backend_error_indicator()
-            gui_built is definitely true so this updates backend error
-             label and related widgets
-          set_transid_label()
-            gui_built is definitely True, this is set based on current
-             transaction
-        END set_sensitivities_and_status() as called by...
-             refresh_trans_types_and_set_sensitivities_and_statu        
+        set_sensitivities_and_status
+          set_backend_error_indicator
+          set_transid_label
       END refresh_trans_types_and_set_sensitivities_and_status as 
            called by on_books_combobox_changed
     END on_books_combobox_changed
 
     new_button_clicked (called by gtk gui thread when new button clicked)
       guistate.do_action(NEW)
+      set_trans_type_combo_to_current_and_reset_view
+        set_transcombo_index
+        reset_trans_view
+          self.hide_transaction
+          self.current_editor set with new editor instance
+      set_sensitivities_and_status
+        set_backend_error_indicator
+        set_transid_label
+
+    delete_button_clicked (called by gtk gui thread when delete button
+                             clicked)
+      guistate.do_action(DELETE)
+         if there is no transaction left
+           set_transcombo_index
+           hide_transaction
+         else there is a transaction left
+           set_trans_type_combo_to_current_and_reset_view
+            set_transcombo_index
+            reset_trans_view
+              self.hide_transaction
+              self.current_editor set with new editor instance
+           set_sensitivities_and_status
+             set_backend_error_indicator
+             set_transid_label
+    
+    trans_type_changed (called by gtk gui thread when trans type
+                        combo changed)
+      guistate.do_action(TYPE_CHANGE, active transaction type selection)
+      self.reset_trans_view
+        self.hide_transaction
+        self.current_editor set with new editor instance
+      set_sensitivities_and_status
+        set_backend_error_indicator
+        set_transid_label
+
+    on_forward_button_clicked() and on_back_button_clicked()
+      (called by gtk gui thread when back and forward buttons are clicked)
+       guistate.do_action(FORWARD)
       set_trans_type_combo_to_current_and_reset_view()
-        set_transcombo_index( based on last transaction type or
-                              first available one NEW just created the first
-                              transaction in the book)
+        set_transcombo_index( based on transaction being moved too)
         reset_trans_view()
           self.hide_transaction()
           self.current_editor set with new editor instance
       set_sensitivities_and_status()
         all buttons, combos, and plugin menu are set_sensitive
           based on guistate, thanks to gui_built having just become True
-        set_backend_error_indicator()
-           gui_built is definitely true so this updates backend error
-           label and related widgets
+          set_backend_error_indicator()
+        gui_built is definitely true so this updates backend error
+          label and related widgets
         set_transid_label()
           gui_built is definitely True, this is set based on current
-          transaction
+           transaction
 
-   delete_button_clicked() (called by gtk gui thread when delete button clicked)
-     guistate.do_action(DELETE)
-        book = self.guistate.get_book()
-        if there is no transaction left
-          set_transcombo_index(COMBO_SELECTION_NONE)
-          hide_transaction()
-        else there is a transaction left
-            set_trans_type_combo_to_current_and_reset_view()
-               set_transcombo_index( based on last transaction type )
-               reset_trans_view()
-                 self.hide_transaction()
-                 self.current_editor set with editor instance for whichever
-                                     old transaction is being displayed
-        self.set_sensitivities_and_status()
-          all buttons, combos, and plugin menu are set_sensitive
+    on_configuration1_activate called by gtk gui thread when config item in
+                               menu is activated
+      closedown_for_config()
+        gui_built = False
+        guistate.do_action(CLOSE)
+        books_combobox.set_active(COMBO_SELECTION_NONE)
+        on_books_combobox_changed is called due to above, but the
+          gui_built = False line prevents it from doing anything       
+        books_combobox_model.clear() gui_built = False also stops the event
+                                     handler for combo change here
+        set_transcombo_index(COMBO_SELECTION_NONE)
+        self.programmatic_transcombo_index = True
+        self.trans_type_model.clear() event handler runs, but goes nowhere
+                                      due to self.programmatic_transcombo_index
+                                      flag
+        self.programmatic_transcombo_index = False
+      bookset.close()
+      bookset = run config dialog, get new bookset from it
+      after_background_load()
+        self.guistate loaded from database (or established if new)
+        if no book selected and at least one available
+           guistate.do_action(BOOK_CHANGE, first book)
+        else if a book selected matches one that exists
+           guistate.do_action(RESET)
+        else if no book selected that matches, or none even available
+           guistate.do_action(BOOK_CHANGE, None)
+        books_combobox_model filled in with possible books
+        books_combobox set to the current book, or one selected if needed
+        if a current book in the combo can not be determined
+          books_combobox.set_active(first book)
+          set_book_from_combo()
+              guistate.do_action(BOOK_CHANGE, current_book_selected)
+        else
+           books_combobox.set_active( selected book as per self.guistate)
+        self.gui_built = True
+        refresh_trans_types_and_set_sensitivities_and_status()
+          refresh_trans_types()
+            exit if no book selected
+            trans_type_model is cleared and reconstucted from all active
+             plugins, attempt is made to identify transaction type
+             matching current transaction (if any)
+            trans_type_combo is setup with new model
+            if a transaction type was found matching current
+              set_transcombo_index()
+              reset_trans_view()
+                self.hide_transaction()
+                self.current_editor set with new editor instance  
+            else no transaction type found
+              hide_transaction()
+          END refresh_trans_types as called by..
+               refresh_trans_types_and_set_sensitivities_and_status
+          set_sensitivities_and_status()
+            all buttons, combos, and plugin menu are set_sensitive
              based on guistate, thanks to gui_built having just become True
             set_backend_error_indicator()
-          gui_built is definitely true so this updates backend error
-            label and related widgets
-          set_transid_label()
-            gui_built is definitely True, this is set based on current
-            transaction
-    
-     trans_type_changed() (called by gtk gui thread when delete button clicked)
-       self.guistate.do_action(TYPE_CHANGE,
-                               self.trans_type_combo.get_active())
-       self.reset_trans_view()
-       self.set_sensitivities_and_status()        
+              with gui_built now being true, this updates backend error
+              label and related widgets
+            set_transid_label()
+              with gui_built now being True, this is set based on current
+               transaction
+          END set_sensitivities_and_status() as called by...
+               refresh_trans_types_and_set_sensitivities_and_status
+        END refresh_trans_types_and_set_sensitivities_and_status
+             as called by after_background_load
+      END after_background_load as called by on_configuration1_activate
+    END on_configuration1_activate
+
+    on_configure_plugin1_activate
+      Run the configuration dialog for the active plugin
+      reset_trans_view()
+        self.hide_transaction()
+        self.current_editor set with new editor instance
+    END on_configure_plugin1_activate
     """
     
     # Functions for window initialization 
