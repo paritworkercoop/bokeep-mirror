@@ -586,9 +586,17 @@ class BoKeepConfigDialog(object):
         if iter != None:
             remove_button.set_sensitive(True)
 
-    def __force_config_on_newly_created_plugin(self, book, new_plugin):
-        """Configures a newly added frontend plugin."""
-        new_plugin.run_configuration_interface(
-            self.bokeep_config_dialog,
-            book.get_backend_plugin().backend_account_dialog,
-            book)
+    def __force_config_on_newly_created_plugin(self, book, is_backend, new_plugin):
+        """Configures a newly added frontend plugin.
+        
+        book: The BoKeep book that the plugin is used in.
+        is_backend: True if it's a backend plugin, False if frontend.
+        new_plugin: The new plugin that needs configuring."""
+        
+        if is_backend:
+            new_plugin.configure_backend(self.bokeep_config_dialog)
+        else:
+            new_plugin.run_configuration_interface(
+                self.bokeep_config_dialog,
+                book.get_backend_plugin().backend_account_dialog,
+                book)
