@@ -308,9 +308,12 @@ class GnuCash(SessionBasedRobustBackendPlugin):
                 system('pidof gnucash > ' + pid_file)
                 f = open(pid_file, 'r')
                 line = f.readline()
-                if line == '':
+                # If there are multiple GnuCash instances, "pidof gnucash" will
+                # return something like "9000 9001".
+                multiple_gnucash_instances = line.find(' ') >= 0
+                if line == '' or multiple_gnucash_instances:
                     pid = 0
-                else:
+                else: # If there's exactly one instance of GnuCash running...
                     pid = int(line)
                 f.close()
                 remove(pid_file)
