@@ -1,4 +1,4 @@
-# Copyright (C) 2010  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2010-2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
@@ -15,13 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Author: Mark Jenkins <mark@parit.ca>
+# Authors: Mark Jenkins <mark@parit.ca>
+#          Samuel Pauls <samuel@parit.ca>
 
 # bokeep imports
 from plugin import \
     BoKeepBackendException, BoKeepBackendResetException
 from session_based_robust_backend_plugin import SessionBasedRobustBackendPlugin
 from bokeep.util import attribute_or_blank
+from bokeep.backend_plugins.serialfile_backend_config import \
+    SerialFileConfigDialog
 from decimal import Decimal 
 from sys import stderr
 
@@ -128,17 +131,10 @@ credits
         self.open_session_and_retain()
 
     def configure_backend(self, parent_window=None):
-        fcd = FileChooserDialog(
-            "Where should the serial file be?",
-            parent_window,
-            FILE_CHOOSER_ACTION_SAVE,
-            (STOCK_CANCEL, RESPONSE_CANCEL, STOCK_SAVE, RESPONSE_OK) )
-        fcd.set_modal(True)
-        result = fcd.run()
-        serialfile_path = fcd.get_filename()
-        fcd.destroy()
-        if result == RESPONSE_OK and serialfile_path != None:
-            self.setattr('accounting_file', serialfile_path)
+        cd = SerialFileConfigDialog()
+        cd.set_filename(self.accounting_file)
+        cd.run()
+        self.accounting_file = cd.get_filename()
 
 def get_plugin_class():
     return SerialFilePlugin
