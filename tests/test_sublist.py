@@ -21,6 +21,22 @@ from unittest import TestCase, main
 
 from bokeep.util import SubList
 
+def make_test_for_positional_delete( index, main_list_match, sub_list_match):
+    def test_positional_delete(self):
+        del self.sublist[index]
+        self.assertEquals( self.main_list, main_list_match )
+        self.assertEquals( list(self.sublist), sub_list_match )
+    return test_positional_delete
+
+def make_test_for_double_delete(
+    first_i, second_i,
+    main_list_match, sub_list_match):
+    def test_double_positional_delete(self):
+        del self.sublist[first_i]
+        make_test_for_positional_delete(
+            second_i, main_list_match, sub_list_match)(self)
+    return test_double_positional_delete
+
 class TestSubList(TestCase):
     def setUp(self):
         self.main_list = [1, 34, 67, 734, 'dsfs']
@@ -33,17 +49,32 @@ class TestSubList(TestCase):
     def test_state_after_setup(self):
         self.assertEquals( self.main_list,
                            [1, 34, 67, 734, 'dsfs', 21, 's6gs', 'abc'] )
+        self.assertEquals( list(self.sublist), [21, 's6gs', 'abc'] )
 
-    def test_positional_deletes(self):
-        for i, (main_list_match, sub_list_match) in \
-                enumerate( (
-                ( [1, 34, 67, 734, 'dsfs', 's6gs', 'abc'],
-                  ['s6gs', 'abc'] ),
-                ) ):
-            del self.sublist[i]
-            self.assertEquals( self.main_list, main_list_match )
+    test_for_zero_delete = make_test_for_positional_delete(
+        0, [1, 34, 67, 734, 'dsfs', 's6gs', 'abc'], ['s6gs', 'abc'] )
 
-        self.assertEquals( list(self.sublist), sub_list_match )
+    test_for_one_delete = make_test_for_positional_delete(
+        1, [1, 34, 67, 734, 'dsfs', 21, 'abc'], [21, 'abc'] )
+
+    test_for_two_delete = make_test_for_positional_delete(
+        2, [1, 34, 67, 734, 'dsfs', 21, 's6gs'], [21, 's6gs'] )
+
+    test_after_double_delete_ohoh = make_test_for_double_delete(
+        0, 0, [1, 34, 67, 734, 'dsfs', 'abc'],
+        ['abc'] )
+
+    test_after_double_delete_ohone = make_test_for_double_delete(
+        0, 1, [1, 34, 67, 734, 'dsfs', 's6gs'],
+        ['s6gs'] )
+
+    test_after_double_delete_two_oh = make_test_for_double_delete(
+        2, 0, [1, 34, 67, 734, 'dsfs', 's6gs'],
+        ['s6gs'] )
+
+    test_after_double_delete_two_one = make_test_for_double_delete(
+        2, 1, [1, 34, 67, 734, 'dsfs', 21],
+        [21] )
 
 if __name__ == "__main__":
     main()
