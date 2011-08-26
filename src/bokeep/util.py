@@ -30,6 +30,7 @@ from itertools import chain
 # ZODB
 import transaction
 from persistent import Persistent
+from persistent.list import PersistentList
 
 # simplifies common usage of transaction.get().commit()
 def ends_with_commit(dec_function):
@@ -619,3 +620,47 @@ def tup_chain(*args):
 
 def tup_multi_append(original_tuple, *args):
     return tup_chain(original_tuple, args)
+
+class SubList(Persistent):
+    def __init__(self, parallel_list):
+        # The "outer" list, the begger one that our sub list will
+        # have items in
+        self.parallel_list = parallel_list
+
+        # the actual sub list of items that will also be kept in the
+        # parallell/outer list. Aditional feature some day would be a
+        # way to initialize this to be certain items already in the bigger
+        # parallel list
+        self.inner_sub_list = PersistentList()
+        self.paranoia = False
+        
+    def append(self, item):
+        self.inner_sub_list.append( (len(self.parallel_list), item) )
+        # important to do second because len(self.parallel_list) above
+        # is meant to be in the position being inserted into here...
+        self.parallel_list.append(item)
+        self.verify_integrity_if_paranoid()
+
+    def __delitem__(self, index):
+        del self.parallel_list[ self.inner_sub_list[index][0] ]
+        # reconstruct the inner sublist, items prior to index have the
+        # same index in the outer
+        self.inner_sub_list = PersistentList(
+            ((outer_i if i < index else outer_i-1 ),
+             item )
+            for i, (outer_i, item) in enumerate(self.inner_sub_list)
+            if i != index
+            )
+        self.verify_integrity_if_paranoid()
+
+    def __iter__(self):
+        self.verify_integrity_if_paranoid()
+        return iter( item for outer_i, item in self.inner_sub_list )
+
+    def verify_integrity(self):
+        return all( id(item) == id(self.parallel_list[outer_i])
+                    for outer_i, item in self.inner_sub_list )
+        
+    def verify_integrity_if_paranoid(self):
+        assert( True if not self.paranoia
+                else self.verify_integrity() )
