@@ -28,15 +28,22 @@ class TestSubList(TestCase):
         self.sublist.paranoia = True
         self.sublist.append( 21 )
         self.sublist.append( 's6gs' )
+        self.sublist.append( 'abc' )
 
     def test_state_after_setup(self):
         self.assertEquals( self.main_list,
-                           [1, 34, 67, 734, 'dsfs', 21, 's6gs'] )
+                           [1, 34, 67, 734, 'dsfs', 21, 's6gs', 'abc'] )
 
-    def test_delete_zero(self):
-        del self.sublist[0]
-        self.assertEquals( self.main_list,
-                           [1, 34, 67, 734, 'dsfs', 's6gs'] )
+    def test_positional_deletes(self):
+        for i, (main_list_match, sub_list_match) in \
+                enumerate( (
+                ( [1, 34, 67, 734, 'dsfs', 's6gs', 'abc'],
+                  ['s6gs', 'abc'] ),
+                ) ):
+            del self.sublist[i]
+            self.assertEquals( self.main_list, main_list_match )
+
+        self.assertEquals( list(self.sublist), sub_list_match )
 
 if __name__ == "__main__":
     main()
