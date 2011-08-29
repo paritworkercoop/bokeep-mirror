@@ -40,6 +40,7 @@ class TestSubList(TestCase):
         self.sublist.append( 21 )
         self.sublist.append( 's6gs' )
         self.sublist.append( 'abc' )
+        self.main_list.extend(self.expected_master_postfix())
 
     def expected_master_prefix(self):
         return [1, 34, 67, 734, 'dsfs']
@@ -49,7 +50,10 @@ class TestSubList(TestCase):
 
     def test_state_after_setup(self):
         self.assertEquals( self.main_list,
-                           [1, 34, 67, 734, 'dsfs', 21, 's6gs', 'abc'] )
+                           (self.expected_master_prefix() +
+                            [21, 's6gs', 'abc'] +
+                            self.expected_master_postfix() )
+                           )
         self.assertEquals( list(self.sublist), [21, 's6gs', 'abc'] )
 
     test_for_zero_delete = make_test_for_positional_delete(
@@ -72,6 +76,10 @@ class TestSubList(TestCase):
 
     test_after_double_delete_two_one = make_test_for_positional_delete(
         [21], 2, 1 )
+
+class TestSubWithExpanedOther(TestSubList):
+    def expected_master_postfix(self):
+        return [1, 2, 3]
 
 if __name__ == "__main__":
     main()
