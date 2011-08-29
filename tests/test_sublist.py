@@ -21,23 +21,31 @@ from unittest import TestCase, main
 
 from bokeep.util import SubList
 
-def make_test_for_positional_delete( main_list_match, sub_list_match,
-                                     *indicies):
+def make_test_for_positional_delete( sub_list_match, *indicies):
     def test_positional_delete(self):
         for index in indicies:
             del self.sublist[index]
-        self.assertEquals( self.main_list, main_list_match )
+            expected_main_list = (
+                self.expected_master_prefix() + sub_list_match +
+                self.expected_master_postfix() )
+        self.assertEquals( self.main_list, expected_main_list )
         self.assertEquals( list(self.sublist), sub_list_match )
     return test_positional_delete
 
 class TestSubList(TestCase):
     def setUp(self):
-        self.main_list = [1, 34, 67, 734, 'dsfs']
+        self.main_list = self.expected_master_prefix()
         self.sublist = SubList(self.main_list)
         self.sublist.paranoia = True
         self.sublist.append( 21 )
         self.sublist.append( 's6gs' )
         self.sublist.append( 'abc' )
+
+    def expected_master_prefix(self):
+        return [1, 34, 67, 734, 'dsfs']
+
+    def expected_master_postfix(self):
+        return []
 
     def test_state_after_setup(self):
         self.assertEquals( self.main_list,
@@ -45,28 +53,24 @@ class TestSubList(TestCase):
         self.assertEquals( list(self.sublist), [21, 's6gs', 'abc'] )
 
     test_for_zero_delete = make_test_for_positional_delete(
-        [1, 34, 67, 734, 'dsfs', 's6gs', 'abc'], ['s6gs', 'abc'], 0 )
+        ['s6gs', 'abc'], 0 )
 
     test_for_one_delete = make_test_for_positional_delete(
-        [1, 34, 67, 734, 'dsfs', 21, 'abc'], [21, 'abc'], 1 )
+        [21, 'abc'], 1 )
 
     test_for_two_delete = make_test_for_positional_delete(
-        [1, 34, 67, 734, 'dsfs', 21, 's6gs'], [21, 's6gs'], 2 )
+        [21, 's6gs'], 2 )
 
     test_after_double_delete_ohoh = make_test_for_positional_delete(
-        [1, 34, 67, 734, 'dsfs', 'abc'], 
         ['abc'], 0, 0 )
 
     test_after_double_delete_ohone = make_test_for_positional_delete(
-        [1, 34, 67, 734, 'dsfs', 's6gs'],
         ['s6gs'], 0, 1 )
 
     test_after_double_delete_two_oh = make_test_for_positional_delete(
-        [1, 34, 67, 734, 'dsfs', 's6gs'],
         ['s6gs'], 2, 0 )
 
     test_after_double_delete_two_one = make_test_for_positional_delete(
-        [1, 34, 67, 734, 'dsfs', 21],
         [21], 2, 1 )
 
 if __name__ == "__main__":
