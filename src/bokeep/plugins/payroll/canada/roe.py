@@ -17,6 +17,16 @@
 # Author(s): Jamie Campbell <jamie@parit.ca>
 #            Mark Jenkins <mark@parit.ca>
 
+from decimal import Decimal
+
+def __get_empstub(paystubs, name):
+    for paystub in paystubs:
+        if paystub.employee.name == name:
+            return paystub
+
+    return None
+
+
 def write_ROE_to_buffer(
     payroll_plugin, employee, start_roe, end_roe, roe_file,
     employer_name_and_address,
@@ -57,7 +67,7 @@ def write_ROE_to_buffer(
     for payday in sorted(paydays.itervalues()):
          sorted_paydays_list.append(payday)
          stubs = payday.paystubs
-         if not(self.get_empstub(stubs, employee.name) == None):
+         if not(__get_empstub(stubs, employee.name) == None):
              emp_specific_paydays.append(payday)
 
     if len(emp_specific_paydays) == 0:
@@ -95,7 +105,7 @@ def write_ROE_to_buffer(
     assert( pay_period_type == "Biweekly" )
     for payday in reversed_paydays:
         stubs = payday.paystubs
-        empstub = self.get_empstub(stubs, employee.name)
+        empstub = __get_empstub(stubs, employee.name)
         if not (empstub == None):
            #get hours for this period
            pd = payday
@@ -121,10 +131,9 @@ def write_ROE_to_buffer(
     insurable_earnings = Decimal('0.0')
     earnings_by_period_str = ''
 
-    assert(False)
     for payday in reversed_paydays:
         stubs = payday.paystubs
-        empstub = self.get_empstub(stubs, employee.name)
+        empstub = __get_empstub(stubs, employee.name)
         if not (empstub == None):
             curr_earnings = Decimal('0.0')
             for line in empstub.paystub_lines:
@@ -155,6 +164,7 @@ def write_ROE_to_buffer(
 
     #section 15c is ONLY to be filled out if there are any gaps
     if insurable_payperiods < processed_payperiods or force_each_pay_period:
+        total_insurable_earnings_by_period = earnings_by_period_list
         roe_file.write("Block 15c (insurable earnings per period): \n")
         for period_number, period_earnings in total_insurable_earnings_by_period:
             roe_file.write(str(period_number) + ': $' + str(period_earnings) + '\n')
@@ -176,6 +186,7 @@ if __name__ == "__main__":
     employee.add_timesheet( DAY_ZERO, 3.4, 'wtf' )
     payday_obj = Payday(payroll_plugin)
     payday_obj.set_paydate( DAY_ZERO, PAYDAY, PAYDAY )
+    payroll_plugin.register_transaction(0, payday_obj)
     paystub = Paystub(employee, payday_obj)
     
     employee.start_roe_work_period(DAY_ZERO)
@@ -186,5 +197,6 @@ if __name__ == "__main__":
         DAY_ZERO,
         PAYDAY, stdout,
         "employer X lives at home",
-        "XXXXX",        
+        "XXXXX",
+        force_each_pay_period=True
         )
