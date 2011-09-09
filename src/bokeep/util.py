@@ -667,3 +667,33 @@ class SubList(Persistent):
 
     def __len__(self):
         return len(self.inner_sub_list)
+
+class DumbMemLeakingUUIDLookup(object):
+    def __init__(self):
+        self.table = []
+    
+    def create(self):
+        uuid = len(self.table)
+        self.table.append(None)
+        return uuid
+    
+    def lookup(self, uuid):
+        return self.table[uuid]
+    
+    def set(self, uuid, value):
+        self.table[uuid] = value
+
+    def create_and_set(self, value):
+        uuid = self.create()
+        self.set(uuid, value)
+        return uuid
+
+    def clear(self, uuid):
+        self.set(uuid, None)
+
+def iterable_linear_search(iterable, conditional):
+    # warning, you should expect conditional to return True for something
+    # in the iterable
+    return (i
+            for i,iter_val in iterable
+            if conditional(iter_val) ).next()
