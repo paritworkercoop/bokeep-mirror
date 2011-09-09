@@ -664,3 +664,6 @@ class SubList(Persistent):
     def verify_integrity_if_paranoid(self):
         assert( True if not self.paranoia
                 else self.verify_integrity() )
+
+    def __len__(self):
+        return len(self.inner_sub_list)
