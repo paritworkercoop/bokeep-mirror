@@ -695,5 +695,5 @@ def iterable_linear_search(iterable, conditional):
     # warning, you should expect conditional to return True for something
     # in the iterable
     return (i
-            for i,iter_val in iterable
+            for i,iter_val in enumerate(iterable)
             if conditional(iter_val) ).next()
