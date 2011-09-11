@@ -18,6 +18,8 @@
 # Author(s): Mark Jenkins <mark@parit.ca>
 #            Paul Evans <pevans@catholic.org>
 
+from persistent.list import PersistentList
+
 from cpp import PaystubCPPDeductionLine, PaystubCPPEmployerContributionLine
 from ei import PaystubEIDeductionLine, PaystubEIEmployerContributionLine
 from income_tax import PaystubCalculatedIncomeTaxDeductionLine
@@ -187,7 +189,7 @@ class Employee(Persistent):
 
     def __init__(self, name=None):
         self.paystubs = []
-        self.timesheets = []
+        self.__init_timesheets()
         self.archived_paystubs = None
         self.auto_add_lines = list(self.auto_add_lines)
 
@@ -219,15 +221,16 @@ class Employee(Persistent):
         self.paystubs.append(paystub)
         self._p_changed = True
 
+    def __init_timesheets(self):
+        # earlier versions didn't have the timesheets array, add if needed
+        if not hasattr(self, 'timesheets'):
+            self.timesheets = PersistentList()
+
     def add_timesheet(self, date, hours, memo):
         sheet = Timesheet(date, hours, memo)
-
-        #earlier versions didn't have the timesheets array, add if needed
-        if not hasattr(self, 'timesheets'):
-            self.timesheets = []
+        self.__init_timesheets()
 
         self.timesheets.append(sheet)
-        self._p_changed = True
 
 
     #for 'record of employment' info, cap the most date if desired
@@ -241,9 +244,7 @@ class Employee(Persistent):
 
     def get_timesheets(self, start_date=date(MINYEAR, 1, 1),
                        end_date=date(MAXYEAR, 12, 31)):
-        #earlier versions didn't have the timesheets array, add if needed
-        if not hasattr(self, 'timesheets'):
-            self.timesheets = []
+        self.__init_timesheets()
 
         if (start_date.year == MINYEAR) and (end_date.year == MAXYEAR):
             return self.timesheets
@@ -258,9 +259,7 @@ class Employee(Persistent):
         
     def drop_timesheets(self, start_date=date(MINYEAR, 1, 1),
                         end_date=date(MAXYEAR, 12, 31)):
-        #earlier versions didn't have the timesheets array, add if needed
-        if not hasattr(self, 'timesheets'):
-            self.timesheets = []
+        self.__init_timesheets()
 
         if (start_date.year == MINYEAR) and (end_date.year == MAXYEAR):
             self.timesheets = []
@@ -402,9 +401,7 @@ class Employee(Persistent):
         else:
             retstr += 'default rate: ' + str(self.default_rate) + '\n'
 
-        #earlier versions didn't have the timesheets array, add if needed
-        if not hasattr(self, 'timesheets'):
-            self.timesheets = []
+        self.__init_timesheets()
 
         if len(self.timesheets) > 0:
             retstr += 'vvvvTimesheetsvvvv\n'
