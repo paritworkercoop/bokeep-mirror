@@ -615,12 +615,6 @@ def decimal_truncate_two_places(decimal_value):
     # with negative numbers
     return decimal_value.quantize(TWOPLACES, rounding=ROUND_DOWN)
 
-def tup_chain(*args):
-    return tuple(chain(*args))
-
-def tup_multi_append(original_tuple, *args):
-    return tup_chain(original_tuple, args)
-
 class SubList(Persistent):
     def __init__(self, parallel_list):
         # The "outer" list, the begger one that our sub list will
