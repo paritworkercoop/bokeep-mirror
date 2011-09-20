@@ -49,15 +49,18 @@ def post_module_load_hook(transaction, plugin, config_module):
 def gui_initialization_hook(plugin_edit_instance, transaction, plugin, book):
     print 'initialization hook'
 
-def page_change_acceptable(old_page, new_page):
-    print 'did page change acceptability check', old_page, 'to', new_page
+def page_change_acceptable(trans, old_page, new_page):
+    print 'did page change acceptability check', old_page, 'to', new_page, \
+        'trans', trans
     return True
 
-def page_pre_change_config_hooks(old_page, new_page):
-    print 'pre-change hook, going from', old_page, 'to', new_page
+def page_pre_change_config_hooks(trans, old_page, new_page):
+    print 'pre-change hook, going from', old_page, 'to', new_page, 'trans', \
+        trans
 
-def page_post_change_config_hooks(old_page, new_page):
-    print 'post-change hook, went from', old_page, 'to', new_page
+def page_post_change_config_hooks(trans, old_page, new_page):
+    print 'post-change hook, went from', old_page, 'to', new_page, 'trans', \
+        trans
 
 non_decimal_check_labels = ( (P1, 'name_entry'), )
 
