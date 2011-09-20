@@ -413,11 +413,11 @@ class multipage_glade_editor(object):
         # conditions because we should really just grey the buttons
         if not (new_page < 0 or new_page == len(self.glade_pages)) and \
                 self.page_change_acceptable_by_input_valid() and \
-                config.page_change_acceptable(old_page, new_page):
+                config.page_change_acceptable(self.trans, old_page, new_page):
 
             # intentionally done before the page is actually attached,
             # that's what we mean by pre
-            config.page_pre_change_config_hooks(old_page, new_page)
+            config.page_pre_change_config_hooks(self.trans, old_page, new_page)
 
             self.detach_current_page()
             self.current_page = new_page
@@ -425,7 +425,7 @@ class multipage_glade_editor(object):
             
             # intentionally done after the page is actually attached,
             # that's what we mean by post
-            config.page_post_change_config_hooks(old_page, new_page)
+            config.page_post_change_config_hooks(self.trans, old_page, new_page)
 
     def entry_changed(self, entry, *args):
         config = self.plugin.get_configuration(allow_reload=False)
