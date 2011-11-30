@@ -32,6 +32,7 @@ from gtk import \
     STOCK_CANCEL, RESPONSE_CANCEL, \
     STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
     MESSAGE_ERROR, BUTTONS_OK, \
+    BUTTONS_YES_NO, RESPONSE_YES, \
     MESSAGE_INFO, \
     TreeView, ListStore, STOCK_ADD, STOCK_DELETE, VBox, HBox, Label, Button, \
     TreeViewColumn, CellRendererText, main as gtk_main, Window, main_quit, \
@@ -94,10 +95,11 @@ def gtk_ok_dialog(msg, parent=None, dia_type=MESSAGE_ERROR):
     error_dialog.destroy()
 
 def gtk_yes_no_dialog(msg):
-    error_dialog = MessageDialog(parent, DIALOG_MODAL, 
-                                 MESSAGE_ERROR, BUTTONS_OK, msg)
-    error_dialog.run()
-    error_dialog.destroy()    
+    yes_no_dialog = MessageDialog(parent, DIALOG_MODAL, 
+                                  MESSAGE_ERROR, BUTTONS_YES_NO, msg)
+    result = (RESPONSE_YES == yes_no_dialog.run())
+    yes_no_dialog.destroy()
+    return result
 
 def start_stock_button(stock_code):
     but = Button()
