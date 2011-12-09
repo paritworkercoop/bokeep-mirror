@@ -26,7 +26,7 @@ from functions import \
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, \
+     JUL_2011, JAN_2012, \
      get_payroll_rule_period_for_paystub
 
 from decimal import Decimal
@@ -63,7 +63,7 @@ class Province(object):
         classmethod( get_provincial_thresholds_and_tax_rates )
 
 class Manitoba( Province ):
-    MINIMUM_WAGE = Decimal('9.50')
+    MINIMUM_WAGE = Decimal('10.00')
     VACATION_PAY_RATE = Decimal('0.04')
     
     PROV_NAME = 'Manitoba'
@@ -170,6 +170,19 @@ class Manitoba( Province ):
                             '21331.50', # 9
                             '23024.50', # 10
                             ), # JUL_2011
+
+                JAN_2012: ( '0.00',     # 0
+                            '8634.00',  # 1
+                            '9480.50',  # 2
+                            '11173.50', # 3
+                            '12866.50', # 4
+                            '14559.50', # 5
+                            '16252.50', # 6
+                            '17945.50', # 7
+                            '19638.50', # 8
+                            '21331.50', # 9
+                            '23024.50', # 10
+                            ), # JAN_2012
                
                 } # TD_PROV
 
@@ -227,6 +240,12 @@ class Manitoba( Province ):
                       ('0.1275', '605'),   # 31000 < A <= 67000
                       ('0.1740', '3720'), )# 67000 < A
                     ), # JUL_2011
+
+        JAN_2012: ( ('31000', '67000'),
+                    ( ('0.1080', '0'),     #         A <= 31000
+                      ('0.1275', '605'),   # 31000 < A <= 67000
+                      ('0.1740', '3720'), )# 67000 < A
+                    ), # JAN_2012
         
         } # PROVINCIAL_THRESHOLDS_AND_TAX_RATES
 
