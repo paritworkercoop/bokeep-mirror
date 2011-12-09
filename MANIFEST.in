@@ -6,14 +6,22 @@ include README_mileage_plugin.txt
 include README_multipageglade_plugin.txt
 include README_payroll_plugin.txt
 include README_plugin_api.txt
+include README_release_process.txt
 include README_style.txt
 include README_trust_plugin.txt
 include README_versions_and_branches.txt
 include COPYRIGHT_AND_CONTRIBUTIONS
 include bo-keep.desktop
 include src/bokeep/gui/bo-keep.svg
+include glademultipage_example_data_files/multipageexample.glade
+include glademultipage_example_data_files/multipageglade_configuration.py
+include src/bokeep/plugins/trust/BOKEEP_PLUGIN
+include src/bokeep/plugins/mileage/BOKEEP_PLUGIN
+include src/bokeep/plugins/payroll/BOKEEP_PLUGIN
+include src/bokeep/backend_plugins/gnucash_backend_BOKEEP_BACKEND_PLUGIN
+include src/bokeep/backend_plugins/null_BOKEEP_BACKEND_PLUGIN
+include src/bokeep/backend_plugins/serialfile_BOKEEP_BACKEND_PLUGIN
 recursive-include payroll_example_data_files *.py
 recursive-include src *.glade
 recursive-include tests *.py
-include glademultipage_example_data_files/multipageexample.glade
-include glademultipage_example_data_files/multipageglade_configuration.py
+

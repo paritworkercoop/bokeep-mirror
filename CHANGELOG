@@ -3,7 +3,12 @@ BoKeep 1.1.2
 - 2012 payroll formulas
 - More changes in experimental multipageglade plugin, compatibility may be
   broken
-- last 1.1.x series release unless there is a major bug and known users
+- Multiple Bo-Keep shells feature, in addition to the default there is
+  a headless shell
+- last 1.1.x series release, 1.1.3 or 1.1.2.x releases not likely to happen
+  unless some users come forward
+  No easy migration or support to migrate to 1.2 expected unless some users
+  come forward.
 
 BoKeep 1.1.1
 - Improved default shell's view.
