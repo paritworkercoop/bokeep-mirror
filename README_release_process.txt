@@ -39,5 +39,7 @@ A developer doing a release needs to do all of the following:
      or bug fix releases in older major series, if any. Mention if decently
      supported upgrade paths are planned.
 
- 13) Promote news item on reddit, freshmeat, and wherever... if there's
+ 13) Update the Bo-Keep website hosted on Savannah
+
+ 14) Promote news item on reddit, freshmeat, and wherever... if there's
      some really, really good stuff compared to last time.
