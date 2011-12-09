@@ -1,3 +1,10 @@
+BoKeep 1.1.2
+- tarballs now contain files that were missing in 1.1.1
+- 2012 payroll formulas
+- More changes in experimental multipageglade plugin, compatibility may be
+  broken
+- last 1.1.x series release unless there is a major bug and known users
+
 BoKeep 1.1.1
 - Improved default shell's view.
 - Improved trust plugin's configuration and transaction entry views.
