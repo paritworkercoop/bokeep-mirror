@@ -30,7 +30,11 @@ A developer doing a release needs to do all of the following:
 
  11) Sign and upload the tarball to Savannah
 
- 12) Put a release news item on to Savannah and announce to the mailing list.
+ 12) Wait until signed and uploaded tarball is publically available
+
+ 13) Close the task related to the relase
+
+ 14) Put a release news item on to Savannah and announce to the mailing list.
      Be sure to mention if backwards compatibility was broken, which as per
      README_versions_and_branches.txt should be reflected by a major or
      super-major version number change.
@@ -39,7 +43,7 @@ A developer doing a release needs to do all of the following:
      or bug fix releases in older major series, if any. Mention if decently
      supported upgrade paths are planned.
 
- 13) Update the Bo-Keep website hosted on Savannah
+ 15) Update the Bo-Keep website hosted on Savannah
 
- 14) Promote news item on reddit, freshmeat, and wherever... if there's
+ 16) Promote news item on reddit, freshmeat, and wherever... if there's
      some really, really good stuff compared to last time.
