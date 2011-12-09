@@ -32,6 +32,8 @@ from gtk import \
     STOCK_CANCEL, RESPONSE_CANCEL, \
     STOCK_SAVE, RESPONSE_OK, STOCK_OPEN, DIALOG_MODAL, \
     MESSAGE_ERROR, BUTTONS_OK, \
+    BUTTONS_YES_NO, RESPONSE_YES, \
+    MESSAGE_INFO, \
     TreeView, ListStore, STOCK_ADD, STOCK_DELETE, VBox, HBox, Label, Button, \
     TreeViewColumn, CellRendererText, main as gtk_main, Window, main_quit, \
     CellRendererCombo, CellRendererText, Dialog, Calendar, Entry
@@ -81,10 +83,23 @@ def get_current_date_of_gtkcal(cal):
     return date(year, month+1, day)
 
 def gtk_error_message(msg, parent=None):
+    gtk_ok_dialog(msg, parent, dia_type=MESSAGE_ERROR)
+
+def gtk_info_message(msg, parent=None):
+    gtk_ok_dialog(msg, parent, dia_type=MESSAGE_INFO)
+
+def gtk_ok_dialog(msg, parent=None, dia_type=MESSAGE_ERROR):
     error_dialog = MessageDialog(parent, DIALOG_MODAL, 
-                                 MESSAGE_ERROR, BUTTONS_OK, msg)
+                                 dia_type, BUTTONS_OK, msg)
     error_dialog.run()
     error_dialog.destroy()
+
+def gtk_yes_no_dialog(msg):
+    yes_no_dialog = MessageDialog(parent, DIALOG_MODAL, 
+                                  MESSAGE_ERROR, BUTTONS_YES_NO, msg)
+    result = (RESPONSE_YES == yes_no_dialog.run())
+    yes_no_dialog.destroy()
+    return result
 
 def start_stock_button(stock_code):
     but = Button()
@@ -548,6 +563,8 @@ def test_prog_list_changed(*args):
 
 def main():
     print 'answer', input_entry_dialog("who what?", 'edit me')
+
+    gtk_info_message("hi there missy")
 
     w = Window()
     w.resize(200, 200)

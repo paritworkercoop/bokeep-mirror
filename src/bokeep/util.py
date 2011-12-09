@@ -633,10 +633,14 @@ class SubList(Persistent):
         # important to do second because len(self.parallel_list) above
         # is meant to be in the position being inserted into here...
         self.parallel_list.append(item)
+        # this is needed in case parallel_list is not persistent
+        self._p_changed = True
         self.verify_integrity_if_paranoid()
 
     def __delitem__(self, index):
         del self.parallel_list[ self.inner_sub_list[index][0] ]
+        # this is needed in case parallel_list is not persistent
+        self._p_changed = True
         # reconstruct the inner sublist, items prior to index have the
         # same index in the outer
         self.inner_sub_list = PersistentList(

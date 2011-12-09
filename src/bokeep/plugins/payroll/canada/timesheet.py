@@ -16,7 +16,9 @@
 #
 #            Mark Jenkins <mark@parit.ca>
 
-class Timesheet():
+from persistent import Persistent
+
+class Timesheet(Persistent):
     def __init__(self, sheet_date, hours, memo):
         self.sheet_date = sheet_date
         self.hours = hours
