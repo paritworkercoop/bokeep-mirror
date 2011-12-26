@@ -94,9 +94,9 @@ def gtk_ok_dialog(msg, parent=None, dia_type=MESSAGE_ERROR):
     error_dialog.run()
     error_dialog.destroy()
 
-def gtk_yes_no_dialog(msg):
+def gtk_yes_no_dialog(msg, parent=None, dia_type=MESSAGE_ERROR):
     yes_no_dialog = MessageDialog(parent, DIALOG_MODAL, 
-                                  MESSAGE_ERROR, BUTTONS_YES_NO, msg)
+                                  dia_type, BUTTONS_YES_NO, msg)
     result = (RESPONSE_YES == yes_no_dialog.run())
     yes_no_dialog.destroy()
     return result
