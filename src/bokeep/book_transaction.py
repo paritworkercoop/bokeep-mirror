@@ -99,12 +99,13 @@ def make_common_fin_trans(lines, trans_date, description,
         trans.chequenum = chequenum
     return trans
 
-def make_fin_line(amount, accounts, comment):
+def make_fin_line(amount, accounts, comment, **extra_attributes):
     """Creates a transaction line."""
     
     line = FinancialTransactionLine(amount)
     line.account_spec = accounts
     line.line_memo = comment
+    line.__dict__.update( extra_attributes )
     return line
 
 class BoKeepTransactionNotMappableToFinancialTransaction(Exception):
