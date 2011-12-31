@@ -127,7 +127,8 @@ class Payday(BookTransaction):
             fin_lines.extend( 
                 make_fin_line( decimal_round_two_place_using_third_digit(
                         negate * paystub_line.get_value()),
-                               accounts, comment)
+                               accounts, comment,
+                               **paystub_line.get_extra_attributes() )
                 for (accounts, comment, paystub_line) in \
                 self.payday_accounting_lines[0][debit_credit_pos]
                 )
@@ -142,8 +143,7 @@ class Payday(BookTransaction):
                                for line in line_list),
                              ZERO )),
                                accounts,
-                               comment
-                               )
+                               comment )
                 
                 for (id, accounts, comment), line_list in \
                     self.payday_accounting_lines[1][debit_credit_pos].\
@@ -167,7 +167,8 @@ class Payday(BookTransaction):
                     make_fin_line( decimal_round_two_place_using_third_digit(
                             negate * paystub_line.get_value()),
                                    accounts,
-                                   comment )                        
+                                   comment,
+                                   **paystub_line.get_extra_attributes() )
                     for (accounts, comment, paystub_line) in \
                         trans[debit_credit_pos]
                     )

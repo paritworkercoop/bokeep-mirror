@@ -118,6 +118,9 @@ class PaystubLine(Persistent):
     def __str__(self):
         return self.description + ': ' + str(self.get_value())
   
+    def get_extra_attributes(self):
+        return ( {} if not hasattr(self, 'extra_attributes')
+                 else self.extra_attributes )
 
 class PaystubIncomeLine(PaystubLine):
     """A PaystubLine that represents some form of income
