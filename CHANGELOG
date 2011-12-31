@@ -1,5 +1,10 @@
 BoKeep 1.2.0
 - Incompatible changes to payroll plugin
+- enhanced book_transaction.make_fin_trans to allow extra attributes
+  to be specified as keyword args
+- provided way for payroll specifications to say that some accounts should
+  be auto created
+- bug #35177 gtk_yes_no_dialog from bokeep.gtkutil was broken
 
 BoKeep 1.1.2
 - tarballs now contain files that were missing in 1.1.1
