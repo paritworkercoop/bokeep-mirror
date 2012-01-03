@@ -17,6 +17,8 @@
 #
 # Author: Mark Jenkins <mark@parit.ca>
 
+from decimal import Decimal
+
 from persistent import Persistent
 
 from bokeep.book_transaction import \
@@ -154,6 +156,14 @@ class BackendDataStateMachine(FunctionAndDataDrivenStateMachine):
             else:
                 try:
                     for fin_trans in fin_trans_list:
+                        # perhaps some day we should ensure
+                        # this is checked for all backend plugins
+                        if not all( isinstance(line.amount, Decimal)
+                                    for line in fin_trans.lines ):
+                            raise BoKeepBackendException(
+                                "not all of the financial transaction "
+                                "lines has an amount of type Decimal")
+
                         new_backend_id = \
                             state_machine.backend_plugin.\
                             create_backend_transaction(fin_trans)
