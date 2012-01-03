@@ -5,6 +5,7 @@ BoKeep 1.2.0
 - provided way for payroll specifications to say that some accounts should
   be auto created
 - bug #35177 gtk_yes_no_dialog from bokeep.gtkutil was broken
+- bug #35228 Plugin detection fails to handle egg files in python path correctly
 
 BoKeep 1.1.2
 - tarballs now contain files that were missing in 1.1.1
