@@ -44,7 +44,7 @@ class HeadlessShellState(Persistent):
     def set_no_current_transaction(self):
         self.current_transaction_id = None
 
-PLUGIN_ARGUMENT, TRANSACTION_TYPE_CODE = range(2)
+PLUGIN_ARGUMENT, TRANSACTION_TYPE_CODE_POS_ARG = range(2)
 
 def shell_startup(config_path, config, bookset, startup_callback,
                   cmdline_options, cmdline_args):
