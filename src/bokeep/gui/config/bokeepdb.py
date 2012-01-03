@@ -155,12 +155,18 @@ def available_plugins_search(plugin_file_name, plugin_subdir):
                  if exists(directory) ]
     dir_list.extend([ path_join(directory, "bokeep", plugin_subdir) 
                       for directory in dir_list
-                      if exists(path_join(directory, "bokeep", plugin_subdir)) ])
+                      if ( isdir(path_join(directory, "bokeep", plugin_subdir))
+                           and 
+                           exists(path_join(directory, "bokeep", plugin_subdir))
+                           ) # end and expression
+                      ])
 
     bokeep_packages = []
     bokeep_modules = []
 
     for directory in dir_list:
+        if not isdir(directory):
+            continue # very lazy of me to use a GOTO...
         items = set(os.listdir(directory))
         sub_directories = set([ item
                                 for item in items 
