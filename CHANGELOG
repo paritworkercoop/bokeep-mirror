@@ -6,6 +6,7 @@ BoKeep 1.2.0
   be auto created
 - bug #35177 gtk_yes_no_dialog from bokeep.gtkutil was broken
 - bug #35228 Plugin detection fails to handle egg files in python path correctly
+- bug #35232 headless shell was broken
 - checks are in place to ensure transaction line amounts are of type Decimal
 
 BoKeep 1.1.2
