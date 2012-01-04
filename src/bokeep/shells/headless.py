@@ -144,6 +144,8 @@ def shell_startup(config_path, config, bookset, startup_callback,
 
         def window_close(*args):
             book.get_backend_plugin().flush_backend()
+            transaction.get().commit()
+            bookset.close()
             # should change guistate (default shell persistent storage)
             # to be on this specific trans id now
             main_quit()
