@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-	<!-- @@@@ Definition of T4A(OAS) ComplexTypes @@@@  2010/sept/15  Version# 2.10  -->
+	<!-- @@@@ Definition of T4A(OAS) ComplexTypes @@@@  2011/Sept/28  Version# 1.12 (version #.yy)-->
 	<xsd:complexType name="T4A_OASSlipType">
 		<xsd:all>
 			<xsd:element name="RCPNT_NM" type="NameType"/>
@@ -8,7 +8,7 @@
 			<xsd:element name="sin" type="sinType"/>
 			<xsd:element name="rcpnt_nbr" type="char20Type" minOccurs="0"/>
 			<xsd:element name="bn" type="bnType"/>
-			<xsd:element name="rpt_tcd" type="preMatchDataType"/>
+			<xsd:element name="rpt_tcd" type="slipDataType"/>
 			<xsd:element name="T4A_OAS_AMT" type="T4aoasAmtType" minOccurs="0"/>
 		</xsd:all>
 	</xsd:complexType>
@@ -30,7 +30,7 @@
 			<xsd:element name="CNTC" type="ContactType2"/>
 			<xsd:element name="tx_yr" type="yearType"/>
 			<xsd:element name="slp_cnt" type="int7Type"/>
-			<xsd:element name="rpt_tcd" type="preMatchDataType"/>
+			<xsd:element name="rpt_tcd" type="otherDataType"/>
 			<xsd:element name="T4A_OAS_TAMT" type="T4aoasTotalsType" minOccurs="0"/>
 		</xsd:all>
 	</xsd:complexType>

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-	<!-- @@@@@@ Include Related Schemas @@@@@@  2010/sept/15  Version# 2.10 -->
+	<!-- @@@@@@ Include Related Schemas @@@@@@  2011/Sept/28  Version# 1.12 (version #.yy)-->
 	<xsd:include schemaLocation="simple.xsd"/>
 	<xsd:include schemaLocation="complex.xsd"/>
 	<xsd:include schemaLocation="t4.xsd"/>

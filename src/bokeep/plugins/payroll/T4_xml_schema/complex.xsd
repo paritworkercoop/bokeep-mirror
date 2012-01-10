@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-	<!--  @@@@     COMPLEX TYPE DEFINITIONS    @@@@  2010/sept/15  Version# 2.10 -->
+	<!--  @@@@     COMPLEX TYPE DEFINITIONS    @@@@  2011/Sept/28  Version# 1.12 (version #.yy)-->
 	<xsd:complexType name="CanadaAddressType">
 		<xsd:all>
 			<xsd:element name="addr_l1_txt" type="char30Type" minOccurs="0"/>
