@@ -89,11 +89,8 @@ def zero_income(t4):
         return True
     return False
 
-def generate_t4s(
-    t4_file_name, year, payroll_module, extra_attributes_per_employee,
-    summary_attributes, submission_attributes ):
-
-    xml_output_file = file(t4_file_name, 'w')
+def generate_t4_xml_slips(
+    year, payroll_module, extra_attributes_per_employee):
 
     t4parts = [
         generate_t4_for_employee(
@@ -102,9 +99,42 @@ def generate_t4s(
         payroll_module.get_employees().iteritems()
         ]
 
-    t4parts = [ t4
-                for t4 in t4parts
-                if not zero_income(t4) ]
+    return [ t4
+             for t4 in t4parts
+             if not zero_income(t4) ]
+
+def generate_plain_t4s(
+    t4_file_name, year, payroll_module, extra_attributes_per_employee):
+    
+    plain_output_file = file(t4_file_name, 'w')
+
+    t4parts = generate_t4_xml_slips(
+        year, payroll_module, extra_attributes_per_employee)
+
+    def sub_attr(attrname):
+        attrsub = { 'empt_incamt': 'Income',
+                    'cpp_cntrb_amt': 'CPP contributions',
+                    'empe_eip_amt': 'EI contributions',
+                    'itx_ddct_amt': 'Income tax deducted' }
+        return attrname if not attrname in attrsub else attrsub[attrname]
+
+    for empname, attr in extra_attributes_per_employee.iteritems():
+        plain_output_file.write("%s\n" % empname)
+        plain_output_file.write( '\n'.join(
+                "%s: %s" % (sub_attr(attrname), attrvalue)
+                for attrname, attrvalue in attr.iteritems() ) )
+        plain_output_file.write('\n\n')
+
+    plain_output_file.close()
+
+def generate_t4s(
+    t4_file_name, year, payroll_module, extra_attributes_per_employee,
+    summary_attributes, submission_attributes ):
+
+    xml_output_file = file(t4_file_name, 'w')
+
+    t4parts = generate_t4_xml_slips(
+        year, payroll_module, extra_attributes_per_employee)
 
     start_of_year, end_of_year = get_year_boundaries(year)
 
