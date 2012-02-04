@@ -31,7 +31,7 @@ from bokeep.util import \
     get_file_in_same_dir_as_module, get_module_for_file_path
 from bokeep.gtkutil import file_selection_path
 from bokeep.plugins.payroll.csv_dump import do_csv_dump
-from bokeep.plugins.payroll.make_T4 import generate_t4s
+from bokeep.plugins.payroll.make_T4 import generate_t4s, generate_plain_t4s
 from bokeep.plugins.payroll.period_analyse import period_analyse
 
 def get_payroll_glade_file():
@@ -84,21 +84,38 @@ class PayrollConfigDialog(object):
         if file_path != None:
             do_csv_dump(self.plugin, file_path)
 
-    def on_dump_T4_clicked(self, *args):
+    def t4_dump_stage_one(self, msg):
         t4infomod = file_selection_module_contents(
             "Select the T4 info file")
         if t4infomod == None:
-            return
+            return None, None
 
-        xml_file_path = self.save_dialog(
-        "where should the T4 xml file be saved?")
+        xml_file_path = self.save_dialog(msg)
         if xml_file_path == None:
-            return
+            return None,None
+
+
+        return t4infomod, xml_file_path
+
+    def on_dump_T4_clicked(self, *args):
+        t4infomod, xml_file_path = self.t4_dump_stage_one(
+            "where should the T4 xml file be saved?")
+        if None in (t4infomod, xml_file_path):
+            return None
 
         generate_t4s(xml_file_path, t4infomod.year, self.plugin,
                      t4infomod.extra_attributes_per_employee,
                      t4infomod.summary_attributes,
                      t4infomod.submission_attributes )
+
+    def on_dump_plain_T4_clicked(self, *args):
+        t4infomod, xml_file_path = self.t4_dump_stage_one(
+            "where should the T4 text file be saved?")
+        if None in (t4infomod, xml_file_path):
+            return None
+
+        generate_plain_t4s(xml_file_path, t4infomod.year, self.plugin,
+                           t4infomod.extra_attributes_per_employee, )
 
     def on_dump_period_analysis_clicked(self, *args):
         analysis_dia = {}
