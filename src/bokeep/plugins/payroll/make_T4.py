@@ -81,13 +81,16 @@ def generate_t4_for_employee(employee, year, extra_attributes):
             employee, PaystubIncomeLine),
         **extra_attributes )
 
-def zero_income(t4):
-    if Decimal(t4.init_args['empt_incamt']) == Decimal(0):
-        assert( 'itx_ddct_amt' not in t4.init_args )
-        assert( 'cpp_cntrb_amt' not in t4.init_args )
-        assert( 'empe_eip_amt' not in t4.init_args )
+def zero_income_t4_dict(t4_dict):
+    if Decimal(t4_dict['empt_incamt']) == Decimal(0):
+        assert( 'itx_ddct_amt' not in t4_dict )
+        assert( 'cpp_cntrb_amt' not in t4_dict )
+        assert( 'empe_eip_amt' not in t4_dict )
         return True
     return False
+
+def zero_income(t4):
+    return zero_income_t4_dict(t4.init_args)
 
 def generate_t4_xml_slips(
     year, payroll_module, extra_attributes_per_employee):
@@ -118,11 +121,15 @@ def generate_plain_t4s(
                     'itx_ddct_amt': 'Income tax deducted' }
         return attrname if not attrname in attrsub else attrsub[attrname]
 
-    for empname, attr in extra_attributes_per_employee.iteritems():
-        plain_output_file.write("%s\n" % empname)
+    for t4 in t4parts:
+        if zero_income(t4):
+            continue # the evil of goto, MUAHAHAHAHHAH
+
+        plain_output_file.write("%s, %s\n" % (t4.init_args['snm'],
+                                              t4.init_args['gvn_nm'] ) )
         plain_output_file.write( '\n'.join(
                 "%s: %s" % (sub_attr(attrname), attrvalue)
-                for attrname, attrvalue in attr.iteritems() ) )
+                for attrname, attrvalue in t4.init_args.iteritems() ) )
         plain_output_file.write('\n\n')
 
     plain_output_file.close()
