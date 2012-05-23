@@ -1,5 +1,6 @@
 BoKeep 1.2.1
 - default shell now prompts on delete
+- T4's can be dumped as plain text
 
 BoKeep 1.2.0
 - Incompatible changes to payroll plugin
