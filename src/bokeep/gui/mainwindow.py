@@ -32,6 +32,7 @@ from gtk.gdk import pixbuf_new_from_file_at_size
 import gtk
 
 # Bo-Keep
+from bokeep.gtkutil import gtk_yes_no_dialog
 from state import \
     BoKeepGuiState, \
     NEW, DELETE, FORWARD, BACKWARD, TYPE_CHANGE, BOOK_CHANGE, CLOSE, RESET
@@ -799,15 +800,17 @@ class MainWindow(object):
 
     def delete_button_clicked(self, *args):
         """Delete a BoKeep transaction."""
-        
-        self.guistate.do_action(DELETE)
-        book = self.guistate.get_book()
-        if self.guistate.get_transaction_id() == None:
-            self.set_transcombo_index(COMBO_SELECTION_NONE)
-            self.hide_transaction()
-        else:
-            self.set_trans_type_combo_to_current_and_reset_view()
-        self.set_sensitivities_and_status()
+        if gtk_yes_no_dialog(
+            """Are you sure you want to delete
+transaction number %s?""" % self.guistate.get_transaction_id() ):
+            self.guistate.do_action(DELETE)
+            book = self.guistate.get_book()
+            if self.guistate.get_transaction_id() == None:
+                self.set_transcombo_index(COMBO_SELECTION_NONE)
+                self.hide_transaction()
+            else:
+                self.set_trans_type_combo_to_current_and_reset_view()
+            self.set_sensitivities_and_status()
 
     # see comment on on_new_button_clicked
     on_delete_button_clicked = delete_button_clicked

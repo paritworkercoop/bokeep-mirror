@@ -1,3 +1,6 @@
+BoKeep 1.2.1
+- default shell now prompts on delete
+
 BoKeep 1.2.0
 - Incompatible changes to payroll plugin
 - enhanced book_transaction.make_fin_trans to allow extra attributes
