@@ -28,7 +28,8 @@ from persistent.mapping import PersistentMapping
 # gtk imports
 from gtk import \
     VBox, HBox, Window, Button, STOCK_GO_FORWARD, STOCK_GO_BACK, Label, \
-    Entry, Calendar
+    Entry, Calendar, \
+    ScrolledWindow, Viewport, POLICY_AUTOMATIC, POLICY_NEVER
 
 # bokeep imports
 from bokeep.book_transaction import \
@@ -210,11 +211,22 @@ class multipage_glade_editor(object):
         self.hide_parent = Window()
         self.hide_parent.hide()
         self.mainvbox = VBox()
-        # for now these two are one and the same, but we're planning on making
-        # the option of maincontainer being inside mainvbox, so we can put
-        # other chrome around whatever the user is providing
-        # so, we end up using self.maincontainer in attach_current_page
-        self.maincontainer = self.mainvbox
+
+        # establish maincontainer, which is where the actual glade
+        # pages are put by attach_current_page
+        #
+        # when we're in headless mode it can just be the mainvbox
+        # but, outside headless mode we save screen real-estate and
+        # place a scrolled window inside the mainvbox and the
+        # glade by glade pages end up in there
+        if display_mode in HEADLESS_MODES:
+            self.maincontainer = self.mainvbox
+        else:
+            self.maincontainer = Viewport()
+            sw = ScrolledWindow()
+            sw.set_policy(POLICY_NEVER, POLICY_AUTOMATIC)
+            sw.add( self.maincontainer)
+            self.mainvbox.pack_start(sw)
         self.hide_parent.add(self.mainvbox)
 
         config = self.trans.get_configuration_and_provide_on_load_hook()
