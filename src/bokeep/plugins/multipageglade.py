@@ -211,22 +211,6 @@ class multipage_glade_editor(object):
         self.hide_parent = Window()
         self.hide_parent.hide()
         self.mainvbox = VBox()
-
-        # establish maincontainer, which is where the actual glade
-        # pages are put by attach_current_page
-        #
-        # when we're in headless mode it can just be the mainvbox
-        # but, outside headless mode we save screen real-estate and
-        # place a scrolled window inside the mainvbox and the
-        # glade by glade pages end up in there
-        if display_mode in HEADLESS_MODES:
-            self.maincontainer = self.mainvbox
-        else:
-            self.maincontainer = Viewport()
-            sw = ScrolledWindow()
-            sw.set_policy(POLICY_NEVER, POLICY_AUTOMATIC)
-            sw.add( self.maincontainer)
-            self.mainvbox.pack_start(sw)
         self.hide_parent.add(self.mainvbox)
 
         config = self.trans.get_configuration_and_provide_on_load_hook()
@@ -272,6 +256,31 @@ class multipage_glade_editor(object):
             (x_align, y_align) = self.page_label.get_alignment()
             self.page_label.set_alignment(0.0, y_align)
             self.mainvbox.pack_start(self.page_label, expand=False)
+
+            # establish maincontainer, which is where the actual glade
+            # pages are put by attach_current_page
+            #
+            # The order of placement here is important, we place this
+            # after page_label has already been added to main
+            # and we also need to do this prior to attach_current_page
+            # being called, as it depends on self.maincontainer being
+            # there
+            #
+            # when we're in headless mode the maincontainer can just be
+            # the mainvbox itself
+            #
+            # but, outside headless mode we save screen real-estate and
+            # place a scrolled window (which becomes the maincontainer)
+            # inside the mainvbox and the glade by glade pages end up
+            # in there instead (again, in attach_current_page)
+            if display_mode in HEADLESS_MODES:
+                self.maincontainer = self.mainvbox
+            else:
+                self.maincontainer = Viewport()
+                sw = ScrolledWindow()
+                sw.set_policy(POLICY_NEVER, POLICY_AUTOMATIC)
+                sw.add( self.maincontainer)
+                self.mainvbox.pack_start(sw)
 
             self.glade_pages = [
                 self.__setup_page(glade_file, top_glade_element)
