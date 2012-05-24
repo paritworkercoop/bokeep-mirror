@@ -210,6 +210,11 @@ class multipage_glade_editor(object):
         self.hide_parent = Window()
         self.hide_parent.hide()
         self.mainvbox = VBox()
+        # for now these two are one and the same, but we're planning on making
+        # the option of maincontainer being inside mainvbox, so we can put
+        # other chrome around whatever the user is providing
+        # so, we end up using self.maincontainer in attach_current_page
+        self.maincontainer = self.mainvbox
         self.hide_parent.add(self.mainvbox)
 
         config = self.trans.get_configuration_and_provide_on_load_hook()
@@ -351,7 +356,7 @@ class multipage_glade_editor(object):
             config.pages[self.current_page][TOP_WIDGET] ]
         self.current_top_vbox = self.current_window.child
         self.current_top_vbox.reparent(
-            self.mainvbox)
+            self.maincontainer)
         self.page_label.set_text( "page %s of %s" %( self.current_page + 1,
                                                      len(config.pages) ) )
         self.update_auto_labels()
