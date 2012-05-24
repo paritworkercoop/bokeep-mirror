@@ -252,6 +252,8 @@ class multipage_glade_editor(object):
                 self.change_register_function()
 
             self.page_label = Label("")
+            (x_align, y_align) = self.page_label.get_alignment()
+            self.page_label.set_alignment(0.0, y_align)
             self.mainvbox.pack_start(self.page_label)
 
             self.glade_pages = [
