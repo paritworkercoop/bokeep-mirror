@@ -2,6 +2,8 @@ BoKeep 1.2.1
 - default shell now prompts on delete
 - T4's can be dumped as plain text
 - multipage glade does a better job of not wasting screen real-estate
+- default shell now contains a status bar with window resize element at the
+  bottom
 
 BoKeep 1.2.0
 - Incompatible changes to payroll plugin
