@@ -192,6 +192,18 @@ def config_valid(config):
 
 GLADE_FILE, TOP_WIDGET = range(2)
 
+def make_widget_changed_func(get_state_func):
+    def widget_changed(self, widget, *args):
+        config = self.plugin.get_configuration(allow_reload=False)
+        widget_key = ( (config.pages[self.current_page]),
+                       widget.get_name() )
+        print 'caught change on', widget_key
+        self.trans.update_widget_state(
+            widget_key, get_state_func(widget) )
+        self.change_register_function()
+        self.update_auto_labels()
+    return widget_changed
+
 class multipage_glade_editor(object):
     def __init__(self,
                  trans, transid, plugin, gui_parent, change_register_function,
@@ -475,24 +487,8 @@ class multipage_glade_editor(object):
             # that's what we mean by post
             config.page_post_change_config_hooks(self.trans, old_page, new_page)
 
-    def entry_changed(self, entry, *args):
-        config = self.plugin.get_configuration(allow_reload=False)
-        widget_key = ( (config.pages[self.current_page]), entry.get_name() )
-        self.trans.update_widget_state(
-            widget_key, entry.get_text() )
-        self.change_register_function()
-        self.update_auto_labels()
-
-    def calendar_changed(self, calendar, *args):
-        # woah, see the commonality with entry_changed, perhaps it's time
-        # to do some decorating no?
-        config = self.plugin.get_configuration(allow_reload=False)
-        widget_key = ( (config.pages[self.current_page]), calendar.get_name() )
-        self.trans.update_widget_state(
-            widget_key, get_current_date_of_gtkcal(calendar) )
-        self.change_register_function()
-        self.update_auto_labels()        
-        
+    entry_changed = make_widget_changed_func(lambda w: w.get_text() )
+    calendar_changed = make_widget_changed_func(get_current_date_of_gtkcal)
 
     def update_auto_labels(self):
         config = self.plugin.get_configuration(allow_reload=False)
