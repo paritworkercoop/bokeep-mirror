@@ -486,7 +486,6 @@ class multipage_glade_editor(object):
     def calendar_changed(self, calendar, *args):
         # woah, see the commonality with entry_changed, perhaps it's time
         # to do some decorating no?
-        print("cal changed")
         config = self.plugin.get_configuration(allow_reload=False)
         widget_key = ( (config.pages[self.current_page]), calendar.get_name() )
         self.trans.update_widget_state(
