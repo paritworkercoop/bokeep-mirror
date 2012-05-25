@@ -365,7 +365,7 @@ class multipage_glade_editor(object):
 
                     (Calendar,
                      self.__change_calendar_from_saved_version,
-                     lambda w: get_current_date_of_gtkcal,
+                     get_current_date_of_gtkcal,
                      lambda w: w.connect( "day_selected",
                                           self.calendar_changed ), 
                      ), # Calendar
