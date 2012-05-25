@@ -333,42 +333,62 @@ class multipage_glade_editor(object):
         return widget_dict
 
     def __setup_auto_widgets(self):
+        # go through each page
         for key, widget_dict in self.glade_pages_by_ident_index.iteritems():
+            # go through each widget
             for widget_name, widget in widget_dict.iteritems():
                 widget_key = (key, widget_name)
-                for cls, func in (
-                    (Entry, self.__setup_auto_entry),
-                    (Calendar, self.__setup_auto_calendar), ):
+
+                # determine if the current widget is one that we can take
+                # care of automatically saving, we do this with a linear
+                # search through a table of eligible types,
+                # where the first element of each entry is Widget class
+                #
+                # Once we have a match do one of the following
+                #  * Change the widget from the existing stored stage
+                #  * Establish new state from some default
+                # The next two entries in the table
+                # (change_widget_from_state, new_state_from_widget)
+                # provide functions to do this
+                #
+                # Lastly, we establish event handlers for this widget using
+                # the last element in the table
+                for (cls,
+                     change_widget_from_state, new_state_from_widget,
+                     establish_event_handlers) in ( # start table
+
+                    (Entry,
+                     lambda w, wk: w.set_text(self.trans.get_widget_state(wk)),
+                     lambda w: '',
+                     lambda w: w.connect("changed", self.entry_changed),
+                     ), # Entry
+
+                    (Calendar,
+                     self.__change_calendar_from_saved_version,
+                     lambda w: get_current_date_of_gtkcal,
+                     lambda w: w.connect( "day_selected",
+                                          self.calendar_changed ), 
+                     ), # Calendar
+
+                    ): # end of table and for declartion
+
+                    # does the widget match the type in the current table entry?
                     if isinstance(widget, cls):
-                        func(widget, widget_key)
 
-    def __setup_auto_entry(self, widget, widget_key):
-        # important to do the initial set prior to setting up
-        # the event handler for changed events
-        if self.trans.has_widget_state( widget_key ):
-            widget.set_text(
-                self.trans.get_widget_state( widget_key ) )
-        else:
-            self.trans.update_widget_state(widget_key,
-                                           '')
-        widget.connect( "changed", self.entry_changed )            
+                        # use the three remaining functions in the table
+                        # as appropriate
+                        if self.trans.has_widget_state( widget_key ):
+                            change_widget_from_state(widget, widget_key)
+                        else:
+                            self.trans.update_widget_state(
+                                widget_key,
+                                new_state_from_widget(widget) )
+                        establish_event_handlers(widget)
 
-    def __setup_auto_calendar(self, widget, widget_key):
-        # FIXME, copy-pasted code from __setup_auto_entry, common parts
-        # should be commonized... either in __setup_auto_widgets or with
-        # a decorator
-        # 
-        # important to do the initial set prior to setting up
-        # the event handler for changed events
-        if self.trans.has_widget_state( widget_key ):
-            date_to_set = self.trans.get_widget_state( widget_key )
-            widget.select_month(date_to_set.month-1, date_to_set.year)
-            widget.select_day(date_to_set.day)
-        else:
-            self.trans.update_widget_state(widget_key,
-                                           get_current_date_of_gtkcal(widget) )
-        widget.connect( "day_selected", self.calendar_changed )            
-        
+    def __change_calendar_from_saved_version(self, widget, widget_key):
+        date_to_set = self.trans.get_widget_state( widget_key )
+        widget.select_month(date_to_set.month-1, date_to_set.year)
+        widget.select_day(date_to_set.day)
 
     def attach_current_page(self):
         config = self.plugin.get_configuration(allow_reload=False)
