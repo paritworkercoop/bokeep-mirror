@@ -1,4 +1,4 @@
-# Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+# Copyright (C) 2011-2012 ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 #
 # This file is part of Bo-Keep.
 #
