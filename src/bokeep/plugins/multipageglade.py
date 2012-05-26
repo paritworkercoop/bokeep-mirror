@@ -28,7 +28,7 @@ from persistent.mapping import PersistentMapping
 # gtk imports
 from gtk import \
     VBox, HBox, Window, Button, STOCK_GO_FORWARD, STOCK_GO_BACK, Label, \
-    Entry, Calendar, \
+    Entry, Calendar, CheckButton, \
     ScrolledWindow, Viewport, POLICY_AUTOMATIC, POLICY_NEVER
 
 # bokeep imports
@@ -203,6 +203,9 @@ def make_widget_changed_func(get_state_func):
         self.change_register_function()
         self.update_auto_labels()
     return widget_changed
+
+def get_state_of_checkbutton(checkbutton):
+    return checkbutton.get_active()
 
 class multipage_glade_editor(object):
     def __init__(self,
@@ -382,6 +385,13 @@ class multipage_glade_editor(object):
                                           self.calendar_changed ), 
                      ), # Calendar
 
+                    (CheckButton,
+                     lambda w, wk:
+                         w.set_active(self.trans.get_widget_state(wk)),
+                     get_state_of_checkbutton,
+                     lambda w: w.connect("toggled", self.checkbutton_changed),
+                     ), # CheckButton
+
                     ): # end of table and for declartion
 
                     # does the widget match the type in the current table entry?
@@ -489,6 +499,7 @@ class multipage_glade_editor(object):
 
     entry_changed = make_widget_changed_func(lambda w: w.get_text() )
     calendar_changed = make_widget_changed_func(get_current_date_of_gtkcal)
+    checkbutton_changed = make_widget_changed_func(get_state_of_checkbutton)
 
     def update_auto_labels(self):
         config = self.plugin.get_configuration(allow_reload=False)
