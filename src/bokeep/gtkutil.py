@@ -82,6 +82,15 @@ def get_current_date_of_gtkcal(cal):
     (year, month, day) = cal.get_date()
     return date(year, month+1, day)
 
+def set_current_date_of_gtkcal(cal, date_to_set):
+    """Note, this doesn't supporess event handlers and calls
+       both select_month and select_day
+
+       date_to_set can be either a datetime.date or datetime.datetime
+    """
+    cal.select_month(date_to_set.month-1, date_to_set.year)
+    cal.select_day(date_to_set.day)
+
 def gtk_error_message(msg, parent=None):
     gtk_ok_dialog(msg, parent, dia_type=MESSAGE_ERROR)
 
