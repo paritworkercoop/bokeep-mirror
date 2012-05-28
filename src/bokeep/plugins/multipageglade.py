@@ -35,8 +35,10 @@ from gtk import \
 from bokeep.book_transaction import \
     Transaction, FinancialTransaction, make_fin_line, \
     BoKeepTransactionNotMappableToFinancialTransaction
-from bokeep.gtkutil import input_entry_dialog, get_current_date_of_gtkcal, \
-    gtk_error_message
+from bokeep.gtkutil import \
+    (input_entry_dialog, gtk_error_message,
+     get_current_date_of_gtkcal, set_current_date_of_gtkcal, )
+     
 from bokeep.gui.gladesupport.glade_util import \
     load_glade_file_get_widgets_and_connect_signals
 from bokeep.safe_config_based_plugin_support import \
@@ -407,9 +409,8 @@ class multipage_glade_editor(object):
                         establish_event_handlers(widget)
 
     def __change_calendar_from_saved_version(self, widget, widget_key):
-        date_to_set = self.trans.get_widget_state( widget_key )
-        widget.select_month(date_to_set.month-1, date_to_set.year)
-        widget.select_day(date_to_set.day)
+        set_current_date_of_gtkcal(widget, 
+                                   self.trans.get_widget_state( widget_key ) )
 
     def attach_current_page(self):
         config = self.plugin.get_configuration(allow_reload=False)
