@@ -197,7 +197,6 @@ def make_widget_changed_func(get_state_func):
         config = self.plugin.get_configuration(allow_reload=False)
         widget_key = ( (config.pages[self.current_page]),
                        widget.get_name() )
-        print 'caught change on', widget_key
         self.trans.update_widget_state(
             widget_key, get_state_func(widget) )
         self.change_register_function()
