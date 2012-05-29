@@ -2,7 +2,7 @@ BoKeep 1.2.1
 - default shell now prompts on delete
 - T4's can be dumped as plain text
 - multipage glade does a better job of not wasting screen real-estate,
-  and also imposes vertical scroll bars on the actual glade pages
+  and also imposes scroll bars on the actual glade pages
   when not in headless mode
 - multipage glade can now do automatic saving of checkboxes
 - default shell now contains a status bar with window resize element at the
