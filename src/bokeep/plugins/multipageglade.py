@@ -294,7 +294,7 @@ class multipage_glade_editor(object):
             else:
                 self.maincontainer = Viewport()
                 sw = ScrolledWindow()
-                sw.set_policy(POLICY_NEVER, POLICY_AUTOMATIC)
+                sw.set_policy(POLICY_AUTOMATIC, POLICY_AUTOMATIC)
                 sw.add( self.maincontainer)
                 self.mainvbox.pack_start(sw)
 
