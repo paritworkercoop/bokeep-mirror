@@ -920,7 +920,7 @@ transaction number %s?""" % self.guistate.get_transaction_id() ):
         ab.set_transient_for(self.mainwindow)
         ab.set_modal(True)
         ab.set_name("Bo-Keep")
-        ab.set_version("1.2.0")
+        ab.set_version("1.2.1")
         ab.set_copyright("ParIT Worker Co-operative, Ltd. 2006-2011")
         ab.set_comments(
             """Bo-Keep helps you keep your books so you don't get lost.
