@@ -20,7 +20,9 @@ A developer doing a release needs to do all of the following:
  6) Run setup.py sdist and inspect the tarball for files that setup.py and
     MANIFEST.in are supposed to ensure go in there.
 
- 7) Do some final testing by running code direct from the tarball
+ 7) Do some final testing by running code direct from the tarball and by
+    doing a test installation with ./setup.py install into a directory
+    under your control.
 
  8) Commit any changes made to setup.py, CHANGELOG, and MANIFEST.in
 
