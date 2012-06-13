@@ -21,8 +21,9 @@ A developer doing a release needs to do all of the following:
     MANIFEST.in are supposed to ensure go in there.
 
  7) Do some final testing by running code direct from the tarball and by
-    doing a test installation with ./setup.py install into a directory
-    under your control.
+    doing a test installation with
+    ./setup.py --prefix=blah install
+    into a directory under your control.
 
  8) Commit any changes made to setup.py, CHANGELOG, and MANIFEST.in
 
