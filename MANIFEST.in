@@ -21,6 +21,7 @@ include src/bokeep/plugins/payroll/BOKEEP_PLUGIN
 include src/bokeep/backend_plugins/gnucash_backend_BOKEEP_BACKEND_PLUGIN
 include src/bokeep/backend_plugins/null_BOKEEP_BACKEND_PLUGIN
 include src/bokeep/backend_plugins/serialfile_BOKEEP_BACKEND_PLUGIN
+include payroll_example_data_files/payroll_example.gnucash
 recursive-include payroll_example_data_files *.py
 recursive-include src *.glade
 recursive-include src *.xsd
