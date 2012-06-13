@@ -4,7 +4,7 @@ real backend plugin.
 
 It is assumed you have a GNU/Linux distribution with a Python
 interpreter installed. (we've tested the CPython implementation
-[http://python.org] versions 2.5 and 2.6, it's possible that we've
+[http://python.org] versions 2.5, 2.6, and 2.7 it's possible that we've
 written Bo-Keep to be 2.4 compatible...)
 
 Almost all distributions package PyGTK (http://pygtk.org/) with glade
@@ -43,50 +43,26 @@ $ python
 >>> import persistent
 
 
-As of June 2011, Ubuntu's GnuCash package lacks Python bindings.  However you,
-can download GnuCash with Python bindings from "ppa:parit/gnucash".  For more
-information, please visit:
+In order to use the GnuCash backend in BoKeep you need a build of GnuCash with
+python bindings enabled. BoKeep developers are testing against the
+build of GnuCash in Ubuntu 12.04 which has python bindings in the
+python-gnucash package. There is also a python-gnucash package in debian
+unstable, wheezy, and squeeze-backports, but these haven't been tested.
+(they should be fine).
 
-https://launchpad.net/~parit/+archive/gnucash
-
-Other Debian based distributions are not yet shipping a version of GnuCash
-(http://gnucash.org/) 2.4.0 with Python bindings enabled, so you have
-to build it yourself.  (A patch has been submitted upstream.)
-
-Alternatively you may find
+To our knowledge, everyone else has to build GnuCash manually to end up with
+python bindings. You may find 
 http://wiki.gnucash.org/wiki/GnuCash#Installation to be helpful;
 included are instructions for other distros.
 
-So here's the Debian way to get the dependencies (this was tested on
-Ubuntu 10.04)
-# aptitude install intltool pkg-config libglib2.0-dev guile-1.6-dev \
-guile-1.6-slib libgconf2-dev libxml2-dev zlib1g-dev libofx-dev \
-libaqbanking-dev libpopt-dev libgtk2.0-dev libgnomeui-dev \
-libglade2-dev libgoffice-0.8-dev libwebkit-dev libltdl-dev libdbi0-dev \
-slib guile-1.6-slib libfinance-quote-perl libwww-perl libhtml-tree-perl \
-libhtml-tableextract-perl libcrypt-ssleay-perl libdate-manip-perl \
-python-dev
-
-And on to building:
-
-# mkdir -p /opt/src/
-# cd /opt/src/
-# wget \
-# http://downloads.sourceforge.net/sourceforge/gnucash/gnucash-2.4.0.tar.bz2
-# tar xjf gnucash-2.4.0.tar.bz2
-# cd gnucash-2.4.0
-# ./configure \
---prefix=/opt/gnucash-2.4.0/ \
---enable-python-bindings \
---with-html-engine=webkit
-# make && make install
+Include --enable-python-bindings in your invocation of configure.
 
 To use the Python bindings, you need to either install GnuCash in a
 place like /usr/ or /usr/local where your Python interpreter can find
-it, or set the PYTHONPATH environmental variable
+it such as creating a .pth file, or set the PYTHONPATH environmental variable
 $ export PYTHONPATH=/opt/gnucash-2.4.0/lib/python2.x/site-packages/:$PYTHONPATH
 
-Test this
+Test the python bindings out:
 $ python
 >>> import gnucash
 
@@ -115,7 +91,7 @@ test suite. (GnuCash with python bindings required) $ python setup.py
 test
 
 
-Copyright (C) 2011  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
+Copyright (C) 2012  ParIT Worker Co-operative, Ltd <paritinfo@parit.ca>
 This file is part of Bo-Keep.
 
 Bo-Keep is free software: you can redistribute it and/or modify
