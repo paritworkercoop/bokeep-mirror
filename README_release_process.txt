@@ -27,17 +27,24 @@ A developer doing a release needs to do all of the following:
 
  8) Commit any changes made to setup.py, CHANGELOG, and MANIFEST.in
 
- 9) Tag the version number
+ 9) Update the debian packaging branch, build the deb and test it
+    (not just install, but running stuff -- you can merge with step 7 if
+     you're lazy as the debian packaging just uses the setup.py)
 
- 10) Remember to push changes, including the tag
+ 10) Tag the version number
 
- 11) Sign and upload the tarball to Savannah
+ 11) Remember to push changes, including the tag
 
- 12) Wait until signed and uploaded tarball is publically available
+ 12) Sign and upload the tarball to Savannah
 
- 13) Close the task related to the relase
+ 13) Send debian packaged version to launchpad
 
- 14) Put a release news item on to Savannah and announce to the mailing list.
+ 14) Wait until signed and uploaded tarball is publically available
+     and launchpad build is done.
+
+ 15) Close the task related to the relase
+
+ 16) Put a release news item on to Savannah and announce to the mailing list.
      Be sure to mention if backwards compatibility was broken, which as per
      README_versions_and_branches.txt should be reflected by a major or
      super-major version number change.
@@ -46,9 +53,9 @@ A developer doing a release needs to do all of the following:
      or bug fix releases in older major series, if any. Mention if decently
      supported upgrade paths are planned.
 
- 15) Update the Bo-Keep website hosted on Savannah
+ 17) Update the Bo-Keep website hosted on Savannah
 
- 16) Update entries on Freshmeat and Free Software Directory
+ 18) Update entries on Freshmeat and Free Software Directory
 
- 17) Promote news item on reddit and wherever... if there's
+ 19) Promote news item on reddit and wherever... if there's
      some really, really good stuff compared to last time.
