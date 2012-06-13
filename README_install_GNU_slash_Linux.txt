@@ -71,8 +71,8 @@ setup.py install or
 # python setup.py install \
 --prefix=/path/to/where/you/want/bokeep/
 
-We're make a python egg available in PyPi and provide a debian package
-to make this even easier eventually.
+We're planning to make a python egg available in PyPi and provide a
+debian package to make this even easier eventually.
 
 If you haven't installed it to /usr/ or /usr/local, python will need
 to find it via $PYTHONPATH
@@ -86,7 +86,7 @@ $ python
 The executable binary (bo-keep) will be available in
 /path/to/where/you/want/bokeep/bin/
 
-Our setup.py can also run the entire 194 tests (and counting) in our
+Our setup.py can also run a large number of tests in our
 test suite. (GnuCash with python bindings required) $ python setup.py
 test
 
