@@ -23,5 +23,6 @@ include src/bokeep/backend_plugins/null_BOKEEP_BACKEND_PLUGIN
 include src/bokeep/backend_plugins/serialfile_BOKEEP_BACKEND_PLUGIN
 recursive-include payroll_example_data_files *.py
 recursive-include src *.glade
+recursive-include src *.xsd
 recursive-include tests *.py
 
