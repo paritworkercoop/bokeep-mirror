@@ -17,6 +17,7 @@ include glademultipage_example_data_files/multipageexample.glade
 include glademultipage_example_data_files/multipageglade_configuration.py
 include src/bokeep/plugins/trust/BOKEEP_PLUGIN
 include src/bokeep/plugins/mileage/BOKEEP_PLUGIN
+include src/bokeep/plugins/mileage/tutorial.html
 include src/bokeep/plugins/payroll/BOKEEP_PLUGIN
 include src/bokeep/backend_plugins/gnucash_backend_BOKEEP_BACKEND_PLUGIN
 include src/bokeep/backend_plugins/null_BOKEEP_BACKEND_PLUGIN
