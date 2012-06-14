@@ -55,7 +55,7 @@ A developer doing a release needs to do all of the following:
 
  17) Update the Bo-Keep website hosted on Savannah
 
- 18) Update entries on Freshmeat and Free Software Directory
+ 18) Update entries on Freecode.com and Free Software Directory
 
  19) Promote news item on reddit and wherever... if there's
      some really, really good stuff compared to last time.
