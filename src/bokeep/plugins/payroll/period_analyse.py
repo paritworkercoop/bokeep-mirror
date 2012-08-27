@@ -94,6 +94,7 @@ def period_analyse(payroll_mod, start_year, start_month,
          ZERO, # employee cpp deductions
          ZERO, # employer cpp contributions
          ZERO, # employee income tax deductions
+         ZERO, # employee gross pay
          ]
         for start_date, end_date in generate_period_boundaries(
             start_year, start_month, period_type, periods)
@@ -133,7 +134,8 @@ def period_analyse(payroll_mod, start_year, start_month,
                     paystub.employer_ei_contributions(),
                     paystub.cpp_deductions(),
                     paystub.employer_cpp_contributions(),
-                    paystub.income_tax_deductions())):
+                    paystub.income_tax_deductions(),
+                    paystub.gross_income() )):
 
                     period[2+i] += Decimal("%.2f" % deduction_or_contribution )
 
@@ -144,16 +146,19 @@ def period_analyse(payroll_mod, start_year, start_month,
          'employee ei deductions', 'employer ei contributions', 'total ei',
          'employee cpp deductions', 'employer cpp contributions', 'total cpp',
          'employee income tax deductions',
-         'total deductions and contributions' ) )
+         'total deductions and contributions',
+         'gross income') )
     csv_writer.writerows(
         (start_date, end_date,
          employee_ei, employer_ei, employee_ei + employer_ei,
          employee_cpp, employer_cpp, employee_cpp + employer_cpp,
          employee_income_tax,
          employee_ei + employer_ei + employee_cpp + employer_cpp +
-         employee_income_tax)
+         employee_income_tax, gross_income, 
+         )
         for start_date, end_date, employee_ei, employer_ei, \
-            employee_cpp, employer_cpp, employee_income_tax in period_list
+            employee_cpp, employer_cpp, employee_income_tax, gross_income \
+            in period_list
         )
     output_file.close()
 
