@@ -536,9 +536,12 @@ class PluginSet(Persistent):
             self.has_plugin_enabled(plugin_name) or \
             self.has_plugin_disabled(plugin_name)
 
+def get_file_in_same_dir_as_file(orig_file, new_file):
+    return join( dirname( abspath( orig_file ) ),
+                 new_file )
+
 def get_file_in_same_dir_as_module(module, filename): 
-    return join( dirname( abspath( module.__file__ ) ),
-                 filename )
+    return get_file_in_same_dir_as_file( module.__file__, filename)
 
 def first_of(a_date):
     return date(a_date.year, a_date.month, 1)
