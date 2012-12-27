@@ -31,7 +31,7 @@ from decimal import Decimal
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, \
+     JUL_2011, JAN_2012, JAN_2013, \
      get_payroll_rule_period_for_paystub
 
 
@@ -44,6 +44,7 @@ CPP_CONTRIBUTION_RATE_TABLE = { JUL_2006: '0.0495', # 4.95%
                                 JAN_2011: '0.0495', # 4.95%
                                 JUL_2011: '0.0495', # 4.95%
                                 JAN_2012: '0.0495', # 4.95%
+                                JAN_2013: '0.0495', # 4.95%
                                 }
 convert_dict_of_string_to_dict_of_decimals_in_place(CPP_CONTRIBUTION_RATE_TABLE)
 
@@ -56,6 +57,7 @@ CPP_MAX_CONTRIBUTION_TABLE = { JUL_2006: '1910.70',
                                JAN_2011: '2217.60',
                                JUL_2011: '2217.60',
                                JAN_2012: '2306.70',
+                               JAN_2013: '2356.20',
                                }
 convert_dict_of_string_to_dict_of_decimals_in_place(CPP_MAX_CONTRIBUTION_TABLE)
 
@@ -68,6 +70,7 @@ CPP_BASIC_EXEMPTION_TABLE = { JUL_2006: '3500.00',
                               JAN_2011: '3500.00',
                               JUL_2011: '3500.00',
                               JAN_2012: '3500.00',
+                              JAN_2013: '3500.00',
                               }
 convert_dict_of_string_to_dict_of_decimals_in_place(CPP_BASIC_EXEMPTION_TABLE)
 

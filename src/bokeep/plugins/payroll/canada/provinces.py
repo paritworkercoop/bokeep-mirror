@@ -26,7 +26,7 @@ from functions import \
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, \
+     JUL_2011, JAN_2012, JAN_2013, \
      get_payroll_rule_period_for_paystub
 
 from decimal import Decimal
@@ -183,6 +183,19 @@ class Manitoba( Province ):
                             '21331.50', # 9
                             '23024.50', # 10
                             ), # JAN_2012
+
+                JAN_2013: ( '0.00',     # 0
+                            '8884.00',  # 1
+                            '9730.50',  # 2
+                            '11423.50', # 3
+                            '13116.50', # 4
+                            '14809.50', # 5
+                            '16502.50', # 6
+                            '18195.50', # 7
+                            '19888.50', # 8
+                            '21581.50', # 9
+                            '23274.50', # 10
+                            ), # JAN_2013
                
                 } # TD_PROV
 
@@ -246,6 +259,12 @@ class Manitoba( Province ):
                       ('0.1275', '605'),   # 31000 < A <= 67000
                       ('0.1740', '3720'), )# 67000 < A
                     ), # JAN_2012
+
+        JAN_2013: ( ('31000', '67000'),
+                    ( ('0.1080', '0'),     #         A <= 31000
+                      ('0.1275', '605'),   # 31000 < A <= 67000
+                      ('0.1740', '3720'), )# 67000 < A
+                    ), # JAN_2013
         
         } # PROVINCIAL_THRESHOLDS_AND_TAX_RATES
 

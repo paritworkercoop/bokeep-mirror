@@ -36,7 +36,7 @@ from itertools import imap
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, \
+     JUL_2011, JAN_2012, JAN_2013, \
      get_payroll_rule_period_for_paystub
 
 
@@ -153,6 +153,19 @@ FEDERAL_CLAIM_CODE_TABLE = { JUL_2006: [ '0.00',     # 0
                                          '26332.00', # 9 
                                          '28400.00', # 10 
                                          ],
+
+                             JAN_2013: [ '0.00',     # 0
+                                         '11038.00', # 1
+                                         '12092.50', # 2 
+                                         '14201.50', # 3 
+                                         '16310.50', # 4 
+                                         '18419.50', # 5 
+                                         '20528.50', # 6 
+                                         '22637.50', # 7 
+                                         '24756.50', # 8 
+                                         '26855.50', # 9 
+                                         '28964.50', # 10 
+                                         ],
                              }
 # convert the above table values from string constants to Decimal values
 # (more convienent data entry than putting Decimal around each...)
@@ -219,6 +232,12 @@ FEDERAL_TAX_RATES_AND_THRESHOLDS = {
                   ('0.26', '6406'), # 85414  < A <= 132406
                   ('0.29', '10378'), # 132406 < A
                   ) ), # JAN_2012
+    JAN_2013:( ('43561', '87123', '135054'),
+                ( ('0.15', '0'),    #          A <= 42707
+                  ('0.22', '3049'), # 42707  < A <= 85414
+                  ('0.26', '6534'), # 85414  < A <= 132406
+                  ('0.29', '10586'), # 132406 < A
+                  ) ), # JAN_2013
 
     } # FEDERAL_TAX_RATES_AND_THRESHOLDS
 
@@ -246,6 +265,7 @@ CANADA_EMPLOYMENT_CREDIT_TABLE = { JUL_2006: '500',
                                    JAN_2011: '1065',
                                    JUL_2011: '1065',
                                    JAN_2012: '1095',
+                                   JAN_2013: '1117',
                                    } # CANADA_EMPLOYMENT_CREDIT
 convert_dict_of_string_to_dict_of_decimals_in_place(
     CANADA_EMPLOYMENT_CREDIT_TABLE)
