@@ -205,7 +205,6 @@ class Employee(Persistent):
 
         self.Y_factor_credits = {}
 
-        self.vacation_rate = self.province.VACATION_PAY_RATE
         self.default_rate = self.province.MINIMUM_WAGE
 
         self.init_roe_work_periods()
@@ -596,6 +595,38 @@ class Employee(Persistent):
             return self.get_bounded_paystubs(start_date, end_date)
         else:
             raise RoeWorkPeriodNotExist()
+
+    def first_paydate_by_paystub(self, answer_for_none=None):
+        return (
+            answer_for_none if len(self.paystubs) == 0
+            else self.paystubs[0].payday.paydate )
+
+    def get_vacation_pay_rate(self, as_of_date=None):
+        # look up the vacation pay rate in terms of the time of service,
+        # which is calculated as some particular as_of_date (defaults to today)
+        # minus the start date
+        #
+        # start date comes from the ROE support if present in the employee
+        # with a start date, otherwise we go with the date of the first
+        # paystub found. (if there is one, and if we use the same as_of_date
+        # so time of service comes out to zero)
+        #
+        # There is a flaw here though -- if an ROE was issued for a leave
+        # of absense or seasonal termination under Manitoba law, time of
+        # service still accumulates, so this will be wrong.
+        #
+        # logic for that kind of thing will have to be per province once
+        # it is developed...
+        if as_of_date == None:
+            as_of_date = date.today()
+        return self.province.get_vacation_pay_rate_for_time_for_service(
+            self.first_paydate_by_paystub(as_of_date)
+            if not self.current_roe_work_period_available()
+            else self.get_current_roe_work_period_start(),
+
+            as_of_date ) # end get_vacation_pay_rate_for_time_for_service
+    
+            
 
 class RoeWorkPeriodsAlreadyInit(Exception):
     pass

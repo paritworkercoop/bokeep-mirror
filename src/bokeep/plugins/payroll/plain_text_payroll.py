@@ -785,3 +785,8 @@ def year_to_date_sum_of_class( paystub_line_class ):
             paystub,
             include_final_paystub=True)
     return retrieval_function
+
+def vacation_pay_rate_on_period_of_paystub(paystub):
+    return "%s%%" % (
+        paystub.employee.get_vacation_pay_rate(paystub.payday.paydate)
+        * Decimal(100) )

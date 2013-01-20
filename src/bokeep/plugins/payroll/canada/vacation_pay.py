@@ -55,13 +55,16 @@ class PaystubVacpayLine(PaystubCalculatedLine):
         # you earn vacation pay on earned income, not on vacation pay
         # being paid out, else you'd become very rich
       
-        vacpay = self.paystub.employee.vacation_rate * \
+        vacpay = (
+            self.paystub.employee.get_vacation_pay_rate(
+                self.paystub.payday.paydate) * 
             sum( (paystub_line.get_value()
                   for paystub_line in \
                       self.paystub.get_paystub_lines_of_classes_not_classes(
                     (PaystubIncomeLine,), (PaystubVacpayPayoutLine,) )
                   ), # end generator expression
-                 ZERO )
+                 ZERO ) # end of sum
+            ) # end overall expression
         vacpay = decimal_round_two_place_using_third_digit(vacpay)
         return vacpay
             

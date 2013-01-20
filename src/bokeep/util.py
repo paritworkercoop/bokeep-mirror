@@ -563,6 +563,8 @@ def month_delta(current_date, months=1):
         new_month = ((new_month-1) % 12) + 1
     return date(new_year, new_month, current_date.day)
 
+def year_delta(current_date, years=1):
+    return date(current_date.year + years, current_date.month, current_date.day)
 
 def start_of_year(a_date):
     return date(a_date.year, 1, 1)

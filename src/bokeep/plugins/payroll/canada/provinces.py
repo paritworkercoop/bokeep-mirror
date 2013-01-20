@@ -29,6 +29,8 @@ from payroll_rule_period import \
      JUL_2011, JAN_2012, JAN_2013, \
      get_payroll_rule_period_for_paystub
 
+from bokeep.util import year_delta
+
 from decimal import Decimal
 
 class Province(object):
@@ -64,7 +66,14 @@ class Province(object):
 
 class Manitoba( Province ):
     MINIMUM_WAGE = Decimal('10.00')
-    VACATION_PAY_RATE = Decimal('0.04')
+    BASE_VACATION_PAY_RATE = Decimal('0.04')
+    YEARS_OF_SERVICE_LONGER_VACATION = 5
+    FIFTH_YEAR_VACATION_PAY_RATE = Decimal('0.06')
+
+    # this is going to be removed at some point
+    # folks should use get_vacation_pay_rate_for_time_for_service
+    # to get a correct rate
+    VACATION_PAY_RATE = BASE_VACATION_PAY_RATE
     
     PROV_NAME = 'Manitoba'
 
@@ -319,6 +328,29 @@ class Manitoba( Province ):
     def calculate_Y(province, employee):
         return Decimal(str(sum(employee.Y_factor_credits.itervalues() )))
     calculate_Y = classmethod(calculate_Y)
+
+    def get_vacation_pay_rate_for_time_for_service(
+        province, start_date, end_date):
+        # It's tottally wrong to use timedelta for this
+        # (result of subtracting dates), because timedelta's largest
+        # unit is days, and we don't want to make the wrong assumption
+        # of a 365 day year or even the 365.25 length year
+        # Hence use of our own year_delta function instead which goes
+        # ahead by calendar year
+        #
+        # note that the higher vacation rate kicks in after year 4 is
+        # done and during the course of year 5. This allows for
+        # a vacation of 3 weeks to be taken at the end of year 5 as the
+        # law says
+        # this is why YEARS_OF_SERVICE_LONGER_VACATION = 5 but we subtract
+        # 1 to find the date where the new rate kicks in
+        return ( province.BASE_VACATION_PAY_RATE
+                 if end_date <=
+                 year_delta(start_date,
+                            province.YEARS_OF_SERVICE_LONGER_VACATION - 1)
+                 else province.FIFTH_YEAR_VACATION_PAY_RATE )
+    get_vacation_pay_rate_for_time_for_service = \
+        classmethod(get_vacation_pay_rate_for_time_for_service)   
 
 class Alberta( Province ):
     PROV_NAME='Alberta'

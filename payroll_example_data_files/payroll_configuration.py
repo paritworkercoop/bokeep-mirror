@@ -40,7 +40,8 @@ from bokeep.plugins.payroll.plain_text_payroll import \
     get_lines_of_class_with_tag, \
     sum_line_of_class_with_tag, \
     lines_of_classes_and_not_classes_function, \
-    year_to_date_sum_of_class
+    year_to_date_sum_of_class, \
+    vacation_pay_rate_on_period_of_paystub
 
 paystub_line_config = (
     ('income', create_paystub_line(PaystubIncomeLine)),
@@ -77,6 +78,7 @@ print_paystub_line_config = [
       value_of_class(PaystubCalculatedEmployerContributionLine)),
     ( "vacation pay accrued this period", 
       value_of_class(PaystubVacpayLine)),
+    ( "vacation pay rate", vacation_pay_rate_on_period_of_paystub),
     ( "possible vacation payout",
       calculated_value_of_class(PaystubVacpayPayoutLine)),
     ( "actual vacation payout",

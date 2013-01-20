@@ -52,7 +52,9 @@ class BasicVacationPayTest(TestCase):
 
 class TestVacationPay(BasicVacationPayTest):
     def test_vac_pay_rate(self):
-        self.assertEqual( self.emp.vacation_rate, Decimal('0.04') )
+        self.assertEqual(
+            self.emp.get_vacation_pay_rate(self.payday_one.paydate),
+            Decimal('0.04') )
 
     def test_one_vac_pay_line(self):
         self.assertEqual( len(self.paystub_one_vacpaylines), 1)
@@ -61,6 +63,46 @@ class TestVacationPay(BasicVacationPayTest):
         self.assertEqual( self.paystub_one_vacpayline.get_value(), Decimal(4) )
         self.assert_(
             self.paystub_one_vacpayline.get_value().as_tuple()[2] >= -2 )
+
+class TestVacationRateSetup(BasicVacationPayTest):
+    def setUp(self):
+        super(TestVacationRateSetup, self).setUp()
+        date_paydate_two = date(2009+4, 01, 01+1)
+        self.payday_two = Payday(None)
+        self.payday_two.set_paydate(
+            *(date_paydate_two for i in xrange(3)) )
+        self.paystub_two = Paystub(self.emp, self.payday_two)
+        self.paystub_two.add_paystub_line(
+            PaystubIncomeLine( self.paystub_two, Decimal(100) ) )
+        self.paystub_two_vacpaylines = tuple(
+            self.paystub_two.get_paystub_lines_of_class(PaystubVacpayLine))
+        self.paystub_two_vacpayline = self.paystub_two_vacpaylines[0]
+
+class TestVacationRate(TestVacationRateSetup):
+    def test_new_rate(self):
+        self.assertEqual(
+            self.emp.get_vacation_pay_rate(self.payday_two.paydate),
+            Decimal('0.06') )        
+
+    def test_vac_pay_amount(self):
+        self.assertEqual( self.paystub_two_vacpayline.get_value(), Decimal(6) )
+        self.assert_(
+            self.paystub_two_vacpayline.get_value().as_tuple()[2] >= -2 )
+
+class TestVacationRateFromROEStart(TestVacationRateSetup):
+    def setUp(self):
+        super(TestVacationRateFromROEStart, self).setUp()
+        self.emp.start_roe_work_period( date(2009, 1, 2) ) 
+
+    def test_new_rate(self):
+        self.assertEqual(
+            self.emp.get_vacation_pay_rate(self.payday_two.paydate),
+            Decimal('0.04') )        
+
+    def test_vac_pay_amount(self):
+        self.assertEqual( self.paystub_two_vacpayline.get_value(), Decimal(4) )
+        self.assert_(
+            self.paystub_two_vacpayline.get_value().as_tuple()[2] >= -2 )
 
 class TestBadVacationPayoutCreate(BasicVacationPayTest):
     def setUp(self):
