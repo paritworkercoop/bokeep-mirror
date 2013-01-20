@@ -75,6 +75,8 @@ print_paystub_line_config = [
       amount_from_paystub_function(Paystub.net_pay) ),
     ( "employer contributions",
       value_of_class(PaystubCalculatedEmployerContributionLine)),
+    ( "vacation pay accrued this period", 
+      value_of_class(PaystubVacpayLine)),
     ( "possible vacation payout",
       calculated_value_of_class(PaystubVacpayPayoutLine)),
     ( "actual vacation payout",
