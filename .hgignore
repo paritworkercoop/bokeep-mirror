@@ -17,8 +17,13 @@
 #
 # Author: Samuel Pauls <samuel@parit.ca>
 
+syntax: glob
 
 # Place files in here that Mercurial should ignore.
 
 # Eclipse project file.
 .project
+*.pyc
+*~
+*.orig
+*.rej
