@@ -65,7 +65,7 @@ class Province(object):
         classmethod( get_provincial_thresholds_and_tax_rates )
 
 class Manitoba( Province ):
-    MINIMUM_WAGE = Decimal('10.00')
+    MINIMUM_WAGE = Decimal('10.45')
     BASE_VACATION_PAY_RATE = Decimal('0.04')
     YEARS_OF_SERVICE_LONGER_VACATION = 5
     FIFTH_YEAR_VACATION_PAY_RATE = Decimal('0.06')
