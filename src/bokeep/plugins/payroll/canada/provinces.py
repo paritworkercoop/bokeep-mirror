@@ -1,5 +1,5 @@
 # provinces.py
-# Copyright (C) 2006-2011 ParIT Worker Co-operative <paritinfo@parit.ca>
+# Copyright (C) 2006-2014 ParIT Worker Co-operative <paritinfo@parit.ca>
 # Copyright (C) 2001-2007 Paul Evans <pevans@catholic.org>
 # 
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@ from functions import \
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, JAN_2013, \
+     JUL_2011, JAN_2012, JAN_2013, JAN_2014, \
      get_payroll_rule_period_for_paystub
 
 from bokeep.util import year_delta
@@ -205,6 +205,19 @@ class Manitoba( Province ):
                             '21581.50', # 9
                             '23274.50', # 10
                             ), # JAN_2013
+
+                JAN_2014: ( '0.00',     # 0
+                            '9134.00',  # 1
+                            '9980.50',  # 2
+                            '11673.50', # 3
+                            '13366.50', # 4
+                            '15059.50', # 5
+                            '16752.50', # 6
+                            '18445.50', # 7
+                            '20138.50', # 8
+                            '21831.50', # 9
+                            '23524.50', # 10
+                            ), # JAN_2014
                
                 } # TD_PROV
 
@@ -274,6 +287,12 @@ class Manitoba( Province ):
                       ('0.1275', '605'),   # 31000 < A <= 67000
                       ('0.1740', '3720'), )# 67000 < A
                     ), # JAN_2013
+
+        JAN_2014: ( ('31000', '67000'),
+                    ( ('0.1080', '0'),     #         A <= 31000
+                      ('0.1275', '605'),   # 31000 < A <= 67000
+                      ('0.1740', '3720'), )# 67000 < A
+                    ), # JAN_2014
         
         } # PROVINCIAL_THRESHOLDS_AND_TAX_RATES
 

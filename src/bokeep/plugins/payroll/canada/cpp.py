@@ -1,6 +1,6 @@
 # cpp.py CPP deductions calculations for Canada
 # Copyright (C) 2001-2006 Paul Evans <pevans@catholic.org>
-# Copyright (C) 2006-2011 ParIT Worker Co-operative <paritinfo@parit.ca>
+# Copyright (C) 2006-2014 ParIT Worker Co-operative <paritinfo@parit.ca>
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ from decimal import Decimal
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, JAN_2013, \
+     JUL_2011, JAN_2012, JAN_2013, JAN_2014, \
      get_payroll_rule_period_for_paystub
 
 
@@ -45,6 +45,7 @@ CPP_CONTRIBUTION_RATE_TABLE = { JUL_2006: '0.0495', # 4.95%
                                 JUL_2011: '0.0495', # 4.95%
                                 JAN_2012: '0.0495', # 4.95%
                                 JAN_2013: '0.0495', # 4.95%
+                                JAN_2014: '0.0495', # 4.95%
                                 }
 convert_dict_of_string_to_dict_of_decimals_in_place(CPP_CONTRIBUTION_RATE_TABLE)
 
@@ -58,6 +59,7 @@ CPP_MAX_CONTRIBUTION_TABLE = { JUL_2006: '1910.70',
                                JUL_2011: '2217.60',
                                JAN_2012: '2306.70',
                                JAN_2013: '2356.20',
+                               JAN_2014: '2425.50',
                                }
 convert_dict_of_string_to_dict_of_decimals_in_place(CPP_MAX_CONTRIBUTION_TABLE)
 
@@ -71,6 +73,7 @@ CPP_BASIC_EXEMPTION_TABLE = { JUL_2006: '3500.00',
                               JUL_2011: '3500.00',
                               JAN_2012: '3500.00',
                               JAN_2013: '3500.00',
+                              JAN_2014: '3500.00',
                               }
 convert_dict_of_string_to_dict_of_decimals_in_place(CPP_BASIC_EXEMPTION_TABLE)
 

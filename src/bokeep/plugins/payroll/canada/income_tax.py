@@ -1,5 +1,5 @@
 # income_tax.py
-# Copyright (C) 2006-2011 ParIT Worker Co-operative <paritinfo@parit.ca>
+# Copyright (C) 2006-2014 ParIT Worker Co-operative <paritinfo@parit.ca>
 # Copyright (C) 2001-2007 Paul Evans <pevans@catholic.org>
 # 
 # This program is free software; you can redistribute it and/or modify
@@ -36,7 +36,7 @@ from itertools import imap
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, JAN_2013, \
+     JUL_2011, JAN_2012, JAN_2013, JAN_2014, \
      get_payroll_rule_period_for_paystub
 
 
@@ -166,6 +166,19 @@ FEDERAL_CLAIM_CODE_TABLE = { JUL_2006: [ '0.00',     # 0
                                          '26855.50', # 9 
                                          '28964.50', # 10 
                                          ],
+
+                             JAN_2014: [ '0.00',     # 0
+                                         '11138.00', # 1
+                                         '12202.00', # 2 
+                                         '14330.00', # 3 
+                                         '16458.00', # 4 
+                                         '18586.00', # 5 
+                                         '20714.00', # 6 
+                                         '22842.00', # 7 
+                                         '24970.00', # 8 
+                                         '27098.00', # 9 
+                                         '29226.00', # 10 
+                                         ],
                              }
 # convert the above table values from string constants to Decimal values
 # (more convienent data entry than putting Decimal around each...)
@@ -238,6 +251,12 @@ FEDERAL_TAX_RATES_AND_THRESHOLDS = {
                   ('0.26', '6534'), # 85414  < A <= 132406
                   ('0.29', '10586'), # 132406 < A
                   ) ), # JAN_2013
+    JAN_2014:( ('43953', '87907', '136270'),
+                ( ('0.15', '0'),    #          A <= 43953
+                  ('0.22', '3077'), # 43953  < A <= 87907
+                  ('0.26', '6593'), # 87907  < A <= 136270
+                  ('0.29', '10681'), # 136270 < A
+                  ) ), # JAN_2014
 
     } # FEDERAL_TAX_RATES_AND_THRESHOLDS
 
@@ -266,6 +285,7 @@ CANADA_EMPLOYMENT_CREDIT_TABLE = { JUL_2006: '500',
                                    JUL_2011: '1065',
                                    JAN_2012: '1095',
                                    JAN_2013: '1117',
+                                   JAN_2014: '1127',
                                    } # CANADA_EMPLOYMENT_CREDIT
 convert_dict_of_string_to_dict_of_decimals_in_place(
     CANADA_EMPLOYMENT_CREDIT_TABLE)
