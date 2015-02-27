@@ -18,8 +18,8 @@
 #            Samuel Pauls <samuel@parit.ca>
 
 JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-JUL_2011, JAN_2012, JAN_2013, JAN_2014 = range(11)
-LAST_RULE_PERIOD = JAN_2014
+JUL_2011, JAN_2012, JAN_2013, JAN_2014, JAN_2015 = range(12)
+LAST_RULE_PERIOD = JAN_2015
 
 # dictionary where each period is a key and the vaule is a two element tuple 
 # consisting of the year part and the month part
@@ -40,9 +40,10 @@ CODE_TO_YEAR_AND_MONTHS = { JUL_2006: (2006, range(7, 12+1) ),
                             JUL_2011: (2011, range(7, 12+1) ),
                             JAN_2012: (2012, range(1, 12+1) ),
                             JAN_2013: (2013, range(1, 12+1) ), 
+                            JAN_2014: (2014, range(1, 12+1) ),
                             # note: change this to 1, 6+1 if a JUL entry
                             # is added
-                            JAN_2014: (2014, range(1, 12+1) ),
+                            JAN_2015: (2015, range(1, 12+1) ),
                             }
 
 YEAR_AND_MONTH_TO_CODE = {}
