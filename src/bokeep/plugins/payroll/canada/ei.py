@@ -24,7 +24,7 @@ from paystub_line import \
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, JAN_2013, JAN_2014, JAN_2015, \
+     JUL_2011, JAN_2012, JAN_2013, JAN_2014, JAN_2015, JAN_2016, \
      get_payroll_rule_period_for_paystub
 
 from functions import decimal_round_two_place_using_third_digit, \
@@ -49,6 +49,7 @@ EI_RATE_TABLE = { JUL_2006: '0.0187', # 1.87%
                   JAN_2013: '0.0188', # 1.88%
                   JAN_2014: '0.0188', # 1.88%
                   JAN_2015: '0.0188', # 1.88%
+                  JAN_2016: '0.0188', # 1.88%
                   }
 convert_dict_of_string_to_dict_of_decimals_in_place(EI_RATE_TABLE)
 
@@ -64,6 +65,7 @@ MAX_EI_PREMIUM_TABLE = { JUL_2006: '729.30',
                          JAN_2013: '891.12',
                          JAN_2014: '913.68',
                          JAN_2015: '930.60',
+                         JAN_2016: '955.04',
                          }
 convert_dict_of_string_to_dict_of_decimals_in_place(MAX_EI_PREMIUM_TABLE)
 

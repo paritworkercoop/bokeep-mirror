@@ -36,7 +36,7 @@ from itertools import imap
 
 from payroll_rule_period import \
      JUL_2006, JAN_2007, JAN_2008, JAN_2009, APR_2009, JAN_2010, JAN_2011, \
-     JUL_2011, JAN_2012, JAN_2013, JAN_2014, JAN_2015, \
+     JUL_2011, JAN_2012, JAN_2013, JAN_2014, JAN_2015, JAN_2016, \
      get_payroll_rule_period_for_paystub
 
 
@@ -192,6 +192,19 @@ FEDERAL_CLAIM_CODE_TABLE = { JUL_2006: [ '0.00',     # 0
                                          '27557.00', # 9 
                                          '29721.00', # 10 
                                          ],
+
+                             JAN_2016: [ '0.00',     # 0
+                                         '11474.00', # 1
+                                         '12570.00', # 2 
+                                         '14762.00', # 3 
+                                         '16954.00', # 4 
+                                         '19146.00', # 5 
+                                         '21338.00', # 6 
+                                         '23530.00', # 7 
+                                         '25722.00', # 8 
+                                         '27914.00', # 9 
+                                         '30106.00', # 10 
+                                         ],
 }
 # convert the above table values from string constants to Decimal values
 # (more convienent data entry than putting Decimal around each...)
@@ -276,6 +289,13 @@ FEDERAL_TAX_RATES_AND_THRESHOLDS = {
                   ('0.26', '6705'), # 87907  < A <= 138586
                   ('0.29', '10863'), # 138586 < A
                   ) ), # JAN_2015
+    JAN_2016:( ('45282', '90563', '140388', '200000'),
+               ( ('0.150', '0'),    #          A <= 45282
+                 ('0.205', '2491'), # 45282  < A <= 90563
+                 ('0.260', '7471'), # 90563  < A <= 140388
+                 ('0.290', '11683'), # 140388 < A <= 200000
+                 ('0.330', '19683'), # > 200000
+                 ) ), # JAN_2016
     } # FEDERAL_TAX_RATES_AND_THRESHOLDS
 
 # convert the above table values from string constants to Decimal values
@@ -305,6 +325,7 @@ CANADA_EMPLOYMENT_CREDIT_TABLE = { JUL_2006: '500',
                                    JAN_2013: '1117',
                                    JAN_2014: '1127',
                                    JAN_2015: '1146',
+                                   JAN_2016: '1161',
                                    } # CANADA_EMPLOYMENT_CREDIT
 convert_dict_of_string_to_dict_of_decimals_in_place(
     CANADA_EMPLOYMENT_CREDIT_TABLE)
